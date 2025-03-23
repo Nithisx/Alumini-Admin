@@ -8,7 +8,7 @@ export default function RegisterRequest() {
   const [requests, setRequests] = useState([]);
   const [message, setMessage] = useState(null);
   const [processing, setProcessing] = useState(false);
-  const API_URL = "http://192.168.249.123:8001/Approve-signup/";
+  const API_URL = "http://192.168.142.123:8000/Approve-signup/";
 
   // Helper function to show message and auto-clear after 3 seconds
   const showMessage = (msg) => {

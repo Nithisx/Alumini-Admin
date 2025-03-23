@@ -5,7 +5,8 @@ import {
   faFileAlt, 
   faUserPlus, 
   faCalendarCheck, 
-  faLock
+  faLock,
+  faPhotoFilm
 } from "@fortawesome/free-solid-svg-icons";
 import '../App.css';
 
@@ -23,6 +24,7 @@ export default function AdminHeader() {
         <NavItem to="/" icon={faFileAlt} label="Post" />
         <NavItem to="/register-request" icon={faUserPlus} label="Register Request" />
         <NavItem to="/event" icon={faCalendarCheck} label="Event" />
+        <NavItem to="/albums" icon={faPhotoFilm} label="Albums" />
       </nav>
 
       {/* Footer */}
