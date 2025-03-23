@@ -10,9 +10,9 @@ import {
   faUserCircle,
   faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
-import Addpost from "./Addpost";
 
-// Dummy data for posts with comments
+
+
 const initialPosts = [
   {
     id: 1,
@@ -87,10 +87,10 @@ const AdminFeed = () => {
   const [activeComments, setActiveComments] = useState(null);
   const [newComments, setNewComments] = useState({});
 
-  // Handle delete click
+  
   const handleDeleteClick = (postId) => {
     if (deleteConfirm === postId) {
-      // Confirm delete
+      
       setPosts(posts.filter(post => post.id !== postId));
       setDeleteConfirm(null);
     } else {
