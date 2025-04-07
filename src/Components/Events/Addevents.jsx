@@ -10,9 +10,11 @@ import {
   faCalendarAlt,
   faMapMarkerAlt,
   faClock,
-  faCalendarPlus
+  faCalendarPlus,
+  faTag
 } from "@fortawesome/free-solid-svg-icons";
 import Events from "./Events";
+
 const AddEvent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -22,9 +24,14 @@ const AddEvent = () => {
     description: "",
     date: "",
     time: "",
-    location: ""
+    location: "",
+    endDate: "",
+    endTime: "",
+    tag: ""
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [apiResponse, setApiResponse] = useState(null);
+  const [apiError, setApiError] = useState(null);
   const fileInputRef = useRef(null);
 
   // Handle drop zone events
@@ -87,40 +94,87 @@ const AddEvent = () => {
     });
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Format date and time for API
+  const formatDateTime = (date, time) => {
+    if (!date) return null;
     
+    // If time is not provided, default to 00:00:00
+    const timeString = time || "00:00:00";
+    
+    return `${date}T${timeString}Z`;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
     if (!formData.title || !formData.date || !formData.location) {
       alert("Please fill in all required fields.");
       return;
     }
-
+  
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Creating event:", {
-        ...formData,
-        image: uploadedFile?.file || null,
+    setApiError(null);
+  
+    try {
+      // Prepare form data for API
+      const eventData = new FormData();
+  
+      eventData.append("title", formData.title);
+      eventData.append("description", formData.description);
+      eventData.append("venue", formData.location);
+      eventData.append("from_date_time", formatDateTime(formData.date, formData.time));
+      eventData.append("end_date_time", formatDateTime(formData.endDate || formData.date, formData.endTime || formData.time));
+      eventData.append("tag", formData.tag);
+  
+      // Append image if uploaded
+      if (uploadedFile?.file) {
+        eventData.append("image", uploadedFile.file);
+      }
+  
+      // Send to API
+      const response = await fetch("http://192.168.249.123:8000/events/", {
+        method: "POST",
+        headers: {
+          "Authorization": `Token 2e3c06490e12df87036a731e47345bcd7e2a4ec7`, // Add token to headers
+        },
+        body: eventData, // We use FormData for multipart/form-data to handle file upload
       });
-      
+  
+      // Parse response
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create event");
+      }
+  
+      setApiResponse(data);
+  
       // Reset form
       setFormData({
         title: "",
         description: "",
         date: "",
         time: "",
-        location: ""
+        location: "",
+        endDate: "",
+        endTime: "",
+        tag: "",
       });
       removeFile();
-      setIsLoading(false);
       setIsModalOpen(false);
-      
+  
       // Show success message
       alert("Event created successfully!");
-    }, 1500);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      setApiError(error.message || "An error occurred while creating the event");
+      alert(`Failed to create event: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
+  
 
   return (
     <div className="relative min-h-screen bg-gray-50">
@@ -193,11 +247,11 @@ const AddEvent = () => {
                   ></textarea>
                 </div>
 
-                {/* Event Date and Time */}
+                {/* Event Start Date and Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                      Date <span className="text-red-500">*</span>
+                      Start Date <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -216,7 +270,7 @@ const AddEvent = () => {
                   </div>
                   <div>
                     <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
+                      Start Time
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -234,10 +288,50 @@ const AddEvent = () => {
                   </div>
                 </div>
 
+                {/* Event End Date and Time */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                      End Date
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
+                      </div>
+                      <input
+                        type="date"
+                        id="endDate"
+                        name="endDate"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={formData.endDate}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">
+                      End Time
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FontAwesomeIcon icon={faClock} className="text-gray-400" />
+                      </div>
+                      <input
+                        type="time"
+                        id="endTime"
+                        name="endTime"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={formData.endTime}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Event Location */}
-                <div className="mb-6">
+                <div className="mb-4">
                   <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                    Location <span className="text-red-500">*</span>
+                    Location/Venue <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -252,6 +346,27 @@ const AddEvent = () => {
                       value={formData.location}
                       onChange={handleInputChange}
                       required
+                    />
+                  </div>
+                </div>
+
+                {/* Event Tag */}
+                <div className="mb-4">
+                  <label htmlFor="tag" className="block text-sm font-medium text-gray-700 mb-1">
+                    Event Tag
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FontAwesomeIcon icon={faTag} className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      id="tag"
+                      name="tag"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter event tag (e.g., workshop, seminar, conference)"
+                      value={formData.tag}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -314,6 +429,14 @@ const AddEvent = () => {
                     </div>
                   )}
                 </div>
+
+                {/* API Error Message */}
+                {apiError && (
+                  <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-200">
+                    <p className="font-medium">Error:</p>
+                    <p>{apiError}</p>
+                  </div>
+                )}
               </form>
             </div>
 
