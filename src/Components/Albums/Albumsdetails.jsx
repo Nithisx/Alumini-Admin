@@ -8,8 +8,9 @@ const AlbumDetailPage = () => {
   const [formData, setFormData] = useState({ title: "", images: [] });
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const token = "2e3c06490e12df87036a731e47345bcd7e2a4ec7";
-  const BASE_URL = "http://192.168.142.123:8000";
+  const token = localStorage.getItem("Token"); // Get token from local storage
+  
+  const BASE_URL = "https://mt-expect-authorization-outlets.trycloudflare.com";
 
   useEffect(() => {
     if (!albumId) return;

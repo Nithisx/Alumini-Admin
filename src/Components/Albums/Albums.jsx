@@ -20,8 +20,8 @@ const AlbumsPage = () => {
     const fetchAlbums = async () => {
       try {
         
-        let token = "2e3c06490e12df87036a731e47345bcd7e2a4ec7";
-        const response = await axios.get("http://192.168.142.123:8000/albums/", {
+        const token = localStorage.getItem("Token"); // Get token from local storage
+        const response = await axios.get("https://mt-expect-authorization-outlets.trycloudflare.com/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
   
@@ -55,7 +55,8 @@ const AlbumsPage = () => {
     }
   
     try {
-      let token = "2e3c06490e12df87036a731e47345bcd7e2a4ec7";
+      const token = localStorage.getItem("Token"); // Get token from local storage
+
       let formDataToSend = new FormData();
   
       formDataToSend.append("title", formData.title);
@@ -66,7 +67,7 @@ const AlbumsPage = () => {
       }
   
       const response = await axios.post(
-        "http://192.168.142.123:8000/albums/",
+        "https://mt-expect-authorization-outlets.trycloudflare.com/albums/",
         formDataToSend,
         {
           headers: {
@@ -145,7 +146,7 @@ const AlbumsPage = () => {
             >
               {album.cover_image ? (
                 <img
-                  src={`http://192.168.142.123:8000${album.cover_image}`}
+                  src={`https://mt-expect-authorization-outlets.trycloudflare.com${album.cover_image}`}
                   alt={album.title}
                   className="w-full h-48 object-cover"
                 />

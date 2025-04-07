@@ -9,8 +9,9 @@ const StudentImageUpload = () => {
     // Fetch students when component mounts
     const fetchStudents = async () => {
       try {
-        let token = "2e3c06490e12df87036a731e47345bcd7e2a4ec7";
-        const response = await axios.get("http://192.168.142.123:8000/students/", {
+        
+        const token = localStorage.getItem("Token")
+        const response = await axios.get("https://mt-expect-authorization-outlets.trycloudflare.com/students/", {
           headers: { Authorization: `Token ${token}` },
         });
         setStudents(response.data);  // Set students in state
@@ -39,14 +40,14 @@ const StudentImageUpload = () => {
     }
 
     try {
-      let token = "2e3c06490e12df87036a731e47345bcd7e2a4ec7";
+      const token = localStorage.getItem("Token"); // Get token from local storage
       let formDataToSend = new FormData();
 
       formDataToSend.append("name", formData.name);
       formDataToSend.append("image", formData.image);
 
       const response = await axios.post(
-        "http://192.168.142.123:8000/students/",
+        "https://mt-expect-authorization-outlets.trycloudflare.com/students/",
         formDataToSend,
         {
           headers: {
@@ -108,7 +109,7 @@ const StudentImageUpload = () => {
           <div key={student.id} className="bg-white rounded-lg shadow p-4">
             {student.image ? (
               <img
-                src={`http://192.168.142.123:8000${student.image}`}
+                src={`https://mt-expect-authorization-outlets.trycloudflare.com${student.image}`}
                 alt={student.name}
                 className="w-full h-40 object-cover rounded-md"
               />

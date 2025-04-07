@@ -7,6 +7,7 @@ import AddEvent from "./Components/Events/Addevents";
 import AlbumsPage from "./Components/Albums/Albums";
 import AlbumDetailPage from "./Components/Albums/Albumsdetails";
 import StudentImageUpload from "./Components/Albums/Students";
+import Login from "./Login"
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/albums" element={<AlbumsPage />} /> 
             <Route path="/albums/:albumId" element={<AlbumDetailPage />} />
             <Route path="/students" element={<StudentImageUpload />} />
+            <Route path="/login" element={<Login/>} />
           </Routes>
         </main>
       </div>
