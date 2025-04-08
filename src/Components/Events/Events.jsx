@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendarAlt,
@@ -11,6 +10,9 @@ import {
   faClock,
   faFilter,
   faSearch,
+  faSortAmountDown,
+  faDownload,
+  faPlus
 } from "@fortawesome/free-solid-svg-icons";
 
 // AuthorizedImage component fetches the image using GET with the token in Authorization headers
@@ -45,7 +47,7 @@ const Events = () => {
 
   useEffect(() => {
     // Fetch events using GET method with Authorization header
-    fetch("https://mt-expect-authorization-outlets.trycloudflare.com/events/", {
+    fetch("https://pubmed-mart-immunology-area.trycloudflare.com/events/", {
       method: "GET",
       headers: {
         Authorization: token ? `Token ${token}` : "",
@@ -220,7 +222,7 @@ const Events = () => {
                 {event.image && (
                   <div className="relative h-48 overflow-hidden">
                     <AuthorizedImage
-                      url={`https://mt-expect-authorization-outlets.trycloudflare.com/${
+                      url={`https://pubmed-mart-immunology-area.trycloudflare.com/${
                         event.image.startsWith("/")
                           ? event.image.substring(1)
                           : event.image

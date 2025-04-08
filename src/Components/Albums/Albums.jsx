@@ -21,7 +21,7 @@ const AlbumsPage = () => {
       try {
         
         const token = localStorage.getItem("Token"); // Get token from local storage
-        const response = await axios.get("https://mt-expect-authorization-outlets.trycloudflare.com/albums/", {
+        const response = await axios.get("https://pubmed-mart-immunology-area.trycloudflare.com/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
   
@@ -67,7 +67,7 @@ const AlbumsPage = () => {
       }
   
       const response = await axios.post(
-        "https://mt-expect-authorization-outlets.trycloudflare.com/albums/",
+        "https://pubmed-mart-immunology-area.trycloudflare.com/albums/",
         formDataToSend,
         {
           headers: {

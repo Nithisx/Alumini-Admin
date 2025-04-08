@@ -8,7 +8,7 @@ export default function RegisterRequest() {
   const [requests, setRequests] = useState([]);
   const [message, setMessage] = useState(null);
   const [processing, setProcessing] = useState(false);
-  const API_URL = "https://mt-expect-authorization-outlets.trycloudflare.com/Approve-signup/";
+  const API_URL = "https://pubmed-mart-immunology-area.trycloudflare.com/Approve-signup/";
 
   // Helper function to show message and auto-clear after 3 seconds
   const showMessage = (msg) => {

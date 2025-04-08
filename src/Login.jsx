@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 
-// URL=`https://mt-expect-authorization-outlets.trycloudflare.com/login/admin/`
+// URL=`https://pubmed-mart-immunology-area.trycloudflare.com/login/admin/`
 
 const LoginPage = () => {
     const [username, setusername] = useState('');
@@ -16,7 +16,7 @@ const LoginPage = () => {
         };
       
         try {
-          const response = await fetch("https://mt-expect-authorization-outlets.trycloudflare.com/login/admin/", {
+          const response = await fetch("https://pubmed-mart-immunology-area.trycloudflare.com/login/admin/", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
