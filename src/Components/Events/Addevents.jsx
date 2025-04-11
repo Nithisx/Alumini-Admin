@@ -11,7 +11,8 @@ import {
   faMapMarkerAlt,
   faClock,
   faCalendarPlus,
-  faTag
+  faTag,
+  faSortAmountDown
 } from "@fortawesome/free-solid-svg-icons";
 import Events from "./Events";
 

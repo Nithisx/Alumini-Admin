@@ -6,7 +6,8 @@ import {
   faUserPlus, 
   faCalendarCheck, 
   faLock,
-  faPhotoFilm
+  faPhotoFilm,
+  faMapMarker
 } from "@fortawesome/free-solid-svg-icons";
 import '../App.css';
 
@@ -21,11 +22,12 @@ export default function AdminHeader() {
 
       {/* Navigation Links */}
       <nav className="p-4 space-y-3">
-        <NavItem to="/" icon={faFileAlt} label="Post" />
-        <NavItem to="/register-request" icon={faUserPlus} label="Register Request" />
-        <NavItem to="/event" icon={faCalendarCheck} label="Event" />
-        <NavItem to="/albums" icon={faPhotoFilm} label="Albums" />
-      </nav>
+          <NavItem to="/" icon={faFileAlt} label="Post" />
+          <NavItem to="/register-request" icon={faUserPlus} label="Register Request" />
+          <NavItem to="/event" icon={faCalendarCheck} label="Event" />
+          <NavItem to="/albums" icon={faPhotoFilm} label="Albums" />
+          <NavItem to="/map" icon={faMapMarker} label="Map" />  {/* Added Map nav item */}
+        </nav>
 
       {/* Footer */}
       <div className="absolute bottom-0 w-full p-4 text-center text-xs text-gray-500">
