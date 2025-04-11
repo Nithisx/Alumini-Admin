@@ -11,7 +11,7 @@ const StudentImageUpload = () => {
       try {
         
         const token = localStorage.getItem("Token")
-        const response = await axios.get("https://mt-expect-authorization-outlets.trycloudflare.com/students/", {
+        const response = await axios.get("https://projection-firmware-benjamin-punch.trycloudflare.com/students/", {
           headers: { Authorization: `Token ${token}` },
         });
         setStudents(response.data);  // Set students in state
@@ -47,7 +47,7 @@ const StudentImageUpload = () => {
       formDataToSend.append("image", formData.image);
 
       const response = await axios.post(
-        "https://mt-expect-authorization-outlets.trycloudflare.com/students/",
+        "https://projection-firmware-benjamin-punch.trycloudflare.com/students/",
         formDataToSend,
         {
           headers: {
@@ -109,7 +109,7 @@ const StudentImageUpload = () => {
           <div key={student.id} className="bg-white rounded-lg shadow p-4">
             {student.image ? (
               <img
-                src={`https://mt-expect-authorization-outlets.trycloudflare.com${student.image}`}
+                src={`https://projection-firmware-benjamin-punch.trycloudflare.com${student.image}`}
                 alt={student.name}
                 className="w-full h-40 object-cover rounded-md"
               />

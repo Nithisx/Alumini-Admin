@@ -21,7 +21,7 @@ const AlbumsPage = () => {
       try {
         
         const token = localStorage.getItem("Token"); // Get token from local storage
-        const response = await axios.get("https://mt-expect-authorization-outlets.trycloudflare.com/albums/", {
+        const response = await axios.get("https://projection-firmware-benjamin-punch.trycloudflare.com/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
   
@@ -67,7 +67,7 @@ const AlbumsPage = () => {
       }
   
       const response = await axios.post(
-        "https://mt-expect-authorization-outlets.trycloudflare.com/albums/",
+        "https://projection-firmware-benjamin-punch.trycloudflare.com/albums/",
         formDataToSend,
         {
           headers: {
@@ -146,7 +146,7 @@ const AlbumsPage = () => {
             >
               {album.cover_image ? (
                 <img
-                  src={`https://mt-expect-authorization-outlets.trycloudflare.com${album.cover_image}`}
+                  src={`https://projection-firmware-benjamin-punch.trycloudflare.com${album.cover_image}`}
                   alt={album.title}
                   className="w-full h-48 object-cover"
                 />

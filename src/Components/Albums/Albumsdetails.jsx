@@ -10,7 +10,7 @@ const AlbumDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("Token"); // Get token from local storage
   
-  const BASE_URL = "https://mt-expect-authorization-outlets.trycloudflare.com";
+  const BASE_URL = "https://projection-firmware-benjamin-punch.trycloudflare.com";
 
   useEffect(() => {
     if (!albumId) return;

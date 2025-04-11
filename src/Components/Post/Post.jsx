@@ -1,325 +1,265 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faHeart,
-  faComment,
-  faShare,
-  faEllipsisH,
   faTrash,
-  faCheckCircle,
+  faPlus,
   faUserCircle,
-  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 
+const API_URL = "https://projection-firmware-benjamin-punch.trycloudflare.com/jobs/";
 
-
-const initialPosts = [
-  {
-    id: 1,
-    username: "john_doe",
-    avatar: null,
-    verified: true,
-    timestamp: "2 hours ago",
-    content: "Just launched our new product! Check it out on our website.",
-    image: "https://picsum.photos/600/400?random=${Math.floor(Math.random() * 10000)}",
-    likes: 124,
-    comments: 43,
-    shares: 12,
-    commentsList: [
-      { id: 101, username: "tech_fan", avatar: null, content: "That's awesome! Can't wait to try it out.", timestamp: "1 hour ago" },
-      { id: 102, username: "curious_user", avatar: null, content: "What features does it have?", timestamp: "30 minutes ago" }
-    ]
-  },
-  {
-    id: 2,
-    username: "jane_smith",
-    avatar: null,
-    verified: false,
-    timestamp: "Yesterday",
-    content: "Beautiful sunset at the beach today! 🌅 #nature #peace",
-    image: "https://picsum.photos/600/400?random=${Math.floor(Math.random() * 10000)}",
-    likes: 287,
-    comments: 56,
-    shares: 24,
-    commentsList: [
-      { id: 201, username: "nature_lover", avatar: null, content: "Wow! What beach is this?", timestamp: "20 hours ago" },
-      { id: 202, username: "photographer", avatar: null, content: "Great composition! What camera did you use?", timestamp: "18 hours ago" }
-    ]
-  },
-  {
-    id: 3,
-    username: "tech_enthusiast",
-    avatar: null,
-    verified: true,
-    timestamp: "3 days ago",
-    content: "Just got the new iPhone! The camera quality is absolutely amazing. What do you think of the latest models?",
-    image: "https://picsum.photos/600/400?random=${Math.floor(Math.random() * 10000)}",
-    likes: 432,
-    comments: 89,
-    shares: 32,
-    commentsList: [
-      { id: 301, username: "apple_fan", avatar: null, content: "The battery life is incredible too!", timestamp: "2 days ago" },
-      { id: 302, username: "tech_reviewer", avatar: null, content: "The A15 chip performance is game-changing.", timestamp: "1 day ago" }
-    ]
-  },
-  {
-    id: 4,
-    username: "fitness_guru",
-    avatar: null,
-    verified: false,
-    timestamp: "1 week ago",
-    content: "Completed my first marathon today! It was tough but so worth it. Remember: consistency is key to achieving your fitness goals!",
-    image: "https://picsum.photos/600/400?random=${Math.floor(Math.random() * 10000)}",
-    likes: 876,
-    comments: 145,
-    shares: 67,
-    commentsList: [
-      { id: 401, username: "runner_101", avatar: null, content: "Congrats! What was your time?", timestamp: "6 days ago" },
-      { id: 402, username: "fitness_newbie", avatar: null, content: "So inspiring! I'm training for my first 5K.", timestamp: "5 days ago" }
-    ]
-  },
-];
+// You can optionally define a helper to get the token. Here it's wrapped in a Promise.
+const getAuthToken = async () => {
+  const token = localStorage.getItem("Token");
+  return token;
+};
 
 const AdminFeed = () => {
-  const [posts, setPosts] = useState(initialPosts);
-  const [activeMenu, setActiveMenu] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [activeComments, setActiveComments] = useState(null);
-  const [newComments, setNewComments] = useState({});
+  // Posts state
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  
-  const handleDeleteClick = (postId) => {
-    if (deleteConfirm === postId) {
-      
-      setPosts(posts.filter(post => post.id !== postId));
-      setDeleteConfirm(null);
-    } else {
-      setDeleteConfirm(postId);
-      
-      setTimeout(() => {
-        setDeleteConfirm(null);
-      }, 3000);
+  // New post state – using fields from the alumini student code:
+  const [newPostCaption, setNewPostCaption] = useState("");
+  const [newPostCompany, setNewPostCompany] = useState("");
+  const [newPostRole, setNewPostRole] = useState("");
+  const [newPostLocation, setNewPostLocation] = useState("");
+  const [newPostSalary, setNewPostSalary] = useState("");
+  const [newPostType, setNewPostType] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [error, setError] = useState("");
+
+  // Fetch posts from backend
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const token = await getAuthToken();
+      const response = await fetch(API_URL, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Token ${token}` : "",
+        },
+      });
+      const data = await response.json();
+      setPosts(data);
+    } catch (err) {
+      console.error("Error fetching posts", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Toggle menu visibility
-  const toggleMenu = (postId) => {
-    setActiveMenu(activeMenu === postId ? null : postId);
-  };
+  useEffect(() => {
+    fetchJobs();
+  }, []);
 
-  // Toggle comments section
-  const toggleComments = (postId) => {
-    setActiveComments(activeComments === postId ? null : postId);
-  };
+  // Handles the submission of a new post
+  const handleSubmitPost = async () => {
+    console.log("handleSubmitPost called");
 
-  // Handle new comment input change
-  const handleCommentChange = (postId, value) => {
-    setNewComments({
-      ...newComments,
-      [postId]: value
+    console.log("Input values:", {
+      description: newPostCaption,
+      company_name: newPostCompany,
+      role: newPostRole,
+      location: newPostLocation,
+      salary_range: newPostSalary,
+      job_type: newPostType,
+      image: selectedImage || "No image selected",
     });
-  };
 
-  // Add new comment
-  const addComment = (postId) => {
-    if (!newComments[postId] || newComments[postId].trim() === '') return;
-    
-    const updatedPosts = posts.map(post => {
-      if (post.id === postId) {
-        const newComment = {
-          id: Math.floor(Math.random() * 10000),
-          username: "current_user", // This would normally be the logged-in user
-          avatar: null,
-          content: newComments[postId],
-          timestamp: "Just now"
-        };
-        
-        return {
-          ...post,
-          comments: post.comments + 1,
-          commentsList: [newComment, ...post.commentsList]
-        };
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error("Authentication token not found");
+      console.log("Token:", token);
+
+      const formData = new FormData();
+      formData.append("description", newPostCaption || "");
+      formData.append("company_name", newPostCompany || "");
+      formData.append("role", newPostRole || "");
+      formData.append("location", newPostLocation || "");
+      formData.append("salary_range", newPostSalary || "");
+      formData.append("job_type", newPostType || "");
+
+      if (selectedImage) {
+        console.log("Appending image:", selectedImage);
+        // In a web environment, selectedImage should be a File object from an input[type="file"]
+        formData.append("images", selectedImage);
+      } else {
+        console.log("No image selected");
       }
-      return post;
-    });
-    
-    setPosts(updatedPosts);
-    setNewComments({
-      ...newComments,
-      [postId]: ''
-    });
+
+      console.log("Sending request to:", API_URL);
+      const response = await axios.post(API_URL, formData, {
+        headers: {
+          Authorization: token ? `Token ${token}` : "",
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("Success:", response.data);
+      // Prepend the new post to the posts list
+      setPosts([response.data, ...posts]);
+
+      // Clear inputs
+      setNewPostCaption("");
+      setNewPostCompany("");
+      setNewPostRole("");
+      setNewPostLocation("");
+      setNewPostSalary("");
+      setNewPostType("");
+      setSelectedImage(null);
+    } catch (error) {
+      if (error.response) {
+        console.error(
+          "Server error:",
+          error.response.status,
+          error.response.data
+        );
+      } else if (error.request) {
+        console.error("Network error: No response received", error.request);
+      } else {
+        console.error("Request setup error:", error.message);
+      }
+      setError(error.message);
+    }
+  };
+
+  // Delete a post using DELETE method (Admin can delete any post)
+  const deletePost = async (postId) => {
+    try {
+      const token = await getAuthToken();
+      const response = await fetch(`${API_URL}${postId}/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: token ? `Token ${token}` : "",
+        },
+      });
+      if (response.ok) {
+        setPosts(posts.filter((post) => post.id !== postId));
+      } else {
+        console.error("Error deleting post");
+      }
+    } catch (error) {
+      console.error("Error deleting post", error);
+    }
+  };
+
+  // File input change handler
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedImage(e.target.files[0]);
+    }
   };
 
   return (
-    <>
-      <div className="container mx-auto p-6 max-w-2xl">
-        <div className="mb-6 flex items-center justify-center">
-          <FontAwesomeIcon icon={faUserCircle} className="mr-2 text-green-600 text-2xl" />
-          <h2 className="text-3xl font-bold text-green-700 text-center">User Posts</h2>
+    <div className="container mx-auto p-6 max-w-2xl">
+      <h2 className="text-3xl font-bold text-green-700 mb-6">Jobs Feed</h2>
+      
+      {/* New Post Form */}
+      <div className="bg-white shadow p-4 rounded-lg border border-gray-100 mb-6">
+        <div className="flex flex-col gap-3">
+          <input
+            type="text"
+            placeholder="Job Description"
+            className="border border-gray-300 p-2 rounded"
+            value={newPostCaption}
+            onChange={(e) => setNewPostCaption(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Company Name"
+            className="border border-gray-300 p-2 rounded"
+            value={newPostCompany}
+            onChange={(e) => setNewPostCompany(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Role"
+            className="border border-gray-300 p-2 rounded"
+            value={newPostRole}
+            onChange={(e) => setNewPostRole(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Location"
+            className="border border-gray-300 p-2 rounded"
+            value={newPostLocation}
+            onChange={(e) => setNewPostLocation(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Salary Range"
+            className="border border-gray-300 p-2 rounded"
+            value={newPostSalary}
+            onChange={(e) => setNewPostSalary(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Job Type"
+            className="border border-gray-300 p-2 rounded"
+            value={newPostType}
+            onChange={(e) => setNewPostType(e.target.value)}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+          <button
+            onClick={handleSubmitPost}
+            className="px-4 py-2 bg-blue-600 text-white rounded flex items-center"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            Post
+          </button>
         </div>
-
-        {posts.length === 0 ? (
-          <div className="bg-white p-8 rounded-lg shadow text-center">
-            <p className="text-gray-500 text-lg">No posts available</p>
-          </div>
-        ) : (
-          posts.map((post) => (
-            <div key={post.id} className="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
-              {/* Post Header */}
-              <div className="p-4 flex justify-between items-center">
-                <div className="flex items-center space-x-3">
-                  {post.avatar ? (
-                    <img
-                      src={post.avatar}
-                      alt={`${post.username}'s avatar`}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  ) : (
-                    <FontAwesomeIcon icon={faUserCircle} className="w-10 h-10 text-gray-400" />
-                  )}
-                  <div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-900">{post.username}</span>
-                      {post.verified && (
-                        <FontAwesomeIcon
-                          icon={faCheckCircle}
-                          className="ml-1 text-blue-500 text-sm"
-                        />
-                      )}
-                    </div>
-                    <span className="text-xs text-gray-500">{post.timestamp}</span>
-                  </div>
-                </div>
-
-                {/* Three dots menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => toggleMenu(post.id)}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <FontAwesomeIcon icon={faEllipsisH} className="text-gray-600" />
-                  </button>
-
-                  {activeMenu === post.id && (
-                    <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg z-10">
-                      <button
-                        onClick={() => handleDeleteClick(post.id)}
-                        className="w-full text-left p-3 text-sm text-red-600 hover:bg-gray-50 flex items-center"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="mr-2" />
-                        {deleteConfirm === post.id ? "Confirm Delete" : "Delete Post"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Post Content */}
-              <div className="px-4 py-2">
-                <p className="text-gray-800 whitespace-pre-wrap">{post.content}</p>
-              </div>
-
-              {/* Post Image (if available) */}
-              {post.image && (
-                <div className="mt-2">
-                  <img
-                    src={post.image}
-                    alt="Post content"
-                    className="w-full h-auto"
-                  />
-                </div>
-              )}
-
-              {/* Post Stats */}
-              <div className="px-4 py-2 border-t border-gray-200">
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span className="font-semibold">{post.likes} likes</span>
-                  <div>
-                    <span className="mr-3 font-semibold">{post.comments} comments</span>
-                    <span className="font-semibold">{post.shares} shares</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Post Actions */}
-              <div className="flex border-t border-gray-200">
-                <button className="flex-1 py-2 text-center text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center">
-                  <FontAwesomeIcon icon={faHeart} className="mr-2" />
-                  Like
-                </button>
-                <button 
-                  className="flex-1 py-2 text-center text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center"
-                  onClick={() => toggleComments(post.id)}
-                >
-                  <FontAwesomeIcon icon={faComment} className="mr-2" />
-                  Comment
-                </button>
-                <button className="flex-1 py-2 text-center text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center">
-                  <FontAwesomeIcon icon={faShare} className="mr-2" />
-                  Share
-                </button>
-              </div>
-
-              {/* Comments Section - with animation */}
-              <div 
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  activeComments === post.id ? 'max-h-96' : 'max-h-0'
-                }`}
-              >
-                <div className="border-t border-gray-200 p-4">
-                  {/* Add comment form */}
-                  <div className="flex items-center mb-4">
-                    <FontAwesomeIcon icon={faUserCircle} className="w-8 h-8 text-gray-400 mr-2" />
-                    <div className="flex-1 relative">
-                      <input
-                        type="text"
-                        placeholder="Write a comment..."
-                        className="w-full border border-gray-200 rounded-full py-2 px-4 pr-10 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        value={newComments[post.id] || ''}
-                        onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addComment(post.id)}
-                      />
-                      <button 
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-600"
-                        onClick={() => addComment(post.id)}
-                      >
-                        <FontAwesomeIcon icon={faPaperPlane} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Comments list */}
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {post.commentsList.map(comment => (
-                      <div key={comment.id} className="flex">
-                        {comment.avatar ? (
-                          <img
-                            src={comment.avatar}
-                            alt={`${comment.username}'s avatar`}
-                            className="w-8 h-8 rounded-full mr-2"
-                          />
-                        ) : (
-                          <FontAwesomeIcon icon={faUserCircle} className="w-8 h-8 text-gray-400 mr-2" />
-                        )}
-                        <div className="flex-1">
-                          <div className="bg-gray-200 rounded-lg p-3">
-                            <p className="font-medium text-sm">{comment.username}</p>
-                            <p className="text-gray-800 text-sm">{comment.content}</p>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1 ml-2">
-                            {comment.timestamp}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+        {error && <p className="text-red-600 mt-2">{error}</p>}
       </div>
-    </>
+
+      {/* Posts List */}
+      {loading ? (
+        <p>Loading posts...</p>
+      ) : posts.length === 0 ? (
+        <p>No posts available.</p>
+      ) : (
+        posts.map((post) => (
+          <div
+            key={post.id}
+            className="bg-white shadow p-4 mb-4 rounded-lg border border-gray-100"
+          >
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                {post.avatar ? (
+                  <img
+                    src={post.avatar}
+                    alt={`${post.username}'s avatar`}
+                    className="w-8 h-8 rounded-full mr-2"
+                  />
+                ) : (
+                  <FontAwesomeIcon
+                    icon={faUserCircle}
+                    className="w-8 h-8 text-gray-400 mr-2"
+                  />
+                )}
+                <span className="font-medium">{post.username}</span>
+              </div>
+              <button
+                onClick={() => deletePost(post.id)}
+                className="text-red-600"
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </button>
+            </div>
+            <p className="mt-2 text-gray-800">{post.content || post.description}</p>
+            {/* Optional: Display other fields if available */}
+            <p className="text-sm text-gray-500">
+              {post.company_name} | {post.role} | {post.location} | {post.salary_range} | {post.job_type}
+            </p>
+          </div>
+        ))
+      )}
+    </div>
   );
 };
 
