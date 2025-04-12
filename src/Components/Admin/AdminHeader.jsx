@@ -9,7 +9,7 @@ import {
   faPhotoFilm,
   faMapMarker
 } from "@fortawesome/free-solid-svg-icons";
-import '../App.css';
+
 
 export default function AdminHeader() {
   return (
