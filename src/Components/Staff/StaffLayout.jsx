@@ -2,8 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Staff UI Components
-import AdminHeader from './AdminHeader';
-import RegisterRequestPage from './Auth/LoginRequest';
+import AdminHeader from './StaffHeader';
 import Addpost from './Post/Addpost';
 import AddEvent from './Events/Addevents';
 import AlbumsPage from './Albums/Albums';
@@ -21,7 +20,7 @@ const AdminLayout = () => {
       <main className="flex-1 p-6 bg-gray-100 ml-64">
         <Routes>
           <Route path="dashboard" element={<Addpost />} />
-          <Route path="register-request" element={<RegisterRequestPage />} />
+          
           <Route path="event" element={<AddEvent />} />
           <Route path="albums" element={<AlbumsPage />} />
           <Route path="albums/:albumId" element={<AlbumDetailPage />} />

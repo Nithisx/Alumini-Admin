@@ -134,10 +134,12 @@ const AddEvent = () => {
       }
   
       // Send to API
-      const response = await fetch("http://192.168.249.123:8000/events/", {
+      const token = localStorage.getItem("Token");
+      console.log(token) // Retrieve token from localStorage
+      const response = await fetch("https://wearing-contains-aluminum-caring.trycloudflare.com/events/", {
         method: "POST",
         headers: {
-          "Authorization": `Token 2e3c06490e12df87036a731e47345bcd7e2a4ec7`, // Add token to headers
+          "Authorization": `Token ${token}`, // Use token from localStorage
         },
         body: eventData, // We use FormData for multipart/form-data to handle file upload
       });

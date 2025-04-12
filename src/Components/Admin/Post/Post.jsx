@@ -7,7 +7,7 @@ import {
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "https://projection-firmware-benjamin-punch.trycloudflare.com/jobs/";
+const API_URL = "https://wearing-contains-aluminum-caring.trycloudflare.com/jobs/";
 
 // You can optionally define a helper to get the token. Here it's wrapped in a Promise.
 const getAuthToken = async () => {

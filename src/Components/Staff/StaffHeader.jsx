@@ -22,11 +22,11 @@ export default function AdminHeader() {
 
       {/* Navigation Links */}
       <nav className="p-4 space-y-3">
-          <NavItem to="/" icon={faFileAlt} label="Post" />
-          <NavItem to="/register-request" icon={faUserPlus} label="Register Request" />
-          <NavItem to="/event" icon={faCalendarCheck} label="Event" />
-          <NavItem to="/albums" icon={faPhotoFilm} label="Albums" />
-          <NavItem to="/map" icon={faMapMarker} label="Map" />  {/* Added Map nav item */}
+          <NavItem to="/staff/dashboard" icon={faFileAlt} label="Post" />
+          
+          <NavItem to="/staff/event" icon={faCalendarCheck} label="Event" />
+          <NavItem to="/staff/albums" icon={faPhotoFilm} label="Albums" />
+          <NavItem to="/staff/map" icon={faMapMarker} label="Map" />  {/* Added Map nav item */}
         </nav>
 
       {/* Footer */}
