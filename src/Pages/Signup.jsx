@@ -21,17 +21,17 @@ export default function Signup() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    first_name: "Gokul",
-    last_name: "Manikandan",
-    email: "gokulmanikandan230@gmail.com",
-    username: "gokul1",
-    phone: "9876543210",
-    faculty_institute: "ABC Institute",
-    faculty_department: "Computer Science",
-    gender: "Male",
+    first_name: "",
+    last_name: "",
+    email: "",
+    username: "",
+    phone: "",
+    faculty_institute: "",
+    faculty_department: "",
+    gender: "",
     work_experience: null, 
-    password: "12345678",
-    confirm_password: "12345678",
+    password: "",
+    confirm_password: "",
     otp: "",
     country_code: "+91",
   });
