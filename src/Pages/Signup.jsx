@@ -1,13 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import kahelogo from "../assets/kahelogo.png";
 
-// API Endpoints
 const SIGNUP_OTP_URL = "http://134.209.157.195:8000/signup-otp/";
 const SIGNUP_URL = "http://134.209.157.195:8000/signup/";
 
-// Required fields for validation
 const REQUIRED_FIELDS = [
   "first_name", "last_name", "email", "username", "phone",
   "college_name", "roll_no", "course", "stream", "course_start_year",
@@ -33,15 +31,20 @@ export default function Signup() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [colleges, setColleges] = useState([
+    "KAHE-ENGINEERING", "KAHE-PHARMACY", "KAHE-ARTS AND SCIENCE", 
+    "KAHE-ARCHITECTURE", "KAHE-COMMERCE"
+  ]);
+  const [courses, setCourses] = useState([]);
+  const [streams, setStreams] = useState([]);
 
-  // Update field
   const updateField = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setFieldErrors(prev => ({ ...prev, [field]: "" }));
     setError("");
   }, []);
 
-  // Validation
   const validate = () => {
     const errors = {};
 
@@ -69,7 +72,6 @@ export default function Signup() {
     return Object.keys(errors).length === 0;
   };
 
-  // Send OTP
   const handleSendOtp = async () => {
     if (!formData.email.trim()) {
       setFieldErrors(prev => ({ ...prev, email: "Email is required" }));
@@ -80,6 +82,7 @@ export default function Signup() {
     try {
       await axios.post(SIGNUP_OTP_URL, { email: formData.email });
       setIsOtpSent(true);
+      setResendTimer(120);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to send OTP");
     } finally {
@@ -87,7 +90,33 @@ export default function Signup() {
     }
   };
 
-  // Signup Handler
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [resendTimer]);
+
+  // Fetch courses and streams data from a hypothetical API
+  useEffect(() => {
+    const fetchCourseAndStreamData = async () => {
+      try {
+        // Fetch courses and streams from an API (replace URL with actual API endpoint)
+        const courseData = await axios.get('https://api.example.com/courses');
+        const streamData = await axios.get('https://api.example.com/streams');
+        
+        setCourses(courseData.data);
+        setStreams(streamData.data);
+      } catch (error) {
+        setError('Failed to load courses or streams');
+      }
+    };
+    
+    fetchCourseAndStreamData();
+  }, []);
+
   const handleSignup = async () => {
     if (!validate()) return;
     setLoading(true);
@@ -146,27 +175,78 @@ export default function Signup() {
           <h2 className="text-2xl font-bold text-gray-900">Sign Up</h2>
           {error && <Alert message={error} />}
 
-          {/* Form Fields */}
           <div className="grid grid-cols-2 gap-2">
             <InputField {...inputProps("first_name")} />
             <InputField {...inputProps("last_name")} />
           </div>
 
-          {[
-            "username", "email", "phone", "college_name", "roll_no", "course",
-            "stream", "course_start_year", "course_end_year", "passed_out_year",
-            "current_work", "experience_role", "experience_years"
-          ].map(field => (
-            <InputField key={field} {...inputProps(field)} />
-          ))}
+          <InputField {...inputProps("username")} />
+          <InputField {...inputProps("email")} />
+          <InputField {...inputProps("phone")} />
+          <InputField {...inputProps("roll_no")} />
+          
+          {/* College Dropdown */}
+          <div>
+            <label>College</label>
+            <select
+              value={formData.college_name}
+              onChange={e => updateField("college_name", e.target.value)}
+              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+            >
+              {colleges.map(college => (
+                <option key={college} value={college}>{college}</option>
+              ))}
+            </select>
+          </div>
 
-          <button
-            onClick={handleSendOtp}
-            disabled={isSendingOtp || isOtpSent}
-            className="btn"
-          >
-            {isSendingOtp ? "Sending..." : isOtpSent ? "OTP Sent ✓" : "Send OTP"}
-          </button>
+          {/* Course Dropdown */}
+          <div>
+            <label>Course</label>
+            <select
+              value={formData.course}
+              onChange={e => updateField("course", e.target.value)}
+              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+            >
+              {courses.map(course => (
+                <option key={course.id} value={course.id}>{course.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Stream Dropdown */}
+          <div>
+            <label>Stream</label>
+            <select
+              value={formData.stream}
+              onChange={e => updateField("stream", e.target.value)}
+              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+            >
+              {streams.map(stream => (
+                <option key={stream.id} value={stream.id}>{stream.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <InputField {...inputProps("course_start_year")} />
+          <InputField {...inputProps("course_end_year")} />
+          <InputField {...inputProps("passed_out_year")} />
+          <InputField {...inputProps("current_work")} />
+          <InputField {...inputProps("experience_role")} />
+          <InputField {...inputProps("experience_years")} />
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSendOtp}
+              disabled={isSendingOtp || resendTimer > 0}
+              className={`btn ${isOtpSent && resendTimer === 0 ? "bg-blue-500" : "bg-green-600"}`}
+            >
+              {isSendingOtp
+                ? "Sending..."
+                : isOtpSent && resendTimer > 0
+                ? `Resend OTP in ${resendTimer}s`
+                : "Send OTP"}
+            </button>
+          </div>
 
           {isOtpSent && <InputField {...inputProps("otp")} />}
 
@@ -215,10 +295,6 @@ export default function Signup() {
     };
   }
 }
-
-// ----------------------
-// Helper Components
-// ----------------------
 
 function InputField({ value, onChange, placeholder, error, type = "text" }) {
   return (
