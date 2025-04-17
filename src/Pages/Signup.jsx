@@ -3,227 +3,188 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import kahelogo from "../assets/kahelogo.png";
 
+// API Endpoints
 const SIGNUP_OTP_URL = "http://134.209.157.195:8000/signup-otp/";
-const SIGNUP_URL     = "http://134.209.157.195:8000/signup/";
+const SIGNUP_URL = "http://134.209.157.195:8000/signup/";
+
+// Required fields for validation
+const REQUIRED_FIELDS = [
+  "first_name", "last_name", "email", "username", "phone",
+  "college_name", "roll_no", "course", "stream", "course_start_year",
+  "course_end_year", "current_work", "experience_role", "experience_years",
+  "passed_out_year"
+];
 
 export default function Signup() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    first_name:       "",
-    last_name:        "",
-    email:            "",
-    username:         "",
-    phone:            "",
-    college_name:     "",
-    password:         "",
-    confirm_password: "",
-    otp:              "",
+    first_name: "", last_name: "", email: "", username: "", phone: "", college_name: "",
+    roll_no: "", course: "", stream: "", course_start_year: "", course_end_year: "",
+    passed_out_year: "", current_work: "", experience_role: "", experience_years: "",
+    password: "", confirm_password: "", otp: ""
   });
-  const [loading, setLoading]             = useState(false);
-  const [error, setError]                 = useState("");      // general server/client error
-  const [fieldErrors, setFieldErrors]     = useState({});      // validation errors
-  const [isOtpSent, setIsOtpSent]         = useState(false);
-  const [isSendingOtp, setIsSendingOtp]   = useState(false);
-  const [showSuccess, setShowSuccess]     = useState(false);
 
-  // These control the “show/hide” for the two password fields
-  const [showPassword, setShowPassword]               = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [error, setError] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // merge new values & clear that field’s error
+  // Update field
   const updateField = useCallback((field, value) => {
-    setFormData(fd => ({ ...fd, [field]: value }));
-    setFieldErrors(fe => ({ ...fe, [field]: "" }));
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setFieldErrors(prev => ({ ...prev, [field]: "" }));
     setError("");
   }, []);
 
-  // client‑side validation
+  // Validation
   const validate = () => {
-    const errs = {};
-    if (!formData.first_name.trim())    errs.first_name    = "First name is required";
-    if (!formData.last_name.trim())     errs.last_name     = "Last name is required";
-    if (!formData.email.trim())         errs.email         = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-                                         errs.email         = "Invalid email format";
-    if (!formData.username.trim())      errs.username      = "Username is required";
-    if (!formData.phone.trim())         errs.phone         = "Phone number is required";
-    if (!formData.college_name.trim())  errs.college_name  = "College name is required";
-    if (formData.password.length < 8)   errs.password      = "Password must be at least 8 characters";
-    if (formData.password !== formData.confirm_password)
-                                         errs.confirm_password = "Passwords don't match";
-    if (!isOtpSent)                     errs.otp           = "Please send OTP first";
-    else if (!formData.otp.trim())      errs.otp           = "OTP is required";
+    const errors = {};
 
-    setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
+    REQUIRED_FIELDS.forEach(field => {
+      if (!formData[field]?.trim()) {
+        errors[field] = "This field is required";
+      }
+    });
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      errors.email = "Invalid email format";
+
+    if (formData.password.length < 8)
+      errors.password = "Password must be at least 8 characters";
+
+    if (formData.password !== formData.confirm_password)
+      errors.confirm_password = "Passwords do not match";
+
+    if (!isOtpSent)
+      errors.otp = "Please send the OTP to verify your email";
+    else if (!formData.otp.trim())
+      errors.otp = "OTP is required";
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // send OTP to email
+  // Send OTP
   const handleSendOtp = async () => {
     if (!formData.email.trim()) {
-      setFieldErrors({ email: "Email is required" });
+      setFieldErrors(prev => ({ ...prev, email: "Email is required" }));
       return;
     }
+
     setIsSendingOtp(true);
     try {
       await axios.post(SIGNUP_OTP_URL, { email: formData.email });
       setIsOtpSent(true);
-    } catch (e) {
-      setError(e.response?.data?.error || "Unable to send OTP");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to send OTP");
     } finally {
       setIsSendingOtp(false);
     }
   };
 
-  // final signup
+  // Signup Handler
   const handleSignup = async () => {
     if (!validate()) return;
     setLoading(true);
+
     try {
       const payload = {
-        name:            `${formData.first_name} ${formData.last_name}`,
-        username:        formData.username,
-        email:           formData.email,
-        phone:           formData.phone,
-        college_name:    formData.college_name,
-        password:        formData.password,
-        otp:             formData.otp,
-        role:            "Staff",
-        work_experience: 0.0,
+        name: `${formData.first_name} ${formData.last_name}`,
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone,
+        college_name: formData.college_name,
+        password: formData.password,
+        otp: formData.otp,
+        role: "Student",
+        roll_no: formData.roll_no,
+        course: formData.course,
+        stream: formData.stream,
+        course_start_year: formData.course_start_year,
+        course_end_year: formData.course_end_year,
+        passed_out_year: formData.passed_out_year,
+        current_work: formData.current_work,
+        experience: {
+          role: formData.experience_role,
+          years: formData.experience_years
+        }
       };
+
       const { data } = await axios.post(SIGNUP_URL, payload);
+
       if (data.token) {
         setShowSuccess(true);
         setTimeout(() => navigate("/login"), 5000);
       } else {
         setError(data.error || "Registration failed");
       }
-    } catch (e) {
-      setError(e.response?.data?.error || "Registration failed");
+    } catch (err) {
+      setError(err.response?.data?.error || "Signup error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  const {
-    first_name, last_name, email, username,
-    phone, college_name, password, confirm_password, otp
-  } = formData;
-
   return (
     <div className="min-h-screen flex flex-col justify-center px-4 bg-gray-100">
       {showSuccess && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
-          <div className="bg-green-100 border-green-400 text-green-700 p-6 rounded shadow text-center animate-pulse">
-            <h2 className="text-2xl font-semibold mb-2">Registration Successful!</h2>
-            <p>Please wait for admin approval and check your email.</p>
-          </div>
-        </div>
+        <SuccessMessage />
       )}
 
-      <div className="max-w-md w-full mx-auto">
+      <div className="max-w-xl w-full mx-auto">
         <div className="text-center mb-8">
           <img src={kahelogo} alt="Logo" className="h-16 mx-auto" />
           <h1 className="mt-2 text-2xl font-bold text-green-600">Karpagam Alumni</h1>
         </div>
 
         <div className="bg-white shadow rounded-lg p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Create Your Account</h2>
-          <p className="text-gray-600">Join the alumni community</p>
+          <h2 className="text-2xl font-bold text-gray-900">Sign Up</h2>
+          {error && <Alert message={error} />}
 
-          {error && (
-            <div className="flex items-center bg-red-100 border-red-300 text-red-700 px-3 py-2 rounded">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2"
-                   viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round"
-                      d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z"/>
-              </svg>
-              <span>{error}</span>
-            </div>
-          )}
-
+          {/* Form Fields */}
           <div className="grid grid-cols-2 gap-2">
-            <InputField
-              value={first_name}
-              onChange={v => updateField("first_name", v)}
-              placeholder="First Name"
-              error={fieldErrors.first_name}
-            />
-            <InputField
-              value={last_name}
-              onChange={v => updateField("last_name", v)}
-              placeholder="Last Name"
-              error={fieldErrors.last_name}
-            />
-          </div>
-          <InputField
-            value={username}
-            onChange={v => updateField("username", v)}
-            placeholder="Username"
-            error={fieldErrors.username}
-          />
-
-          <div>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <InputField
-                  type="email"
-                  value={email}
-                  onChange={v => updateField("email", v)}
-                  placeholder="Email"
-                  error={fieldErrors.email}
-                />
-              </div>
-              <button
-                onClick={handleSendOtp}
-                disabled={isSendingOtp || isOtpSent}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-              >
-                {isSendingOtp ? "Sending..." : isOtpSent ? "Sent ✓" : "Send OTP"}
-              </button>
-            </div>
-            {isOtpSent && (
-              <InputField
-                value={otp}
-                onChange={v => updateField("otp", v)}
-                placeholder="Enter OTP"
-                error={fieldErrors.otp}
-              />
-            )}
+            <InputField {...inputProps("first_name")} />
+            <InputField {...inputProps("last_name")} />
           </div>
 
-          <InputField
-            value={phone}
-            onChange={v => updateField("phone", v)}
-            placeholder="Phone Number"
-            error={fieldErrors.phone}
-          />
-          <InputField
-            value={college_name}
-            onChange={v => updateField("college_name", v)}
-            placeholder="College Name"
-            error={fieldErrors.college_name}
-          />
+          {[
+            "username", "email", "phone", "college_name", "roll_no", "course",
+            "stream", "course_start_year", "course_end_year", "passed_out_year",
+            "current_work", "experience_role", "experience_years"
+          ].map(field => (
+            <InputField key={field} {...inputProps(field)} />
+          ))}
 
-          {/* Password with working toggle */}
+          <button
+            onClick={handleSendOtp}
+            disabled={isSendingOtp || isOtpSent}
+            className="btn"
+          >
+            {isSendingOtp ? "Sending..." : isOtpSent ? "OTP Sent ✓" : "Send OTP"}
+          </button>
+
+          {isOtpSent && <InputField {...inputProps("otp")} />}
+
           <PasswordField
-            value={password}
+            value={formData.password}
+            onChange={v => updateField("password", v)}
             placeholder="Password"
             error={fieldErrors.password}
             show={showPassword}
-            toggleShow={() => setShowPassword(s => !s)}
-            onChange={v => updateField("password", v)}
+            toggleShow={() => setShowPassword(prev => !prev)}
           />
-
-          {/* Confirm password with working toggle */}
           <PasswordField
-            value={confirm_password}
+            value={formData.confirm_password}
+            onChange={v => updateField("confirm_password", v)}
             placeholder="Confirm Password"
             error={fieldErrors.confirm_password}
             show={showConfirmPassword}
-            toggleShow={() => setShowConfirmPassword(s => !s)}
-            onChange={v => updateField("confirm_password", v)}
+            toggleShow={() => setShowConfirmPassword(prev => !prev)}
           />
 
           <button
@@ -234,24 +195,30 @@ export default function Signup() {
             {loading ? "Creating Account..." : "Create Account"}
           </button>
 
-          <div className="text-center">
-            <span className="text-gray-600">Already have an account? </span>
-            <button
-              onClick={() => navigate("/login")}
-              className="text-green-600 font-bold hover:underline"
-            >
-              Sign In
+          <p className="text-center text-sm text-gray-600">
+            Already have an account?{" "}
+            <button onClick={() => navigate("/login")} className="text-green-600 hover:underline font-medium">
+              Login
             </button>
-          </div>
+          </p>
         </div>
-
-        <p className="mt-4 text-center text-gray-500 text-sm">
-          By signing up, you agree to our Terms and Privacy Policy
-        </p>
       </div>
     </div>
   );
+
+  function inputProps(field) {
+    return {
+      value: formData[field],
+      onChange: v => updateField(field, v),
+      placeholder: field.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+      error: fieldErrors[field]
+    };
+  }
 }
+
+// ----------------------
+// Helper Components
+// ----------------------
 
 function InputField({ value, onChange, placeholder, error, type = "text" }) {
   return (
@@ -265,7 +232,7 @@ function InputField({ value, onChange, placeholder, error, type = "text" }) {
           error ? "border-red-500" : "border-gray-300"
         }`}
       />
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );
 }
@@ -289,7 +256,26 @@ function PasswordField({ value, onChange, placeholder, error, show, toggleShow }
       >
         {show ? "Hide" : "Show"}
       </button>
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
+}
+
+function Alert({ message }) {
+  return (
+    <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded">
+      {message}
+    </div>
+  );
+}
+
+function SuccessMessage() {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
+      <div className="bg-green-100 border-green-400 text-green-700 p-6 rounded shadow text-center animate-pulse">
+        <h2 className="text-2xl font-semibold mb-2">Registration Successful!</h2>
+        <p>Please wait for admin approval and check your email.</p>
+      </div>
     </div>
   );
 }
