@@ -18,7 +18,7 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     first_name: "", last_name: "", email: "", username: "", phone: "",
     faculty_institute: "", faculty_department: "", gender: "",
-    password: "", confirm_password: "", otp: ""
+    password: "", confirm_password: "", otp: "", country_code: "+1"
   });
 
   const [loading, setLoading] = useState(false);
@@ -113,7 +113,7 @@ export default function Signup() {
         first_name: `${formData.first_name} ${formData.last_name}`,
         username: formData.username,
         email: formData.email,
-        phone: formData.phone,
+        phone: formData.country_code + formData.phone, // Append country code to phone
         college_name: formData.faculty_institute,
         faculty_institute: formData.faculty_institute,
         faculty_department: formData.faculty_department,
@@ -159,7 +159,32 @@ export default function Signup() {
 
           <InputField {...inputProps("username")} />
           <InputField {...inputProps("email")} />
-          <InputField {...inputProps("phone")} />
+
+          <div>
+            <label className="block mb-1">Phone</label>
+            <div className="flex space-x-2">
+              <select
+                value={formData.country_code}
+                onChange={e => updateField("country_code", e.target.value)}
+                className="w-1/4 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+              >
+                <option value="+1">+1</option>
+                <option value="+91">+91</option>
+                <option value="+44">+44</option>
+                <option value="+61">+61</option>
+                {/* Add more country codes as needed */}
+              </select>
+              <input
+                type="text"
+                value={formData.phone}
+                onChange={e => updateField("phone", e.target.value)}
+                placeholder="Phone number"
+                className="w-3/4 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+            </div>
+            {fieldErrors.phone && <p className="text-red-500 text-sm">{fieldErrors.phone}</p>}
+          </div>
+
           <InputField {...inputProps("faculty_institute")} />
           <InputField {...inputProps("faculty_department")} />
 
@@ -248,9 +273,7 @@ function InputField({ value, onChange, placeholder, error, type = "text" }) {
         value={value}
         placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
-        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
-          error ? "border-red-500" : "border-gray-300"
-        }`}
+        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${error ? "border-red-500" : "border-gray-300"}`}
       />
       {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
@@ -265,9 +288,7 @@ function PasswordField({ value, onChange, placeholder, error, show, toggleShow }
         value={value}
         placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
-        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
-          error ? "border-red-500" : "border-gray-300"
-        }`}
+        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${error ? "border-red-500" : "border-gray-300"}`}
       />
       <button
         type="button"
