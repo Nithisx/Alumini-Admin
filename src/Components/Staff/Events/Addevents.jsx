@@ -136,7 +136,7 @@ const AddEvent = () => {
       // Send to API
       const token = localStorage.getItem("Token");
       console.log(token) // Retrieve token from localStorage
-      const response = await fetch("https://empire-anything-curriculum-kentucky.trycloudflare.com/events/", {
+      const response = await fetch("http://134.209.157.195:8000/events/", {
         method: "POST",
         headers: {
           "Authorization": `Token ${token}`, // Use token from localStorage

@@ -13,7 +13,7 @@ import {
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "https://empire-anything-curriculum-kentucky.trycloudflare.com/jobs/";
+const API_URL = "http://134.209.157.195:8000/jobs/";
 
 const getAuthToken = async () => {
   const token = localStorage.getItem("Token");
