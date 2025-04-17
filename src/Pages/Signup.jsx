@@ -8,18 +8,15 @@ const SIGNUP_URL = "http://134.209.157.195:8000/signup/";
 
 const REQUIRED_FIELDS = [
   "first_name", "last_name", "email", "username", "phone",
-  "college_name", "roll_no", "course", "stream", "course_start_year",
-  "course_end_year", "current_work", "experience_role", "experience_years",
-  "passed_out_year"
+  "faculty_institute", "faculty_department", "gender"
 ];
 
 export default function Signup() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    first_name: "", last_name: "", email: "", username: "", phone: "", college_name: "",
-    roll_no: "", course: "", stream: "", course_start_year: "", course_end_year: "",
-    passed_out_year: "", current_work: "", experience_role: "", experience_years: "",
+    first_name: "", last_name: "", email: "", username: "", phone: "",
+    faculty_institute: "", faculty_department: "", gender: "",
     password: "", confirm_password: "", otp: ""
   });
 
@@ -32,12 +29,6 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  const [colleges, setColleges] = useState([
-    "KAHE-ENGINEERING", "KAHE-PHARMACY", "KAHE-ARTS AND SCIENCE", 
-    "KAHE-ARCHITECTURE", "KAHE-COMMERCE"
-  ]);
-  const [courses, setCourses] = useState([]);
-  const [streams, setStreams] = useState([]);
 
   const updateField = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -99,24 +90,6 @@ export default function Signup() {
     }
   }, [resendTimer]);
 
-  // Fetch courses and streams data from a hypothetical API
-  useEffect(() => {
-    const fetchCourseAndStreamData = async () => {
-      try {
-        // Fetch courses and streams from an API (replace URL with actual API endpoint)
-        const courseData = await axios.get('https://api.example.com/courses');
-        const streamData = await axios.get('https://api.example.com/streams');
-        
-        setCourses(courseData.data);
-        setStreams(streamData.data);
-      } catch (error) {
-        setError('Failed to load courses or streams');
-      }
-    };
-    
-    fetchCourseAndStreamData();
-  }, []);
-
   const handleSignup = async () => {
     if (!validate()) return;
     setLoading(true);
@@ -127,21 +100,12 @@ export default function Signup() {
         username: formData.username,
         email: formData.email,
         phone: formData.phone,
-        college_name: formData.college_name,
+        faculty_institute: formData.faculty_institute,
+        faculty_department: formData.faculty_department,
+        gender: formData.gender,
         password: formData.password,
         otp: formData.otp,
-        role: "Student",
-        roll_no: formData.roll_no,
-        course: formData.course,
-        stream: formData.stream,
-        course_start_year: formData.course_start_year,
-        course_end_year: formData.course_end_year,
-        passed_out_year: formData.passed_out_year,
-        current_work: formData.current_work,
-        experience: {
-          role: formData.experience_role,
-          years: formData.experience_years
-        }
+        role: "Faculty"
       };
 
       const { data } = await axios.post(SIGNUP_URL, payload);
@@ -161,9 +125,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center px-4 bg-gray-100">
-      {showSuccess && (
-        <SuccessMessage />
-      )}
+      {showSuccess && <SuccessMessage />}
 
       <div className="max-w-xl w-full mx-auto">
         <div className="text-center mb-8">
@@ -172,7 +134,7 @@ export default function Signup() {
         </div>
 
         <div className="bg-white shadow rounded-lg p-8 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Sign Up</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Faculty Sign Up</h2>
           {error && <Alert message={error} />}
 
           <div className="grid grid-cols-2 gap-2">
@@ -183,56 +145,23 @@ export default function Signup() {
           <InputField {...inputProps("username")} />
           <InputField {...inputProps("email")} />
           <InputField {...inputProps("phone")} />
-          <InputField {...inputProps("roll_no")} />
-          
-          {/* College Dropdown */}
+          <InputField {...inputProps("faculty_institute")} />
+          <InputField {...inputProps("faculty_department")} />
+
           <div>
-            <label>College</label>
+            <label className="block mb-1">Gender</label>
             <select
-              value={formData.college_name}
-              onChange={e => updateField("college_name", e.target.value)}
+              value={formData.gender}
+              onChange={e => updateField("gender", e.target.value)}
               className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
             >
-              {colleges.map(college => (
-                <option key={college} value={college}>{college}</option>
-              ))}
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
             </select>
+            {fieldErrors.gender && <p className="text-red-500 text-sm">{fieldErrors.gender}</p>}
           </div>
-
-          {/* Course Dropdown */}
-          <div>
-            <label>Course</label>
-            <select
-              value={formData.course}
-              onChange={e => updateField("course", e.target.value)}
-              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-            >
-              {courses.map(course => (
-                <option key={course.id} value={course.id}>{course.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Stream Dropdown */}
-          <div>
-            <label>Stream</label>
-            <select
-              value={formData.stream}
-              onChange={e => updateField("stream", e.target.value)}
-              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-            >
-              {streams.map(stream => (
-                <option key={stream.id} value={stream.id}>{stream.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <InputField {...inputProps("course_start_year")} />
-          <InputField {...inputProps("course_end_year")} />
-          <InputField {...inputProps("passed_out_year")} />
-          <InputField {...inputProps("current_work")} />
-          <InputField {...inputProps("experience_role")} />
-          <InputField {...inputProps("experience_years")} />
 
           <div className="flex justify-end">
             <button
