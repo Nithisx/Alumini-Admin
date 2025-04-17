@@ -5,20 +5,35 @@ import kahelogo from "../assets/kahelogo.png";
 
 const SIGNUP_OTP_URL = "http://134.209.157.195:8000/signup-otp/";
 const SIGNUP_URL = "http://134.209.157.195:8000/signup/";
-const COLLEGE_LIST_URL = "http://134.209.157.195:8000/colleges/";
 
 const REQUIRED_FIELDS = [
-  "first_name", "last_name", "email", "username", "phone",
-  "faculty_institute", "faculty_department", "gender"
+  "first_name",
+  "last_name",
+  "email",
+  "username",
+  "phone",
+  "faculty_institute",
+  "faculty_department",
+  "gender",
 ];
 
 export default function Signup() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    first_name: "", last_name: "", email: "", username: "", phone: "",
-    faculty_institute: "", faculty_department: "", gender: "",
-    password: "", confirm_password: "", otp: "", country_code: "+91"
+    first_name: "Gokul",
+    last_name: "Manikandan",
+    email: "gokulmanikandan230@gmail.com",
+    username: "gokul1",
+    phone: "9876543210",
+    faculty_institute: "ABC Institute",
+    faculty_department: "Computer Science",
+    gender: "Male",
+    work_experience: null, 
+    password: "12345678",
+    confirm_password: "12345678",
+    otp: "",
+    country_code: "+91",
   });
 
   const [loading, setLoading] = useState(false);
@@ -33,15 +48,15 @@ export default function Signup() {
   const [colleges, setColleges] = useState([]);
 
   const updateField = useCallback((field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setFieldErrors(prev => ({ ...prev, [field]: "" }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => ({ ...prev, [field]: "" }));
     setError("");
   }, []);
 
   const validate = () => {
     const errors = {};
 
-    REQUIRED_FIELDS.forEach(field => {
+    REQUIRED_FIELDS.forEach((field) => {
       if (!formData[field]?.trim()) {
         errors[field] = "This field is required";
       }
@@ -56,10 +71,8 @@ export default function Signup() {
     if (formData.password !== formData.confirm_password)
       errors.confirm_password = "Passwords do not match";
 
-    if (!isOtpSent)
-      errors.otp = "Please send the OTP to verify your email";
-    else if (!formData.otp.trim())
-      errors.otp = "OTP is required";
+    if (!isOtpSent) errors.otp = "Please send the OTP to verify your email";
+    else if (!formData.otp.trim()) errors.otp = "OTP is required";
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -67,7 +80,7 @@ export default function Signup() {
 
   const handleSendOtp = async () => {
     if (!formData.email.trim()) {
-      setFieldErrors(prev => ({ ...prev, email: "Email is required" }));
+      setFieldErrors((prev) => ({ ...prev, email: "Email is required" }));
       return;
     }
 
@@ -86,7 +99,7 @@ export default function Signup() {
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setInterval(() => {
-        setResendTimer(prev => prev - 1);
+        setResendTimer((prev) => prev - 1);
       }, 1000);
       return () => clearInterval(timer);
     }
@@ -115,12 +128,13 @@ export default function Signup() {
         email: formData.email,
         phone: formData.country_code + formData.phone, // Append country code to phone
         college_name: formData.faculty_institute,
+        work_experience: formData.work_experience,
         faculty_institute: formData.faculty_institute,
         faculty_department: formData.faculty_department,
         gender: formData.gender,
         password: formData.password,
         otp: formData.otp,
-        role: "Staff"
+        role: "Staff",
       };
 
       const { data } = await axios.post(SIGNUP_URL, payload);
@@ -129,7 +143,7 @@ export default function Signup() {
         setShowSuccess(true);
         setTimeout(() => navigate("/login"), 5000);
       } else {
-        setError(data.error || "Registration failed");
+        setError(data.error || data.message);
       }
     } catch (err) {
       setError(err.response?.data?.error || "Signup error occurred");
@@ -145,7 +159,9 @@ export default function Signup() {
       <div className="max-w-xl w-full mx-auto">
         <div className="text-center mb-8">
           <img src={kahelogo} alt="Logo" className="h-16 mx-auto" />
-          <h1 className="mt-2 text-2xl font-bold text-green-600">Karpagam Alumni</h1>
+          <h1 className="mt-2 text-2xl font-bold text-green-600">
+            Karpagam Alumni
+          </h1>
         </div>
 
         <div className="bg-white shadow rounded-lg p-8 space-y-4">
@@ -166,7 +182,7 @@ export default function Signup() {
               <input
                 type="text"
                 value={formData.country_code}
-                onChange={e => updateField("country_code", e.target.value)}
+                onChange={(e) => updateField("country_code", e.target.value)}
                 className="w-1/4 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
                 placeholder="Country Code"
                 maxLength={5} // Limiting to maximum of 5 characters for country code
@@ -174,22 +190,26 @@ export default function Signup() {
               <input
                 type="text"
                 value={formData.phone}
-                onChange={e => updateField("phone", e.target.value)}
+                onChange={(e) => updateField("phone", e.target.value)}
                 placeholder="Phone number"
                 className="w-3/4 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
               />
             </div>
-            {fieldErrors.phone && <p className="text-red-500 text-sm">{fieldErrors.phone}</p>}
+            {fieldErrors.phone && (
+              <p className="text-red-500 text-sm">{fieldErrors.phone}</p>
+            )}
           </div>
 
           <InputField {...inputProps("faculty_institute")} />
           <InputField {...inputProps("faculty_department")} />
+          <InputField type="number" {...inputProps("work_experience")} /> 
+
 
           <div>
             <label className="block mb-1">Gender</label>
             <select
               value={formData.gender}
-              onChange={e => updateField("gender", e.target.value)}
+              onChange={(e) => updateField("gender", e.target.value)}
               className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
             >
               <option value="">Select Gender</option>
@@ -197,14 +217,20 @@ export default function Signup() {
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
-            {fieldErrors.gender && <p className="text-red-500 text-sm">{fieldErrors.gender}</p>}
+            {fieldErrors.gender && (
+              <p className="text-red-500 text-sm">{fieldErrors.gender}</p>
+            )}
           </div>
 
           <div className="flex justify-end">
             <button
               onClick={handleSendOtp}
               disabled={isSendingOtp || resendTimer > 0}
-              className={`btn ${isOtpSent && resendTimer === 0 ? "bg-blue-500" : "bg-green-600"}`}
+              className={`btn ${
+                isOtpSent && resendTimer === 0
+                  ? "bg-blue-500 p-2 rounded"
+                  : "bg-green-600 p-2 rounded text-white"
+              }`}
             >
               {isSendingOtp
                 ? "Sending..."
@@ -218,19 +244,19 @@ export default function Signup() {
 
           <PasswordField
             value={formData.password}
-            onChange={v => updateField("password", v)}
+            onChange={(v) => updateField("password", v)}
             placeholder="Password"
             error={fieldErrors.password}
             show={showPassword}
-            toggleShow={() => setShowPassword(prev => !prev)}
+            toggleShow={() => setShowPassword((prev) => !prev)}
           />
           <PasswordField
             value={formData.confirm_password}
-            onChange={v => updateField("confirm_password", v)}
+            onChange={(v) => updateField("confirm_password", v)}
             placeholder="Confirm Password"
             error={fieldErrors.confirm_password}
             show={showConfirmPassword}
-            toggleShow={() => setShowConfirmPassword(prev => !prev)}
+            toggleShow={() => setShowConfirmPassword((prev) => !prev)}
           />
 
           <button
@@ -243,7 +269,10 @@ export default function Signup() {
 
           <p className="text-center text-sm text-gray-600">
             Already have an account?{" "}
-            <button onClick={() => navigate("/login")} className="text-green-600 hover:underline font-medium">
+            <button
+              onClick={() => navigate("/login")}
+              className="text-green-600 hover:underline font-medium"
+            >
               Login
             </button>
           </p>
@@ -255,9 +284,11 @@ export default function Signup() {
   function inputProps(field) {
     return {
       value: formData[field],
-      onChange: v => updateField(field, v),
-      placeholder: field.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
-      error: fieldErrors[field]
+      onChange: (v) => updateField(field, v),
+      placeholder: field
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+      error: fieldErrors[field],
     };
   }
 }
@@ -269,23 +300,34 @@ function InputField({ value, onChange, placeholder, error, type = "text" }) {
         type={type}
         value={value}
         placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${error ? "border-red-500" : "border-gray-300"}`}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
+          error ? "border-red-500" : "border-gray-300"
+        }`}
       />
       {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );
 }
 
-function PasswordField({ value, onChange, placeholder, error, show, toggleShow }) {
+function PasswordField({
+  value,
+  onChange,
+  placeholder,
+  error,
+  show,
+  toggleShow,
+}) {
   return (
     <div className="relative">
       <input
         type={show ? "text" : "password"}
         value={value}
         placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${error ? "border-red-500" : "border-gray-300"}`}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
+          error ? "border-red-500" : "border-gray-300"
+        }`}
       />
       <button
         type="button"
@@ -311,7 +353,9 @@ function SuccessMessage() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
       <div className="bg-green-100 border-green-400 text-green-700 p-6 rounded shadow text-center animate-pulse">
-        <h2 className="text-2xl font-semibold mb-2">Registration Successful!</h2>
+        <h2 className="text-2xl font-semibold mb-2">
+          Registration Successful!
+        </h2>
         <p>Please wait for admin approval and check your email.</p>
       </div>
     </div>
