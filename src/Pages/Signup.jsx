@@ -8,6 +8,7 @@ const SIGNUP_URL     = "http://134.209.157.195:8000/signup/";
 
 export default function Signup() {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     first_name:       "",
     last_name:        "",
@@ -19,12 +20,16 @@ export default function Signup() {
     confirm_password: "",
     otp:              "",
   });
-  const [loading, setLoading]         = useState(false);
-  const [error, setError]             = useState("");      // general server/client error
-  const [fieldErrors, setFieldErrors] = useState({});      // validation errors
-  const [isOtpSent, setIsOtpSent]     = useState(false);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [loading, setLoading]             = useState(false);
+  const [error, setError]                 = useState("");      // general server/client error
+  const [fieldErrors, setFieldErrors]     = useState({});      // validation errors
+  const [isOtpSent, setIsOtpSent]         = useState(false);
+  const [isSendingOtp, setIsSendingOtp]   = useState(false);
+  const [showSuccess, setShowSuccess]     = useState(false);
+
+  // These control the “show/hide” for the two password fields
+  const [showPassword, setShowPassword]               = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // merge new values & clear that field’s error
   const updateField = useCallback((field, value) => {
@@ -77,7 +82,7 @@ export default function Signup() {
     setLoading(true);
     try {
       const payload = {
-        first_name:            `${formData.first_name} ${formData.last_name}`,
+        name:            `${formData.first_name} ${formData.last_name}`,
         username:        formData.username,
         email:           formData.email,
         phone:           formData.phone,
@@ -92,11 +97,9 @@ export default function Signup() {
         setShowSuccess(true);
         setTimeout(() => navigate("/login"), 5000);
       } else {
-        // in case backend returns success=false without token
         setError(data.error || "Registration failed");
       }
     } catch (e) {
-      // expect {"error": "Err_Message"}
       setError(e.response?.data?.error || "Registration failed");
     } finally {
       setLoading(false);
@@ -142,17 +145,23 @@ export default function Signup() {
 
           <div className="grid grid-cols-2 gap-2">
             <InputField
-              value={first_name} onChange={v => updateField("first_name", v)}
-              placeholder="First Name" error={fieldErrors.first_name}
+              value={first_name}
+              onChange={v => updateField("first_name", v)}
+              placeholder="First Name"
+              error={fieldErrors.first_name}
             />
             <InputField
-              value={last_name} onChange={v => updateField("last_name", v)}
-              placeholder="Last Name" error={fieldErrors.last_name}
+              value={last_name}
+              onChange={v => updateField("last_name", v)}
+              placeholder="Last Name"
+              error={fieldErrors.last_name}
             />
           </div>
           <InputField
-            value={username} onChange={v => updateField("username", v)}
-            placeholder="Username" error={fieldErrors.username}
+            value={username}
+            onChange={v => updateField("username", v)}
+            placeholder="Username"
+            error={fieldErrors.username}
           />
 
           <div>
@@ -160,8 +169,10 @@ export default function Signup() {
               <div className="flex-1">
                 <InputField
                   type="email"
-                  value={email} onChange={v => updateField("email", v)}
-                  placeholder="Email" error={fieldErrors.email}
+                  value={email}
+                  onChange={v => updateField("email", v)}
+                  placeholder="Email"
+                  error={fieldErrors.email}
                 />
               </div>
               <button
@@ -174,30 +185,45 @@ export default function Signup() {
             </div>
             {isOtpSent && (
               <InputField
-                value={otp} onChange={v => updateField("otp", v)}
-                placeholder="Enter OTP" error={fieldErrors.otp}
+                value={otp}
+                onChange={v => updateField("otp", v)}
+                placeholder="Enter OTP"
+                error={fieldErrors.otp}
               />
             )}
           </div>
 
           <InputField
-            value={phone} onChange={v => updateField("phone", v)}
-            placeholder="Phone Number" error={fieldErrors.phone}
+            value={phone}
+            onChange={v => updateField("phone", v)}
+            placeholder="Phone Number"
+            error={fieldErrors.phone}
           />
           <InputField
-            value={college_name} onChange={v => updateField("college_name", v)}
-            placeholder="College Name" error={fieldErrors.college_name}
+            value={college_name}
+            onChange={v => updateField("college_name", v)}
+            placeholder="College Name"
+            error={fieldErrors.college_name}
           />
 
+          {/* Password with working toggle */}
           <PasswordField
-            value={password} show={false} toggleShow={() => {}}
+            value={password}
+            placeholder="Password"
+            error={fieldErrors.password}
+            show={showPassword}
+            toggleShow={() => setShowPassword(s => !s)}
             onChange={v => updateField("password", v)}
-            placeholder="Password" error={fieldErrors.password}
           />
+
+          {/* Confirm password with working toggle */}
           <PasswordField
-            value={confirm_password} show={false} toggleShow={() => {}}
+            value={confirm_password}
+            placeholder="Confirm Password"
+            error={fieldErrors.confirm_password}
+            show={showConfirmPassword}
+            toggleShow={() => setShowConfirmPassword(s => !s)}
             onChange={v => updateField("confirm_password", v)}
-            placeholder="Confirm Password" error={fieldErrors.confirm_password}
           />
 
           <button
@@ -210,8 +236,10 @@ export default function Signup() {
 
           <div className="text-center">
             <span className="text-gray-600">Already have an account? </span>
-            <button onClick={() => navigate("/login")}
-                    className="text-green-600 font-bold hover:underline">
+            <button
+              onClick={() => navigate("/login")}
+              className="text-green-600 font-bold hover:underline"
+            >
               Sign In
             </button>
           </div>
@@ -229,7 +257,9 @@ function InputField({ value, onChange, placeholder, error, type = "text" }) {
   return (
     <div>
       <input
-        type={type} value={value} placeholder={placeholder}
+        type={type}
+        value={value}
+        placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
         className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
           error ? "border-red-500" : "border-gray-300"
@@ -240,19 +270,21 @@ function InputField({ value, onChange, placeholder, error, type = "text" }) {
   );
 }
 
-function PasswordField({ value, onChange, show, toggleShow, placeholder, error }) {
+function PasswordField({ value, onChange, placeholder, error, show, toggleShow }) {
   return (
     <div className="relative">
       <input
         type={show ? "text" : "password"}
-        value={value} placeholder={placeholder}
+        value={value}
+        placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
         className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
           error ? "border-red-500" : "border-gray-300"
         }`}
       />
       <button
-        type="button" onClick={toggleShow}
+        type="button"
+        onClick={toggleShow}
         className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600"
       >
         {show ? "Hide" : "Show"}
