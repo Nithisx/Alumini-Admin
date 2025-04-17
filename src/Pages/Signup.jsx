@@ -18,7 +18,7 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     first_name: "", last_name: "", email: "", username: "", phone: "",
     faculty_institute: "", faculty_department: "", gender: "",
-    password: "", confirm_password: "", otp: "", country_code: "+1"
+    password: "", confirm_password: "", otp: "", country_code: "+91"
   });
 
   const [loading, setLoading] = useState(false);
@@ -163,17 +163,14 @@ export default function Signup() {
           <div>
             <label className="block mb-1">Phone</label>
             <div className="flex space-x-2">
-              <select
+              <input
+                type="text"
                 value={formData.country_code}
                 onChange={e => updateField("country_code", e.target.value)}
                 className="w-1/4 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-              >
-                <option value="+1">+1</option>
-                <option value="+91">+91</option>
-                <option value="+44">+44</option>
-                <option value="+61">+61</option>
-                {/* Add more country codes as needed */}
-              </select>
+                placeholder="Country Code"
+                maxLength={5} // Limiting to maximum of 5 characters for country code
+              />
               <input
                 type="text"
                 value={formData.phone}
