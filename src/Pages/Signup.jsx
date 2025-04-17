@@ -105,7 +105,7 @@ export default function Signup() {
         gender: formData.gender,
         password: formData.password,
         otp: formData.otp,
-        role: "Faculty"
+        role: "Staff"
       };
 
       const { data } = await axios.post(SIGNUP_URL, payload);
