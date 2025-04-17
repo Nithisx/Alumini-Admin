@@ -5,6 +5,7 @@ import kahelogo from "../assets/kahelogo.png";
 
 const SIGNUP_OTP_URL = "http://134.209.157.195:8000/signup-otp/";
 const SIGNUP_URL = "http://134.209.157.195:8000/signup/";
+const COLLEGE_LIST_URL = "http://134.209.157.195:8000/colleges/";
 
 const REQUIRED_FIELDS = [
   "first_name", "last_name", "email", "username", "phone",
@@ -29,6 +30,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [colleges, setColleges] = useState([]);
 
   const updateField = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -90,6 +92,18 @@ export default function Signup() {
     }
   }, [resendTimer]);
 
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const { data } = await axios.get(COLLEGE_LIST_URL);
+        setColleges(data);
+      } catch (err) {
+        console.error("Failed to fetch colleges", err);
+      }
+    };
+    fetchColleges();
+  }, []);
+
   const handleSignup = async () => {
     if (!validate()) return;
     setLoading(true);
@@ -100,7 +114,7 @@ export default function Signup() {
         username: formData.username,
         email: formData.email,
         phone: formData.phone,
-        college_name:formData.faculty_institute,
+        college_name: formData.faculty_institute,
         faculty_institute: formData.faculty_institute,
         faculty_department: formData.faculty_department,
         gender: formData.gender,
@@ -146,7 +160,23 @@ export default function Signup() {
           <InputField {...inputProps("username")} />
           <InputField {...inputProps("email")} />
           <InputField {...inputProps("phone")} />
-          <InputField {...inputProps("faculty_institute")} />
+
+          {/* College Dropdown */}
+          <div>
+            <label className="block mb-1">Faculty Institute</label>
+            <select
+              value={formData.faculty_institute}
+              onChange={e => updateField("faculty_institute", e.target.value)}
+              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+            >
+              <option value="">Select Institute</option>
+              {colleges.map(college => (
+                <option key={college.id} value={college.name}>{college.name}</option>
+              ))}
+            </select>
+            {fieldErrors.faculty_institute && <p className="text-red-500 text-sm">{fieldErrors.faculty_institute}</p>}
+          </div>
+
           <InputField {...inputProps("faculty_department")} />
 
           <div>
