@@ -77,7 +77,7 @@ export default function Signup() {
     setLoading(true);
     try {
       const payload = {
-        name:            `${formData.first_name} ${formData.last_name}`,
+        first_name:            `${formData.first_name} ${formData.last_name}`,
         username:        formData.username,
         email:           formData.email,
         phone:           formData.phone,
