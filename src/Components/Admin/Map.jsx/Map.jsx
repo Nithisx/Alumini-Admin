@@ -22,7 +22,7 @@ const MapComponent = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await fetch('https://wearing-contains-aluminum-caring.trycloudflare.com/user_locations/', {
+        const response = await fetch('http://134.209.157.195:8000/user_locations/', {
           method: 'GET',
           headers: {
             'Authorization': 'Token ff33e87bb30f1e7e4c66548b5869a8cbf360bfb9',

@@ -5,7 +5,7 @@ import kahelogo from '../assets/kahelogo.png'
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("admin");
+  const [role, setRole] = useState("staff");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,8 +23,8 @@ const LoginPage = () => {
     const userData = { username, password };
     const loginUrl =
       role === "admin"
-        ? "https://wearing-contains-aluminum-caring.trycloudflare.com/login/admin/"
-        : "https://wearing-contains-aluminum-caring.trycloudflare.com/login/staff/";
+        ? "http://134.209.157.195:8000/login/admin/"
+        : "http://134.209.157.195:8000/login/staff/";
 
     try {
       setLoading(true);

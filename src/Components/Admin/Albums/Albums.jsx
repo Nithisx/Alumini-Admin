@@ -21,7 +21,7 @@ const AlbumsPage = () => {
       try {
         
         const token = localStorage.getItem("Token"); // Get token from local storage
-        const response = await axios.get("https://wearing-contains-aluminum-caring.trycloudflare.com/albums/", {
+        const response = await axios.get("http://134.209.157.195:8000/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
   
@@ -67,7 +67,7 @@ const AlbumsPage = () => {
       }
   
       const response = await axios.post(
-        "https://wearing-contains-aluminum-caring.trycloudflare.com/albums/",
+        "http://134.209.157.195:8000/albums/",
         formDataToSend,
         {
           headers: {
@@ -140,13 +140,14 @@ const AlbumsPage = () => {
               onClick={() => {
                 console.log("Navigating to album:", album.id);
                 console.log("Fetched Albums Data:", albums);
-                navigate(`/albums/${album.id}`);
+                navigate(`/admin/albums/${album.id}`);
+
               }}
             
             >
               {album.cover_image ? (
                 <img
-                  src={`https://wearing-contains-aluminum-caring.trycloudflare.com${album.cover_image}`}
+                  src={`http://134.209.157.195:8000${album.cover_image}`}
                   alt={album.title}
                   className="w-full h-48 object-cover"
                 />

@@ -11,7 +11,7 @@ const StudentImageUpload = () => {
       try {
         
         const token = localStorage.getItem("Token")
-        const response = await axios.get("https://wearing-contains-aluminum-caring.trycloudflare.com/students/", {
+        const response = await axios.get("http://134.209.157.195:8000/students/", {
           headers: { Authorization: `Token ${token}` },
         });
         setStudents(response.data);  // Set students in state
@@ -47,7 +47,7 @@ const StudentImageUpload = () => {
       formDataToSend.append("image", formData.image);
 
       const response = await axios.post(
-        "https://wearing-contains-aluminum-caring.trycloudflare.com/students/",
+        "http://134.209.157.195:8000/students/",
         formDataToSend,
         {
           headers: {
@@ -109,7 +109,7 @@ const StudentImageUpload = () => {
           <div key={student.id} className="bg-white rounded-lg shadow p-4">
             {student.image ? (
               <img
-                src={`https://wearing-contains-aluminum-caring.trycloudflare.com${student.image}`}
+                src={`http://134.209.157.195:8000${student.image}`}
                 alt={student.name}
                 className="w-full h-40 object-cover rounded-md"
               />
