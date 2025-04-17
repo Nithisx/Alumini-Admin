@@ -160,23 +160,7 @@ export default function Signup() {
           <InputField {...inputProps("username")} />
           <InputField {...inputProps("email")} />
           <InputField {...inputProps("phone")} />
-
-          {/* College Dropdown */}
-          <div>
-            <label className="block mb-1">Faculty Institute</label>
-            <select
-              value={formData.faculty_institute}
-              onChange={e => updateField("faculty_institute", e.target.value)}
-              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-            >
-              <option value="">Select Institute</option>
-              {colleges.map(college => (
-                <option key={college.id} value={college.name}>{college.name}</option>
-              ))}
-            </select>
-            {fieldErrors.faculty_institute && <p className="text-red-500 text-sm">{fieldErrors.faculty_institute}</p>}
-          </div>
-
+          <InputField {...inputProps("faculty_institute")} />
           <InputField {...inputProps("faculty_department")} />
 
           <div>
