@@ -16,7 +16,7 @@ import {
   faEllipsisH,
   faHeart,
   faComment,
-  faShare
+  faShare,
 } from "@fortawesome/free-solid-svg-icons";
 
 // AuthorizedImage component fetches the image using GET with the token in Authorization headers
@@ -51,13 +51,12 @@ const Events = () => {
   const [loading, setloading] = useState(false);
   const [error, seterror] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setviewmode] = useState()
-
+  const [viewMode, setviewmode] = useState();
 
   useEffect(() => {
     // Fetch events using GET method with Authorization header
     fetch(
-      "https://wearing-contains-aluminum-caring.trycloudflare.com/events/",
+      "https://empire-anything-curriculum-kentucky.trycloudflare.com/events/",
       {
         method: "GET",
         headers: {
@@ -167,65 +166,6 @@ const Events = () => {
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header with search and filter */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold text-green-600">
-              Events Management
-            </h1>
-            <div className="flex space-x-2">
-              <button className="px-4 py-2 bg-white border border-gray-300 rounded-md flex items-center text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-                <FontAwesomeIcon
-                  icon={faFilter}
-                  className="mr-2 text-gray-500"
-                />
-                <span>Filter</span>
-              </button>
-              <button className="px-4 py-2 bg-white border border-gray-200 rounded shadow-sm flex items-center text-gray-700 hover:bg-gray-50">
-                <FontAwesomeIcon
-                  icon={faSortAmountDown}
-                  className="mr-2 text-gray-500"
-                />
-                <span>Sort</span>
-              </button>
-              <button className="px-4 py-2 bg-white border border-gray-200 rounded shadow-sm flex items-center text-gray-700 hover:bg-gray-50">
-                <FontAwesomeIcon
-                  icon={faDownload}
-                  className="mr-2 text-gray-500"
-                />
-                <span>Export</span>
-              </button>
-
-              <input
-                type="text"
-                placeholder="Search events..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-              />
-
-              <button
-                className="px-4 py-2 bg-blue-600 rounded shadow-sm flex items-center text-white hover:bg-blue-700"
-                onClick={() =>
-                  alert("Add new event functionality would go here")
-                }
-              >
-                <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                <span>New Event</span>
-              </button>
-            </div>
-          </div>
-          <div className="relative mb-6">
-            <input
-              type="text"
-              placeholder="Search events..."
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-            />
-            <FontAwesomeIcon
-              icon={faSearch}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-          </div>
-        </div>
 
         {/* Events Grid */}
         {events.length === 0 ? (
@@ -252,7 +192,7 @@ const Events = () => {
                 {event.image && (
                   <div className="relative h-48 overflow-hidden">
                     <AuthorizedImage
-                      url={`https://wearing-contains-aluminum-caring.trycloudflare.com/${
+                      url={`https://empire-anything-curriculum-kentucky.trycloudflare.com/${
                         event.image.startsWith("/")
                           ? event.image.substring(1)
                           : event.image
@@ -381,38 +321,6 @@ const Events = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Event Stats & Actions */}
-                <div className="border-t border-gray-100">
-                  <div className="px-5 py-3 text-xs text-gray-500 flex justify-between">
-                    <span>{event.likes} likes</span>
-                    <span>{event.comments} comments</span>
-                    <span>{event.shares} shares</span>
-                  </div>
-                  <div className="flex border-t border-gray-100 divide-x divide-gray-100">
-                    <button className="flex-1 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-center">
-                      <FontAwesomeIcon
-                        icon={faHeart}
-                        className="mr-2 text-gray-500"
-                      />
-                      Like
-                    </button>
-                    <button className="flex-1 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-center">
-                      <FontAwesomeIcon
-                        icon={faComment}
-                        className="mr-2 text-gray-500"
-                      />
-                      Comment
-                    </button>
-                    <button className="flex-1 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-center">
-                      <FontAwesomeIcon
-                        icon={faShare}
-                        className="mr-2 text-gray-500"
-                      />
-                      Share
-                    </button>
-                  </div>
-                </div>
               </div>
             ))}
           </div>
@@ -477,7 +385,7 @@ const Events = () => {
                             <div className="flex-shrink-0 h-10 w-10 mr-3">
                               <img
                                 className="h-10 w-10 rounded object-cover"
-                                src={`https://wearing-contains-aluminum-caring.trycloudflare.com${event.image}`}
+                                src={`https://empire-anything-curriculum-kentucky.trycloudflare.com${event.image}`}
                                 alt=""
                                 onError={(e) => {
                                   e.target.onerror = null;

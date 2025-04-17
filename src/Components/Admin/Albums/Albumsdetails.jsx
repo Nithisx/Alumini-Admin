@@ -10,7 +10,7 @@ const AlbumDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("Token"); // Get token from local storage
   
-  const BASE_URL = "https://wearing-contains-aluminum-caring.trycloudflare.com";
+  const BASE_URL = "https://empire-anything-curriculum-kentucky.trycloudflare.com";
 
   useEffect(() => {
     if (!albumId) return;

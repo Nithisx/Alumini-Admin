@@ -23,8 +23,8 @@ const LoginPage = () => {
     const userData = { username, password };
     const loginUrl =
       role === "admin"
-        ? "https://wearing-contains-aluminum-caring.trycloudflare.com/login/admin/"
-        : "https://wearing-contains-aluminum-caring.trycloudflare.com/login/staff/";
+        ? "https://empire-anything-curriculum-kentucky.trycloudflare.com/login/admin/"
+        : "https://empire-anything-curriculum-kentucky.trycloudflare.com/login/staff/";
 
     try {
       setLoading(true);

@@ -57,7 +57,7 @@ const Events = () => {
   useEffect(() => {
     // Fetch events using GET method with Authorization header
     fetch(
-      "https://wearing-contains-aluminum-caring.trycloudflare.com/events/",
+      "https://empire-anything-curriculum-kentucky.trycloudflare.com/events/",
       {
         method: "GET",
         headers: {
@@ -252,7 +252,7 @@ const Events = () => {
                 {event.image && (
                   <div className="relative h-48 overflow-hidden">
                     <AuthorizedImage
-                      url={`https://wearing-contains-aluminum-caring.trycloudflare.com/${
+                      url={`https://empire-anything-curriculum-kentucky.trycloudflare.com/${
                         event.image.startsWith("/")
                           ? event.image.substring(1)
                           : event.image
@@ -477,7 +477,7 @@ const Events = () => {
                             <div className="flex-shrink-0 h-10 w-10 mr-3">
                               <img
                                 className="h-10 w-10 rounded object-cover"
-                                src={`https://wearing-contains-aluminum-caring.trycloudflare.com${event.image}`}
+                                src={`https://empire-anything-curriculum-kentucky.trycloudflare.com${event.image}`}
                                 alt=""
                                 onError={(e) => {
                                   e.target.onerror = null;

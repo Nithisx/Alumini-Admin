@@ -12,7 +12,7 @@ import {
   faClock,
   faCalendarPlus,
   faTag,
-  faSortAmountDown
+  faSortAmountDown,
 } from "@fortawesome/free-solid-svg-icons";
 import Events from "./Events";
 
@@ -28,7 +28,7 @@ const AddEvent = () => {
     location: "",
     endDate: "",
     endTime: "",
-    tag: ""
+    tag: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [apiResponse, setApiResponse] = useState(null);
@@ -48,7 +48,7 @@ const AddEvent = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files[0]);
     }
@@ -71,7 +71,7 @@ const AddEvent = () => {
         name: file.name,
         type: fileType,
         preview: URL.createObjectURL(file),
-        size: (file.size / 1024 / 1024).toFixed(2) // Convert to MB
+        size: (file.size / 1024 / 1024).toFixed(2), // Convert to MB
       });
     } else {
       alert("Please upload only image files for event banners.");
@@ -91,68 +91,88 @@ const AddEvent = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
   // Format date and time for API
   const formatDateTime = (date, time) => {
     if (!date) return null;
-    
+
     // If time is not provided, default to 00:00:00
     const timeString = time || "00:00:00";
-    
+
     return `${date}T${timeString}Z`;
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!formData.title || !formData.date || !formData.location) {
       alert("Please fill in all required fields.");
       return;
     }
-  
+
     setIsLoading(true);
     setApiError(null);
-  
+
     try {
       // Prepare form data for API
       const eventData = new FormData();
-  
+
       eventData.append("title", formData.title);
       eventData.append("description", formData.description);
       eventData.append("venue", formData.location);
-      eventData.append("from_date_time", formatDateTime(formData.date, formData.time));
-      eventData.append("end_date_time", formatDateTime(formData.endDate || formData.date, formData.endTime || formData.time));
+      eventData.append(
+        "from_date_time",
+        formatDateTime(formData.date, formData.time)
+      );
+      eventData.append(
+        "end_date_time",
+        formatDateTime(
+          formData.endDate || formData.date,
+          formData.endTime || formData.time
+        )
+      );
       eventData.append("tag", formData.tag);
-  
+
+      // Debugging: Log the uploadedFile state before appending
+      console.log("uploadedFile in handleSubmit:", uploadedFile);
+
       // Append image if uploaded
       if (uploadedFile?.file) {
-        eventData.append("image", uploadedFile.file);
+        eventData.append("images", uploadedFile.file);
       }
-  
+
+      // Debugging: Log the eventData before sending the request
+      for (const pair of eventData.entries()) {
+        console.log(pair[0] + ", " + pair[1]);
+      }
+
       // Send to API
       const token = localStorage.getItem("Token");
-      console.log(token) // Retrieve token from localStorage
-      const response = await fetch("https://wearing-contains-aluminum-caring.trycloudflare.com/events/", {
-        method: "POST",
-        headers: {
-          "Authorization": `Token ${token}`, // Use token from localStorage
-        },
-        body: eventData, // We use FormData for multipart/form-data to handle file upload
-      });
-  
+      console.log(token); // Retrieve token from localStorage
+      const response = await fetch(
+        "https://empire-anything-curriculum-kentucky.trycloudflare.com/events/",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${token}`, // Use token from localStorage
+          },
+          body: eventData, // We use FormData for multipart/form-data to handle file upload
+        }
+      );
+
       // Parse response
       const data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(data.message || "Failed to create event");
       }
-  
+
       setApiResponse(data);
-  
+
       // Reset form
       setFormData({
         title: "",
@@ -166,18 +186,19 @@ const AddEvent = () => {
       });
       removeFile();
       setIsModalOpen(false);
-  
+
       // Show success message
       alert("Event created successfully!");
     } catch (error) {
       console.error("Error creating event:", error);
-      setApiError(error.message || "An error occurred while creating the event");
+      setApiError(
+        error.message || "An error occurred while creating the event"
+      );
       alert(`Failed to create event: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   return (
     <div className="relative min-h-screen bg-gray-50">
@@ -187,9 +208,9 @@ const AddEvent = () => {
       {/* Add event floating button */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg 
-                   hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                   flex items-center justify-center transition-all duration-200"
+        className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg
+                          hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                          flex items-center justify-center transition-all duration-200"
         aria-label="Add new event"
       >
         <FontAwesomeIcon icon={faCalendarPlus} className="text-xl" />
@@ -202,10 +223,13 @@ const AddEvent = () => {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-medium text-gray-800 flex items-center">
-                <FontAwesomeIcon icon={faCalendarAlt} className="mr-2 text-blue-500" />
+                <FontAwesomeIcon
+                  icon={faCalendarAlt}
+                  className="mr-2 text-blue-500"
+                />
                 Create New Event
               </h3>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label="Close modal"
@@ -219,7 +243,10 @@ const AddEvent = () => {
               <form onSubmit={handleSubmit} className="p-6">
                 {/* Event Title */}
                 <div className="mb-4">
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="title"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Event Title <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -236,7 +263,10 @@ const AddEvent = () => {
 
                 {/* Event Description */}
                 <div className="mb-4">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Description
                   </label>
                   <textarea
@@ -253,12 +283,18 @@ const AddEvent = () => {
                 {/* Event Start Date and Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="date"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Start Date <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="text-gray-400"
+                        />
                       </div>
                       <input
                         type="date"
@@ -272,12 +308,18 @@ const AddEvent = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="time"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Start Time
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FontAwesomeIcon icon={faClock} className="text-gray-400" />
+                        <FontAwesomeIcon
+                          icon={faClock}
+                          className="text-gray-400"
+                        />
                       </div>
                       <input
                         type="time"
@@ -294,12 +336,18 @@ const AddEvent = () => {
                 {/* Event End Date and Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="endDate"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       End Date
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400" />
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="text-gray-400"
+                        />
                       </div>
                       <input
                         type="date"
@@ -312,12 +360,18 @@ const AddEvent = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="endTime"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       End Time
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FontAwesomeIcon icon={faClock} className="text-gray-400" />
+                        <FontAwesomeIcon
+                          icon={faClock}
+                          className="text-gray-400"
+                        />
                       </div>
                       <input
                         type="time"
@@ -333,12 +387,18 @@ const AddEvent = () => {
 
                 {/* Event Location */}
                 <div className="mb-4">
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="location"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Location/Venue <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" />
+                      <FontAwesomeIcon
+                        icon={faMapMarkerAlt}
+                        className="text-gray-400"
+                      />
                     </div>
                     <input
                       type="text"
@@ -355,7 +415,10 @@ const AddEvent = () => {
 
                 {/* Event Tag */}
                 <div className="mb-4">
-                  <label htmlFor="tag" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="tag"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Event Tag
                   </label>
                   <div className="relative">
@@ -379,11 +442,15 @@ const AddEvent = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Event Banner
                   </label>
-                  
+
                   {!uploadedFile ? (
                     <div
                       className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-400"}`}
+                                          ${
+                                            isDragging
+                                              ? "border-blue-500 bg-blue-50"
+                                              : "border-gray-300 hover:border-blue-400"
+                                          }`}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
@@ -391,11 +458,20 @@ const AddEvent = () => {
                     >
                       <div className="flex flex-col items-center">
                         <div className="mb-3 bg-gray-100 p-3 rounded-full">
-                          <FontAwesomeIcon icon={faUpload} className="text-xl text-blue-500" />
+                          <FontAwesomeIcon
+                            icon={faUpload}
+                            className="text-xl text-blue-500"
+                          />
                         </div>
-                        <p className="text-sm font-medium text-gray-700 mb-1">Drag and drop an image here</p>
-                        <p className="text-xs text-gray-500 mb-2">or click to browse</p>
-                        <p className="text-xs text-gray-400">Recommended size: 1200 x 600 pixels</p>
+                        <p className="text-sm font-medium text-gray-700 mb-1">
+                          Drag and drop an image here
+                        </p>
+                        <p className="text-xs text-gray-500 mb-2">
+                          or click to browse
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Recommended size: 1200 x 600 pixels
+                        </p>
                       </div>
                       <input
                         type="file"
@@ -408,7 +484,9 @@ const AddEvent = () => {
                   ) : (
                     <div className="border rounded-lg p-4">
                       <div className="flex justify-between items-center mb-2">
-                        <h4 className="text-sm font-medium text-gray-700">Banner Preview</h4>
+                        <h4 className="text-sm font-medium text-gray-700">
+                          Banner Preview
+                        </h4>
                         <button
                           type="button"
                           onClick={removeFile}
@@ -417,16 +495,20 @@ const AddEvent = () => {
                           <FontAwesomeIcon icon={faTimesCircle} />
                         </button>
                       </div>
-                      
+
                       <div className="relative">
-                        <img 
-                          src={uploadedFile.preview} 
-                          alt="Event banner preview" 
+                        <img
+                          src={uploadedFile.preview}
+                          alt="Event banner preview"
                           className="w-full h-40 object-cover rounded"
                         />
                         <div className="mt-2 flex justify-between items-center">
-                          <span className="text-xs text-gray-500">{uploadedFile.name}</span>
-                          <span className="text-xs text-gray-500">{uploadedFile.size} MB</span>
+                          <span className="text-xs text-gray-500">
+                            {uploadedFile.name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {uploadedFile.size} MB
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -457,14 +539,21 @@ const AddEvent = () => {
                 type="submit"
                 onClick={handleSubmit}
                 className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md shadow-sm
-                          hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
-                          flex items-center justify-center min-w-[100px]
-                          ${isLoading ? "opacity-75 cursor-not-allowed" : ""}`}
+                                    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
+                                    flex items-center justify-center min-w-[100px]
+                                    ${
+                                      isLoading
+                                        ? "opacity-75 cursor-not-allowed"
+                                        : ""
+                                    }`}
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                    <FontAwesomeIcon
+                      icon={faSpinner}
+                      className="animate-spin mr-2"
+                    />
                     Creating...
                   </>
                 ) : (
