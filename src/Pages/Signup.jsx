@@ -1,61 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import kahelogo from '../assets/kahelogo.png';
+import kahelogo from "../assets/kahelogo.png";
 
 const SIGNUP_OTP_URL = "http://134.209.157.195:8000/signup-otp/";
-const SIGNUP_URL     = "http://134.209.157.195:8000/signup/";
+const SIGNUP_URL = "http://134.209.157.195:8000/signup/";
+
+const REQUIRED_FIELDS = [
+  "first_name",
+  "last_name",
+  "email",
+  "username",
+  "phone",
+  "faculty_institute",
+  "faculty_department",
+  "gender",
+];
 
 export default function Signup() {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
     email: "",
     username: "",
     phone: "",
-    college_name: "",
+    faculty_institute: "",
+    faculty_department: "",
+    gender: "",
+    work_experience: null, 
     password: "",
     confirm_password: "",
     otp: "",
+    country_code: "+91",
   });
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState("");
-  const [fieldErrors, setFieldErrors]   = useState({});
+
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [error, setError] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isOtpSent, setIsOtpSent]       = useState(false);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [colleges, setColleges] = useState([]);
 
-  // New: show success overlay
-  const [showSuccess, setShowSuccess] = useState(false);
+  const updateField = useCallback((field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+    setError("");
+  }, []);
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (fieldErrors[field]) {
-      setFieldErrors(prev => ({ ...prev, [field]: "" }));
-    }
-  };
-
-  const validateForm = () => {
+  const validate = () => {
     const errors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!formData.first_name.trim())    errors.first_name    = "First name is required";
-    if (!formData.last_name.trim())     errors.last_name     = "Last name is required";
-    if (!formData.email.trim())         errors.email         = "Email is required";
-    if (formData.email && !emailRegex.test(formData.email))
+    REQUIRED_FIELDS.forEach((field) => {
+      if (!formData[field]?.trim()) {
+        errors[field] = "This field is required";
+      }
+    });
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       errors.email = "Invalid email format";
-    if (!formData.username.trim())      errors.username      = "Username is required";
-    if (!formData.phone.trim())         errors.phone         = "Phone number is required";
-    if (!formData.college_name.trim())  errors.college_name  = "College name is required";
-    if (formData.password.length < 8)   
-      errors.password     = "Password must be at least 8 characters";
+
+    if (formData.password.length < 8)
+      errors.password = "Password must be at least 8 characters";
+
     if (formData.password !== formData.confirm_password)
-      errors.confirm_password = "Passwords don't match";
-    if (!isOtpSent)                     errors.otp          = "Please send OTP first";
-    if (isOtpSent && !formData.otp.trim())
-      errors.otp = "OTP is required";
+      errors.confirm_password = "Passwords do not match";
+
+    if (!isOtpSent) errors.otp = "Please send the OTP to verify your email";
+    else if (!formData.otp.trim()) errors.otp = "OTP is required";
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -63,16 +80,15 @@ export default function Signup() {
 
   const handleSendOtp = async () => {
     if (!formData.email.trim()) {
-      setFieldErrors({ email: "Email is required" });
+      setFieldErrors((prev) => ({ ...prev, email: "Email is required" }));
       return;
     }
+
+    setIsSendingOtp(true);
     try {
-      setIsSendingOtp(true);
-      const res = await axios.post(SIGNUP_OTP_URL, { email: formData.email });
-      if (res.status === 200) {
-        setIsOtpSent(true);
-        setError("");
-      }
+      await axios.post(SIGNUP_OTP_URL, { email: formData.email });
+      setIsOtpSent(true);
+      setResendTimer(120);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to send OTP");
     } finally {
@@ -80,213 +96,267 @@ export default function Signup() {
     }
   };
 
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [resendTimer]);
+
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const { data } = await axios.get(COLLEGE_LIST_URL);
+        setColleges(data);
+      } catch (err) {
+        console.error("Failed to fetch colleges", err);
+      }
+    };
+    fetchColleges();
+  }, []);
+
   const handleSignup = async () => {
-    if (!validateForm()) return;
+    if (!validate()) return;
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const signupData = {
-        name: `${formData.first_name} ${formData.last_name}`,
+      const payload = {
+        first_name: `${formData.first_name} ${formData.last_name}`,
         username: formData.username,
         email: formData.email,
-        phone: formData.phone,
-        college_name: formData.college_name,
+        phone: formData.country_code + formData.phone, // Append country code to phone
+        college_name: formData.faculty_institute,
+        work_experience: formData.work_experience,
+        faculty_institute: formData.faculty_institute,
+        faculty_department: formData.faculty_department,
+        gender: formData.gender,
         password: formData.password,
         otp: formData.otp,
         role: "Staff",
-        work_experience: 0.0
       };
-      const response = await axios.post(SIGNUP_URL, signupData);
 
-      if (response.data?.token) {
+      const { data } = await axios.post(SIGNUP_URL, payload);
+
+      if (data.token) {
         setShowSuccess(true);
         setTimeout(() => navigate("/login"), 5000);
+      } else {
+        setError(data.error || data.message);
       }
     } catch (err) {
-      const srv = err.response?.data || {};
-      setFieldErrors(srv);
-      setError(srv.non_field_errors?.[0] || "Registration failed");
+      setError(err.response?.data?.error || "Signup error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-100 flex flex-col justify-center px-4">
-      {/* Success Overlay */}
-      {showSuccess && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
-          <div className="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg shadow-lg animate-pulse text-center">
-            <h2 className="text-2xl font-semibold mb-2">Registration Successful!</h2>
-            <p>Please wait for admin approval and check your email.</p>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen flex flex-col justify-center px-4 bg-gray-100">
+      {showSuccess && <SuccessMessage />}
 
-      <div className="max-w-md w-full mx-auto">
+      <div className="max-w-xl w-full mx-auto">
         <div className="text-center mb-8">
-          <img className="mx-auto h-16 w-auto" src={kahelogo} alt="Logo" />
-          <h1 className="text-2xl font-bold text-green-600 mt-2">Karpagam Alumni</h1>
+          <img src={kahelogo} alt="Logo" className="h-16 mx-auto" />
+          <h1 className="mt-2 text-2xl font-bold text-green-600">
+            Karpagam Alumni
+          </h1>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg px-8 py-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Your Account!</h2>
-          <p className="text-gray-600 mb-4">Join the alumni community</p>
+        <div className="bg-white shadow rounded-lg p-8 space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900">Faculty Sign Up</h2>
+          {error && <Alert message={error} />}
 
-          {error && (
-            <div className="flex items-center bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded mb-4">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z"/>
-              </svg>
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* First & Last Name */}
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="First Name"
-              value={formData.first_name}
-              onChange={e => handleChange("first_name", e.target.value)}
-              className={`w-full border ${fieldErrors.first_name ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 mb-2`}
-            />
-            {fieldErrors.first_name && <p className="text-red-500 text-sm mb-2">{fieldErrors.first_name}</p>}
-
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={formData.last_name}
-              onChange={e => handleChange("last_name", e.target.value)}
-              className={`w-full border ${fieldErrors.last_name ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600`}
-            />
-            {fieldErrors.last_name && <p className="text-red-500 text-sm mb-2">{fieldErrors.last_name}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            <InputField {...inputProps("first_name")} />
+            <InputField {...inputProps("last_name")} />
           </div>
 
-          {/* Username */}
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Username"
-              value={formData.username}
-              onChange={e => handleChange("username", e.target.value)}
-              className={`w-full border ${fieldErrors.username ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600`}
-            />
-            {fieldErrors.username && <p className="text-red-500 text-sm mb-2">{fieldErrors.username}</p>}
-          </div>
+          <InputField {...inputProps("username")} />
+          <InputField {...inputProps("email")} />
 
-          {/* Email + OTP */}
-          <div className="mb-4">
-            <div className="flex gap-2">
+          <div>
+            <label className="block mb-1">Phone</label>
+            <div className="flex space-x-2">
               <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={e => handleChange("email", e.target.value)}
-                className={`w-full border ${fieldErrors.email ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600`}
+                type="text"
+                value={formData.country_code}
+                onChange={(e) => updateField("country_code", e.target.value)}
+                className="w-1/4 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+                placeholder="Country Code"
+                maxLength={5} // Limiting to maximum of 5 characters for country code
               />
-              <button
-                onClick={handleSendOtp}
-                disabled={isSendingOtp || isOtpSent}
-                className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition duration-200"
-              >
-                {isSendingOtp ? "Sending..." : isOtpSent ? "Sent ✓" : "Send OTP"}
-              </button>
+              <input
+                type="text"
+                value={formData.phone}
+                onChange={(e) => updateField("phone", e.target.value)}
+                placeholder="Phone number"
+                className="w-3/4 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
             </div>
-            {fieldErrors.email && <p className="text-red-500 text-sm mb-2">{fieldErrors.email}</p>}
-
-            {isOtpSent && (
-              <>
-                <input
-                  type="text"
-                  placeholder="Enter OTP"
-                  value={formData.otp}
-                  onChange={e => handleChange("otp", e.target.value)}
-                  className={`w-full border ${fieldErrors.otp ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 mt-2`}
-                />
-                {fieldErrors.otp && <p className="text-red-500 text-sm mb-2">{fieldErrors.otp}</p>}
-              </>
+            {fieldErrors.phone && (
+              <p className="text-red-500 text-sm">{fieldErrors.phone}</p>
             )}
           </div>
 
-          {/* Phone & College */}
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Phone Number"
-              value={formData.phone}
-              onChange={e => handleChange("phone", e.target.value)}
-              className={`w-full border ${fieldErrors.phone ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 mb-2`}
-            />
-            {fieldErrors.phone && <p className="text-red-500 text-sm mb-2">{fieldErrors.phone}</p>}
+          <InputField {...inputProps("faculty_institute")} />
+          <InputField {...inputProps("faculty_department")} />
+          <InputField type="number" {...inputProps("work_experience")} /> 
 
-            <input
-              type="text"
-              placeholder="College Name"
-              value={formData.college_name}
-              onChange={e => handleChange("college_name", e.target.value)}
-              className={`w-full border ${fieldErrors.college_name ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600`}
-            />
-            {fieldErrors.college_name && <p className="text-red-500 text-sm mb-2">{fieldErrors.college_name}</p>}
-          </div>
 
-          {/* Password */}
-          <div className="mb-4 relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={formData.password}
-              onChange={e => handleChange("password", e.target.value)}
-              className={`w-full border ${fieldErrors.password ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600"
+          <div>
+            <label className="block mb-1">Gender</label>
+            <select
+              value={formData.gender}
+              onChange={(e) => updateField("gender", e.target.value)}
+              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
             >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-            {fieldErrors.password && <p className="text-red-500 text-sm mt-2">{fieldErrors.password}</p>}
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+            {fieldErrors.gender && (
+              <p className="text-red-500 text-sm">{fieldErrors.gender}</p>
+            )}
           </div>
 
-          {/* Confirm Password */}
-          <div className="mb-6 relative">
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              value={formData.confirm_password}
-              onChange={e => handleChange("confirm_password", e.target.value)}
-              className={`w-full border ${fieldErrors.confirm_password ? "border-red-500" : "border-gray-300"} rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600`}
-            />
+          <div className="flex justify-end">
             <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600"
+              onClick={handleSendOtp}
+              disabled={isSendingOtp || resendTimer > 0}
+              className={`btn ${
+                isOtpSent && resendTimer === 0
+                  ? "bg-blue-500 p-2 rounded"
+                  : "bg-green-600 p-2 rounded text-white"
+              }`}
             >
-              {showConfirmPassword ? "Hide" : "Show"}
+              {isSendingOtp
+                ? "Sending..."
+                : isOtpSent && resendTimer > 0
+                ? `Resend OTP in ${resendTimer}s`
+                : "Send OTP"}
             </button>
-            {fieldErrors.confirm_password && <p className="text-red-500 text-sm mt-2">{fieldErrors.confirm_password}</p>}
           </div>
 
-          {/* Submit */}
+          {isOtpSent && <InputField {...inputProps("otp")} />}
+
+          <PasswordField
+            value={formData.password}
+            onChange={(v) => updateField("password", v)}
+            placeholder="Password"
+            error={fieldErrors.password}
+            show={showPassword}
+            toggleShow={() => setShowPassword((prev) => !prev)}
+          />
+          <PasswordField
+            value={formData.confirm_password}
+            onChange={(v) => updateField("confirm_password", v)}
+            placeholder="Confirm Password"
+            error={fieldErrors.confirm_password}
+            show={showConfirmPassword}
+            toggleShow={() => setShowConfirmPassword((prev) => !prev)}
+          />
+
           <button
             onClick={handleSignup}
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition duration-200"
+            className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
           >
             {loading ? "Creating Account..." : "Create Account"}
           </button>
 
-          <div className="mt-4 text-center">
-            <span className="text-gray-600">Already have an account? </span>
-            <button onClick={() => navigate("/login")} className="text-green-600 font-bold hover:underline">
-              Sign In
+          <p className="text-center text-sm text-gray-600">
+            Already have an account?{" "}
+            <button
+              onClick={() => navigate("/login")}
+              className="text-green-600 hover:underline font-medium"
+            >
+              Login
             </button>
-          </div>
+          </p>
         </div>
+      </div>
+    </div>
+  );
 
-        <p className="text-center text-gray-500 text-sm mt-4">
-          By signing up, you agree to our Terms and Privacy Policy
-        </p>
+  function inputProps(field) {
+    return {
+      value: formData[field],
+      onChange: (v) => updateField(field, v),
+      placeholder: field
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+      error: fieldErrors[field],
+    };
+  }
+}
+
+function InputField({ value, onChange, placeholder, error, type = "text" }) {
+  return (
+    <div>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
+          error ? "border-red-500" : "border-gray-300"
+        }`}
+      />
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
+}
+
+function PasswordField({
+  value,
+  onChange,
+  placeholder,
+  error,
+  show,
+  toggleShow,
+}) {
+  return (
+    <div className="relative">
+      <input
+        type={show ? "text" : "password"}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-600 ${
+          error ? "border-red-500" : "border-gray-300"
+        }`}
+      />
+      <button
+        type="button"
+        onClick={toggleShow}
+        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600"
+      >
+        {show ? "Hide" : "Show"}
+      </button>
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
+}
+
+function Alert({ message }) {
+  return (
+    <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded">
+      {message}
+    </div>
+  );
+}
+
+function SuccessMessage() {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
+      <div className="bg-green-100 border-green-400 text-green-700 p-6 rounded shadow text-center animate-pulse">
+        <h2 className="text-2xl font-semibold mb-2">
+          Registration Successful!
+        </h2>
+        <p>Please wait for admin approval and check your email.</p>
       </div>
     </div>
   );

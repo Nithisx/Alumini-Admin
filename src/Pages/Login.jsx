@@ -1,164 +1,138 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import kahelogo from '../assets/kahelogo.png'
+import axios from "axios";
+import kahelogo from "../assets/kahelogo.png";
 
-const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("staff");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+// axios instance with a shared base URL & JSON headers
+const api = axios.create({
+  baseURL: "http://134.209.157.195:8000",
+  headers: { "Content-Type": "application/json" },
+});
+
+export default function LoginPage() {
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // consolidate form data
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+    role: "staff",
+  });
+  const [error, setError]     = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // generic onChange for all inputs
+  const handleChange = useCallback(e => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
     setError("");
-    
-    // Prevent long usernames that may break the backend
-    if (username.length > 100) {
-      setError("Username too long (max 100 characters)");
-      return;
-    }
+  }, []);
 
-    const userData = { username, password };
-    const loginUrl =
-      role === "admin"
-        ? "http://134.209.157.195:8000/login/admin/"
-        : "http://134.209.157.195:8000/login/staff/";
+  // pick the correct endpoint based on role
+  const loginUrl = useMemo(
+    () => (form.role === "admin" ? "/login/admin/" : "/login/staff/"),
+    [form.role]
+  );
 
-    try {
+  const handleLogin = useCallback(
+    async e => {
+      e.preventDefault();
+      setError("");
+
+      if (form.username.length > 100) {
+        return setError("Username too long (max 100 characters)");
+      }
+
       setLoading(true);
-      const response = await fetch(loginUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+      try {
+        const { data } = await api.post(loginUrl, {
+          username: form.username,
+          password: form.password,
+        });
 
-      const contentType = response.headers.get("content-type");
-      if (!response.ok) {
-        const text = await response.text();
-        setError(`Login failed: ${text}`);
-        return;
+        if (data.token) {
+          localStorage.setItem("Token", data.token);
+          localStorage.setItem("Role", form.role);
+          navigate(form.role === "admin" ? "/admin/dashboard" : "/staff/dashboard");
+        } else {
+          setError(data.error || "Login failed: no token received");
+        }
+      } catch (err) {
+        setError(
+          err.response?.data?.error ||
+          err.message ||
+          "An unexpected error occurred"
+        );
+      } finally {
+        setLoading(false);
       }
-
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        setError(`Expected JSON response but got: ${text}`);
-        return;
-      }
-
-      const data = await response.json();
-      const token = data?.token;
-
-      if (token) {
-        localStorage.setItem("Token", token);
-        localStorage.setItem("Role", role);
-        navigate(role === "admin" ? "/admin/dashboard" : "/staff/dashboard");
-      } else {
-        setError("Token not found in response");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred");
-      console.error("Login failed (exception):", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("Token");
-    localStorage.removeItem("Role");
-    console.log("Logged out successfully");
-    navigate("/");
-  };
+    },
+    [form, loginUrl, navigate]
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center px-4">
-      <div className="max-w-md w-full mx-auto">
-        {/* Header / Logo Section */}
-        <div className="text-center mb-8">
-          <img
-            className="mx-auto h-20 w-auto"
-            src={kahelogo} 
-            alt="Logo"
-          />
-          <h1 className="text-3xl font-bold text-green-600 mt-4">Karpagam Alumni</h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+      <div className="max-w-md w-full space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <img src={kahelogo} alt="Logo" className="mx-auto h-20" />
+          <h1 className="mt-4 text-3xl font-bold text-green-600">Karpagam Alumni</h1>
           <p className="text-gray-600">Connect with your college community</p>
         </div>
 
-        {/* Login Form */}
+        {/* Form */}
         <form
           onSubmit={handleLogin}
-          className="bg-white shadow-md rounded-lg px-8 py-6"
+          className="bg-white shadow-md rounded-lg px-8 py-6 space-y-4"
         >
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
-            Welcome Back !
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 text-center">Welcome Back!</h2>
 
           {error && (
-            <div className="flex items-center bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded mb-4">
-              <svg
-                className="h-5 w-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z"
-                />
-              </svg>
-              <span>{error}</span>
-            </div>
+            <ErrorBanner message={error} />
           )}
 
-          {/* Role Dropdown */}
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full mb-4 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-          >
-            <option value="admin">Admin</option>
-            <option value="staff">Staff</option>
-          </select>
+          <div className="space-y-4">
+            <Select
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              options={[
+                { value: "admin", label: "Admin" },
+                { value: "staff", label: "Staff" },
+              ]}
+            />
 
-          {/* Username Input */}
-          <input
-            type="text"
-            placeholder="Username"
-            maxLength={100}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full mb-4 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-            required
-          />
+            <Input
+              name="username"
+              type="text"
+              label="Username"
+              placeholder="Enter your username"
+              value={form.username}
+              onChange={handleChange}
+              maxLength={100}
+              required
+            />
 
-          {/* Password Input */}
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full mb-6 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-            required
-          />
+            <Input
+              name="password"
+              type="password"
+              label="Password"
+              placeholder="Enter your password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded transition duration-200"
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded transition duration-200 disabled:opacity-50"
           >
             {loading ? "Signing In..." : "Login"}
           </button>
 
-          {/* Sign Up Navigation */}
-          <p className="mt-4 text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600">
             Don't have an account?{" "}
             <button
               type="button"
@@ -169,11 +143,67 @@ const LoginPage = () => {
             </button>
           </p>
         </form>
-
-        
       </div>
     </div>
   );
-};
+}
 
-export default LoginPage;
+// Reusable input with label
+function Input({ name, label, ...props }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      <input
+        name={name}
+        {...props}
+        className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+      />
+    </div>
+  );
+}
+
+// Reusable select
+function Select({ name, label, options, ...props }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label || "Role"}
+      </label>
+      <select
+        name={name}
+        {...props}
+        className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+      >
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// Error banner component
+function ErrorBanner({ message }) {
+  return (
+    <div className="flex items-center bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded">
+      <svg
+        className="h-5 w-5 mr-2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z"
+        />
+      </svg>
+      <span>{message}</span>
+    </div>
+  );
+}
