@@ -10,7 +10,7 @@ import {
   faTimes,
   faShield
 } from "@fortawesome/free-solid-svg-icons"
-import "../../app.css"
+import "../../App.css"
 
 export default function AdminHeader() {
   const [pathname, setPathname] = useState(window.location.pathname)
