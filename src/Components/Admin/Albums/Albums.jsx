@@ -225,7 +225,7 @@ const AlbumsPage = () => {
                 {filteredAlbums.map(album => (
                   <div
                     key={album.id}
-                    onClick={() => navigate(`/staff/albums/${album.id}`)}
+                    onClick={() => navigate(`/admin/albums/${album.id}`)}
                     className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer"
                   >
                     <div className="relative h-48 overflow-hidden">

@@ -68,7 +68,7 @@ export default function Signup() {
     if (formData.password.length < 8)
       errors.password = "Password must be at least 8 characters";
 
-    if (formData.password !== formData.confirm_password)
+    if (formData.password !== formData.confirm_password) 
       errors.confirm_password = "Passwords do not match";
 
     if (!isOtpSent) errors.otp = "Please send the OTP to verify your email";
