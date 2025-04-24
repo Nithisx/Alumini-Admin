@@ -1,6 +1,7 @@
 /*
 File: NewsList.js
 This component fetches and displays news posts with a completely redesigned UI
+Using a green-600 theme
 */
 import React, { useEffect, useState } from 'react';
 import AddNewsModal from './Addnewsmodel';
@@ -98,7 +99,7 @@ export default function NewsList() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition shadow-md"
+            className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition shadow-md"
           >
             <Plus size={18} className="mr-2" />
             Post News
@@ -121,7 +122,7 @@ export default function NewsList() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                     <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <span className="inline-flex items-center px-3 py-1 bg-indigo-600 text-white text-sm rounded-full">
+                      <span className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-full">
                         <Tag size={14} className="mr-1" />
                         {post.category}
                       </span>
@@ -140,7 +141,7 @@ export default function NewsList() {
                     <div className="flex justify-between items-center">
                       <a
                         href={`/staff/news/${post.id}/`}
-                        className="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-700"
+                        className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
                       >
                         Read Full Story
                         <ChevronRight size={16} className="ml-1" />
@@ -169,7 +170,7 @@ export default function NewsList() {
                 onClick={() => setActiveCategory(category)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap ${
                   activeCategory === category
-                    ? 'bg-indigo-600 text-white shadow-md'
+                    ? 'bg-green-600 text-white shadow-md'
                     : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
                 }`}
               >
@@ -182,7 +183,7 @@ export default function NewsList() {
         {/* News List */}
         {isLoading ? (
           <div className="flex flex-col items-center py-16">
-            <div className="text-indigo-600">
+            <div className="text-green-600">
               <Loader size={40} className="animate-spin" />
             </div>
             <p className="mt-4 text-gray-600">Loading news...</p>
@@ -210,7 +211,7 @@ export default function NewsList() {
                   </div>
                   <div className="p-6 sm:w-2/3">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full">
+                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
                         {post.category}
                       </span>
                       <div className="flex items-center text-gray-500 text-sm">
@@ -223,7 +224,7 @@ export default function NewsList() {
                     <div className="flex justify-between items-center">
                       <a
                         href={`/staff/news/${post.id}/`}
-                        className="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-700"
+                        className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
                       >
                         Read More
                         <ChevronRight size={16} className="ml-1" />

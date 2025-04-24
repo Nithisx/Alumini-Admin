@@ -8,8 +8,13 @@ const AlbumDetailPage = () => {
   const [formData, setFormData] = useState({ title: "", images: [] });
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("Token"); // Get token from local storage
+  // New state for fullscreen image viewer
+  const [fullscreenImage, setFullscreenImage] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // New state for fullscreen image loading
+  const [imageLoading, setImageLoading] = useState(false);
   
+  const token = localStorage.getItem("Token"); // Get token from local storage
   const BASE_URL = "http://134.209.157.195:8000";
 
   useEffect(() => {
@@ -35,6 +40,24 @@ const AlbumDetailPage = () => {
 
     fetchEventImages();
   }, [albumId]);
+
+  // Handle keyboard navigation in fullscreen mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (fullscreenImage === null) return;
+      
+      if (e.key === "Escape") {
+        closeFullscreen();
+      } else if (e.key === "ArrowRight") {
+        showNextImage();
+      } else if (e.key === "ArrowLeft") {
+        showPrevImage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [fullscreenImage, currentImageIndex, eventImages]);
 
   const handleFileChange = (e) => {
     if (e.target.files) {
@@ -106,6 +129,44 @@ const AlbumDetailPage = () => {
     }
   };
 
+  // Open fullscreen image viewer
+  const openFullscreen = (image, index) => {
+    setImageLoading(true); // Start loading
+    setFullscreenImage(image);
+    setCurrentImageIndex(index);
+    // Prevent body scrolling when modal is open
+    document.body.style.overflow = "hidden";
+  };
+
+  // Close fullscreen image viewer
+  const closeFullscreen = () => {
+    setFullscreenImage(null);
+    setImageLoading(false);
+    // Restore body scrolling
+    document.body.style.overflow = "auto";
+  };
+
+  // Show next image
+  const showNextImage = () => {
+    setImageLoading(true); // Start loading for next image
+    const nextIndex = (currentImageIndex + 1) % eventImages.length;
+    setCurrentImageIndex(nextIndex);
+    setFullscreenImage(eventImages[nextIndex]);
+  };
+
+  // Show previous image
+  const showPrevImage = () => {
+    setImageLoading(true); // Start loading for previous image
+    const prevIndex = (currentImageIndex - 1 + eventImages.length) % eventImages.length;
+    setCurrentImageIndex(prevIndex);
+    setFullscreenImage(eventImages[prevIndex]);
+  };
+
+  // Handle fullscreen image load complete
+  const handleImageLoaded = () => {
+    setImageLoading(false);
+  };
+
   return (
     <div className="p-4">
       {loading ? (
@@ -123,7 +184,8 @@ const AlbumDetailPage = () => {
                   <img
                     src={`${BASE_URL}${event.image}`}
                     alt={event.title}
-                    className="w-full h-40 object-cover rounded-md"
+                    className="w-full h-40 object-cover rounded-md cursor-pointer"
+                    onClick={() => openFullscreen(event, index)}
                   />
                   <p className="mt-2 text-center font-medium text-gray-700">
                     {event.title}
@@ -153,6 +215,106 @@ const AlbumDetailPage = () => {
               <p className="text-gray-500">No images available.</p>
             )}
           </div>
+
+          {/* Fullscreen Image Modal */}
+          {fullscreenImage && (
+            <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+              {/* Image container */}
+              <div className="relative max-w-full max-h-full p-4">
+                {/* Loading Spinner */}
+                {imageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+                  </div>
+                )}
+                
+                <img
+                  src={`${BASE_URL}${fullscreenImage.image}`}
+                  alt={fullscreenImage.title}
+                  className={`max-h-screen max-w-full object-contain transition-opacity duration-300 ${
+                    imageLoading ? "opacity-0" : "opacity-100"
+                  }`}
+                  onLoad={handleImageLoaded}
+                />
+                <h3 className="text-white text-center mt-4 text-xl">
+                  {fullscreenImage.title}
+                </h3>
+              </div>
+
+              {/* Navigation and Close buttons */}
+              <button
+                onClick={closeFullscreen}
+                className="absolute top-4 right-4 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition"
+                aria-label="Close"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              {/* Previous button */}
+              <button
+                onClick={showPrevImage}
+                className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
+                aria-label="Previous image"
+                disabled={imageLoading}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-8 w-8"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Next button */}
+              <button
+                onClick={showNextImage}
+                className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
+                aria-label="Next image"
+                disabled={imageLoading}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-8 w-8"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+
+              {/* Current Image Counter */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-full">
+                {currentImageIndex + 1} / {eventImages.length}
+              </div>
+            </div>
+          )}
 
           {/* Image Upload Form */}
           {showForm ? (

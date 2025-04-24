@@ -10,7 +10,9 @@ import {
   faTimes,
   faShield,
   faNewspaper,
-  faIdBadge
+  faIdBadge,
+  faBirthdayCake,
+  faBriefcase
 } from "@fortawesome/free-solid-svg-icons"
 import "../../App.css"
 
@@ -50,11 +52,12 @@ export default function AdminHeader() {
   const navItems = [
     { path: "/staff/dashboard", icon: faFileAlt, label: "Dashboard" },
     { path: "/staff/event", icon: faCalendarCheck, label: "Events" },
-    { path: "/staff/jobs", icon: faCalendarCheck, label: "Jobs" },
+    { path: "/staff/jobs", icon: faBriefcase, label: "Jobs" },
     { path: "/staff/albums", icon: faPhotoFilm, label: "Albums" },
     { path: "/staff/map", icon: faMapMarker, label: "Map" },
     { path: "/staff/news", icon: faNewspaper, label: "NewsRoom" },
     { path: "/staff/members", icon: faIdBadge, label: "Members" },
+    { path: "/staff/birthday", icon: faBirthdayCake, label: "Birthdays" },
   ]
 
   return (

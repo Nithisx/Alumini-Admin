@@ -15,6 +15,8 @@ import SingleNews from './News/Singlenews';
 import Members from './Members/Members';
 import Singlemember from './Members/Singlemember';
 import Dashboard from './Dashboard/Dashboard';
+import Birthday from "./Birthday/Birthday"
+
 const AdminLayout = () => {
   return (
     <div className="flex">
@@ -36,6 +38,7 @@ const AdminLayout = () => {
           <Route path="members" element={<Members />} />
           <Route path="members/:name" element={<Singlemember />} />
           <Route path="jobs" element={<Addpost />} />
+          <Route path="birthday" element={<Birthday />} />
           {/* Add more admin routes if needed */}
         </Routes>
       </main>
