@@ -74,18 +74,20 @@ export default function SingleMember() {
 
         {/* Details */}
         <div className="p-6 space-y-6">
-          {/* Personal */}
-          <section>
-            <h2 className="text-xl font-semibold mb-2">Personal Information</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-              <div><span className="font-medium">Gender:</span> {gender}</div>
-              <div><span className="font-medium">Date of Birth:</span> {date_of_birth}</div>
-              <div><span className="font-medium">Role:</span> {role}</div>
-              <div><span className="font-medium">Chapter:</span> {chapter}</div>
-            </div>
-          </section>
+          {/* personal */}
+                <section>
+                <h2 className="text-xl font-semibold mb-2">Personal Information</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                  <div><span className="font-medium">First Name:</span> {first_name}</div>
+                  <div><span className="font-medium">Last Name:</span> {last_name}</div>
+                  <div><span className="font-medium">Gender:</span> {gender}</div>
+                  <div><span className="font-medium">Date of Birth:</span> {date_of_birth}</div>
+                  <div><span className="font-medium">Role:</span> {role}</div>
+                  <div><span className="font-medium">Chapter:</span> {chapter}</div>
+                </div>
+                </section>
 
-          {/* Contact */}
+                {/* Contact */}
           <section>
             <h2 className="text-xl font-semibold mb-2">Contact Details</h2>
             <div className="space-y-2 text-gray-700">

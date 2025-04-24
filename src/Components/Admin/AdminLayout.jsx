@@ -14,6 +14,7 @@ import NewsRoom from './News/News';
 import SingleNews from './News/Singlenews';
 import Members from './Members/Members';
 import Singlemember from './Members/Singlemember';
+import Dashboard from './Dashboard/Dashboard';
 const AdminLayout = () => {
   return (
     <div className="flex">
@@ -23,7 +24,7 @@ const AdminLayout = () => {
       {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100 ml-64">
         <Routes>
-          <Route path="dashboard" element={<Addpost />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="register-request" element={<RegisterRequestPage />} />
           <Route path="event" element={<AddEvent />} />
           <Route path="albums" element={<AlbumsPage />} />
@@ -34,6 +35,7 @@ const AdminLayout = () => {
           <Route path="news/:id" element={<SingleNews />} />
           <Route path="members" element={<Members />} />
           <Route path="members/:name" element={<Singlemember />} />
+          <Route path="jobs" element={<Addpost />} />
           {/* Add more admin routes if needed */}
         </Routes>
       </main>
