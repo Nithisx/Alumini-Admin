@@ -9,7 +9,10 @@ import AlbumsPage from './Albums/Albums';
 import AlbumDetailPage from './Albums/Albumsdetails';
 import StudentImageUpload from './Albums/Students';
 import Map from './Map.jsx/Map';
-
+import NewsRoom from './News/News';
+import SingleNews from './News/Singlenews';
+import Members from './Members/Members';
+import Singlemember from './Members/Singlemember';
 const AdminLayout = () => {
   return (
     <div className="flex">
@@ -19,14 +22,18 @@ const AdminLayout = () => {
       {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100 ml-64">
         <Routes>
+
           <Route path="dashboard" element={<Addpost />} />
-          
           <Route path="event" element={<AddEvent />} />
           <Route path="albums" element={<AlbumsPage />} />
           <Route path="albums/:albumId" element={<AlbumDetailPage />} />
           <Route path="students" element={<StudentImageUpload />} />
           <Route path="map" element={<Map />} />
-          {/* Add more admin routes if needed */}
+          <Route path="news" element={<NewsRoom />} />
+          <Route path="news/:id" element={<SingleNews />} />
+          <Route path="members" element={<Members />} />
+          <Route path="members/:name" element={<Singlemember />} />
+         
         </Routes>
       </main>
     </div>

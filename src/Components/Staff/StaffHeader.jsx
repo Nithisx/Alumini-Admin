@@ -8,7 +8,9 @@ import {
   faSignOutAlt,
   faBars,
   faTimes,
-  faShield
+  faShield,
+  faNewspaper,
+  faIdBadge
 } from "@fortawesome/free-solid-svg-icons"
 import "../../App.css"
 
@@ -50,6 +52,8 @@ export default function AdminHeader() {
     { path: "/staff/event", icon: faCalendarCheck, label: "Events" },
     { path: "/staff/albums", icon: faPhotoFilm, label: "Albums" },
     { path: "/staff/map", icon: faMapMarker, label: "Map" },
+    { path: "/staff/news", icon: faNewspaper, label: "NewsRoom" },
+    { path: "/staff/members", icon: faIdBadge, label: "Members" },
   ]
 
   return (
