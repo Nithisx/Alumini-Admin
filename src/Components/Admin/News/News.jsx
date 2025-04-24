@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
 
-const TOKEN = 'ff33e87bb30f1e7e4c66548b5869a8cbf360bfb9';
+const TOKEN = localStorage.getItem('Token');
 const API_URL = 'http://134.209.157.195:8000/news/';
 const BASE_URL = 'http://134.209.157.195:8000';
 
@@ -139,7 +139,7 @@ export default function NewsList() {
                     <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
                     <div className="flex justify-between items-center">
                       <a
-                        href={`/staff/news/${post.id}/`}
+                        href={`/admin/news/${post.id}/`}
                         className="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-700"
                       >
                         Read Full Story
@@ -222,7 +222,7 @@ export default function NewsList() {
                     <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
                     <div className="flex justify-between items-center">
                       <a
-                        href={`/staff/news/${post.id}/`}
+                        href={`/admin/news/${post.id}/`}
                         className="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-700"
                       >
                         Read More

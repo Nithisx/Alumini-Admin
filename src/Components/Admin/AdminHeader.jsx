@@ -57,6 +57,7 @@ export default function AdminHeader() {
     },
     { path: "/admin/event", icon: faCalendarCheck, label: "Events" },
     { path: "/admin/albums", icon: faPhotoFilm, label: "Albums" },
+    { path: "/admin/map", icon: faMapMarker, label: "Map" },
     { path: "/admin/news", icon: faNewspaper, label: "NewsRoom" },
     { path: "/admin/members", icon: faIdBadge, label: "Members" },
 

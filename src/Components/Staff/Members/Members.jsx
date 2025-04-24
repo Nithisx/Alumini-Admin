@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const TOKEN = 'ff33e87bb30f1e7e4c66548b5869a8cbf360bfb9';
+const TOKEN = localStorage.getItem('Token');
 const API_URL = 'http://134.209.157.195:8000/member-profiles/';
 
 export default function MembersPage() {

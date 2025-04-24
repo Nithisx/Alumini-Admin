@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const TOKEN = 'ff33e87bb30f1e7e4c66548b5869a8cbf360bfb9';
+const TOKEN = localStorage.getItem('Token');
 const API_URL = 'http://134.209.157.195:8000/member-profiles/';
 
 export default function MembersPage() {
@@ -119,7 +119,7 @@ export default function MembersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {filtered.map(member => (
                   <Link
-                    to={`/staff/members/${member.username}`}
+                    to={`/admin/members/${member.username}`}
                     key={member.id}
                     className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition"
                   >

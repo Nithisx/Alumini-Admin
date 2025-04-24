@@ -1,9 +1,9 @@
-// map.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Search, User, Map, Layers, Users, RefreshCw, AlertCircle } from 'lucide-react';
+import { Search, Map, Layers, Users, RefreshCw, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Base URL for media files
 const MEDIA_BASE_URL = 'http://134.209.157.195:8000';
@@ -20,6 +20,7 @@ const MapComponent = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const mapRef = useRef(null);
+  const navigate = useNavigate();
   
   // Filter locations based on search query
   const filteredLocations = locations.filter(user => 
@@ -72,7 +73,7 @@ const MapComponent = () => {
   const mapTileOptions = {
     streets: {
       url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> contributors'
     },
     satellite: {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -80,7 +81,7 @@ const MapComponent = () => {
     },
     dark: {
       url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
-      attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
+      attribution: '&copy; <a href=\"https://stadiamaps.com/\">Stadia Maps</a>'
     }
   };
 
@@ -209,14 +210,12 @@ const MapComponent = () => {
             />
 
             {filteredLocations.map((user) => {
-              // Determine the icon URL: user profile or fallback
               const iconUrl =
                 user.user_details.profile_photo &&
                 user.user_details.profile_photo.startsWith('/media')
                   ? `${MEDIA_BASE_URL}${user.user_details.profile_photo}`
                   : defaultIconUrl;
 
-              // Create a custom Leaflet icon for each user
               const userIcon = new L.Icon({
                 iconUrl,
                 iconSize: [40, 40],
@@ -228,31 +227,14 @@ const MapComponent = () => {
               return (
                 <Marker
                   key={user.id}
-                  position={[
-                    parseFloat(user.latitude),
-                    parseFloat(user.longitude),
-                  ]}
+                  position={[parseFloat(user.latitude), parseFloat(user.longitude)]}
                   icon={userIcon}
-                >
-                  <Popup className="rounded-lg">
-                    <div className="text-center p-2">
-                      <img
-                        src={iconUrl}
-                        alt={`${user.user_details.username}`}
-                        className="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-white shadow"
-                      />
-                      <h3 className="font-bold text-lg">
-                        {user.user_details.username}
-                      </h3>
-                      <p className="text-gray-600">ID: {user.id}</p>
-                      <div className="mt-2 pt-2 border-t border-gray-100">
-                        <p className="text-xs text-gray-500">
-                          Location: {user.latitude}, {user.longitude}
-                        </p>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
+                  eventHandlers={{
+                    click: () => {
+                      navigate(`/admin/members/${user.user_details.username}`);
+                    },
+                  }}
+                />
               );
             })}
           </MapContainer>
@@ -279,7 +261,7 @@ const MapComponent = () => {
                 onClick={() => setMapView('dark')}
                 title="Dark Mode"
               >
-                <User size={20} />
+                <Users size={20} />
               </button>
             </div>
           </div>

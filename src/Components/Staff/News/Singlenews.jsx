@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 
-const TOKEN = 'ff33e87bb30f1e7e4c66548b5869a8cbf360bfb9';
+const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'http://134.209.157.195:8000/news/';
 const SERVER_BASE = 'http://134.209.157.195:8000';
 

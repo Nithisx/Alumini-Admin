@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-const TOKEN = 'ff33e87bb30f1e7e4c66548b5869a8cbf360bfb9';
+const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'http://134.209.157.195:8000/profile/';
 
 export default function SingleMember() {
@@ -58,9 +58,7 @@ export default function SingleMember() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link to="/staff/members" className="text-sm text-gray-600 hover:underline mb-4 inline-block">
-        &laquo; Back to Members
-      </Link>
+      
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         {/* Header */}

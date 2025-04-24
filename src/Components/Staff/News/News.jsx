@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
 
-const TOKEN = 'ff33e87bb30f1e7e4c66548b5869a8cbf360bfb9';
+const TOKEN = localStorage.getItem('Token');
 const API_URL = 'http://134.209.157.195:8000/news/';
 const BASE_URL = 'http://134.209.157.195:8000';
 
