@@ -64,7 +64,7 @@ export default function AdminHeader() {
     { path: "/admin/map", icon: faMapMarker, label: "Map" },
     { path: "/admin/news", icon: faNewspaper, label: "NewsRoom" },
     { path: "/admin/members", icon: faIdBadge, label: "Members" },
-    { path: "/staff/birthday", icon: faBirthdayCake, label: "Birthdays" },
+    { path: "/admin/birthday", icon: faBirthdayCake, label: "Birthdays" },
 
 
     ,

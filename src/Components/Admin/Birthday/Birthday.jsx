@@ -101,11 +101,36 @@ const Birthday = () => {
       onClick={() => handleUserClick(user.username)}
     >
       <div className="flex-shrink-0">
-        <img
-          src={`http://134.209.157.195:8000${user.profile_photo}`}
-          alt={user.username}
-          className="w-16 h-16 rounded-full object-cover border-2 border-green-300 hover:border-green-600 transition-colors"
-        />
+        {user.profile_photo ? (
+          <img
+            src={`http://134.209.157.195:8000${user.profile_photo}`}
+            alt={user.username}
+            className="w-16 h-16 rounded-full object-cover border-2 border-green-300 hover:border-green-600 transition-colors"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8 text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 14l9-5-9-5-9 5 9 5z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 14l6.16-3.422A12.083 12.083 0 0112 21.5a12.083 12.083 0 01-6.16-10.922L12 14z"
+              />
+            </svg>
+          </div>
+        )}
       </div>
       <div className="flex-grow">
         <span className="text-lg font-medium text-gray-800">{user.username}</span>
