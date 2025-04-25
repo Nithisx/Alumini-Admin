@@ -15,6 +15,7 @@ import Members from './Members/Members';
 import Singlemember from './Members/Singlemember';
 import Dashboard from './Dashboard/Dashboard';
 import Birthday from "./Birthday/Birthday"
+import Singleevents from './Events/Singleevents';
 const AdminLayout = () => {
   return (
     <div className="flex">
@@ -27,6 +28,7 @@ const AdminLayout = () => {
 
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="event" element={<AddEvent />} />
+          <Route path="event/:id" element={<Singleevents />} />
           <Route path="albums" element={<AlbumsPage />} />
           <Route path="albums/:albumId" element={<AlbumDetailPage />} />
           <Route path="students" element={<StudentImageUpload />} />

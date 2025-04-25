@@ -109,50 +109,7 @@ const HomePage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4">
-        {/* Featured News */}
-        <section className="mb-16">
-          <div className="flex items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Featured News</h2>
-            <div className="ml-auto">
-              <button 
-                onClick={() => navigate('/admin/news/')}
-                className="text-green-600 hover:text-green-800 font-medium flex items-center"
-              >
-                View All 
-                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {data.featured_news.map(news => (
-              <div
-                key={news.id}
-                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition group"
-                onClick={() => navigate(`/admin/news/${news.id}/`)}
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={`${BASE_URL}${news.thumbnail}`}
-                    alt={news.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  />
-                  <div className="absolute bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent w-full h-24"></div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-green-600 transition">{news.title}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{news.content.substring(0, 150)}...</p>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Clock className="w-4 h-4 mr-1" />
-                    <span>Published {formatDate(news.created_at || new Date())}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+       
 
         {/* Upcoming Events */}
         <section className="mb-16">
@@ -176,7 +133,7 @@ const HomePage = () => {
               <div
                 key={event.id}
                 className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition cursor-pointer"
-                onClick={() => navigate(`/admin/event/`)}
+                onClick={() => navigate(`/admin/event/${event.id}`)}
               >
                 {event.images && event.images[0] ? (
                   <div className="relative h-48 overflow-hidden">

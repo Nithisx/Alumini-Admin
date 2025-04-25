@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
-  faTrash, faSearch, faCalendarAlt, faMapMarkerAlt, faList, faThLarge
+  faTrash, faSearch, faCalendarAlt, faMapMarkerAlt, faList, faThLarge 
 } from "@fortawesome/free-solid-svg-icons";
 
 // AuthorizedImage component fetches image with token
@@ -36,8 +37,8 @@ export default function Events() {
   const [viewMode, setViewMode] = useState("grid");
   const [isLoading, setIsLoading] = useState(true);
   const token = localStorage.getItem("Token");
+  const navigate = useNavigate(); // 👈 Add useNavigate hook
 
-  // Fetch events
   useEffect(() => {
     setIsLoading(true);
     fetch("http://134.209.157.195:8000/events/", {
@@ -150,7 +151,8 @@ export default function Events() {
               return (
                 <div
                   key={event.id}
-                  className="bg-white rounded-xl shadow-md overflow-hidden group relative hover:shadow-lg transition-shadow duration-300"
+                  onClick={() => navigate(`/staff/event/${event.id}`)} // 👈 Navigate on click
+                  className="cursor-pointer bg-white rounded-xl shadow-md overflow-hidden group relative hover:shadow-lg transition-shadow duration-300"
                 >
                   <div className="relative">
                     {imgUrl ? (
@@ -164,9 +166,11 @@ export default function Events() {
                         <FontAwesomeIcon icon={faCalendarAlt} className="text-green-300 text-4xl" />
                       </div>
                     )}
-                    {/* Delete button that appears on hover */}
                     <button
-                      onClick={() => handleDelete(event.id)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // 👈 Prevent card click when deleting
+                        handleDelete(event.id);
+                      }}
                       className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-700"
                       title="Delete event"
                     >
@@ -212,7 +216,11 @@ export default function Events() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filtered.map((event) => (
-                  <tr key={event.id} className="hover:bg-gray-50 group">
+                  <tr
+                    key={event.id}
+                    onClick={() => navigate(`/staff/event/${event.id}`)} // 👈 Navigate on row click
+                    className="hover:bg-gray-50 group cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -232,7 +240,10 @@ export default function Events() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => handleDelete(event.id)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // 👈 Prevent row click when deleting
+                          handleDelete(event.id);
+                        }}
                         className="text-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-red-800"
                       >
                         <FontAwesomeIcon icon={faTrash} className="mr-1" /> Delete
