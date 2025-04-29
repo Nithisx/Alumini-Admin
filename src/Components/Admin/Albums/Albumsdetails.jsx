@@ -59,6 +59,19 @@ const AlbumDetailPage = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [fullscreenImage, currentImageIndex, eventImages]);
 
+  // Prevent body scrolling when modal is open
+  useEffect(() => {
+    if (showForm || fullscreenImage) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showForm, fullscreenImage]);
+
   const handleFileChange = (e) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
@@ -70,13 +83,13 @@ const AlbumDetailPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.title || formData.images.length === 0) {
-      alert("Please enter a title and select at least one image.");
+    if (formData.images.length === 0) {
+      alert("Please select at least one image.");
       return;
     }
 
     let formDataToSend = new FormData();
-    formDataToSend.append("title", formData.title);
+    formDataToSend.append("title", formData.title || "New Image");
 
     // Append each image using the key "images" to match Django's request.FILES.getlist('images')
     formData.images.forEach((image) => {
@@ -134,16 +147,12 @@ const AlbumDetailPage = () => {
     setImageLoading(true); // Start loading
     setFullscreenImage(image);
     setCurrentImageIndex(index);
-    // Prevent body scrolling when modal is open
-    document.body.style.overflow = "hidden";
   };
 
   // Close fullscreen image viewer
   const closeFullscreen = () => {
     setFullscreenImage(null);
     setImageLoading(false);
-    // Restore body scrolling
-    document.body.style.overflow = "auto";
   };
 
   // Show next image
@@ -316,67 +325,96 @@ const AlbumDetailPage = () => {
             </div>
           )}
 
-          {/* Image Upload Form */}
-          {showForm ? (
-            <form
-              onSubmit={handleSubmit}
-              className="mt-4 bg-white p-4 rounded-lg shadow-md"
-            >
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Event Title
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="Enter event title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Upload Images
-                </label>
-                <input
-                  id="imageUpload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-between">
+          {/* Upload Image Modal Popup */}
+          {showForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+                {/* Close button */}
                 <button
-                  type="button"
-                  className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition"
                   onClick={() => setShowForm(false)}
+                  className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+                  aria-label="Close"
                 >
-                  Cancel
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                >
-                  Upload
-                </button>
+
+                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+                  Upload New Images
+                </h2>
+
+                <form onSubmit={handleSubmit}>
+                  {/* Title input is optional */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Title (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter image title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Images
+                    </label>
+                    <input
+                      id="imageUpload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                      onClick={() => setShowForm(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                    >
+                      Upload
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
-          ) : (
-            <button
-              onClick={() => setShowForm(true)}
-              className="fixed bottom-8 right-8 h-14 w-14 flex items-center justify-center rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition"
-            >
-              +
-            </button>
+            </div>
           )}
+
+          {/* Upload Button */}
+          <button
+            onClick={() => setShowForm(true)}
+            className="fixed bottom-8 right-8 h-14 w-14 flex items-center justify-center rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition text-2xl font-bold"
+            title="Upload Images"
+          >
+            +
+          </button>
         </>
       )}
     </div>
