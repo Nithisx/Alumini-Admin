@@ -357,20 +357,6 @@ const AlbumDetailPage = () => {
 
                 <form onSubmit={handleSubmit}>
                   {/* Title input is optional */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter image title"
-                      value={formData.title}
-                      onChange={(e) =>
-                        setFormData({ ...formData, title: e.target.value })
-                      }
-                    />
-                  </div>
 
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
