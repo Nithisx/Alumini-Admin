@@ -84,7 +84,33 @@ const HomePage = () => {
         </div>
 
 
-        <section className="mb-16">
+       
+        {/* Quick Stats */}
+      <div className="bg-white shadow-md py-6 mb-8">
+        <div className="container mxx`-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4">
+              <p className="text-3xl font-bold text-green-600">{data.upcoming_events.length}</p>
+              <p className="text-gray-600">Upcoming Events</p>
+            </div>
+            {/* <div className="text-center p-4">
+              <p className="text-3xl font-bold text-green-600">{data.featured_news.length}</p>
+              <p className="text-gray-600">News Articles</p>
+            </div> */}
+            <div className="text-center p-4">
+              <p className="text-3xl font-bold text-green-600">{data.latest_album_images.length}</p>
+              <p className="text-gray-600">Photo Albums</p>
+            </div>
+            <div className="text-center p-4">
+              <p className="text-3xl font-bold text-green-600">{data.latest_members.length}</p>
+              <p className="text-gray-600">New Members</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <section className="mb-16">
           <div className="flex items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800"> News</h2>
             <div className="ml-auto">
@@ -128,29 +154,6 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Quick Stats */}
-      <div className="bg-white shadow-md py-6 mb-8">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4">
-              <p className="text-3xl font-bold text-green-600">{data.upcoming_events.length}</p>
-              <p className="text-gray-600">Upcoming Events</p>
-            </div>
-            <div className="text-center p-4">
-              <p className="text-3xl font-bold text-green-600">{data.featured_news.length}</p>
-              <p className="text-gray-600">News Articles</p>
-            </div>
-            <div className="text-center p-4">
-              <p className="text-3xl font-bold text-green-600">{data.latest_album_images.length}</p>
-              <p className="text-gray-600">Photo Albums</p>
-            </div>
-            <div className="text-center p-4">
-              <p className="text-3xl font-bold text-green-600">{data.latest_members.length}</p>
-              <p className="text-gray-600">New Members</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4">
