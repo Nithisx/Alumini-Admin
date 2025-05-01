@@ -87,7 +87,7 @@ const HomePage = () => {
 
         <section className="mb-16">
           <div className="flex items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Featured News</h2>
+            <h2 className="text-2xl font-bold text-gray-800"> News</h2>
             <div className="ml-auto">
               <button 
                 onClick={() => navigate('/staff/news/')}
