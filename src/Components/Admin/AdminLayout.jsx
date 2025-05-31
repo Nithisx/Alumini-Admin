@@ -15,8 +15,10 @@ import SingleNews from './News/Singlenews';
 import Members from './Members/Members';
 import Singlemember from './Members/Singlemember';
 import Dashboard from './Dashboard/Dashboard';
-import Birthday from "./Birthday/Birthday"
+import Birthday from "./Birthday/Birthday";
 import Singleevents from './Events/Singleevents';
+import BusinessDirectory from './Business/BusinessDirectory';
+import BusinessDetail from './Business/BusinessDetail';
 const AdminLayout = () => {
   return (
     <div className="flex">
@@ -35,11 +37,12 @@ const AdminLayout = () => {
           <Route path="map" element={<Map />} />
           <Route path="news" element={<NewsRoom />} />
           <Route path="news/:id" element={<SingleNews />} />
-          <Route path="members" element={<Members />} />
-          <Route path="members/:name" element={<Singlemember />} />
+          <Route path="members" element={<Members />} />          <Route path="members/:name" element={<Singlemember />} />
           <Route path="jobs" element={<Addpost />} />
           <Route path="birthday" element={<Birthday />} />
           <Route path="event/:id" element={<Singleevents />} />
+          <Route path="business" element={<BusinessDirectory />} />
+          <Route path="business/:id" element={<BusinessDetail />} />
 
           {/* Add more admin routes if needed */}
         </Routes>

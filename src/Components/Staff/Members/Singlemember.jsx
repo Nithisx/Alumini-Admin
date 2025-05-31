@@ -48,10 +48,10 @@ export default function SingleMember() {
     start_year,
     end_year,
     college_name,
-    chapter,
-    role,
+    chapter,    role,
     bio,
     current_work,
+    worked_in,
     passed_out_year,
     social_links = {},
   } = member;
@@ -111,10 +111,10 @@ export default function SingleMember() {
           </section>
 
           {/* Work */}
-          <section>
-            <h2 className="text-xl font-semibold mb-2">Professional</h2>
+          <section>            <h2 className="text-xl font-semibold mb-2">Professional</h2>
             <div className="space-y-2 text-gray-700">
-              {current_work && <div><span className="font-medium">Current Work:</span> {current_work}</div>}
+              {worked_in && <div><span className="font-medium">Worked In:</span> {worked_in}</div>}
+              {current_work && !worked_in && <div><span className="font-medium">Current Work:</span> {current_work}</div>}
             </div>
           </section>
 

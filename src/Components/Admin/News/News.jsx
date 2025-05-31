@@ -6,6 +6,8 @@ Using a green-600 theme
 import React, { useEffect, useState } from 'react';
 import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
+import placeholderWide from '../../../assets/placeholder-wide.svg';
+import placeholderMedium from '../../../assets/placeholder-medium.svg';
 
 const TOKEN = localStorage.getItem('Token');
 const API_URL = 'http://134.209.157.195:8000/news/';
@@ -115,10 +117,10 @@ export default function NewsList() {
                 <div key={`featured-${post.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg transition transform hover:scale-[1.02]">
                   <div className="relative h-60">
                     <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/600x400'}
+                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : placeholderWide}
                       alt={post.title}
                       className="w-full h-full object-cover"
-                      onError={e => e.target.src = 'https://via.placeholder.com/600x400'}
+                      onError={e => e.target.src = placeholderWide}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                     <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -203,7 +205,7 @@ export default function NewsList() {
                 <div className="sm:flex">
                   <div className="sm:w-1/3 relative">
                     <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/400x300'}
+                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : placeholderMedium}
                       alt={post.title}
                       className="w-full h-48 sm:h-full object-cover"
                       onError={e => e.target.src = 'https://via.placeholder.com/400x300'}
