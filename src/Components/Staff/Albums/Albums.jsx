@@ -4,7 +4,7 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
   faFolderOpen, faPlus, faTimes, faTrash, 
-  faImage, faCheck, faExclamationCircle
+  faImage, faCheck, faExclamationCircle, faSpinner
 } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumsPage = () => {
@@ -17,6 +17,7 @@ const AlbumsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("grid"); // grid or list view
+  const [isCreating, setIsCreating] = useState(false); // Loading state for create button
 
   useEffect(() => {
     const fetchAlbums = async () => {
@@ -66,6 +67,9 @@ const AlbumsPage = () => {
       showNotification("Please enter an album title.", "error");
       return;
     }
+    
+    setIsCreating(true); // Start loading
+    
     try {
       const token = localStorage.getItem("Token");
       const payload = new FormData();
@@ -90,6 +94,8 @@ const AlbumsPage = () => {
     } catch (error) {
       console.error("Error creating album:", error);
       showNotification("Could not create album.", "error");
+    } finally {
+      setIsCreating(false); // Stop loading
     }
   };
 
@@ -105,6 +111,11 @@ const AlbumsPage = () => {
   const removeFile = () => {
     if (uploadedFile?.preview) URL.revokeObjectURL(uploadedFile.preview);
     setUploadedFile(null);
+  };
+
+  // Handle drag and drop box click
+  const handleDragBoxClick = () => {
+    document.getElementById('file-upload').click();
   };
 
   const filteredAlbums = searchTerm 
@@ -313,6 +324,7 @@ const AlbumsPage = () => {
                 <button 
                   onClick={() => setIsModalOpen(false)} 
                   className="text-white hover:text-green-100 transition"
+                  disabled={isCreating}
                 >
                   <FontAwesomeIcon icon={faTimes} size="lg" />
                 </button>
@@ -328,6 +340,7 @@ const AlbumsPage = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   placeholder="Enter album title"
+                  disabled={isCreating}
                 />
               </div>
 
@@ -340,6 +353,7 @@ const AlbumsPage = () => {
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   placeholder="Describe what this album is about"
+                  disabled={isCreating}
                 />
               </div>
 
@@ -351,6 +365,7 @@ const AlbumsPage = () => {
                       onClick={removeFile}
                       type="button"
                       className="absolute top-2 right-2 bg-white text-red-500 rounded-full p-1 shadow-md hover:bg-red-50 transition"
+                      disabled={isCreating}
                     >
                       <FontAwesomeIcon icon={faTimes} />
                     </button>
@@ -366,7 +381,10 @@ const AlbumsPage = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                  <div 
+                    className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition"
+                    onClick={handleDragBoxClick}
+                  >
                     <div className="space-y-1 text-center">
                       <svg
                         className="mx-auto h-12 w-12 text-gray-400"
@@ -383,24 +401,22 @@ const AlbumsPage = () => {
                         />
                       </svg>
                       <div className="flex text-sm text-gray-600">
-                        <label
-                          htmlFor="file-upload"
-                          className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none"
-                        >
-                          <span>Upload a file</span>
-                          <input
-                            id="file-upload"
-                            name="file-upload"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                            className="sr-only"
-                          />
-                        </label>
+                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none">
+                          Upload a file
+                        </span>
                         <p className="pl-1">or drag and drop</p>
                       </div>
                       <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                     </div>
+                    <input
+                      id="file-upload"
+                      name="file-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="sr-only"
+                      disabled={isCreating}
+                    />
                   </div>
                 )}
               </div>
@@ -410,15 +426,26 @@ const AlbumsPage = () => {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                  disabled={isCreating}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 transition flex items-center"
+                  className="px-5 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 transition flex items-center disabled:bg-green-400 disabled:cursor-not-allowed"
+                  disabled={isCreating}
                 >
-                  <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                  Create Album
+                  {isCreating ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                      Create Album
+                    </>
+                  )}
                 </button>
               </div>
             </form>

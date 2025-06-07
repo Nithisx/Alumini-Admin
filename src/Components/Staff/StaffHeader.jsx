@@ -54,8 +54,8 @@ export default function AdminHeader() {
     { path: "/staff/event", icon: faCalendarCheck, label: "Events" },
     { path: "/staff/jobs", icon: faBriefcase, label: "Jobs" },
     { path: "/staff/albums", icon: faPhotoFilm, label: "Albums" },
-    { path: "/staff/map", icon: faMapMarker, label: "Map" },
-    { path: "/staff/news", icon: faNewspaper, label: "NewsRoom" },    { path: "/staff/members", icon: faIdBadge, label: "Members" },
+    { path: "/staff/news", icon: faNewspaper, label: "NewsRoom" },
+    { path: "/staff/members", icon: faIdBadge, label: "Members" },
     { path: "/staff/birthday", icon: faBirthdayCake, label: "Birthdays" },
     { path: "/staff/business", icon: faBuilding, label: "Business Directory" },
   ]

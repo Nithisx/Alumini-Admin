@@ -106,7 +106,7 @@ export default function LoginPage() {
               name="username"
               type="text"
               label="Username"
-              placeholder="Enter your username"
+              placeholder="Enter your username or email"
               value={form.username}
               onChange={handleChange}
               maxLength={100}

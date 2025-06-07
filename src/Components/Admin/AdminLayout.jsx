@@ -37,7 +37,8 @@ const AdminLayout = () => {
           <Route path="map" element={<Map />} />
           <Route path="news" element={<NewsRoom />} />
           <Route path="news/:id" element={<SingleNews />} />
-          <Route path="members" element={<Members />} />          <Route path="members/:name" element={<Singlemember />} />
+          <Route path="members" element={<Members />} />
+          <Route path="members/:name" element={<Singlemember />} />
           <Route path="jobs" element={<Addpost />} />
           <Route path="birthday" element={<Birthday />} />
           <Route path="event/:id" element={<Singleevents />} />

@@ -8,6 +8,8 @@ const AlbumDetailPage = () => {
   const [formData, setFormData] = useState({ title: "", images: [] });
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  // New state for upload loading
+  const [uploading, setUploading] = useState(false);
   // New state for fullscreen image viewer
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -16,6 +18,80 @@ const AlbumDetailPage = () => {
   
   const token = localStorage.getItem("Token"); // Get token from local storage
   const BASE_URL = "http://134.209.157.195:8000";
+
+  // Image compression function
+const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
+  console.log(`Original file size: ${(file.size / (1024 * 1024)).toFixed(2)} MB`);
+
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      let { width, height } = img;
+      const maxDimension = 1920;
+
+      if (width > height && width > maxDimension) {
+        height = (height * maxDimension) / width;
+        width = maxDimension;
+      } else if (height > maxDimension) {
+        width = (width * maxDimension) / height;
+        height = maxDimension;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          const printCompressedSize = (b) => {
+            console.log(`Compressed file size: ${(b.size / (1024 * 1024)).toFixed(2)} MB`);
+          };
+
+          if (blob.size > maxSizeMB * 1024 * 1024 && quality > 0.1) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const newImg = new Image();
+              newImg.onload = () => {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(newImg, 0, 0, width, height);
+                canvas.toBlob(
+                  (finalBlob) => {
+                    printCompressedSize(finalBlob);
+                    const compressedFile = new File([finalBlob], file.name, {
+                      type: file.type,
+                      lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                  },
+                  file.type,
+                  Math.max(0.1, quality - 0.2)
+                );
+              };
+              newImg.src = e.target.result;
+            };
+            reader.readAsDataURL(blob);
+          } else {
+            printCompressedSize(blob);
+            const compressedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now()
+            });
+            resolve(compressedFile);
+          }
+        },
+        file.type,
+        quality
+      );
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 
   useEffect(() => {
     if (!albumId) return;
@@ -72,11 +148,39 @@ const AlbumDetailPage = () => {
     };
   }, [showForm, fullscreenImage]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
       console.log("Selected Files:", selectedFiles);
-      setFormData({ ...formData, images: selectedFiles });
+      
+      // Show loading state while compressing
+      setUploading(true);
+      
+      try {
+        // Compress each image if it's larger than 5MB
+        const compressedFiles = await Promise.all(
+          selectedFiles.map(async (file) => {
+            const fileSizeMB = file.size / (1024 * 1024);
+            console.log(`File ${file.name} size: ${fileSizeMB.toFixed(2)}MB`);
+            
+            if (fileSizeMB > 5) {
+              console.log(`Compressing ${file.name}...`);
+              const compressedFile = await compressImage(file);
+              const compressedSizeMB = compressedFile.size / (1024 * 1024);
+              console.log(`Compressed ${file.name} to ${compressedSizeMB.toFixed(2)}MB`);
+              return compressedFile;
+            }
+            return file;
+          })
+        );
+        
+        setFormData({ ...formData, images: compressedFiles });
+      } catch (error) {
+        console.error("Error compressing images:", error);
+        alert("Error processing images. Please try again.");
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -87,6 +191,8 @@ const AlbumDetailPage = () => {
       alert("Please select at least one image.");
       return;
     }
+
+    setUploading(true); // Start upload loading state
 
     let formDataToSend = new FormData();
     formDataToSend.append("title", formData.title || "New Image");
@@ -124,6 +230,8 @@ const AlbumDetailPage = () => {
     } catch (error) {
       console.error("Error uploading event image:", error);
       alert("Failed to upload event images.");
+    } finally {
+      setUploading(false); // End upload loading state
     }
   };
 
@@ -334,6 +442,7 @@ const AlbumDetailPage = () => {
                   onClick={() => setShowForm(false)}
                   className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
                   aria-label="Close"
+                  disabled={uploading}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -356,8 +465,6 @@ const AlbumDetailPage = () => {
                 </h2>
 
                 <form onSubmit={handleSubmit}>
-                  {/* Title input is optional */}
-
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Select Images
@@ -370,22 +477,35 @@ const AlbumDetailPage = () => {
                       onChange={handleFileChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
+                      disabled={uploading}
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Images larger than 5MB will be automatically compressed
+                    </p>
                   </div>
 
                   <div className="flex justify-end space-x-3">
                     <button
                       type="button"
-                      className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                      className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition disabled:opacity-50"
                       onClick={() => setShowForm(false)}
+                      disabled={uploading}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50 flex items-center"
+                      disabled={uploading}
                     >
-                      Upload
+                      {uploading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                          {formData.images.length > 0 ? 'Uploading...' : 'Processing...'}
+                        </>
+                      ) : (
+                        'Upload'
+                      )}
                     </button>
                   </div>
                 </form>
@@ -396,10 +516,15 @@ const AlbumDetailPage = () => {
           {/* Upload Button */}
           <button
             onClick={() => setShowForm(true)}
-            className="fixed bottom-8 right-8 h-14 w-14 flex items-center justify-center rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition text-2xl font-bold"
+            className="fixed bottom-8 right-8 h-14 w-14 flex items-center justify-center rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition text-2xl font-bold disabled:opacity-50"
             title="Upload Images"
+            disabled={uploading}
           >
-            +
+            {uploading ? (
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+            ) : (
+              '+'
+            )}
           </button>
         </>
       )}
