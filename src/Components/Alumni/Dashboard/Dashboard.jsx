@@ -7,18 +7,14 @@ const HomePage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [token, setToken] = useState(null);
   const BASE_URL = "http://134.209.157.195:8000";
+
+  // Retrieve token directly from localStorage
+  const token = localStorage.getItem("Token");
 
   // Navigation function using window.location
   const navigate = useCallback((path) => {
     window.location.href = path;
-  }, []);
-
-  useEffect(() => {
-    // Get token safely after component mounts
-    const storedToken = localStorage.getItem("Token");
-    setToken(storedToken);
   }, []);
 
   useEffect(() => {
@@ -268,7 +264,7 @@ const HomePage = () => {
                 </svg>
               </div>
               <p className="text-4xl font-bold text-cyan-700 mb-2">
-                {data.latest_members.length}
+                {data.total_users}
               </p>
               <p className="text-cyan-600 font-medium">Total Members</p>
             </div>
@@ -482,7 +478,7 @@ const HomePage = () => {
                     {event.description}
                   </p>
 
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/alumni/event/${event.id}`);
