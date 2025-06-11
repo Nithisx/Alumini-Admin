@@ -316,7 +316,7 @@ const UploadBrochure = () => {
                             <FontAwesomeIcon icon={faTimesCircle} />
                           </button>
                         </div>
-                        
+
                         <div className="flex items-center">
                           <div className="relative mr-3">
                             <img 
@@ -325,7 +325,7 @@ const UploadBrochure = () => {
                               className="w-16 h-16 object-cover rounded"
                             />
                           </div>
-                          
+
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-800 truncate">{uploadedJobFile.name}</p>
                             <p className="text-xs text-gray-500">{uploadedJobFile.size} MB</p>

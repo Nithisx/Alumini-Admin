@@ -27,12 +27,12 @@ const getAuthToken = async () => {
 // Format date to a more readable format
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -47,26 +47,28 @@ const ImageGallery = ({ images }) => {
   };
 
   const prevImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + images.length) % images.length
+    );
   };
 
   return (
     <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden my-3">
-      <img 
-        src={images[currentIndex].image} 
-        alt={`Job image ${currentIndex + 1}`} 
+      <img
+        src={images[currentIndex].image}
+        alt={`Job image ${currentIndex + 1}`}
         className="w-full h-full object-cover"
       />
-      
+
       {images.length > 1 && (
         <>
-          <button 
+          <button
             onClick={prevImage}
             className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
           >
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
-          <button 
+          <button
             onClick={nextImage}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
           >
@@ -74,9 +76,11 @@ const ImageGallery = ({ images }) => {
           </button>
           <div className="absolute bottom-2 left-0 right-0 flex justify-center">
             {images.map((_, idx) => (
-              <div 
-                key={idx} 
-                className={`h-2 w-2 mx-1 rounded-full ${idx === currentIndex ? 'bg-white' : 'bg-gray-400'}`}
+              <div
+                key={idx}
+                className={`h-2 w-2 mx-1 rounded-full ${
+                  idx === currentIndex ? "bg-white" : "bg-gray-400"
+                }`}
                 onClick={() => setCurrentIndex(idx)}
               ></div>
             ))}
@@ -90,15 +94,17 @@ const ImageGallery = ({ images }) => {
 // Comment Section Component
 const CommentSection = ({ comments, totalComments }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   if (!comments || comments.length === 0) return null;
-  
+
   return (
     <div className="mt-4 border-t pt-3">
       <div className="flex justify-between items-center mb-2">
-        <h4 className="font-medium text-gray-700">Comments ({totalComments})</h4>
+        <h4 className="font-medium text-gray-700">
+          Comments ({totalComments})
+        </h4>
         {totalComments > 2 && (
-          <button 
+          <button
             className="text-blue-600 text-sm font-medium"
             onClick={() => setIsExpanded(!isExpanded)}
           >
@@ -106,19 +112,22 @@ const CommentSection = ({ comments, totalComments }) => {
           </button>
         )}
       </div>
-      
+
       <div className="space-y-3">
-        {(isExpanded ? comments : comments.slice(0, 2)).map(comment => (
+        {(isExpanded ? comments : comments.slice(0, 2)).map((comment) => (
           <div key={comment.id} className="flex space-x-2">
             <div className="flex-shrink-0">
               {comment.user.profile_photo ? (
-                <img 
-                  src={comment.user.profile_photo} 
+                <img
+                  src={comment.user.profile_photo}
                   alt={`${comment.user.first_name}'s avatar`}
                   className="w-8 h-8 rounded-full"
                 />
               ) : (
-                <FontAwesomeIcon icon={faUserCircle} className="w-6 h-6 text-gray-400" />
+                <FontAwesomeIcon
+                  icon={faUserCircle}
+                  className="w-6 h-6 text-gray-400"
+                />
               )}
             </div>
             <div className="flex-1 bg-gray-50 p-2 rounded-lg">
@@ -203,7 +212,7 @@ const AdminFeed = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-      
+
       setPosts([response.data, ...posts]);
       setShowNewPostForm(false);
 
@@ -217,7 +226,11 @@ const AdminFeed = () => {
       setSelectedImage(null);
     } catch (error) {
       if (error.response) {
-        console.error("Server error:", error.response.status, error.response.data);
+        console.error(
+          "Server error:",
+          error.response.status,
+          error.response.data
+        );
       } else if (error.request) {
         console.error("Network error: No response received", error.request);
       } else {
@@ -252,7 +265,7 @@ const AdminFeed = () => {
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Jobs Feed</h2>
-          <button 
+          <button
             onClick={() => setShowNewPostForm(!showNewPostForm)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
           >
@@ -260,18 +273,20 @@ const AdminFeed = () => {
             {showNewPostForm ? "Cancel" : "Add Job"}
           </button>
         </div>
-        
+
         {/* New Post Form */}
         {showNewPostForm && (
           <div className="bg-white shadow-lg rounded-lg p-6 mb-6 border border-gray-200">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800">Create New Job Post</h3>
-            
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              Create New Job Post
+            </h3>
+
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded mb-4">
                 {error}
               </div>
             )}
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 mb-1">Company Name</label>
@@ -283,7 +298,7 @@ const AdminFeed = () => {
                   placeholder="Company name"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 mb-1">Role</label>
                 <input
@@ -294,7 +309,7 @@ const AdminFeed = () => {
                   placeholder="Job role/title"
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-1">Location</label>
@@ -306,9 +321,11 @@ const AdminFeed = () => {
                     placeholder="Location"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-gray-700 mb-1">Salary Range</label>
+                  <label className="block text-gray-700 mb-1">
+                    Salary Range
+                  </label>
                   <input
                     type="text"
                     value={newPostSalary}
@@ -317,7 +334,7 @@ const AdminFeed = () => {
                     placeholder="e.g. 25K-30K"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 mb-1">Job Type</label>
                   <select
@@ -333,7 +350,7 @@ const AdminFeed = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 mb-1">Description</label>
                 <textarea
@@ -343,7 +360,7 @@ const AdminFeed = () => {
                   placeholder="Job description..."
                 ></textarea>
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 mb-1">Upload Image</label>
                 <input
@@ -357,7 +374,7 @@ const AdminFeed = () => {
                   </p>
                 )}
               </div>
-              
+
               <button
                 onClick={handleSubmitPost}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition"
@@ -404,29 +421,29 @@ const AdminFeed = () => {
                         {post.user?.first_name} {post.user?.last_name}
                       </div>
                       <div className="flex items-center text-xs text-gray-500">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="mr-1" />
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="mr-1"
+                        />
                         <span>{formatDate(post.posted_on)}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => deletePost(post.id)}
-                      className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-full transition"
-                      title="Delete job post"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </div>
+                  <div className="flex items-center"></div>
                 </div>
-                
+
                 {/* Job info */}
                 <div className="p-4">
                   {/* Company and Role */}
                   <div className="mb-3">
-                    <h3 className="text-xl font-bold text-gray-800">{post.role}</h3>
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {post.role}
+                    </h3>
                     <div className="flex items-center text-gray-700 mt-1">
-                      <FontAwesomeIcon icon={faBuilding} className="mr-2 text-gray-500" />
+                      <FontAwesomeIcon
+                        icon={faBuilding}
+                        className="mr-2 text-gray-500"
+                      />
                       <span>{post.company_name}</span>
                     </div>
                   </div>
@@ -434,15 +451,24 @@ const AdminFeed = () => {
                   {/* Job Details */}
                   <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
                     <div className="flex items-center">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-gray-500" />
+                      <FontAwesomeIcon
+                        icon={faMapMarkerAlt}
+                        className="mr-2 text-gray-500"
+                      />
                       <span>{post.location}</span>
                     </div>
                     <div className="flex items-center">
-                      <FontAwesomeIcon icon={faMoneyBillWave} className="mr-2 text-gray-500" />
+                      <FontAwesomeIcon
+                        icon={faMoneyBillWave}
+                        className="mr-2 text-gray-500"
+                      />
                       <span>{post.salary_range}</span>
                     </div>
                     <div className="flex items-center col-span-2">
-                      <FontAwesomeIcon icon={faClock} className="mr-2 text-gray-500" />
+                      <FontAwesomeIcon
+                        icon={faClock}
+                        className="mr-2 text-gray-500"
+                      />
                       <span className="capitalize">{post.job_type}</span>
                     </div>
                   </div>
@@ -458,23 +484,30 @@ const AdminFeed = () => {
                   {/* Reactions */}
                   <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
-                      <FontAwesomeIcon 
-                        icon={faHeart} 
-                        className={post.reaction?.like > 0 ? "text-red-500" : "text-gray-500"} 
+                      <FontAwesomeIcon
+                        icon={faHeart}
+                        className={
+                          post.reaction?.like > 0
+                            ? "text-red-500"
+                            : "text-gray-500"
+                        }
                       />
                       <span>{post.reaction?.like || 0} likes</span>
                     </button>
-                    
+
                     <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
-                      <FontAwesomeIcon icon={faComment} className="text-gray-500" />
+                      <FontAwesomeIcon
+                        icon={faComment}
+                        className="text-gray-500"
+                      />
                       <span>{post.total_comments || 0} comments</span>
                     </button>
                   </div>
 
                   {/* Comments */}
-                  <CommentSection 
-                    comments={post.comments} 
-                    totalComments={post.total_comments} 
+                  <CommentSection
+                    comments={post.comments}
+                    totalComments={post.total_comments}
                   />
                 </div>
               </div>

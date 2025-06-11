@@ -233,19 +233,26 @@ const JobFeed = () => {
     e.preventDefault();
     setIsDragging(true);
   };
-  const handleDragLeave = () => setIsDragging(false);
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files[0]);
     }
-  };
+  }; // Handle file selection
+
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
   };
+
+  // Process the selected file
   const handleFile = (file) => {
     // Check if file is an image
     const fileType = file.type;
@@ -261,8 +268,12 @@ const JobFeed = () => {
       alert("Please upload only image files.");
     }
   };
+
+  // Remove uploaded file
   const removeFile = () => {
-    if (uploadedFile?.preview) URL.revokeObjectURL(uploadedFile.preview);
+    if (uploadedFile?.preview) {
+      URL.revokeObjectURL(uploadedFile.preview);
+    }
     setUploadedFile(null);
   };
 
@@ -480,7 +491,7 @@ const JobFeed = () => {
         )}
       </div>
 
-      {/* Floating Add Post Button */}
+      {/* Add post floating button */}
       <button
         onClick={() => setIsModalOpen(true)}
         className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg 
@@ -490,7 +501,7 @@ const JobFeed = () => {
         <FontAwesomeIcon icon={faPlus} className="text-xl" />
       </button>
 
-      {/* Modal */}
+      {/* Upload Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
@@ -507,6 +518,7 @@ const JobFeed = () => {
               </button>
             </div>
 
+            {/* Modal Body */}
             <form onSubmit={handleSubmit}>
               <div className="p-4">
                 {error && (
@@ -711,7 +723,8 @@ const JobFeed = () => {
                 </div>
               </div>
 
-              <div className="p-4 border-t flex justify-end gap-3">
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-gray-200 flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={closeModal}
@@ -736,7 +749,7 @@ const JobFeed = () => {
                     <>
                       <FontAwesomeIcon
                         icon={faSpinner}
-                        className="animate-spin"
+                        className="animate-spin mr-2"
                       />
                       Posting...
                     </>

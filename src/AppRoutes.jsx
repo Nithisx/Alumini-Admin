@@ -1,22 +1,27 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Our Components
-import LoginPage from './Pages/Login'; // Your existing login
+// Pages
+import LoginPage from './Pages/Login';
 import Signup from './Pages/Signup';
+
+// Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
 import StaffLayout from './Components/Staff/StaffLayout';
+import AlumniLayout from './Components/Alumni/AlumniLayout';
+
+// Protected route wrapper
 import ProtectedRoute from './Components/Shared/ProtectedRoute';
 
 const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        {/* Public Route: Login */}
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/Signup" element={<Signup />} />
 
-        {/* Admin Routes (Protected) */}
+        {/* Admin Routes */}
         <Route
           path="/admin/*"
           element={
@@ -26,7 +31,7 @@ const AppRoutes = () => {
           }
         />
 
-        {/* Staff Routes (Protected) */}
+        {/* Staff Routes */}
         <Route
           path="/staff/*"
           element={
@@ -36,7 +41,17 @@ const AppRoutes = () => {
           }
         />
 
-        {/* Default or 404 */}
+        {/* Alumni Routes */}
+        <Route
+          path="/alumni/*"
+          element={
+            <ProtectedRoute requiredRole="alumni">
+              <AlumniLayout />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Fallback */}
         <Route path="*" element={<LoginPage />} />
       </Routes>
     </Router>

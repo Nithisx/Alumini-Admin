@@ -26,7 +26,7 @@ const AdminLayout = () => {
       <AdminHeader />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-gray-100 ml-64">
+      <main className="md:ml-60 p-4">
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="register-request" element={<RegisterRequestPage />} />

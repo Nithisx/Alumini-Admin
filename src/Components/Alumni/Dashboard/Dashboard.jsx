@@ -160,7 +160,7 @@ const HomePage = () => {
         <div className="absolute top-8 left-8 bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4">
           <h2 className="text-2xl font-bold text-green-800">Welcome Back!</h2>
           <p className="text-green-600">
-            Stay connected with your Alumni community
+            Stay connected with your alumni community
           </p>
         </div>
       </div>
@@ -283,7 +283,7 @@ const HomePage = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/staff/news/")}
+              onClick={() => navigate("/alumni/news/")}
               className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg flex items-center"
             >
               View All News
@@ -308,7 +308,7 @@ const HomePage = () => {
               <div
                 key={news.id}
                 className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-green-100"
-                onClick={() => navigate(`/staff/news/${news.id}/`)}
+                onClick={() => navigate(`/alumni/news/${news.id}/`)}
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
@@ -366,7 +366,7 @@ const HomePage = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/staff/event/")}
+              onClick={() => navigate("/alumni/event/")}
               className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-3 rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 font-semibold shadow-lg flex items-center"
             >
               View All Events
@@ -391,7 +391,7 @@ const HomePage = () => {
               <div
                 key={event.id}
                 className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-green-100"
-                onClick={() => navigate(`/staff/event/${event.id}`)}
+                onClick={() => navigate(`/alumni/event/${event.id}`)}
               >
                 {event.images && event.images[0] ? (
                   <div className="relative h-56 overflow-hidden">
@@ -481,7 +481,7 @@ const HomePage = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/staff/event/${event.id}`);
+                      navigate(`/alumni/event/${event.id}`);
                     }}
                     className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg"
                   >
@@ -504,7 +504,7 @@ const HomePage = () => {
                 <p className="text-green-600">Memories captured in time</p>
               </div>
               <button
-                onClick={() => navigate("/staff/albums/")}
+                onClick={() => navigate("/alumni/albums/")}
                 className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white px-8 py-3 rounded-2xl hover:from-teal-600 hover:to-cyan-700 transition-all duration-200 font-semibold shadow-lg flex items-center"
               >
                 View Gallery
@@ -529,7 +529,7 @@ const HomePage = () => {
                 <div
                   key={album.id}
                   className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-green-100"
-                  onClick={() => navigate(`/staff/albums/${album.id}/`)}
+                  onClick={() => navigate(`/alumni/albums/${album.id}/`)}
                 >
                   <div className="relative h-48 overflow-hidden">
                     {album.cover_image ? (
@@ -587,10 +587,10 @@ const HomePage = () => {
                 <h2 className="text-3xl font-bold text-green-800 mb-2">
                   New Members
                 </h2>
-                <p className="text-green-600">Welcome our newest Alumni</p>
+                <p className="text-green-600">Welcome our newest alumni</p>
               </div>
               <button
-                onClick={() => navigate("/staff/members/")}
+                onClick={() => navigate("/alumni/members/")}
                 className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all duration-200 font-semibold shadow-lg text-sm flex items-center"
               >
                 View All
@@ -620,7 +620,7 @@ const HomePage = () => {
                       : ""
                   }`}
                   onClick={() =>
-                    navigate(`/staff/members/${member.username}/`)
+                    navigate(`/alumni/members/${member.username}/`)
                   }
                 >
                   <div className="mr-4 relative">
@@ -643,7 +643,7 @@ const HomePage = () => {
                       {member.first_name} {member.last_name}
                     </h3>
                     <p className="text-sm text-green-600 font-medium">
-                      {member.role || "staff Member"}
+                      {member.role || "Alumni Member"}
                     </p>
                   </div>
                   <svg
@@ -671,7 +671,7 @@ const HomePage = () => {
         <div className="container mx-auto px-6 text-center">
           <h3 className="text-2xl font-bold mb-4">Stay Connected</h3>
           <p className="text-green-200 mb-6">
-            Join our thriving Alumni community and never miss an update
+            Join our thriving alumni community and never miss an update
           </p>
           <div className="flex justify-center space-x-6">
             <button
