@@ -51,7 +51,7 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="min-h-screen  flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
         <div className="text-center p-8 bg-white rounded-3xl shadow-xl border border-green-100">
           <div className="w-20 h-20 border-4 border-green-300 border-t-green-600 rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-xl font-semibold text-green-800">
@@ -157,9 +157,9 @@ const HomePage = () => {
           ))}
         </div>
 
-        <div className="absolute top-8 left-8 bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4">
-          <h2 className="text-2xl font-bold text-green-800">Welcome Back!</h2>
-          <p className="text-green-600">
+        <div className="absolute top-8 left-2 bg-white/90 backdrop-blur-sm rounded-2xl px-3 md:px-6 py-2 md:py-4">
+          <h2 className="text-xl md:text-2xl font-bold text-green-800">Welcome Back!</h2>
+          <p className="text-green-600 text-sm md:text-base mt-2">
             Stay connected with your alumni community
           </p>
         </div>
@@ -263,7 +263,7 @@ const HomePage = () => {
                   ></path>
                 </svg>
               </div>
-              <p className="text-4xl font-bold text-cyan-700 mb-2">
+              <p className="text-3xl font-bold text-cyan-700 mb-2">
                 {data.total_users}
               </p>
               <p className="text-cyan-600 font-medium">Total Members</p>
@@ -578,6 +578,66 @@ const HomePage = () => {
                 </div>
               ))}
             </div>
+
+            <section className="mb-16 my-[100px]">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-4xl font-bold text-green-800 mb-2">
+                Alumni Chapters
+              </h2>
+              <p className="text-green-600">
+                Connect with alumni in your region
+              </p>
+            </div>
+            
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data.chapters.slice(0, 6).map((chapter, index) => (
+              <div
+                key={index}
+                className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-green-100"
+                onClick={() => navigate(`/alumni/chapters/${encodeURIComponent(chapter.chapter)}/`)}
+              >
+                <div className="flex items-center mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
+                    <svg
+                      className="w-6 h-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      ></path>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-3xl font-bold text-blue-700 mb-1">
+                      {chapter.member_count.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-blue-600 font-medium">Members</div>
+                  </div>
+                </div>
+                
+                <h3 className="text-lg font-bold text-green-800 mb-4 line-clamp-2 group-hover:text-green-600 transition-colors duration-200">
+                  {chapter.chapter.replace(/&#039;/g, "'")}
+                </h3>
+                
+               
+              </div>
+            ))}
+          </div>
+        </section>
           </section>
 
           {/* New Members */}
@@ -610,6 +670,7 @@ const HomePage = () => {
               </button>
             </div>
 
+              
             <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 border border-green-100">
               {data.latest_members.map((member, index) => (
                 <div
@@ -665,6 +726,10 @@ const HomePage = () => {
           </section>
         </div>
       </div>
+
+
+      
+
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-green-800 via-emerald-800 to-teal-800 text-white py-12 mt-20">

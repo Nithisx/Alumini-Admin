@@ -12,7 +12,9 @@ import {
   faIdBadge,
   faBirthdayCake,
   faBriefcase,
-  faBuilding
+  faBuilding,
+  faUser,
+  faHandHoldingHeart
 } from "@fortawesome/free-solid-svg-icons"
 import "../../App.css"
 
@@ -58,6 +60,8 @@ export default function AdminHeader() {
     { path: "/staff/members", icon: faIdBadge, label: "Members" },
     { path: "/staff/birthday", icon: faBirthdayCake, label: "Birthdays" },
     { path: "/staff/business", icon: faBuilding, label: "Business Directory" },
+    { path: "/staff/my-profile", icon: faUser, label: "My Profile" },
+  { path: "/staff/my-contribution", icon: faHandHoldingHeart, label: "My Contribution" },
   ]
 
   return (

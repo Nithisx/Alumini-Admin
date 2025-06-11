@@ -8,12 +8,15 @@ import {
   faSignOutAlt,
   faBars,
   faTimes,
-  faShield,  faUserPlus,
+  faShield,
+  faUserPlus,
   faNewspaper,
   faIdBadge,
   faBirthdayCake,
   faBriefcase,
-  faBuilding
+  faBuilding,
+  faUser,
+  faHandHoldingHeart,
 } from "@fortawesome/free-solid-svg-icons";
 import "../../App.css";
 
@@ -61,9 +64,16 @@ export default function AdminHeader() {
     { path: "/admin/jobs", icon: faBriefcase, label: "Jobs" },
 
     { path: "/admin/albums", icon: faPhotoFilm, label: "Albums" },
-    { path: "/admin/news", icon: faNewspaper, label: "NewsRoom" },    { path: "/admin/members", icon: faIdBadge, label: "Members" },
+    { path: "/admin/news", icon: faNewspaper, label: "NewsRoom" },
+    { path: "/admin/members", icon: faIdBadge, label: "Members" },
     { path: "/admin/birthday", icon: faBirthdayCake, label: "Birthdays" },
     { path: "/admin/business", icon: faBuilding, label: "Business Directory" },
+    { path: "/admin/my-profile", icon: faUser, label: "My Profile" },
+    {
+      path: "/admin/my-contribution",
+      icon: faHandHoldingHeart,
+      label: "My Contribution",
+    },
   ];
 
   return (
