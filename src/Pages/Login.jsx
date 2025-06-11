@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import kahelogo from "../assets/kahelogo.png";
 
-// axios instance with a shared base URL & JSON headers
+// axios instance
 const api = axios.create({
   baseURL: "http://134.209.157.195:8000",
   headers: { "Content-Type": "application/json" },
@@ -12,30 +12,33 @@ const api = axios.create({
 export default function LoginPage() {
   const navigate = useNavigate();
 
-  // consolidate form data
   const [form, setForm] = useState({
     username: "",
     password: "",
-    role: "staff",
+    role: "alumni",
   });
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // generic onChange for all inputs
-  const handleChange = useCallback(e => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
     setError("");
   }, []);
 
-  // pick the correct endpoint based on role
-  const loginUrl = useMemo(
-    () => (form.role === "admin" ? "/login/admin/" : "/login/staff/"),
-    [form.role]
-  );
+  const loginUrl = useMemo(() => {
+    switch (form.role) {
+      case "admin":
+        return "/login/admin/";
+      case "alumni":
+        return "/login/user/";
+      default:
+        return "/login/staff/";
+    }
+  }, [form.role]);
 
   const handleLogin = useCallback(
-    async e => {
+    async (e) => {
       e.preventDefault();
       setError("");
 
@@ -53,15 +56,26 @@ export default function LoginPage() {
         if (data.token) {
           localStorage.setItem("Token", data.token);
           localStorage.setItem("Role", form.role);
-          navigate(form.role === "admin" ? "/admin/dashboard" : "/staff/dashboard");
+          console.log("Login successful:", data);
+          switch (form.role) {
+            
+            case "admin":
+              navigate("/admin/dashboard");
+              break;
+            case "alumni":
+              navigate("/alumni/dashboard");
+              break;
+            default:
+              navigate("/staff/dashboard");
+          }
         } else {
           setError(data.error || "Login failed: no token received");
         }
       } catch (err) {
         setError(
           err.response?.data?.error ||
-          err.message ||
-          "An unexpected error occurred"
+            err.message ||
+            "An unexpected error occurred"
         );
       } finally {
         setLoading(false);
@@ -87,9 +101,7 @@ export default function LoginPage() {
         >
           <h2 className="text-2xl font-bold text-gray-900 text-center">Welcome Back!</h2>
 
-          {error && (
-            <ErrorBanner message={error} />
-          )}
+          {error && <ErrorBanner message={error} />}
 
           <div className="space-y-4">
             <Select
@@ -99,6 +111,7 @@ export default function LoginPage() {
               options={[
                 { value: "admin", label: "Admin" },
                 { value: "staff", label: "Staff" },
+                { value: "alumni", label: "Alumni" },
               ]}
             />
 
@@ -148,13 +161,11 @@ export default function LoginPage() {
   );
 }
 
-// Reusable input with label
+// Input component
 function Input({ name, label, ...props }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <input
         name={name}
         {...props}
@@ -164,7 +175,7 @@ function Input({ name, label, ...props }) {
   );
 }
 
-// Reusable select
+// Select component
 function Select({ name, label, options, ...props }) {
   return (
     <div>
@@ -176,7 +187,7 @@ function Select({ name, label, options, ...props }) {
         {...props}
         className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
       >
-        {options.map(opt => (
+        {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>
@@ -186,24 +197,11 @@ function Select({ name, label, options, ...props }) {
   );
 }
 
-// Error banner component
+// Error Banner
 function ErrorBanner({ message }) {
   return (
-    <div className="flex items-center bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded">
-      <svg
-        className="h-5 w-5 mr-2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M13 16h-1v-4h-1m0-4h.01M12 2a10 10 0 110 20 10 10 0 010-20z"
-        />
-      </svg>
-      <span>{message}</span>
+    <div className="bg-red-100 text-red-800 px-4 py-2 rounded text-sm text-center">
+      {message}
     </div>
   );
 }

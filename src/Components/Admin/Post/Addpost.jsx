@@ -20,7 +20,7 @@ import {
   faTimesCircle,
   faTimes,
   faUpload,
-  faSpinner
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
 const API_URL = "http://134.209.157.195:8000/jobs/";
@@ -34,12 +34,12 @@ const getAuthToken = async () => {
 // Format date to a more readable format
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -54,7 +54,9 @@ const ImageGallery = ({ images }) => {
   };
 
   const prevImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + images.length) % images.length
+    );
   };
 
   // Fix for image paths that might be relative
@@ -66,21 +68,21 @@ const ImageGallery = ({ images }) => {
 
   return (
     <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden my-3">
-      <img 
-        src={getImageUrl(images[currentIndex].image)} 
-        alt={`Job image ${currentIndex + 1}`} 
+      <img
+        src={getImageUrl(images[currentIndex].image)}
+        alt={`Job image ${currentIndex + 1}`}
         className="w-full h-full object-cover"
       />
-      
+
       {images.length > 1 && (
         <>
-          <button 
+          <button
             onClick={prevImage}
             className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
           >
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
-          <button 
+          <button
             onClick={nextImage}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
           >
@@ -88,9 +90,11 @@ const ImageGallery = ({ images }) => {
           </button>
           <div className="absolute bottom-2 left-0 right-0 flex justify-center">
             {images.map((_, idx) => (
-              <div 
-                key={idx} 
-                className={`h-2 w-2 mx-1 rounded-full ${idx === currentIndex ? 'bg-white' : 'bg-gray-400'}`}
+              <div
+                key={idx}
+                className={`h-2 w-2 mx-1 rounded-full ${
+                  idx === currentIndex ? "bg-white" : "bg-gray-400"
+                }`}
                 onClick={() => setCurrentIndex(idx)}
               ></div>
             ))}
@@ -104,15 +108,17 @@ const ImageGallery = ({ images }) => {
 // Comment Section Component
 const CommentSection = ({ comments, totalComments }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   if (!comments || comments.length === 0) return null;
-  
+
   return (
     <div className="mt-4 border-t pt-3">
       <div className="flex justify-between items-center mb-2">
-        <h4 className="font-medium text-gray-700">Comments ({totalComments})</h4>
+        <h4 className="font-medium text-gray-700">
+          Comments ({totalComments})
+        </h4>
         {totalComments > 2 && (
-          <button 
+          <button
             className="text-green-600 text-sm font-medium"
             onClick={() => setIsExpanded(!isExpanded)}
           >
@@ -120,19 +126,22 @@ const CommentSection = ({ comments, totalComments }) => {
           </button>
         )}
       </div>
-      
+
       <div className="space-y-3">
-        {(isExpanded ? comments : comments.slice(0, 2)).map(comment => (
+        {(isExpanded ? comments : comments.slice(0, 2)).map((comment) => (
           <div key={comment.id} className="flex space-x-2">
             <div className="flex-shrink-0">
               {comment.user.profile_photo ? (
-                <img 
-                  src={comment.user.profile_photo} 
+                <img
+                  src={comment.user.profile_photo}
                   alt={`${comment.user.first_name}'s avatar`}
                   className="w-8 h-8 rounded-full"
                 />
               ) : (
-                <FontAwesomeIcon icon={faUserCircle} className="w-6 h-6 text-gray-400" />
+                <FontAwesomeIcon
+                  icon={faUserCircle}
+                  className="w-6 h-6 text-gray-400"
+                />
               )}
             </div>
             <div className="flex-1 bg-gray-50 p-2 rounded-lg">
@@ -157,14 +166,14 @@ const JobFeed = () => {
   // Posts state
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   // Modal and file upload states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   // Form field states
   const [description, setDescription] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -218,7 +227,7 @@ const JobFeed = () => {
       console.error("Error deleting post", error);
     }
   };
-  
+
   // Handle drop zone events
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -246,7 +255,7 @@ const JobFeed = () => {
         name: file.name,
         type: fileType,
         preview: URL.createObjectURL(file),
-        size: (file.size / 1024 / 1024).toFixed(2) // Convert to MB
+        size: (file.size / 1024 / 1024).toFixed(2), // Convert to MB
       });
     } else {
       alert("Please upload only image files.");
@@ -278,13 +287,13 @@ const JobFeed = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Simple validation
     if (!companyName || !role || !location) {
       setError("Company name, role, and location are required.");
       return;
     }
-    
+
     setIsSubmitting(true);
     setError("");
 
@@ -299,7 +308,7 @@ const JobFeed = () => {
       formData.append("location", location);
       formData.append("salary_range", salaryRange);
       formData.append("job_type", jobType);
-      
+
       if (uploadedFile) {
         formData.append("images", uploadedFile.file);
       }
@@ -310,16 +319,18 @@ const JobFeed = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-      
+
       // Add new post to state
       setPosts([response.data, ...posts]);
-      
+
       // Close modal and reset form
       closeModal();
-      
     } catch (error) {
       console.error("Error creating post:", error);
-      setError(error.response?.data?.message || "Failed to create post. Please try again.");
+      setError(
+        error.response?.data?.message ||
+          "Failed to create post. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -369,32 +380,32 @@ const JobFeed = () => {
                         {post.user?.first_name} {post.user?.last_name}
                       </div>
                       <div className="flex items-center text-xs text-gray-500">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="mr-1" />
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="mr-1"
+                        />
                         <span>{formatDate(post.posted_on)}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => deletePost(post.id)}
-                      className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-full transition"
-                      title="Delete job post"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </div>
+                  <div className="flex items-center"></div>
                 </div>
-                
+
                 {/* Green colored tag at top of content */}
                 <div className="bg-green-600 h-1 w-full"></div>
-                
+
                 {/* Job info */}
                 <div className="p-4">
                   {/* Company and Role */}
                   <div className="mb-3">
-                    <h3 className="text-xl font-bold text-green-600">{post.role}</h3>
+                    <h3 className="text-xl font-bold text-green-600">
+                      {post.role}
+                    </h3>
                     <div className="flex items-center text-gray-700 mt-1">
-                      <FontAwesomeIcon icon={faBuilding} className="mr-2 text-green-600" />
+                      <FontAwesomeIcon
+                        icon={faBuilding}
+                        className="mr-2 text-green-600"
+                      />
                       <span>{post.company_name}</span>
                     </div>
                   </div>
@@ -402,16 +413,27 @@ const JobFeed = () => {
                   {/* Job Details */}
                   <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
                     <div className="flex items-center">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-green-600" />
+                      <FontAwesomeIcon
+                        icon={faMapMarkerAlt}
+                        className="mr-2 text-green-600"
+                      />
                       <span>{post.location}</span>
                     </div>
                     <div className="flex items-center">
-                      <FontAwesomeIcon icon={faMoneyBillWave} className="mr-2 text-green-600" />
+                      <FontAwesomeIcon
+                        icon={faMoneyBillWave}
+                        className="mr-2 text-green-600"
+                      />
                       <span>{post.salary_range || "Not specified"}</span>
                     </div>
                     <div className="flex items-center col-span-2">
-                      <FontAwesomeIcon icon={faClock} className="mr-2 text-green-600" />
-                      <span className="capitalize">{post.job_type || "Not specified"}</span>
+                      <FontAwesomeIcon
+                        icon={faClock}
+                        className="mr-2 text-green-600"
+                      />
+                      <span className="capitalize">
+                        {post.job_type || "Not specified"}
+                      </span>
                     </div>
                   </div>
 
@@ -426,23 +448,30 @@ const JobFeed = () => {
                   {/* Reactions */}
                   <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
-                      <FontAwesomeIcon 
-                        icon={faHeart} 
-                        className={post.reaction?.like > 0 ? "text-red-500" : "text-gray-500"} 
+                      <FontAwesomeIcon
+                        icon={faHeart}
+                        className={
+                          post.reaction?.like > 0
+                            ? "text-red-500"
+                            : "text-gray-500"
+                        }
                       />
                       <span>{post.reaction?.like || 0} likes</span>
                     </button>
-                    
+
                     <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
-                      <FontAwesomeIcon icon={faComment} className="text-gray-500" />
+                      <FontAwesomeIcon
+                        icon={faComment}
+                        className="text-gray-500"
+                      />
                       <span>{post.total_comments || 0} comments</span>
                     </button>
                   </div>
 
                   {/* Comments */}
-                  <CommentSection 
-                    comments={post.comments} 
-                    totalComments={post.total_comments} 
+                  <CommentSection
+                    comments={post.comments}
+                    totalComments={post.total_comments}
                   />
                 </div>
               </div>
@@ -467,8 +496,10 @@ const JobFeed = () => {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
             {/* Modal Header */}
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-xl font-semibold text-green-600">Create New Job Post</h3>
-              <button 
+              <h3 className="text-xl font-semibold text-green-600">
+                Create New Job Post
+              </h3>
+              <button
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
@@ -487,7 +518,10 @@ const JobFeed = () => {
                 {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="company"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Company Name *
                     </label>
                     <input
@@ -500,9 +534,12 @@ const JobFeed = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="md:col-span-2">
-                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="role"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Role/Position *
                     </label>
                     <input
@@ -515,9 +552,12 @@ const JobFeed = () => {
                       required
                     />
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="location"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Location *
                     </label>
                     <input
@@ -530,9 +570,12 @@ const JobFeed = () => {
                       required
                     />
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="salary"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Salary Range
                     </label>
                     <input
@@ -544,9 +587,12 @@ const JobFeed = () => {
                       onChange={(e) => setSalaryRange(e.target.value)}
                     />
                   </div>
-                  
+
                   <div className="md:col-span-2">
-                    <label htmlFor="jobType" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="jobType"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Job Type
                     </label>
                     <select
@@ -563,9 +609,12 @@ const JobFeed = () => {
                       <option value="remote">Remote</option>
                     </select>
                   </div>
-                  
+
                   <div className="md:col-span-2">
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Description
                     </label>
                     <textarea
@@ -583,7 +632,11 @@ const JobFeed = () => {
                     {!uploadedFile ? (
                       <div
                         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                  ${isDragging ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-400"}`}
+                                  ${
+                                    isDragging
+                                      ? "border-green-500 bg-green-50"
+                                      : "border-gray-300 hover:border-green-400"
+                                  }`}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
@@ -591,13 +644,23 @@ const JobFeed = () => {
                       >
                         <div className="flex flex-col items-center">
                           <div className="mb-3 bg-gray-100 p-3 rounded-full">
-                            <FontAwesomeIcon icon={faUpload} className="text-xl text-green-500" />
+                            <FontAwesomeIcon
+                              icon={faUpload}
+                              className="text-xl text-green-500"
+                            />
                           </div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Drop image to upload</h4>
-                          <p className="text-xs text-gray-500 mb-2">or click to browse</p>
-                          
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">
+                            Drop image to upload
+                          </h4>
+                          <p className="text-xs text-gray-500 mb-2">
+                            or click to browse
+                          </p>
+
                           <div className="flex items-center text-xs text-gray-500">
-                            <FontAwesomeIcon icon={faImage} className="text-green-500 mr-1" />
+                            <FontAwesomeIcon
+                              icon={faImage}
+                              className="text-green-500 mr-1"
+                            />
                             <span>Supported formats: JPG, PNG, GIF</span>
                           </div>
                         </div>
@@ -612,7 +675,9 @@ const JobFeed = () => {
                     ) : (
                       <div className="border rounded-lg p-3">
                         <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-medium text-gray-700 text-sm">Uploaded Image</h4>
+                          <h4 className="font-medium text-gray-700 text-sm">
+                            Uploaded Image
+                          </h4>
                           <button
                             type="button"
                             onClick={removeFile}
@@ -621,19 +686,23 @@ const JobFeed = () => {
                             <FontAwesomeIcon icon={faTimesCircle} />
                           </button>
                         </div>
-                        
+
                         <div className="flex items-center">
                           <div className="relative mr-3">
-                            <img 
-                              src={uploadedFile.preview} 
-                              alt="Preview" 
+                            <img
+                              src={uploadedFile.preview}
+                              alt="Preview"
                               className="w-16 h-16 object-cover rounded"
                             />
                           </div>
-                          
+
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-800 truncate">{uploadedFile.name}</p>
-                            <p className="text-xs text-gray-500">{uploadedFile.size} MB</p>
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                              {uploadedFile.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {uploadedFile.size} MB
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -656,12 +725,19 @@ const JobFeed = () => {
                   className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg
                             hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500
                             flex items-center justify-center min-w-[80px]
-                            ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""}`}
+                            ${
+                              isSubmitting
+                                ? "opacity-75 cursor-not-allowed"
+                                : ""
+                            }`}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        className="animate-spin"
+                      />
                       Posting...
                     </>
                   ) : (
