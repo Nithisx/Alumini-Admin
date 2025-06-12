@@ -18,7 +18,7 @@ const Home = () => {
             Connecting graduates, sharing opportunities, and building a stronger community.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <button 
               onClick={() => navigate('/login')}
               className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -31,7 +31,7 @@ const Home = () => {
             >
               Join Network
             </button>
-          </div>
+          </div> */}
           
           {/* Feature sections */}
           <div id="features" className="grid md:grid-cols-3 gap-8 mt-16">
