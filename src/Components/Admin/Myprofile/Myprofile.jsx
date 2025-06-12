@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+"use client"
+
+import { useEffect, useState } from "react"
+import axios from "axios"
 import {
   ArrowLeft,
   Edit,
@@ -17,47 +19,44 @@ import {
   Camera,
   AlertCircle,
   Loader,
-} from "lucide-react";
+  Key,
+} from "lucide-react"
 
 // API Configuration
-const API_URL = "http://134.209.157.195:8000/profile/";
-const BASE_URL = "http://134.209.157.195:8000";
-const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile";
-const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo";
+const API_URL = "http://134.209.157.195:8000/profile/"
+const FORGOT_PASSWORD_URL = "http://134.209.157.195:8000/forgot-password/"
+const BASE_URL = "http://134.209.157.195:8000"
+const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
+const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 
 // Utility functions
 const getMediaUrl = (uri) => {
-  if (!uri) return "";
-  if (
-    uri.startsWith("http://") ||
-    uri.startsWith("https://") ||
-    uri.startsWith("file://")
-  )
-    return uri;
+  if (!uri) return ""
+  if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) return uri
   if (uri.startsWith("//")) {
-    return `http:${uri}`;
+    return `http:${uri}`
   }
-  const baseUrlEndsWithSlash = BASE_URL.endsWith("/");
-  const uriStartsWithSlash = uri.startsWith("/");
+  const baseUrlEndsWithSlash = BASE_URL.endsWith("/")
+  const uriStartsWithSlash = uri.startsWith("/")
 
   if (baseUrlEndsWithSlash && uriStartsWithSlash) {
-    return `${BASE_URL}${uri.slice(1)}`;
+    return `${BASE_URL}${uri.slice(1)}`
   } else if (!baseUrlEndsWithSlash && !uriStartsWithSlash) {
-    return `${BASE_URL}/${uri}`;
+    return `${BASE_URL}/${uri}`
   } else {
-    return `${BASE_URL}${uri}`;
+    return `${BASE_URL}${uri}`
   }
-};
+}
 
 const prepareFile = (file) => {
   return new Promise((resolve, reject) => {
     if (file && file.type && file.type.startsWith("image/")) {
-      resolve(file);
+      resolve(file)
     } else {
-      reject(new Error("Invalid file type"));
+      reject(new Error("Invalid file type"))
     }
-  });
-};
+  })
+}
 
 const ProfileScreen = () => {
   const [profile, setProfile] = useState({
@@ -81,104 +80,127 @@ const ProfileScreen = () => {
     date_of_birth: null,
     profile_photo: DEFAULT_PROFILE_IMAGE,
     cover_photo: DEFAULT_COVER_IMAGE,
-  });
+  })
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-  const [editPage, setEditPage] = useState(0);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [modalVisible, setModalVisible] = useState(false)
+  const [activeTab, setActiveTab] = useState(0)
+  const [editPage, setEditPage] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState("")
 
-  const tabs = ["Personal", "Work", "Contact", "Social"];
-  const editTabs = ["Basic Info", "Address", "Experience"];
+  const tabs = ["Personal", "Work", "Contact", "Social"]
+  const editTabs = ["Basic Info", "Address", "Experience"]
 
   const handleError = (error, customMessage) => {
-    console.error(customMessage, error);
+    console.error(customMessage, error)
     const errorMessage =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      customMessage;
-    alert(errorMessage);
-  };
+      error?.response?.data?.message || error?.response?.data?.error || error?.message || customMessage
+    alert(errorMessage)
+  }
 
   // Add this function to fetch the profile
   const fetchProfile = async () => {
-    setLoading(true);
-    setError("");
+    setLoading(true)
+    setError("")
     try {
-      const token = localStorage.getItem("Token");
-      if (!token) throw new Error("Authentication required.");
+      const token = localStorage.getItem("Token")
+      if (!token) throw new Error("Authentication required.")
       const response = await fetch(API_URL, {
         headers: { Authorization: `Token ${token}` },
-      });
-      if (!response.ok) throw new Error("Failed to fetch profile.");
-      const data = await response.json();
+      })
+      if (!response.ok) throw new Error("Failed to fetch profile.")
+      const data = await response.json()
       setProfile((prev) => ({
         ...prev,
         ...data,
-        experience:
-          typeof data.experience === "string"
-            ? JSON.parse(data.experience)
-            : data.experience || {},
-        social_links:
-          typeof data.social_links === "string"
-            ? JSON.parse(data.social_links)
-            : data.social_links || {},
-        Worked_in:
-          typeof data.Worked_in === "string"
-            ? JSON.parse(data.Worked_in)
-            : data.Worked_in || [],
-      }));
+        experience: typeof data.experience === "string" ? JSON.parse(data.experience) : data.experience || {},
+        social_links: typeof data.social_links === "string" ? JSON.parse(data.social_links) : data.social_links || {},
+        Worked_in: typeof data.Worked_in === "string" ? JSON.parse(data.Worked_in) : data.Worked_in || [],
+      }))
     } catch (err) {
-      setError(err.message || "Failed to fetch profile.");
+      setError(err.message || "Failed to fetch profile.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  // Forgot Password function
+  const handleForgotPassword = async () => {
+    if (!profile.email) {
+      alert("Email is required to reset password")
+      return
+    }
+
+    setForgotPasswordLoading(true)
+    setForgotPasswordMessage("")
+
+    try {
+      await axios.post(FORGOT_PASSWORD_URL, {
+        email: profile.email,
+      })
+
+      setForgotPasswordMessage("Check your mail to change the password")
+
+      // Clear message after 5 seconds
+      setTimeout(() => {
+        setForgotPasswordMessage("")
+      }, 5000)
+    } catch (error) {
+      console.error("Forgot password error:", error)
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to send reset email. Please try again."
+      alert(errorMessage)
+    } finally {
+      setForgotPasswordLoading(false)
+    }
+  }
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    fetchProfile()
+  }, [])
 
   const handleImageUpload = (field, event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const file = event.target.files[0]
+    if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be less than 5MB");
-      return;
+      alert("Image size should be less than 5MB")
+      return
     }
 
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (e) => {
       setProfile((prev) => ({
         ...prev,
         [field]: e.target.result,
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
+      }))
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSave = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
-      const token = localStorage.getItem("Token");
+      const token = localStorage.getItem("Token")
       if (!token) {
-        setSaving(false);
-        throw new Error("Authentication required.");
+        setSaving(false)
+        throw new Error("Authentication required.")
       }
 
       if (!profile.first_name?.trim() || !profile.email?.trim()) {
-        setSaving(false);
-        throw new Error("Name and email are required fields.");
+        setSaving(false)
+        throw new Error("Name and email are required fields.")
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(profile.email)) {
-        setSaving(false);
-        throw new Error("Please enter a valid email address.");
+        setSaving(false)
+        throw new Error("Please enter a valid email address.")
       }
 
       const profileData = {
@@ -198,35 +220,32 @@ const ProfileScreen = () => {
         country: profile.country || "",
         zip_code: profile.zip_code || "",
         date_of_birth: profile.date_of_birth || "",
-      };
+      }
 
       await axios.put(API_URL, profileData, {
         headers: {
           Authorization: `Token ${token}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-      });
+      })
 
       // Handle image uploads if needed
-      if (
-        profile.profile_photo !== DEFAULT_PROFILE_IMAGE ||
-        profile.cover_photo !== DEFAULT_COVER_IMAGE
-      ) {
-        const imageFormData = new FormData();
+      if (profile.profile_photo !== DEFAULT_PROFILE_IMAGE || profile.cover_photo !== DEFAULT_COVER_IMAGE) {
+        const imageFormData = new FormData()
 
         // Note: In a real implementation, you'd need to handle the file upload properly
         // This is a simplified version for demonstration
       }
 
-      setSaving(false);
-      setModalVisible(false);
-      alert("Profile updated successfully!");
-      fetchProfile();
+      setSaving(false)
+      setModalVisible(false)
+      alert("Profile updated successfully!")
+      fetchProfile()
     } catch (error) {
-      setSaving(false);
-      handleError(error, "Failed to update profile.");
+      setSaving(false)
+      handleError(error, "Failed to update profile.")
     }
-  };
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -236,13 +255,9 @@ const ProfileScreen = () => {
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <User className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Full Name
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Full Name</p>
                 <p className="text-base text-green-900">
-                  {`${profile.first_name || "John"} ${
-                    profile.last_name || "Doe"
-                  }`}
+                  {`${profile.first_name || "John"} ${profile.last_name || "Doe"}`}
                 </p>
               </div>
             </div>
@@ -250,40 +265,56 @@ const ProfileScreen = () => {
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <Mail className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Email
-                </p>
-                <p className="text-base text-green-900">
-                  {profile.email || "N/A"}
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Email</p>
+                <p className="text-base text-green-900">{profile.email || "N/A"}</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <FileText className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Bio
-                </p>
-                <p className="text-base text-green-900 line-clamp-3">
-                  {profile.bio || "No bio available"}
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Bio</p>
+                <p className="text-base text-green-900 line-clamp-3">{profile.bio || "No bio available"}</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <Calendar className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Date of Birth
-                </p>
-                <p className="text-base text-green-900">
-                  {profile.date_of_birth || "N/A"}
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Date of Birth</p>
+                <p className="text-base text-green-900">{profile.date_of_birth || "N/A"}</p>
               </div>
             </div>
+
+            {/* Forgot Password Section */}
+            <div className="pt-4 border-t border-green-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Key className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="text-xs font-bold text-green-700 uppercase mb-1">Password Reset</p>
+                    <p className="text-sm text-green-600">Reset your account password</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={forgotPasswordLoading || !profile.email}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {forgotPasswordLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
+                  <span>{forgotPasswordLoading ? "Sending..." : "Forgot Password"}</span>
+                </button>
+              </div>
+
+              {/* Success Message */}
+              {forgotPasswordMessage && (
+                <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+                  <p className="text-green-800 text-sm font-medium">{forgotPasswordMessage}</p>
+                </div>
+              )}
+            </div>
           </div>
-        );
+        )
 
       case 1: // Work
         return (
@@ -291,33 +322,23 @@ const ProfileScreen = () => {
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <Briefcase className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Current Work
-                </p>
-                <p className="text-base text-green-900">
-                  {profile.current_work || "N/A"}
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Current Work</p>
+                <p className="text-base text-green-900">{profile.current_work || "N/A"}</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <GraduationCap className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Passed Out Year
-                </p>
-                <p className="text-base text-green-900">
-                  {profile.passed_out_year || "N/A"}
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Passed Out Year</p>
+                <p className="text-base text-green-900">{profile.passed_out_year || "N/A"}</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <TrendingUp className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Experience
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Experience</p>
                 <p className="text-base text-green-900">
                   {profile.experience?.role
                     ? `${profile.experience.role} (${profile.experience.years} years)`
@@ -329,16 +350,12 @@ const ProfileScreen = () => {
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <Building className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Previous Work
-                </p>
-                <p className="text-base text-green-900 line-clamp-2">
-                  {profile.Worked_in?.join(", ") || "N/A"}
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Previous Work</p>
+                <p className="text-base text-green-900 line-clamp-2">{profile.Worked_in?.join(", ") || "N/A"}</p>
               </div>
             </div>
           </div>
-        );
+        )
 
       case 2: // Contact
         return (
@@ -346,55 +363,35 @@ const ProfileScreen = () => {
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <Phone className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Phone
-                </p>
-                <p className="text-base text-green-900">
-                  {profile.phone || "N/A"}
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Phone</p>
+                <p className="text-base text-green-900">{profile.phone || "N/A"}</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <MapPin className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                  Address
-                </p>
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Address</p>
                 <p className="text-base text-green-900 line-clamp-3">
-                  {[
-                    profile.Address,
-                    profile.city,
-                    profile.state,
-                    profile.country,
-                    profile.zip_code,
-                  ]
+                  {[profile.Address, profile.city, profile.state, profile.country, profile.zip_code]
                     .filter(Boolean)
                     .join(", ") || "N/A"}
                 </p>
               </div>
             </div>
           </div>
-        );
+        )
 
       case 3: // Social
         return (
           <div className="space-y-4">
-            {profile.social_links &&
-            Object.keys(profile.social_links).length > 0 ? (
+            {profile.social_links && Object.keys(profile.social_links).length > 0 ? (
               Object.entries(profile.social_links).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex items-start space-x-3 pb-4 border-b border-green-200"
-                >
+                <div key={key} className="flex items-start space-x-3 pb-4 border-b border-green-200">
                   <Globe className="w-5 h-5 text-green-600 mt-1" />
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-green-700 uppercase mb-1">
-                      {key.replace("_link", "")}
-                    </p>
-                    <p className="text-base text-green-900 truncate">
-                      {String(value) || "N/A"}
-                    </p>
+                    <p className="text-xs font-bold text-green-700 uppercase mb-1">{key.replace("_link", "")}</p>
+                    <p className="text-base text-green-900 truncate">{String(value) || "N/A"}</p>
                   </div>
                 </div>
               ))
@@ -405,12 +402,12 @@ const ProfileScreen = () => {
               </div>
             )}
           </div>
-        );
+        )
 
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   const renderEditContent = () => {
     switch (editPage) {
@@ -420,11 +417,7 @@ const ProfileScreen = () => {
             <div className="flex justify-center mb-6">
               <div className="relative">
                 <img
-                  src={
-                    profile.profile_photo
-                      ? getMediaUrl(profile.profile_photo)
-                      : DEFAULT_PROFILE_IMAGE
-                  }
+                  src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
                   alt="Profile"
                   className="w-20 h-20 rounded-full border-3 border-green-600 object-cover"
                 />
@@ -442,9 +435,7 @@ const ProfileScreen = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-green-900 mb-1">
-                  First Name
-                </label>
+                <label className="block text-sm font-bold text-green-900 mb-1">First Name</label>
                 <input
                   type="text"
                   placeholder="First Name"
@@ -459,9 +450,7 @@ const ProfileScreen = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-green-900 mb-1">
-                  Last Name
-                </label>
+                <label className="block text-sm font-bold text-green-900 mb-1">Last Name</label>
                 <input
                   type="text"
                   placeholder="Last Name"
@@ -478,106 +467,80 @@ const ProfileScreen = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                Email
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">Email</label>
               <input
                 type="email"
                 placeholder="Email"
                 value={profile.email || ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({ ...prev, email: e.target.value }))
-                }
+                onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
                 className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                Bio
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">Bio</label>
               <textarea
                 placeholder="Tell us about yourself"
                 value={profile.bio || ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({ ...prev, bio: e.target.value }))
-                }
+                onChange={(e) => setProfile((prev) => ({ ...prev, bio: e.target.value }))}
                 rows={3}
                 className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 resize-none"
               />
             </div>
           </div>
-        );
+        )
 
       case 1: // Address
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1">
-                Phone
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1">Phone</label>
               <input
                 type="tel"
                 placeholder="Phone Number"
                 value={profile.phone || ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({ ...prev, phone: e.target.value }))
-                }
+                onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))}
                 className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                  City
-                </label>
+                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">City</label>
                 <input
                   type="text"
                   placeholder="City"
                   value={profile.city || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({ ...prev, city: e.target.value }))
-                  }
+                  onChange={(e) => setProfile((prev) => ({ ...prev, city: e.target.value }))}
                   className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                  State
-                </label>
+                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">State</label>
                 <input
                   type="text"
                   placeholder="State"
                   value={profile.state || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({ ...prev, state: e.target.value }))
-                  }
+                  onChange={(e) => setProfile((prev) => ({ ...prev, state: e.target.value }))}
                   className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                Country
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">Country</label>
               <input
                 type="text"
                 placeholder="Country"
                 value={profile.country || ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({ ...prev, country: e.target.value }))
-                }
+                onChange={(e) => setProfile((prev) => ({ ...prev, country: e.target.value }))}
                 className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                  ZIP Code
-                </label>
+                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">ZIP Code</label>
                 <input
                   type="text"
                   placeholder="ZIP"
@@ -592,9 +555,7 @@ const ProfileScreen = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                  Birth Date
-                </label>
+                <label className="block text-sm font-bold text-green-900 mb-1 mt-3">Birth Date</label>
                 <input
                   type="date"
                   value={profile.date_of_birth || ""}
@@ -609,15 +570,13 @@ const ProfileScreen = () => {
               </div>
             </div>
           </div>
-        );
+        )
 
       case 2: // Experience
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1">
-                Current Work
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1">Current Work</label>
               <input
                 type="text"
                 placeholder="Current Work"
@@ -633,15 +592,11 @@ const ProfileScreen = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                Passed Out Year
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">Passed Out Year</label>
               <input
                 type="number"
                 placeholder="Year"
-                value={
-                  profile.passed_out_year ? String(profile.passed_out_year) : ""
-                }
+                value={profile.passed_out_year ? String(profile.passed_out_year) : ""}
                 onChange={(e) =>
                   setProfile((prev) => ({
                     ...prev,
@@ -653,9 +608,7 @@ const ProfileScreen = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                LinkedIn
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">LinkedIn</label>
               <input
                 type="url"
                 placeholder="LinkedIn URL"
@@ -674,9 +627,7 @@ const ProfileScreen = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">
-                Website
-              </label>
+              <label className="block text-sm font-bold text-green-900 mb-1 mt-3">Website</label>
               <input
                 type="url"
                 placeholder="Website URL"
@@ -694,12 +645,12 @@ const ProfileScreen = () => {
               />
             </div>
           </div>
-        );
+        )
 
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -709,7 +660,7 @@ const ProfileScreen = () => {
           <p className="text-green-600 text-lg">Loading profile...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -718,29 +669,24 @@ const ProfileScreen = () => {
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
           <p className="text-red-500 text-center mb-3 text-base">{error}</p>
-          <button
-            onClick={fetchProfile}
-            className="bg-green-600 text-white px-5 py-2 rounded-lg font-bold"
-          >
+          <button onClick={fetchProfile} className="bg-green-600 text-white px-5 py-2 rounded-lg font-bold">
             Retry
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="min-h-screen bg-green-50">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-green-200 shadow-md">
-        <button className="p-2">
-          <ArrowLeft className="w-6 h-6 text-green-600" />
-        </button>
+        
         <h1 className="text-xl font-bold text-green-900">Profile</h1>
         <button
           onClick={() => {
-            setEditPage(0);
-            setModalVisible(true);
+            setEditPage(0)
+            setModalVisible(true)
           }}
           className="p-2"
         >
@@ -751,11 +697,7 @@ const ProfileScreen = () => {
       {/* Profile Header */}
       <div className="bg-white text-center py-5 mb-3">
         <img
-          src={
-            profile.profile_photo
-              ? getMediaUrl(profile.profile_photo)
-              : DEFAULT_PROFILE_IMAGE
-          }
+          src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
           alt="Profile"
           className="w-20 h-20 rounded-full mx-auto mb-3 border-3 border-green-600 object-cover"
         />
@@ -772,9 +714,7 @@ const ProfileScreen = () => {
             key={index}
             onClick={() => setActiveTab(index)}
             className={`flex-1 py-3 text-center rounded text-xs font-medium ${
-              activeTab === index
-                ? "bg-green-600 text-white font-bold"
-                : "text-green-700"
+              activeTab === index ? "bg-green-600 text-white font-bold" : "text-green-700"
             }`}
           >
             {tab}
@@ -784,9 +724,7 @@ const ProfileScreen = () => {
 
       {/* Tab Content */}
       <div className="mx-3">
-        <div className="bg-white rounded-lg p-5 shadow-md min-h-[400px]">
-          {renderTabContent()}
-        </div>
+        <div className="bg-white rounded-lg p-5 shadow-md min-h-[400px]">{renderTabContent()}</div>
       </div>
 
       {/* Edit Modal */}
@@ -815,9 +753,7 @@ const ProfileScreen = () => {
                   key={index}
                   onClick={() => setEditPage(index)}
                   className={`flex-1 py-3 text-center rounded text-xs font-medium ${
-                    editPage === index
-                      ? "bg-green-600 text-white font-bold"
-                      : "text-green-700"
+                    editPage === index ? "bg-green-600 text-white font-bold" : "text-green-700"
                   }`}
                 >
                   {tab}
@@ -827,15 +763,13 @@ const ProfileScreen = () => {
 
             {/* Edit Content */}
             <div className="mx-3 mt-3 mb-3">
-              <div className="bg-white rounded-lg p-5 shadow-md min-h-[500px]">
-                {renderEditContent()}
-              </div>
+              <div className="bg-white rounded-lg p-5 shadow-md min-h-[500px]">{renderEditContent()}</div>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ProfileScreen;
+export default ProfileScreen
