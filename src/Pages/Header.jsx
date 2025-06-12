@@ -39,7 +39,7 @@ return (
                     <button onClick={() => window.location.href = "/newsroom"} className="hover:text-green-700 bg-transparent">Newsroom</button>
                     <button onClick={() => window.location.href = "/members"} className="hover:text-green-700 bg-transparent">Members</button>
                     <button onClick={() => window.location.href = "/events"} className="hover:text-green-700 bg-transparent">Events</button>
-                    <button onClick={() => window.location.href = "/gallery"} className="hover:text-green-700 bg-transparent">Gallery</button>
+                    <button onClick={() => window.location.href = "/Chapters"} className="hover:text-green-700 bg-transparent">Chapters</button>
                     <button onClick={() => window.location.href = "/contact"} className="hover:text-green-700 bg-transparent">Contact Us</button>
                 </nav>
             </div>
@@ -66,7 +66,7 @@ return (
                     <button onClick={() => window.location.href = "/newsroom"} className="hover:text-green-700 bg-transparent text-left">Newsroom</button>
                     <button onClick={() => window.location.href = "/members"} className="hover:text-green-700 bg-transparent text-left">Members</button>
                     <button onClick={() => window.location.href = "/events"} className="hover:text-green-700 bg-transparent text-left">Events</button>
-                    <button onClick={() => window.location.href = "/gallery"} className="hover:text-green-700 bg-transparent text-left">Gallery</button>
+                    <button onClick={() => window.location.href = "/Chapters"} className="hover:text-green-700 bg-transparent text-left">Chapters</button>
                     <button onClick={() => window.location.href = "/contact"} className="hover:text-green-700 bg-transparent text-left">Contact Us</button>
                 </nav>
             </div>
