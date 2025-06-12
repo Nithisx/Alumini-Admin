@@ -250,7 +250,7 @@ export default function MembersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {members.map(member => (
                   <Link
-                    to={`/staff/members/${member.username}`}
+                    to={`/alumni/members/${member.username}`}
                     key={member.id}
                     className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group"
                   >
