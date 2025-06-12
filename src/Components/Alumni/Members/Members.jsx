@@ -44,56 +44,75 @@ export default function MembersPage() {
   const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchMembers = async (page = currentPage, size = pageSize) => {
-    setLoading(true);
+const fetchMembers = async () => {
+  setLoading(true);
+  const params = new URLSearchParams({
+    page: currentPage,
+    page_size: pageSize,
+  });
 
-    const params = new URLSearchParams({
-      page,
-      page_size: size,
+  if (roleFilter) params.append("role", roleFilter);
+  if (cityFilter) params.append("city", cityFilter);
+  if (workedInFilter) params.append("Worked_in", workedInFilter);
+  if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
+  if (searchQuery) params.append("search", searchQuery);
+  if (genderFilter) params.append("gender", genderFilter);
+  if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
+  if (companyFilter) params.append("company", companyFilter);
+  if (countryFilter) params.append("country", countryFilter);
+
+  try {
+    const response = await axios.get(`${API_URL}?${params.toString()}`, {
+      headers: {
+        Authorization: `Token ${TOKEN}`,
+        "Content-Type": "application/json",
+      },
     });
 
-    if (roleFilter) params.append("role", roleFilter);
-    if (cityFilter) params.append("city", cityFilter);
-    if (workedInFilter) params.append("Worked_in", workedInFilter);
-    if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
-    if (searchQuery) params.append("search", searchQuery);
-    if (genderFilter) params.append("gender", genderFilter);
-    if (courseEndYearFilter)
-      params.append("course_end_year", courseEndYearFilter);
-    if (companyFilter) params.append("company", companyFilter);
-    if (countryFilter) params.append("country", countryFilter);
+    const { results, count } = response.data;
 
-    try {
-      const response = await axios.get(`${API_URL}?${params.toString()}`, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
+    setMembers(results);
+    setFilteredTotal(count);
+    setTotalPages(Math.ceil(count / pageSize));
+    setLoading(false);
+  } catch (error) {
+    console.error("Error fetching members:", error);
+    setLoading(false);
+  }
+};
 
-      const { results, count } = response.data;
 
-      setMembers(results);
-      setFilteredTotal(count);
-      setTotalPages(Math.ceil(count / size));
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching members:", error);
-      setLoading(false);
-    }
-  };
-
-  // Initial fetch
+  // When filters change, always reset page to 1
   useEffect(() => {
-    fetchMembers(1, pageSize);
-  }, [pageSize]);
-
-  // Fetch when filters change
-  useEffect(() => {
-    // Reset to first page when filters change
     setCurrentPage(1);
-    fetchMembers(1, pageSize);
-  }, [roleFilter, cityFilter, workedInFilter, searchQuery]);
+  }, [
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    searchQuery,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+  ]);
+
+  // Whenever page or filters change, fetch data
+  useEffect(() => {
+    fetchMembers(currentPage, pageSize);
+  }, [
+    currentPage,
+    pageSize,
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    searchQuery,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+  ]);
 
   // Derive unique options from current result set
   const cities = Array.from(new Set(members.map((m) => m.city))).filter(
