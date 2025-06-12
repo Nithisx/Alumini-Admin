@@ -92,7 +92,7 @@ export default function NewsList() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      <div className="max-w-7xl lg:mx-[100px] px-4 py-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-gray-200">
           <div>

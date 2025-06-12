@@ -63,7 +63,6 @@ const AdminFeed = () => {
          new Date(b.created_at || 0) - new Date(a.created_at || 0)
       );
       setPosts(sortedData);
-
     } catch (err) {
       console.error("Error fetching posts:", err);
       setError(err.message || "Failed to fetch posts. Please try again.");
@@ -74,6 +73,7 @@ const AdminFeed = () => {
 
   useEffect(() => {
     fetchJobs();
+    console.log("Fetched posts:", sortedData);
   }, []);
 
   // Handle drop zone events (moved from Post component)
@@ -249,95 +249,94 @@ const AdminFeed = () => {
       <div className="container mx-auto p-4 md:p-6 max-w-3xl">
         <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Admin Job Feed</h2>
 
-        {/* Posts List */}
-        <div className="space-y-6">
-          <h3 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Posted Jobs</h3>
-          {loading ? (
-            <p className="text-center text-gray-500 py-6">Loading posts...</p>
-          ) : posts.length === 0 ? (
-            <p className="text-center text-gray-500 py-6">No job posts available yet.</p>
-          ) : (
-            posts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-white shadow-md rounded-lg p-5 border border-gray-200 relative"
-              >
-                <div className="flex items-center mb-3">
-                  {post.user?.avatar ? (
-                    <img
-                      src={post.user.avatar}
-                      alt={`${post.user.username || 'Admin'}'s avatar`}
-                      className="w-10 h-10 rounded-full mr-3 object-cover"
-                    />
-                  ) : (
-                    <FontAwesomeIcon
-                      icon={faUserCircle}
-                      className="w-10 h-10 text-gray-400 mr-3"
-                    />
-                  )}
-                  <div>
-                    <span className="font-semibold text-gray-800">{post.user?.username || 'Admin'}</span>
-                    {post.created_at && (
-                      <p className="text-xs text-gray-500">
-                        Posted on: {new Date(post.created_at).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => deletePost(post.id)}
-                    className="absolute top-3 right-3 text-gray-400 hover:text-red-600 focus:outline-none p-1 rounded-full hover:bg-red-100 transition duration-150 ease-in-out"
-                    aria-label="Delete post"
-                    title="Delete post"
-                  >
-                    <FontAwesomeIcon icon={faTrash} className="w-4 h-4"/>
-                  </button>
-                </div>
+    <div className="space-y-6">
+      <h3 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Posted Jobs</h3>
+      {loading ? (
+        <p className="text-center text-gray-500 py-6">Loading posts...</p>
+      ) : posts.length === 0 ? (
+        <p className="text-center text-gray-500 py-6">No job posts available yet.</p>
+      ) : (
+        posts.map((post) => (
+          <div
+        key={post.id}
+        className="bg-white shadow-md rounded-lg p-5 border border-gray-200 relative"
+          >
+        <div className="flex items-center mb-3">
+          {post.user?.avatar ? (
+            <img
+              src={post.user.avatar}
+              alt={`${post.user.username || 'Admin'}'s avatar`}
+              className="w-10 h-10 rounded-full mr-3 object-cover"
+            />
+          ) : (
+            <FontAwesomeIcon
+              icon={faUserCircle}
+              className="w-10 h-10 text-gray-400 mr-3"
+            />
+          )}
+          <div>
+            <span className="font-semibold text-gray-800">{post.user?.username || 'Admin'}</span>
+            {post.created_at && (
+              <p className="text-xs text-gray-500">
+            Posted on: {new Date(post.created_at).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => deletePost(post.id)}
+            className="absolute top-3 right-3 text-gray-400 hover:text-red-600 focus:outline-none p-1 rounded-full hover:bg-red-100 transition duration-150 ease-in-out"
+            aria-label="Delete post"
+            title="Delete post"
+          >
+            <FontAwesomeIcon icon={faTrash} className="w-4 h-4"/>
+          </button>
+        </div>
 
-                <div className="mt-2">
-                  {post.image_url && (
-                    <img
-                      src={post.image_url}
-                      alt={`Illustration for ${post.company_name || 'job post'}`}
-                      className="mt-3 mb-4 w-full max-h-60 rounded-lg object-cover border border-gray-200"
-                    />
-                  )}
+        <div className="mt-2">
+          {post.images && (
+            <img
+              src={post.images}
+              alt={`Illustration for ${post.company_name || 'job post'}`}
+              className="mt-3 mb-4 w-full max-h-60 rounded-lg object-cover border border-gray-200"
+            />
+          )}
 
-                  <p className="text-gray-800 mb-4 whitespace-pre-wrap">{post.description}</p>
+          <p className="text-gray-800 mb-4 whitespace-pre-wrap">{post.description}</p>
 
-                  <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600 space-y-2">
-                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-                      <div className="flex">
-                        <dt className="font-semibold w-24 shrink-0">Company:</dt>
-                        <dd className="text-gray-800">{post.company_name || 'N/A'}</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-semibold w-24 shrink-0">Role:</dt>
-                        <dd className="text-gray-800">{post.role || 'N/A'}</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-semibold w-24 shrink-0">Location:</dt>
-                        <dd className="text-gray-800">{post.location || 'N/A'}</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-semibold w-24 shrink-0">Type:</dt>
-                        <dd className="text-gray-800">{post.job_type || 'N/A'}</dd>
-                      </div>
-                      {post.salary_range && (
-                        <div className="flex">
-                          <dt className="font-semibold w-24 shrink-0">Salary:</dt>
-                          <dd className="text-gray-800">{post.salary_range}</dd>
-                        </div>
-                      )}
-                    </dl>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      </div>
+          <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600 space-y-2">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+              <div className="flex">
+            <dt className="font-semibold w-24 shrink-0">Company:</dt>
+            <dd className="text-gray-800">{post.company_name || 'N/A'}</dd>
+              </div>
+              <div className="flex">
+            <dt className="font-semibold w-24 shrink-0">Role:</dt>
+            <dd className="text-gray-800">{post.role || 'N/A'}</dd>
+              </div>
+              <div className="flex">
+            <dt className="font-semibold w-24 shrink-0">Location:</dt>
+            <dd className="text-gray-800">{post.location || 'N/A'}</dd>
+              </div>
+              <div className="flex">
+            <dt className="font-semibold w-24 shrink-0">Type:</dt>
+            <dd className="text-gray-800">{post.job_type || 'N/A'}</dd>
+              </div>
+              {post.salary_range && (
+            <div className="flex">
+              <dt className="font-semibold w-24 shrink-0">Salary:</dt>
+              <dd className="text-gray-800">{post.salary_range}</dd>
+            </div>
+              )}
+            </dl>
+        </div>
+          </div>
+        </div>
+      ))
+    )}
+      </div>
+      </div>
 
-      {/* Add post floating button */}
+      {/* Add post floating button */}
       <button
         onClick={() => setIsModalOpen(true)}
         className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg

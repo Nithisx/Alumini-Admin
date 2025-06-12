@@ -443,7 +443,7 @@ const AlbumsPage = () => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in-out { 0%,100% { opacity: 0;} 10%,90% { opacity:1;} }
         .animate-fade-in-out { animation: fade-in-out 4s ease-in-out forwards; }
         @keyframes scale-in { from { transform: scale(0.95); opacity: 0;} to { transform: scale(1); opacity: 1;} }
