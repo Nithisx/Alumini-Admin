@@ -37,7 +37,7 @@ const AlumniLayout = () => {
           <Route path="albums/:albumId" element={<AlbumDetailPage />} />
           <Route path="students" element={<StudentImageUpload />} />
           <Route path="map" element={<Map />} />
-          <Route path="news" element={<NewsRoom />} />
+          <Route path="news" element={<NewsRoom />} />  ``
           <Route path="news/:id" element={<SingleNews />} />
           <Route path="members" element={<Members />} />
           <Route path="members/:name" element={<Singlemember />} />
