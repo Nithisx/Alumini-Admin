@@ -8,7 +8,7 @@ import VisionMissionSection from './about_components/VisionMissionSection';
 import Leadership from './about_components/LeadershipSection';
 import Faculty from './about_components/FacultySection';
 import Departments from './about_components/DepartmentsSection';
-
+import Logo from "../images/logo.png"; // Assuming you have a logo image
 const About = () => {
   // Track the active section based on URL hash
   const [activeSection, setActiveSection] = useState('overview');
@@ -46,9 +46,11 @@ const About = () => {
       <div className="flex-grow py-12">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex items-center justify-center mb-12">
-            <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full mr-4 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">KAHE</span>
-            </div>
+            <img
+              src={Logo}
+              alt="KAHE Logo"
+              className="w-28 h-28 rounded-lg mr-4 object-contain bg-white shadow"
+            />
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-green-800">About KAHE</h1>
               <h2 className="text-xl text-green-600">Karpagam Academy of Higher Education</h2>
@@ -83,7 +85,7 @@ const About = () => {
           </div>
           
           {/* Content Sections */}
-          <div className="bg-white rounded-3xl shadow-lg p-8 border border-green-100">
+          <div className="bg-white rounded-3xl shadow-lg p-8">
             {activeSection === 'overview' && (
               <div id="overview">
                 <h2 className="text-2xl font-bold text-green-800 mb-6">Overview</h2>

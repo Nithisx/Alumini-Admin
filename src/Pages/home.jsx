@@ -8,7 +8,7 @@ import Image1 from "../images/image1.jpeg"
 import Image2 from "../images/image2.jpg"
 import Image3 from "../images/image3.jpg"
 import Footer from "../Pages/about_components/Footer.jsx"
-
+import Loader from "./Loder.jsx"
 export default function Home() {
   const [data, setData] = useState({
     upcoming_events: [],
@@ -90,6 +90,10 @@ export default function Home() {
     }
   }, [])
 
+
+  if (showLoader) {
+    return <Loader />;
+  }
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
