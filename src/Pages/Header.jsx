@@ -96,21 +96,41 @@ const Header = () => {
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        {/* Left section */}
-        <div className="flex items-center space-x-4">
-          <img src={logo} alt="KAHEAA Logo" className="h-12 w-auto" />
-          <div className="leading-tight">
-            <h1 className="text-xl font-bold text-green-700">KAHEAA</h1>
-            <p className="text-xs text-gray-600">
-              Karpagam Academy of Higher
-              <br />
-              Education Alumni Association
-            </p>
+       
+          <div className="flex items-center space-x-4">
+            <img src={logo} alt="KAHEAA Logo" className="h-12 w-auto" />
+            <div className="leading-tight">
+              <h1 className="text-xl font-bold text-green-700">KAHEAA</h1>
+              <p className="text-xs text-gray-600">
+                Karpagam Academy of Higher
+                <br />
+                Education Alumni Association
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="hidden md:flex flex-col items-end space-y-1">
-          <div className="text-sm text-gray-800 space-x-2">
+          <div className="hidden md:flex flex-col items-end space-y-1">
+            <div className="text-sm text-gray-800 space-x-2">
+              {localStorage.getItem("Token") ? (
+                <>
+            <button
+              onClick={() => handleNavigation("/dashboard")}
+              className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
+            >
+              DASHBOARD
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem("Token");
+                handleNavigation("/login");
+              }}
+              className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
+            >
+              LOGOUT
+            </button>
+                </>
+              ) : (
+                <>
             <button
               onClick={() => handleNavigation("/signup")}
               className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
@@ -123,10 +143,12 @@ const Header = () => {
             >
               LOGIN
             </button>
-          </div>
+                </>
+              )}
+            </div>
 
-          <nav className="flex gap-4 text-sm text-gray-700">
-            {/* About dropdown - added padding to create a larger hover area */}
+            <nav className="flex gap-4 text-sm text-gray-700">
+              {/* About dropdown - added padding to create a larger hover area */}
 
             <button
               onClick={() => handleNavigation("/about")}

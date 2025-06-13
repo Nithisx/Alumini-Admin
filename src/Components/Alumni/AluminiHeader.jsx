@@ -273,7 +273,7 @@ export default function AdminHeader() {
               </button>
 
               <div className="mt-4 text-center">
-                <p className="text-xs text-gray-500">Logged in as Staff</p>
+                <p className="text-xs text-gray-500">Logged in as Alumini</p>
                 <p className="text-xs text-gray-400 mt-1">
                   © 2025 Admin Portal
                 </p>
