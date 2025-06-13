@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@layer utilities {
+/* @layer utilities {
   .navy-50 {
     background-color: #f8fafc;
   }
@@ -51,4 +51,4 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-}
+} */

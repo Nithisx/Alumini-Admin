@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import image1 from "../../../images/image1.jpeg";
 import image2 from "../../../images/image2.jpg";
 import image3 from "../../../images/image3.jpg";
-
+import Herosection from "../../../Pages/Herosection"
 const HomePage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -108,69 +108,12 @@ const HomePage = () => {
     }).format(date);
   };
 
-  const ImageSlider = () => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const images = [image1, image2, image3];
-
-    const nextSlide = useCallback(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
-    }, [images.length]);
-
-    useEffect(() => {
-      const timer = setInterval(nextSlide, 3000);
-      return () => clearInterval(timer);
-    }, [nextSlide]);
-
-    return (
-      <div className="relative w-full h-[500px] my-[50px] rounded-3xl overflow-hidden mb-12 shadow-2xl">
-        {images.map((image, index) => (
-          <div
-            key={index}
-            className={`absolute w-full h-full transition-all duration-1000 ease-in-out ${
-              index === currentIndex
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-105"
-            }`}
-          >
-            <img
-              src={image || "/placeholder.svg"}
-              alt={`Slide ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 via-transparent to-green-900/20"></div>
-          </div>
-        ))}
-
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentIndex
-                  ? "bg-white scale-125 shadow-lg"
-                  : "bg-white/60 hover:bg-white/80"
-              }`}
-              onClick={() => setCurrentIndex(index)}
-            ></button>
-          ))}
-        </div>
-
-        <div className="absolute top-8 left-2 bg-white/90 backdrop-blur-sm rounded-2xl px-3 md:px-6 py-2 md:py-4">
-          <h2 className="text-xl md:text-2xl font-bold text-green-800">Welcome Back!</h2>
-          <p className="text-green-600 text-sm md:text-base mt-2">
-            Stay connected with your alumni community
-          </p>
-        </div>
-      </div>
-    );
-  };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <div className="container mx-auto px-6 -mt-8 relative z-20">
-        <ImageSlider />
+        <Herosection />
 
         {/* Quick Stats */}
         <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-8 mb-12 border border-green-100">

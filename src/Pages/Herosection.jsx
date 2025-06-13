@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Image1 from "../images/image1.jpeg"
 import Image2 from "../images/image2.jpg"
 import Image3 from "../images/image3.jpg"
+import { useNavigate } from 'react-router-dom';
 const AlumniHeroSection = ({ data }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
-
+     const navigate = useNavigate();
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % 3);
@@ -52,21 +53,27 @@ const AlumniHeroSection = ({ data }) => {
                             </p>
                         </div>
 
-                        {/* Action Buttons */}
+                       
+
+                       
+
                         <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                            <button className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center">
+                            <button
+                                className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center"
+                                onClick={() => navigate('/login')}
+                            >
                                 <span>Join Our Community</span>
                                 <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                 </svg>
                             </button>
                             
-                            <button className="px-8 py-4 bg-white/80 backdrop-blur-sm text-slate-700 font-semibold rounded-xl border border-slate-200 hover:bg-white hover:border-slate-300 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <button  onClick={() => navigate('/alumni/dashboard')} className="px-8 py-4 bg-white/80 backdrop-blur-sm text-slate-700 font-semibold rounded-xl border border-slate-200 hover:bg-white hover:border-slate-300 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
                                 Explore Network
                             </button>
                         </div>
 
-                        {/* Stats */}
+                        
                         <div className="grid grid-cols-3 gap-8 pt-8 border-t border-slate-200">
                             <div className="text-center">
                                 <div className="text-2xl lg:text-3xl font-bold text-slate-900">{data?.total_users?.toLocaleString() || '10K'}+</div>

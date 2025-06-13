@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileAlt,
   faCalendarCheck,
@@ -8,133 +8,283 @@ import {
   faSignOutAlt,
   faBars,
   faTimes,
-  faShield,  faNewspaper,
+  faShield,
+  faNewspaper,
   faIdBadge,
   faBirthdayCake,
   faBriefcase,
   faBuilding,
   faUser,
-  faHandHoldingHeart
-} from "@fortawesome/free-solid-svg-icons"
-import "../../App.css"
+  faHandHoldingHeart,
+  faChevronDown,
+} from "@fortawesome/free-solid-svg-icons";
 
+// Mock logo - replace with actual logo import
+import logo from "../../images/logo.png"; // Make sure this path is correct and the file exists
+
+// If the image is not found, try adjusting the path, for example:
+// import logo from "../../../images/logo.png";
+// or
+// import logo from "/src/images/logo.png";
 export default function AdminHeader() {
-  const [pathname, setPathname] = useState(window.location.pathname)
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [pathname, setPathname] = useState(window.location.pathname);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleLocationChange = () => {
-      setPathname(window.location.pathname)
-    }
+      setPathname(window.location.pathname);
+    };
 
-    window.addEventListener('popstate', handleLocationChange)
-    return () => window.removeEventListener('popstate', handleLocationChange)
-  }, [])
+    window.addEventListener("popstate", handleLocationChange);
+    return () => window.removeEventListener("popstate", handleLocationChange);
+  }, []);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsMobileOpen(false)
-      } else {
-        setIsMobileOpen(true)
-      }
-    }
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
 
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = () => {
+    // Note: localStorage not available in artifacts
+    console.log("Logout clicked");
     localStorage.removeItem("Token")
     localStorage.removeItem("Role")
     window.location.href = "/login"
-  }
+  };
 
-const navItems = [
-  { path: "/alumni/dashboard", icon: faFileAlt, label: "Dashboard" },
-  { path: "/alumni/event", icon: faCalendarCheck, label: "Events" },
-  { path: "/alumni/jobs", icon: faBriefcase, label: "Jobs" },
-  { path: "/alumni/albums", icon: faPhotoFilm, label: "Albums" },
-  { path: "/alumni/news", icon: faNewspaper, label: "NewsRoom" },
-  { path: "/alumni/members", icon: faIdBadge, label: "Members" },
-  { path: "/alumni/birthday", icon: faBirthdayCake, label: "Birthdays" },
-  { path: "/alumni/business", icon: faBuilding, label: "Business Directory" },
-  { path: "/alumni/my-profile", icon: faUser, label: "My Profile" },
-  { path: "/alumni/my-contribution", icon: faHandHoldingHeart, label: "My Contribution" },
-];
-
+  const navItems = [
+    {
+      path: "/alumni/dashboard",
+      icon: faFileAlt,
+      label: "Dashboard",
+      color: "text-blue-600",
+    },
+    {
+      path: "/alumni/event",
+      icon: faCalendarCheck,
+      label: "Events",
+      color: "text-purple-600",
+    },
+    {
+      path: "/alumni/jobs",
+      icon: faBriefcase,
+      label: "Jobs",
+      color: "text-orange-600",
+    },
+    {
+      path: "/alumni/albums",
+      icon: faPhotoFilm,
+      label: "Albums",
+      color: "text-pink-600",
+    },
+    {
+      path: "/alumni/news",
+      icon: faNewspaper,
+      label: "NewsRoom",
+      color: "text-red-600",
+    },
+    {
+      path: "/alumni/members",
+      icon: faIdBadge,
+      label: "Members",
+      color: "text-indigo-600",
+    },
+    {
+      path: "/alumni/birthday",
+      icon: faBirthdayCake,
+      label: "Birthdays",
+      color: "text-yellow-600",
+    },
+    {
+      path: "/alumni/business",
+      icon: faBuilding,
+      label: "Business Directory",
+      color: "text-teal-600",
+    },
+    {
+      path: "/alumni/my-profile",
+      icon: faUser,
+      label: "My Profile",
+      color: "text-gray-600",
+    },
+    {
+      path: "/alumni/my-contribution",
+      icon: faHandHoldingHeart,
+      label: "My Contribution",
+      color: "text-green-600",
+    },
+  ];
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <button
-        className="fixed top-4  z-50 lg:hidden p-2 rounded-md bg-white border border-gray-200 shadow-sm"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
+      {/* Main Navigation Bar */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
+            : "bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-b border-emerald-100"
+        }`}
       >
-        <FontAwesomeIcon icon={isMobileOpen ? faTimes : faBars} className="h-5 w-5 text-gray-700" />
-      </button>
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            {/* Left section - Logo */}
+            <div className="flex items-center space-x-4">
+              <div className="relative w-14 h-14 flex-shrink-0">
+                <img
+                  src={logo}
+                  alt="KAHEAA Logo"
+                  className="h-14 w-14 object-cover rounded-full shadow-md ring-2 ring-emerald-200"
+                />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
+              </div>
+              <div className="leading-tight">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
+                  KAHEAA
+                </h1>
+              </div>
+            </div>
 
-      {/* Mobile Backdrop */}
-      {isMobileOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsMobileOpen(false)} />
-      )}
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-1">
+              {navItems.map((item) => (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  className={`group relative flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 ${
+                    pathname === item.path
+                      ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
+                      : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                  }`}
+                >
+                  <FontAwesomeIcon
+                    icon={item.icon}
+                    className={`h-4 w-4 transition-all duration-300 ${
+                      pathname === item.path
+                        ? "text-emerald-600"
+                        : `${item.color} group-hover:text-emerald-600`
+                    }`}
+                  />
+                  <span className="text-sm font-medium whitespace-nowrap">
+                    {item.label}
+                  </span>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col bg-gradient-to-b from-emerald-50 to-white border-r border-gray-200 transition-all duration-300 ease-in-out
-          w-[280px] lg:w-64
-          ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-      >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-start p-4 border-b border-gray-200 gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-600">
-            <FontAwesomeIcon icon={faShield} className="h-5 w-5" />
+                  {/* Active indicator */}
+                  {pathname === item.path && (
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
+                  )}
+                </a>
+              ))}
+
+              {/* Logout Button */}
+              <div className="ml-4 pl-4 border-l border-gray-200">
+                <button
+                  onClick={handleLogout}
+                  className="group flex items-center gap-2 px-4 py-2 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300 hover:scale-105"
+                >
+                  <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileOpen(!isMobileOpen)}
+              className="lg:hidden relative p-3 rounded-xl bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg"
+            >
+              <FontAwesomeIcon
+                icon={isMobileOpen ? faTimes : faBars}
+                className={`h-5 w-5 text-emerald-700 transition-transform duration-300 ${
+                  isMobileOpen ? "rotate-180" : "rotate-0"
+                }`}
+              />
+            </button>
           </div>
-          <h1 className="text-lg font-semibold text-emerald-700">Alumni Portal</h1>
         </div>
 
-        {/* Navigation Links */}
-        <div className="flex-1 py-4 overflow-y-auto">
-          <nav className="px-2 space-y-1">
-            {navItems.map((item) => (
+        {/* Mobile Navigation Dropdown */}
+        <div
+          className={`lg:hidden transition-all duration-300 ease-in-out ${
+            isMobileOpen
+              ? "max-h-screen opacity-100 bg-white/95 backdrop-blur-md"
+              : "max-h-0 opacity-0 overflow-hidden"
+          }`}
+        >
+          <div className="px-4 py-6 space-y-2 border-t border-gray-200">
+            {navItems.map((item, index) => (
               <a
                 key={item.path}
                 href={item.path}
-                onClick={() => {
-                  if (window.innerWidth < 1024) setIsMobileOpen(false)
-                }}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-gray-700 transition-all duration-200
-                  hover:bg-emerald-100 hover:text-emerald-700 group
-                  ${pathname === item.path ? "bg-emerald-100 text-emerald-700 font-medium" : ""}`}
+                onClick={() => setIsMobileOpen(false)}
+                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 transform hover:scale-102 ${
+                  pathname === item.path
+                    ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                }`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <FontAwesomeIcon
-                  icon={item.icon}
-                  className={`h-5 w-5 flex-shrink-0
-                    ${pathname === item.path ? "text-emerald-600" : "text-gray-500 group-hover:text-emerald-600"}`}
-                />
-                <span>{item.label}</span>
+                <div
+                  className={`p-2 rounded-lg ${
+                    pathname === item.path
+                      ? "bg-emerald-200"
+                      : "bg-gray-100 group-hover:bg-emerald-100"
+                  }`}
+                >
+                  <FontAwesomeIcon
+                    icon={item.icon}
+                    className={`h-5 w-5 transition-all duration-300 ${
+                      pathname === item.path
+                        ? "text-emerald-600"
+                        : `${item.color} group-hover:text-emerald-600`
+                    }`}
+                  />
+                </div>
+                <span className="font-medium">{item.label}</span>
+
+                {pathname === item.path && (
+                  <div className="ml-auto w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                )}
               </a>
             ))}
-          </nav>
-        </div>
 
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            className="w-full flex items-center px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
-            onClick={handleLogout}
-          >
-            <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5 mr-2" />
-            <span>Logout</span>
-          </button>
+            {/* Mobile Logout */}
+            <div className="pt-4 mt-4 border-t border-gray-200">
+              <button
+                onClick={handleLogout}
+                className="w-full group flex items-center gap-4 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300"
+              >
+                <div className="p-2 rounded-lg bg-red-100 group-hover:bg-red-200">
+                  <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
+                </div>
+                <span className="font-medium">Logout</span>
+              </button>
 
-          <div className="mt-4 text-xs text-center text-gray-500">
-            <p>Logged in as Staff</p>
-            <p className="mt-1">© 2025 Admin Portal</p>
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-500">Logged in as Staff</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  © 2025 Admin Portal
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </aside>
+      </nav>
+
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Spacer to prevent content from being hidden under fixed navbar */}
+      <div className="h-20"></div>
     </>
-  )
+  );
 }
