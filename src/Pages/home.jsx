@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
-import Header from "./Header.jsx";
-import Herosection from "./Herosection.jsx";
-import Image1 from "../images/image1.jpeg";
-import Image2 from "../images/image2.jpg";
-import Image3 from "../images/image3.jpg";
-import Loder from "./Loder.jsx";
+import { useState, useEffect } from "react"
+import { format } from "date-fns"
+import Header from "./Header.jsx"
+import Herosection from "./Herosection.jsx"
+import Image1 from "../images/image1.jpeg"
+import Image2 from "../images/image2.jpg"
+import Image3 from "../images/image3.jpg"
+import Footer from "../Pages/about_components/Footer.jsx"
 
 export default function Home() {
   const [data, setData] = useState({
@@ -75,11 +75,21 @@ export default function Home() {
       }, 6000);
       return () => clearInterval(timer);
     }
-  }, [data.featured_news.length]);
+  }, [data.featured_news.length])
 
-  if (showLoader) {
-    return <Loder />;
-  }
+  // Scroll to element if hash is present in URL
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1)
+      const element = document.getElementById(id)
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" })
+        }, 100)
+      }
+    }
+  }, [])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -228,19 +238,16 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Featured News Slider */}
-        {data.featured_news.length > 0 && (
-          <section className="py-20 " id="#news-section">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                  Latest News & Updates
-                </h2>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                  Stay informed with the latest achievements and stories from
-                  our alumni community
-                </p>
-              </div>
+      {/* Featured News Slider */}
+      {data.featured_news.length > 0 && (
+        <section className="py-20 " id="news-section">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Latest News & Updates</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Stay informed with the latest achievements and stories from our alumni community
+              </p>
+            </div>
 
               <div className="relative max-w-6xl mx-auto">
                 <div className="overflow-hidden rounded-3xl shadow-2xl">
@@ -370,18 +377,16 @@ export default function Home() {
           </section>
         )}
 
-        {/* Upcoming Events */}
-        {data.upcoming_events.length > 0 && (
-          <section className="py-20 ">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                  Events
-                </h2>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                  Join us for exciting events and networking opportunities
-                </p>
-              </div>
+      {/* Upcoming Events */}
+      {data.upcoming_events.length > 0 && (
+        <section className="py-20 " id="events-section">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Events</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Join us for exciting events and networking opportunities
+              </p>
+            </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                 {data.upcoming_events.map((event) => (
@@ -484,8 +489,8 @@ export default function Home() {
           </section>
         )}
 
-        {/* Latest Members Section */}
-        <section className="py-20 ">
+      {/* Latest Members Section */}
+        <section className="py-20" id="member-section">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
@@ -595,16 +600,12 @@ export default function Home() {
         </section>
 
         {/* Chapters Section */}
-        <section className="py-20 ">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-green-900 mb-4">
-                Global Chapters
-              </h2>
-              <p className="text-xl text-green-700 max-w-2xl mx-auto">
-                Connect with alumni chapters around the world
-              </p>
-            </div>
+          <section className="py-20 " id="chapters-section">
+            <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-green-900 mb-4">Global Chapters</h2>
+            <p className="text-xl text-green-700 max-w-2xl mx-auto">Connect with alumni chapters around the world</p>
+          </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {data.chapters.slice(0, 6).map((chapter, index) => (
@@ -670,8 +671,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Call to Action */}
-        <section className="py-20  text-green-900 relative overflow-hidden">
+          {/* Call to Action */}
+        <section className="py-20  text-green-900 relative overflow-hidden" id="contact-section">
           <div className="absolute inset-0 bg-green-100/40"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
@@ -699,11 +700,14 @@ export default function Home() {
               </div>
             </div>
           </div>
+
           {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full -translate-x-32 -translate-y-32"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-400/10 rounded-full translate-x-48 translate-y-48"></div>
-        </section>
-      </div>
+        <div className="absolute top-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full -translate-x-32 -translate-y-32"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-400/10 rounded-full translate-x-48 translate-y-48"></div>
+      </section>
+      <Footer/>
+    </div>
+    
     </>
   );
 }

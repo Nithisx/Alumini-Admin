@@ -134,7 +134,11 @@ export default function AdminHeader() {
           <div className="flex items-center justify-between h-20">
             {/* Left section - Logo */}
             <div className="flex items-center space-x-4">
-              <div className="relative w-14 h-14 flex-shrink-0">
+              <div 
+                className="relative w-14 h-14 flex-shrink-0 cursor-pointer" 
+                onClick={() => window.location.href = '/'}
+                title="Go to Home Page"
+              >
                 <img
                   src={logo}
                   alt="KAHEAA Logo"
@@ -142,7 +146,11 @@ export default function AdminHeader() {
                 />
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
               </div>
-              <div className="leading-tight">
+              <div 
+                className="leading-tight cursor-pointer" 
+                onClick={() => window.location.href = '/'}
+                title="Go to Home Page"
+              >
                 <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
                   KAHEAA
                 </h1>

@@ -173,6 +173,13 @@ const ProfileScreen = () => {
       return
     }
 
+    // Store the actual file for later upload
+    setProfile((prev) => ({
+      ...prev,
+      [`${field}_file`]: file,
+    }))
+
+    // Also set the preview image
     const reader = new FileReader()
     reader.onload = (e) => {
       setProfile((prev) => ({
@@ -203,39 +210,42 @@ const ProfileScreen = () => {
         throw new Error("Please enter a valid email address.")
       }
 
-      const profileData = {
-        bio: profile.bio || "",
-        email: profile.email || "",
-        passed_out_year: profile.passed_out_year || "",
-        phone: profile.phone || "",
-        first_name: profile.first_name || "",
-        last_name: profile.last_name || "",
-        experience: JSON.stringify(profile.experience || {}),
-        social_links: JSON.stringify(profile.social_links || {}),
-        current_work: profile.current_work || "",
-        Worked_in: JSON.stringify(profile.Worked_in || []),
-        Address: profile.Address || "",
-        city: profile.city || "",
-        state: profile.state || "",
-        country: profile.country || "",
-        zip_code: profile.zip_code || "",
-        date_of_birth: profile.date_of_birth || "",
+      // Create FormData for the entire profile update (including text fields)
+      const formData = new FormData()
+
+      // Add text data
+      formData.append("bio", profile.bio || "")
+      formData.append("email", profile.email || "")
+      formData.append("passed_out_year", profile.passed_out_year || "")
+      formData.append("phone", profile.phone || "")
+      formData.append("first_name", profile.first_name || "")
+      formData.append("last_name", profile.last_name || "")
+      formData.append("experience", JSON.stringify(profile.experience || {}))
+      formData.append("social_links", JSON.stringify(profile.social_links || {}))
+      formData.append("current_work", profile.current_work || "")
+      formData.append("Worked_in", JSON.stringify(profile.Worked_in || []))
+      formData.append("Address", profile.Address || "")
+      formData.append("city", profile.city || "")
+      formData.append("state", profile.state || "")
+      formData.append("country", profile.country || "")
+      formData.append("zip_code", profile.zip_code || "")
+      formData.append("date_of_birth", profile.date_of_birth || "")
+
+      // Add image files if they exist
+      if (profile.profile_photo_file) {
+        formData.append("profile_photo", profile.profile_photo_file)
+      }
+      if (profile.cover_photo_file) {
+        formData.append("cover_photo", profile.cover_photo_file)
       }
 
-      await axios.put(API_URL, profileData, {
+      // Send the data to the API using FormData
+      await axios.put(API_URL, formData, {
         headers: {
           Authorization: `Token ${token}`,
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "multipart/form-data",
         },
       })
-
-      // Handle image uploads if needed
-      if (profile.profile_photo !== DEFAULT_PROFILE_IMAGE || profile.cover_photo !== DEFAULT_COVER_IMAGE) {
-        const imageFormData = new FormData()
-
-        // Note: In a real implementation, you'd need to handle the file upload properly
-        // This is a simplified version for demonstration
-      }
 
       setSaving(false)
       setModalVisible(false)
