@@ -118,6 +118,12 @@ export default function AdminHeader() {
       label: "My Contribution",
       color: "text-green-600",
     },
+    {
+      path: "/admin/register-request",
+      icon: faShield,
+      label: "Login Requests",
+      color: "text-green-600",
+    },
   ];
 
   return (
