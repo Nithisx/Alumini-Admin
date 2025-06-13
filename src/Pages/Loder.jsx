@@ -109,7 +109,7 @@ const Loader = () => {
           className="mb-8 relative"
         >
           {/* Glowing ring behind logo */}
-          <motion.div
+          {/* <motion.div
             className="absolute inset-0 rounded-full"
             animate={{
               boxShadow: [
@@ -124,7 +124,7 @@ const Loader = () => {
               ease: "easeInOut",
             }}
             style={{ width: "280px", height: "280px", left: "-40px", top: "-40px" }}
-          />
+          /> */}
 
           {/* Main logo */}
           <motion.div

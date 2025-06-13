@@ -27,7 +27,7 @@ const AlumniLayout = () => {
       <AdminHeader />
 
       {/* Main Content */}
-      <main className="md:ml-60 p-4">
+      <main className="p-4">
         {" "}
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
