@@ -7,7 +7,7 @@ import Herosection from "./Herosection.jsx"
 import Image1 from "../images/image1.jpeg"
 import Image2 from "../images/image2.jpg"
 import Image3 from "../images/image3.jpg"
-
+import Footer from "../Pages/about_components/Footer.jsx"
 
 export default function Home() {
   const [data, setData] = useState({
@@ -62,6 +62,19 @@ export default function Home() {
       return () => clearInterval(timer)
     }
   }, [data.featured_news.length])
+
+  // Scroll to element if hash is present in URL
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1)
+      const element = document.getElementById(id)
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" })
+        }, 100)
+      }
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -180,7 +193,7 @@ export default function Home() {
 
       {/* Featured News Slider */}
       {data.featured_news.length > 0 && (
-        <section className="py-20 " id="#news-section">
+        <section className="py-20 " id="news-section">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Latest News & Updates</h2>
@@ -280,7 +293,7 @@ export default function Home() {
 
       {/* Upcoming Events */}
       {data.upcoming_events.length > 0 && (
-        <section className="py-20 ">
+        <section className="py-20 " id="events-section">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Events</h2>
@@ -386,7 +399,7 @@ export default function Home() {
       )}
 
       {/* Latest Members Section */}
-        <section className="py-20 ">
+        <section className="py-20" id="member-section">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">Latest Members</h2>
@@ -477,7 +490,7 @@ export default function Home() {
         </section>
 
         {/* Chapters Section */}
-          <section className="py-20 ">
+          <section className="py-20 " id="chapters-section">
             <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-green-900 mb-4">Global Chapters</h2>
@@ -537,7 +550,7 @@ export default function Home() {
           </section>
 
           {/* Call to Action */}
-        <section className="py-20  text-green-900 relative overflow-hidden">
+        <section className="py-20  text-green-900 relative overflow-hidden" id="contact-section">
           <div className="absolute inset-0 bg-green-100/40"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
@@ -566,10 +579,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Decorative elements */}}
+          {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full -translate-x-32 -translate-y-32"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-400/10 rounded-full translate-x-48 translate-y-48"></div>
       </section>
+      <Footer/>
     </div>
     
     </>

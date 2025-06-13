@@ -1,109 +1,141 @@
-import React, { useState } from 'react';
-import Header from './about_components/Header';
+import React, { useState, useEffect } from 'react';
+import Header from './Header';
 import Footer from './about_components/Footer';
-import AccordionSection from './about_components/Accordition_Section';
-import AdminSubSection from './about_components/AdminSubSection';
+import { faBuilding, faLightbulb, faUsers, faUserTie, faGraduationCap, faSitemap } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import OverviewSection from './about_components/OverviewSection';
+import VisionMissionSection from './about_components/VisionMissionSection';
 import Leadership from './about_components/LeadershipSection';
 import Faculty from './about_components/FacultySection';
 import Departments from './about_components/DepartmentsSection';
-import { faBuilding, faLightbulb, faUsers, faUserTie, faGraduationCap, faSitemap, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import OverviewSection from './about_components/OverviewSection';
-import VisionMissionSection from './about_components/VisionMissionSection';
-
-library.add(faChevronDown, faChevronUp, faBuilding, faLightbulb, faUsers, faUserTie, faGraduationCap, faSitemap);
 
 const About = () => {
-  const [openSections, setOpenSections] = useState({
-    overview: true,
-    visionMission: false,
-    administration: false,
-  });
+  // Track the active section based on URL hash
+  const [activeSection, setActiveSection] = useState('overview');
+  const [activeAdminSection, setActiveAdminSection] = useState(null);
 
-  const [openAdminSubSections, setOpenAdminSubSections] = useState({
-    leadership: false,
-    faculty: false,
-    departments: false,
-  });
+  // Handle URL hash changes
+  useEffect(() => {
+    // Default to overview if no hash
+    const hash = window.location.hash.replace('#', '') || 'overview';
+    setActiveSection(hash);
+    
+    // If administration section is active, set default admin subsection
+    if (hash === 'administration') {
+      setActiveAdminSection('leadership');
+    }
+    
+    // Add event listener for hash changes
+    const handleHashChange = () => {
+      const newHash = window.location.hash.replace('#', '') || 'overview';
+      setActiveSection(newHash);
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
-  const toggleSection = (section) => {
-    setOpenSections({ ...openSections, [section]: !openSections[section] });
-  };
-
-  const toggleAdminSubSection = (subsection) => {
-    setOpenAdminSubSections({ ...openAdminSubSections, [subsection]: !openAdminSubSections[subsection] });
+  // Handle admin sub-section changes
+  const handleAdminSectionChange = (section) => {
+    setActiveAdminSection(section);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-green-100">
       <Header />
       <div className="flex-grow py-12">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex items-center justify-center mb-12">
-            <div className="w-24 h-24 bg-blue-100 rounded-full mr-4 flex items-center justify-center">
-              <span className="text-blue-800 font-bold text-xl">KAHE</span>
+            <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full mr-4 flex items-center justify-center">
+              <span className="text-white font-bold text-xl">KAHE</span>
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-blue-800">About KAHE</h1>
-              <h2 className="text-xl text-gray-600">Karpagam Academy of Higher Education</h2>
+              <h1 className="text-3xl md:text-4xl font-bold text-green-800">About KAHE</h1>
+              <h2 className="text-xl text-green-600">Karpagam Academy of Higher Education</h2>
             </div>
           </div>
 
-          {/* Overview */}
-          <AccordionSection
-            title="Overview"
-            icon={faBuilding}
-            isOpen={openSections.overview}
-            onToggle={() => toggleSection('overview')}
-          >
-           <OverviewSection/>
-          </AccordionSection>
-
-          {/* Vision & Mission */}
-          <AccordionSection
-            title="Vision & Mission"
-            icon={faLightbulb}
-            isOpen={openSections.visionMission}
-            onToggle={() => toggleSection('visionMission')}
-          >
-            <VisionMissionSection/>
-          </AccordionSection>
-
-          {/* Administration */}
-          <AccordionSection
-            title="Administration"
-            icon={faUsers}
-            isOpen={openSections.administration}
-            onToggle={() => toggleSection('administration')}
-          >
-            {/* Nested Sub Sections */}
-            <AdminSubSection
-              title="Board of Trustees"
-              icon={faUserTie}
-              isOpen={openAdminSubSections.leadership}
-              onToggle={() => toggleAdminSubSection('leadership')}
+          {/* Navigation Tabs */}
+          <div className="flex mb-8 overflow-x-auto pb-2">
+            <button 
+              onClick={() => {window.location.hash = 'overview'; setActiveSection('overview');}}
+              className={`px-5 py-2 mx-1 rounded-full font-medium ${activeSection === 'overview' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-700 hover:bg-green-50'}`}
             >
-              <Leadership />
-            </AdminSubSection>
-
-            <AdminSubSection
-              title="Chancellor"
-              icon={faGraduationCap}
-              isOpen={openAdminSubSections.faculty}
-              onToggle={() => toggleAdminSubSection('faculty')}
+              <FontAwesomeIcon icon={faBuilding} className="mr-2" />
+              Overview
+            </button>
+            
+            <button 
+              onClick={() => {window.location.hash = 'vision-mission'; setActiveSection('vision-mission');}}
+              className={`px-5 py-2 mx-1 rounded-full font-medium ${activeSection === 'vision-mission' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-700 hover:bg-green-50'}`}
             >
-              <Faculty />
-            </AdminSubSection>
-
-            <AdminSubSection
-              title="Vice Chancellor"
-              icon={faSitemap}
-              isOpen={openAdminSubSections.departments}
-              onToggle={() => toggleAdminSubSection('departments')}
+              <FontAwesomeIcon icon={faLightbulb} className="mr-2" />
+              Vision & Mission
+            </button>
+            
+            <button 
+              onClick={() => {window.location.hash = 'administration'; setActiveSection('administration'); setActiveAdminSection('leadership');}}
+              className={`px-5 py-2 mx-1 rounded-full font-medium ${activeSection === 'administration' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-700 hover:bg-green-50'}`}
             >
-              <Departments />
-            </AdminSubSection>
-          </AccordionSection>
+              <FontAwesomeIcon icon={faUsers} className="mr-2" />
+              Administration
+            </button>
+          </div>
+          
+          {/* Content Sections */}
+          <div className="bg-white rounded-3xl shadow-lg p-8 border border-green-100">
+            {activeSection === 'overview' && (
+              <div id="overview">
+                <h2 className="text-2xl font-bold text-green-800 mb-6">Overview</h2>
+                <OverviewSection />
+              </div>
+            )}
+            
+            {activeSection === 'vision-mission' && (
+              <div id="vision-mission">
+                <h2 className="text-2xl font-bold text-green-800 mb-6">Vision & Mission</h2>
+                <VisionMissionSection />
+              </div>
+            )}
+            
+            {activeSection === 'administration' && (
+              <div id="administration">
+                <h2 className="text-2xl font-bold text-green-800 mb-6">Administration</h2>
+                
+                {/* Admin Sub-navigation */}
+                <div className="flex mb-8 overflow-x-auto pb-2 border-b border-green-100">
+                  <button 
+                    onClick={() => handleAdminSectionChange('leadership')}
+                    className={`px-4 py-2 mr-2 ${activeAdminSection === 'leadership' ? 'border-b-2 border-green-600 text-green-700 font-medium' : 'text-gray-600 hover:text-green-700'}`}
+                  >
+                    <FontAwesomeIcon icon={faUserTie} className="mr-2" />
+                    Board of Trustees
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleAdminSectionChange('faculty')}
+                    className={`px-4 py-2 mr-2 ${activeAdminSection === 'faculty' ? 'border-b-2 border-green-600 text-green-700 font-medium' : 'text-gray-600 hover:text-green-700'}`}
+                  >
+                    <FontAwesomeIcon icon={faGraduationCap} className="mr-2" />
+                    Chancellor
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleAdminSectionChange('departments')}
+                    className={`px-4 py-2 mr-2 ${activeAdminSection === 'departments' ? 'border-b-2 border-green-600 text-green-700 font-medium' : 'text-gray-600 hover:text-green-700'}`}
+                  >
+                    <FontAwesomeIcon icon={faSitemap} className="mr-2" />
+                    Vice Chancellor
+                  </button>
+                </div>
+                
+                {/* Admin Content */}
+                {activeAdminSection === 'leadership' && <Leadership />}
+                {activeAdminSection === 'faculty' && <Faculty />}
+                {activeAdminSection === 'departments' && <Departments />}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <Footer />
