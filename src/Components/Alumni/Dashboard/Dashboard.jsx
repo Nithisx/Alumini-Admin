@@ -250,7 +250,7 @@ const HomePage = () => {
           {data.featured_news.length > 0 && (
             <section className="py-20 " id="news-section">
               <div className="container mx-auto px-4">
-                <div className="text-center mb-16">
+                {/* <div className="text-center mb-16">
                   <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                     Latest News & Updates
                   </h2>
@@ -258,7 +258,7 @@ const HomePage = () => {
                     Stay informed with the latest achievements and stories from
                     our alumni community
                   </p>
-                </div>
+                </div> */}
 
                 <div className="relative max-w-6xl mx-auto">
                   <div className="overflow-hidden rounded-3xl shadow-2xl">
