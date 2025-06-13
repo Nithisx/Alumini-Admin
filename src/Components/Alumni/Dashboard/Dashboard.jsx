@@ -4,6 +4,7 @@ import image2 from "../../../images/image2.jpg";
 import image3 from "../../../images/image3.jpg";
 import Herosection from "../../../Pages/Herosection";
 import { format } from "date-fns";
+import Footer from "../../../Pages/about_components/Footer"
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -250,7 +251,7 @@ const HomePage = () => {
           {data.featured_news.length > 0 && (
             <section className="py-20 " id="news-section">
               <div className="container mx-auto px-4">
-                <div className="text-center mb-16">
+                {/* <div className="text-center mb-16">
                   <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                     Latest News & Updates
                   </h2>
@@ -258,7 +259,7 @@ const HomePage = () => {
                     Stay informed with the latest achievements and stories from
                     our alumni community
                   </p>
-                </div>
+                </div> */}
 
                 <div className="relative max-w-6xl mx-auto">
                   <div className="overflow-hidden rounded-3xl shadow-2xl">
@@ -778,28 +779,7 @@ const HomePage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-green-800 via-emerald-800 to-teal-800 text-white py-12 mt-20">
-        <div className="container mx-auto px-6 text-center">
-          <h3 className="text-2xl font-bold mb-4">Stay Connected</h3>
-          <p className="text-green-200 mb-6">
-            Join our thriving alumni community and never miss an update
-          </p>
-          <div className="flex justify-center space-x-6">
-            <button
-              onClick={() => navigate("/newsletter")}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors px-6 py-3 rounded-xl font-semibold"
-            >
-              Newsletter
-            </button>
-            <button
-              onClick={() => navigate("/contact")}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors px-6 py-3 rounded-xl font-semibold"
-            >
-              Contact Us
-            </button>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
