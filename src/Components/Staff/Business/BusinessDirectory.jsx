@@ -118,7 +118,7 @@ const BusinessDirectory = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 my-[100px] rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Business Directory</h1>
         <Link 

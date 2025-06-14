@@ -151,7 +151,7 @@ const Birthday = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-gray-50 min-h-screen">
+    <div className="max-w-5xl mx-auto p-6 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 my-[50px] min-h-screen">
       <h1 className="text-3xl font-bold text-center mb-8 text-green-800">Birthday Calendar</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Pages
@@ -21,34 +21,33 @@ const AppRoutes = () => {
 
   // Redirect authenticated users to their respective dashboards
   const redirectAuthenticated = () => {
-    if (token) {
-      switch (role) {
-        case 'admin':
-          return <Navigate to="/admin/dashboard" replace />;
-        case 'staff':
-          return <Navigate to="/staff/dashboard" replace />;
-        case 'alumni':
-          return <Navigate to="/alumni/dashboard" replace />;
-        default:
-          return <Navigate to="/home" replace />;
-      }
+    if (!token) return <Navigate to="/home" replace />;
+
+    switch (role) {
+      case 'admin':
+        return <Navigate to="/admin/dashboard" replace />;
+      case 'staff':
+        return <Navigate to="/staff/dashboard" replace />;
+      case 'alumni':
+        return <Navigate to="/alumni/dashboard" replace />;
+      default:
+        return <Navigate to="/home" replace />;
     }
-    return null;
   };
 
   return (
     <Router>
-      <Routes>        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
+      <Routes>
+        {/* Initial Route - Redirect based on role or to home */}
+        <Route path="/" element={redirectAuthenticated()} />
+
+        {/* Public Routes */}
         <Route path="/home" element={<Home />} />
         <Route path="/about" element={<About />} />
         
-        <Route path="/login" element={
-          token ? redirectAuthenticated() : <LoginPage />
-        } />
-        <Route path="/Signup" element={
-          token ? redirectAuthenticated() : <Signup />
-        } />
+        {/* Login and Signup */}
+        <Route path="/login" element={token ? redirectAuthenticated() : <LoginPage />} />
+        <Route path="/Signup" element={token ? redirectAuthenticated() : <Signup />} />
 
         {/* Admin Routes */}
         <Route
@@ -80,8 +79,8 @@ const AppRoutes = () => {
           }
         />
 
-        {/* Fallback - redirect to home if no token, otherwise to appropriate dashboard */}
-        <Route path="*" element={token ? redirectAuthenticated() : <Navigate to="/home" replace />} />
+        {/* Fallback Route */}
+        <Route path="*" element={token ? redirectAuthenticated() : <Navigate to="/home" />} />
       </Routes>
     </Router>
   );

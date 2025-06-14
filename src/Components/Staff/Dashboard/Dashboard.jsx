@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
-import image1 from "../../../images/image1.jpeg";
-import image2 from "../../../images/image2.jpg";
-import image3 from "../../../images/image3.jpg";
+
+import Herosection from "../../../Pages/Herosection";
+import { format } from "date-fns";
+import Footer from "../../../Pages/about_components/Footer"
 
 const HomePage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [newsSlide, setNewsSlide] = useState(0);
   const BASE_URL = "http://134.209.157.195:8000";
 
   // Retrieve token directly from localStorage
@@ -108,69 +110,10 @@ const HomePage = () => {
     }).format(date);
   };
 
-  const ImageSlider = () => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const images = [image1, image2, image3];
-
-    const nextSlide = useCallback(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
-    }, [images.length]);
-
-    useEffect(() => {
-      const timer = setInterval(nextSlide, 3000);
-      return () => clearInterval(timer);
-    }, [nextSlide]);
-
-    return (
-      <div className="relative w-full h-[500px] my-[50px] rounded-3xl overflow-hidden mb-12 shadow-2xl">
-        {images.map((image, index) => (
-          <div
-            key={index}
-            className={`absolute w-full h-full transition-all duration-1000 ease-in-out ${
-              index === currentIndex
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-105"
-            }`}
-          >
-            <img
-              src={image || "/placeholder.svg"}
-              alt={`Slide ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 via-transparent to-green-900/20"></div>
-          </div>
-        ))}
-
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentIndex
-                  ? "bg-white scale-125 shadow-lg"
-                  : "bg-white/60 hover:bg-white/80"
-              }`}
-              onClick={() => setCurrentIndex(index)}
-            ></button>
-          ))}
-        </div>
-
-        <div className="absolute top-8 left-2 bg-white/90 backdrop-blur-sm rounded-2xl px-3 md:px-6 py-2 md:py-4">
-          <h2 className="text-xl md:text-2xl font-bold text-green-800">Welcome Back!</h2>
-          <p className="text-green-600 text-sm md:text-base mt-2">
-            Stay connected with your Alumni community
-          </p>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <div className="container mx-auto px-6 -mt-8 relative z-20">
-        <ImageSlider />
+        <Herosection />
 
         {/* Quick Stats */}
         <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-8 mb-12 border border-green-100">
@@ -302,37 +245,96 @@ const HomePage = () => {
               </svg>
             </button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {data.featured_news.map((news) => (
-              <div
-                key={news.id}
-                className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-green-100"
-                onClick={() => navigate(`/staff/news/${news.id}/`)}
-              >
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={`${BASE_URL}${news.thumbnail}`}
-                    alt={news.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 via-transparent to-transparent"></div>
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2">
-                    <span className="text-green-700 font-semibold text-sm">
-                      News
-                    </span>
-                  </div>
-                </div>
-                <div className="p-8">
-                  <h3 className="text-2xl font-bold mb-4 group-hover:text-green-600 transition-colors duration-200">
-                    {news.title}
-                  </h3>
-                  <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">
-                    {news.content.substring(0, 150)}...
+          {/* Featured News Slider */}
+          {data.featured_news.length > 0 && (
+            <section className="py-20 " id="news-section">
+              <div className="container mx-auto px-4">
+                {/* <div className="text-center mb-16">
+                  <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                    Latest News & Updates
+                  </h2>
+                  <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                    Stay informed with the latest achievements and stories from
+                    our alumni community
                   </p>
-                  <div className="flex items-center text-sm text-green-600">
+                </div> */}
+
+                <div className="relative max-w-6xl mx-auto">
+                  <div className="overflow-hidden rounded-3xl shadow-2xl">
+                    {data.featured_news.map((news, index) => (
+                      <div
+                        key={news.id}
+                        className={`transition-transform duration-700 ease-in-out ${
+                          index === newsSlide
+                            ? "translate-x-0"
+                            : index < newsSlide
+                            ? "-translate-x-full"
+                            : "translate-x-full"
+                        }`}
+                        style={{
+                          display: index === newsSlide ? "block" : "none",
+                        }}
+                      >
+                        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
+                          <div className="relative">
+                            <img
+                              src={`http://134.209.157.195:8000${news.thumbnail}`}
+                              alt={news.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-4 left-4">
+                              <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                                {news.category}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-12 flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white">
+                            <div className="mb-4">
+                              <span className="text-blue-600 font-semibold text-sm">
+                                {format(
+                                  new Date(news.published_on),
+                                  "MMMM d, yyyy"
+                                )}
+                              </span>
+                            </div>
+                            <h3 className="text-3xl font-bold text-gray-900 mb-6 leading-tight">
+                              {news.title}
+                            </h3>
+                            <p className="text-gray-700 text-lg mb-8 leading-relaxed">
+                              {news.content}
+                            </p>
+                            <div className="flex items-center">
+                              <img
+                                src={`http://134.209.157.195:8000${news.user.profile_photo}`}
+                                alt={`${news.user.first_name} ${news.user.last_name}`}
+                                className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-blue-200"
+                              />
+                              <div>
+                                <p className="font-semibold text-gray-900">{`${news.user.first_name} ${news.user.last_name}`}</p>
+                                <p className="text-gray-600 text-sm">
+                                  Alumni Contributor
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Navigation buttons */}
+                  <button
+                    onClick={() =>
+                      setNewsSlide(
+                        (prev) =>
+                          (prev - 1 + data.featured_news.length) %
+                          data.featured_news.length
+                      )
+                    }
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-300"
+                  >
                     <svg
-                      className="w-4 h-4 mr-2"
+                      className="w-6 h-6 text-gray-700"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -340,18 +342,50 @@ const HomePage = () => {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
-                    <span className="font-medium">
-                      Published {formatDate(news.created_at || new Date())}
-                    </span>
+                  </button>
+                  <button
+                    onClick={() =>
+                      setNewsSlide(
+                        (prev) => (prev + 1) % data.featured_news.length
+                      )
+                    }
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-300"
+                  >
+                    <svg
+                      className="w-6 h-6 text-gray-700"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Slide indicators */}
+                  <div className="flex justify-center mt-8 space-x-2">
+                    {data.featured_news.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setNewsSlide(index)}
+                        className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                          index === newsSlide ? "bg-blue-600" : "bg-gray-300"
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </section>
+          )}{" "}
         </section>
 
         {/* Upcoming Events */}
@@ -579,65 +613,81 @@ const HomePage = () => {
               ))}
             </div>
 
-            <section className="mb-16 my-[100px]">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-4xl font-bold text-green-800 mb-2">
-                Alumni Chapters
-              </h2>
-              <p className="text-green-600">
-                Connect with Alumni in your region
-              </p>
-            </div>
-            
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data.chapters.slice(0, 6).map((chapter, index) => (
-              <div
-                key={index}
-                className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-green-100"
-                onClick={() => navigate(`/staff/chapters/${encodeURIComponent(chapter.chapter)}/`)}
-              >
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      ></path>
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      ></path>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-3xl font-bold text-blue-700 mb-1">
-                      {chapter.member_count.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-blue-600 font-medium">Members</div>
-                  </div>
+            {/* Chapters Section */}
+            <section className="py-20 md:w-[1500px]  " id="chapters-section">
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-16">
+                  <h2 className="text-4xl md:text-5xl font-bold text-green-900 mb-4">
+                    Global Chapters
+                  </h2>
+                  <p className="text-xl text-green-700 max-w-2xl mx-auto">
+                    Connect with alumni chapters around the world
+                  </p>
                 </div>
-                
-                <h3 className="text-lg font-bold text-green-800 mb-4 line-clamp-2 group-hover:text-green-600 transition-colors duration-200">
-                  {chapter.chapter.replace(/&#039;/g, "'")}
-                </h3>
-                
-               
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {data.chapters.slice(0, 6).map((chapter, index) => (
+                    <div
+                      key={index}
+                      className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100"
+                    >
+                      <div className="flex items-center mb-6">
+                        <div className="w-12 h-12 bg-gradient-to-r from-green-300 to-green-300 rounded-full flex items-center justify-center mr-4">
+                          <svg
+                            className="w-6 h-6 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-green-00 leading-tight">
+                            {chapter.chapter.replace("&#039;", "'")}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center">
+                          <svg
+                            className="w-5 h-5 text-green-500 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                          </svg>
+                          <span className="text-green-700 font-semibold">
+                            {chapter.member_count} Members
+                          </span>
+                        </div>
+                        <span className="text-green-700 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">
+                          Active
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
           </section>
 
           {/* New Members */}
@@ -647,7 +697,7 @@ const HomePage = () => {
                 <h2 className="text-3xl font-bold text-green-800 mb-2">
                   New Members
                 </h2>
-                <p className="text-green-600">Welcome our newest Alumni</p>
+                <p className="text-green-600">Welcome our newest alumni</p>
               </div>
               <button
                 onClick={() => navigate("/staff/members/")}
@@ -670,7 +720,6 @@ const HomePage = () => {
               </button>
             </div>
 
-              
             <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8 border border-green-100">
               {data.latest_members.map((member, index) => (
                 <div
@@ -704,7 +753,7 @@ const HomePage = () => {
                       {member.first_name} {member.last_name}
                     </h3>
                     <p className="text-sm text-green-600 font-medium">
-                      {member.role || "staff Member"}
+                      {member.role || "Alumni Member"}
                     </p>
                   </div>
                   <svg
@@ -727,33 +776,8 @@ const HomePage = () => {
         </div>
       </div>
 
-
-      
-
-
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-green-800 via-emerald-800 to-teal-800 text-white py-12 mt-20">
-        <div className="container mx-auto px-6 text-center">
-          <h3 className="text-2xl font-bold mb-4">Stay Connected</h3>
-          <p className="text-green-200 mb-6">
-            Join our thriving Alumni community and never miss an update
-          </p>
-          <div className="flex justify-center space-x-6">
-            <button
-              onClick={() => navigate("/newsletter")}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors px-6 py-3 rounded-xl font-semibold"
-            >
-              Newsletter
-            </button>
-            <button
-              onClick={() => navigate("/contact")}
-              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors px-6 py-3 rounded-xl font-semibold"
-            >
-              Contact Us
-            </button>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -119,7 +119,7 @@ const SingleEvents = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 my-[50px]">
       {/* Top Banner with Event Title */}
       <div className="bg-green-600 text-white shadow-md">
         <div className="container px-4 py-6 mx-auto">

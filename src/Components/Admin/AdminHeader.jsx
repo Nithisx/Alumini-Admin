@@ -18,14 +18,7 @@ import {
   faHandHoldingHeart,
   faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
-
-// Mock logo - replace with actual logo import
-import logo from "../../images/logo.png"; // Make sure this path is correct and the file exists
-
-// If the image is not found, try adjusting the path, for example:
-// import logo from "../../../images/logo.png";
-// or
-// import logo from "/src/images/logo.png";
+import Logo from "../../images/logo.png"; // Adjust the path as necessary
 export default function AdminHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -50,11 +43,11 @@ export default function AdminHeader() {
   }, []);
 
   const handleLogout = () => {
-    // Note: localStorage not available in artifacts
     console.log("Logout clicked");
-    localStorage.removeItem("Token")
-    localStorage.removeItem("Role")
-    window.location.href = "/login"
+    // Note: localStorage not available in artifacts
+    // localStorage.removeItem("Token")
+    // localStorage.removeItem("Role")
+    // window.location.href = "/login"
   };
 
   const navItems = [
@@ -103,26 +96,26 @@ export default function AdminHeader() {
     {
       path: "/admin/business",
       icon: faBuilding,
-      label: "Business Directory",
+      label: "Business",
       color: "text-teal-600",
     },
     {
       path: "/admin/my-profile",
       icon: faUser,
-      label: "My Profile",
+      label: "Profile",
       color: "text-gray-600",
     },
     {
       path: "/admin/my-contribution",
       icon: faHandHoldingHeart,
-      label: "My Contribution",
+      label: "Contribution",
       color: "text-green-600",
     },
     {
       path: "/admin/register-request",
       icon: faShield,
-      label: "Login Requests",
-      color: "text-green-600",
+      label: "Requests",
+      color: "text-emerald-600",
     },
   ];
 
@@ -137,71 +130,147 @@ export default function AdminHeader() {
         }`}
       >
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Left section - Logo */}
-            <div className="flex items-center space-x-4">
-              <div 
-                className="relative w-14 h-14 flex-shrink-0 cursor-pointer" 
+          <div className="flex items-center justify-between h-16 w-full">
+            {/* Left section - Logo */} 
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <div
+                className="relative w-10 h-10 flex-shrink-0 cursor-pointer"
                 onClick={() => window.location.href = '/'}
                 title="Go to Home Page"
               >
                 <img
-                  src={logo}
-                  alt="KAHEAA Logo"
-                  className="h-14 w-14 object-cover rounded-full shadow-md ring-2 ring-emerald-200"
+                  src={Logo}
+                  alt="Logo"
+                  className="h-10 w-10 rounded-full shadow-md ring-2 ring-emerald-200 object-cover"
                 />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
               </div>
-              <div 
-                className="leading-tight cursor-pointer" 
+              <div
+                className="leading-tight cursor-pointer hidden sm:block"
                 onClick={() => window.location.href = '/'}
                 title="Go to Home Page"
               >
-                <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
                   KAHEAA
                 </h1>
               </div>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {navItems.map((item) => (
-                <a
-                  key={item.path}
-                  href={item.path}
-                  className={`group relative flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 ${
-                    pathname === item.path
-                      ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                  }`}
-                >
-                  <FontAwesomeIcon
-                    icon={item.icon}
-                    className={`h-4 w-4 transition-all duration-300 ${
-                      pathname === item.path
-                        ? "text-emerald-600"
-                        : `${item.color} group-hover:text-emerald-600`
-                    }`}
-                  />
-                  <span className="text-sm font-medium whitespace-nowrap">
-                    {item.label}
-                  </span>
+            {/* Desktop Navigation - Full width distribution */}
+            <div className="hidden lg:flex items-center flex-1 justify-between">
+              <div className="flex items-center flex-1 justify-center">
+                <div className="flex items-center space-x-2">
+                  {navItems.map((item) => (
+                    <a
+                      key={item.path}
+                      href={item.path}
+                      className={`group relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                        pathname === item.path
+                          ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                      }`}
+                    >
+                      <FontAwesomeIcon
+                        icon={item.icon}
+                        className={`h-3.5 w-3.5 transition-all duration-300 ${
+                          pathname === item.path
+                            ? "text-emerald-600"
+                            : `${item.color} group-hover:text-emerald-600`
+                        }`}
+                      />
+                      <span className="text-xs font-medium whitespace-nowrap">
+                        {item.label}
+                      </span>
 
-                  {/* Active indicator */}
-                  {pathname === item.path && (
-                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
-                  )}
-                </a>
-              ))}
+                      {/* Active indicator */}
+                      {pathname === item.path && (
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></div>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
 
               {/* Logout Button */}
               <div className="ml-4 pl-4 border-l border-gray-200">
                 <button
                   onClick={handleLogout}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300 hover:scale-105"
+                  className="group flex items-center gap-1.5 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300 hover:scale-105"
                 >
-                  <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4" />
-                  <span className="text-sm font-medium">Logout</span>
+                  <FontAwesomeIcon icon={faSignOutAlt} className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium">Logout</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Tablet Navigation - Dropdown for overflow items */}
+            <div className="hidden md:flex lg:hidden items-center flex-1 mx-4">
+              <div className="flex items-center space-x-1">
+                {/* Show first 6 items */}
+                {navItems.slice(0, 6).map((item) => (
+                  <a
+                    key={item.path}
+                    href={item.path}
+                    className={`group relative flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                      pathname === item.path
+                        ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                    }`}
+                  >
+                    <FontAwesomeIcon
+                      icon={item.icon}
+                      className={`h-3.5 w-3.5 transition-all duration-300 ${
+                        pathname === item.path
+                          ? "text-emerald-600"
+                          : `${item.color} group-hover:text-emerald-600`
+                      }`}
+                    />
+                    <span className="text-xs font-medium hidden xl:block">
+                      {item.label}
+                    </span>
+                  </a>
+                ))}
+                
+                {/* More dropdown */}
+                <div className="relative group">
+                  <button className="flex items-center gap-1 px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-all duration-300">
+                    <FontAwesomeIcon icon={faChevronDown} className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">More</span>
+                  </button>
+                  
+                  {/* Dropdown menu */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                    <div className="py-2">
+                      {navItems.slice(6).map((item) => (
+                        <a
+                          key={item.path}
+                          href={item.path}
+                          className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${
+                            pathname === item.path ? "text-emerald-700 bg-emerald-50" : "text-gray-700"
+                          }`}
+                        >
+                          <FontAwesomeIcon
+                            icon={item.icon}
+                            className={`h-4 w-4 ${
+                              pathname === item.path ? "text-emerald-600" : item.color
+                            }`}
+                          />
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Logout Button */}
+              <div className="ml-3 pl-3 border-l border-gray-200">
+                <button
+                  onClick={handleLogout}
+                  className="group flex items-center gap-1.5 px-2 py-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300"
+                >
+                  <FontAwesomeIcon icon={faSignOutAlt} className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium hidden xl:block">Logout</span>
                 </button>
               </div>
             </div>
@@ -209,11 +278,11 @@ export default function AdminHeader() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="lg:hidden relative p-3 rounded-xl bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg"
+              className="md:hidden relative p-2.5 rounded-lg bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               <FontAwesomeIcon
                 icon={isMobileOpen ? faTimes : faBars}
-                className={`h-5 w-5 text-emerald-700 transition-transform duration-300 ${
+                className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${
                   isMobileOpen ? "rotate-180" : "rotate-0"
                 }`}
               />
@@ -223,7 +292,7 @@ export default function AdminHeader() {
 
         {/* Mobile Navigation Dropdown */}
         <div
-          className={`lg:hidden transition-all duration-300 ease-in-out ${
+          className={`md:hidden transition-all duration-300 ease-in-out ${
             isMobileOpen
               ? "max-h-screen opacity-100 bg-white/95 backdrop-blur-md"
               : "max-h-0 opacity-0 overflow-hidden"
@@ -292,13 +361,24 @@ export default function AdminHeader() {
       {/* Mobile Backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
       {/* Spacer to prevent content from being hidden under fixed navbar */}
-      <div className="h-20"></div>
+      <div className="h-16"></div>
+
+      {/* Custom scrollbar styles */}
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </>
   );
 }

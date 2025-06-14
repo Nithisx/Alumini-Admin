@@ -326,7 +326,7 @@ const JobFeed = () => {
   }
 
   return (
-    <div className="min-h-screen md:ml-64  w-full">
+    <div className="min-h-screen my-[50px] w-full bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       {/* Main Container - Full width with proper centering */}
       <div className="w-full">
         <div className="max-w-2xl mx-auto px-4 py-6">

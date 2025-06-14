@@ -52,9 +52,9 @@ export default function AdminHeader() {
   const handleLogout = () => {
     // Note: localStorage not available in artifacts
     console.log("Logout clicked");
-    localStorage.removeItem("Token")
-    localStorage.removeItem("Role")
-    window.location.href = "/login"
+    localStorage.removeItem("Token");
+    localStorage.removeItem("Role");
+    window.location.href = "/login";
   };
 
   const navItems = [
@@ -124,7 +124,7 @@ export default function AdminHeader() {
     <>
       {/* Main Navigation Bar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0  left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
             : "bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-b border-emerald-100"
@@ -134,9 +134,9 @@ export default function AdminHeader() {
           <div className="flex items-center justify-between h-20">
             {/* Left section - Logo */}
             <div className="flex items-center space-x-4">
-              <div 
-                className="relative w-14 h-14 flex-shrink-0 cursor-pointer" 
-                onClick={() => window.location.href = '/'}
+              <div
+                className="relative w-14 h-14 flex-shrink-0 cursor-pointer"
+                onClick={() => (window.location.href = "/home")}
                 title="Go to Home Page"
               >
                 <img
@@ -146,9 +146,9 @@ export default function AdminHeader() {
                 />
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
               </div>
-              <div 
-                className="leading-tight cursor-pointer" 
-                onClick={() => window.location.href = '/'}
+              <div
+                className="leading-tight cursor-pointer"
+                onClick={() => (window.location.href = "/home")}
                 title="Go to Home Page"
               >
                 <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
@@ -273,9 +273,9 @@ export default function AdminHeader() {
               </button>
 
               <div className="mt-4 text-center">
-                <p className="text-xs text-gray-500">Logged in as Staff</p>
+                <p className="text-xs text-gray-500">Logged in as Alumini</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  © 2025 Alumni Portal
+                  © 2025 Admin Portal
                 </p>
               </div>
             </div>

@@ -126,7 +126,7 @@ const AlbumsPage = () => {
     : albums;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 my-[50px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section - Updated with green gradient and smaller size */}
         {/* Header Section with search in header */}

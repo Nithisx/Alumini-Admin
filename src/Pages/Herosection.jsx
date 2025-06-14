@@ -60,7 +60,7 @@ const AlumniHeroSection = ({ data }) => {
                         <div className="flex flex-col sm:flex-row gap-4 pt-4">
                             <button
                                 className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center"
-                                onClick={() => navigate('/login')}
+                                onClick={() => navigate('/signup')}
                             >
                                 <span>Join Our Community</span>
                                 <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@ const AlumniHeroSection = ({ data }) => {
                                 </svg>
                             </button>
                             
-                            <button  onClick={() => navigate('/alumni/dashboard')} className="px-8 py-4 bg-white/80 backdrop-blur-sm text-slate-700 font-semibold rounded-xl border border-slate-200 hover:bg-white hover:border-slate-300 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <button  onClick={() => navigate('/about')} className="px-8 py-4 bg-white/80 backdrop-blur-sm text-slate-700 font-semibold rounded-xl border border-slate-200 hover:bg-white hover:border-slate-300 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
                                 Explore Network
                             </button>
                         </div>
