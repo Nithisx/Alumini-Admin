@@ -480,7 +480,7 @@ export default function RegisterRequest() {
           </div>
 
           {/* Desktop View */}
-          <div className="hidden lg:block overflow-x-auto">
+          <div className="hidden w-[105rem] lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-green-100">
               <thead className="bg-gradient-to-r from-green-50 to-emerald-50">
                 <tr>
