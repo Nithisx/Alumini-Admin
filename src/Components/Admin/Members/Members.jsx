@@ -6,9 +6,7 @@ import Pagination from "../../Shared/Pagination";
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "http://134.209.157.195:8000";
 const API_URL = `${BASE_URL}/admin-members/`;
-
-// Predefined roles
-const ROLES = ["Student", "Staff", "Admin"];
+const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
 
 // Placeholder image service
 const getPlaceholderImage = (name) => {
@@ -36,13 +34,55 @@ export default function MembersPage() {
   const [courseEndYearFilter, setCourseEndYearFilter] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
+  const [stateFilter, setStateFilter] = useState("");
+  const [passedOutYearFilter, setPassedOutYearFilter] = useState("");
+  const [courseFilter, setCourseFilter] = useState("");
+  const [collegeNameFilter, setCollegeNameFilter] = useState("");
+  const [currentWorkFilter, setCurrentWorkFilter] = useState("");
+
+  // Store dropdown options
+  const [dropdownFilters, setDropdownFilters] = useState({
+    current_work: [],
+    college_name: [],
+    city: [],
+    state: [],
+    country: [],
+    role: [],
+    passed_out_year: [],
+    course: [],
+  });
 
   const [loading, setLoading] = useState(true);
+  const [filtersLoading, setFiltersLoading] = useState(true);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Fetch dropdown filter options
+  const fetchDropdownFilters = async () => {
+    setFiltersLoading(true);
+    try {
+      const response = await axios.get(DROPDOWN_FILTERS_URL, {
+        headers: {
+          Authorization: `Token ${TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      setDropdownFilters(response.data);
+      setFiltersLoading(false);
+    } catch (error) {
+      console.error("Error fetching dropdown filters:", error);
+      setFiltersLoading(false);
+    }
+  };
+
+  // Fetch dropdown options on component mount
+  useEffect(() => {
+    fetchDropdownFilters();
+  }, []);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -53,14 +93,18 @@ export default function MembersPage() {
 
     if (roleFilter) params.append("role", roleFilter);
     if (cityFilter) params.append("city", cityFilter);
-    if (workedInFilter) params.append("Worked_in", workedInFilter);
+    if (workedInFilter) params.append("worked_in", workedInFilter);
     if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
     if (searchQuery) params.append("search", searchQuery);
     if (genderFilter) params.append("gender", genderFilter);
-    if (courseEndYearFilter)
-      params.append("course_end_year", courseEndYearFilter);
+    if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
     if (companyFilter) params.append("company", companyFilter);
     if (countryFilter) params.append("country", countryFilter);
+    if (stateFilter) params.append("state", stateFilter);
+    if (passedOutYearFilter) params.append("passed_out_year", passedOutYearFilter);
+    if (courseFilter) params.append("course", courseFilter);
+    if (collegeNameFilter) params.append("college_name", collegeNameFilter);
+    if (currentWorkFilter) params.append("current_work", currentWorkFilter);
 
     try {
       const response = await axios.get(`${API_URL}?${params.toString()}`, {
@@ -95,11 +139,16 @@ export default function MembersPage() {
     courseEndYearFilter,
     companyFilter,
     countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
   ]);
 
   // Whenever page or filters change, fetch data
   useEffect(() => {
-    fetchMembers(currentPage, pageSize);
+    fetchMembers();
   }, [
     currentPage,
     pageSize,
@@ -112,6 +161,11 @@ export default function MembersPage() {
     courseEndYearFilter,
     companyFilter,
     countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
   ]);
 
   // Derive unique options from current result set
@@ -125,14 +179,12 @@ export default function MembersPage() {
   // Handle page change
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchMembers(page, pageSize);
   };
 
   // Handle page size change
   const handlePageSizeChange = (size) => {
     setPageSize(size);
     setCurrentPage(1); // Reset to first page
-    fetchMembers(1, size);
   };
 
   const handleResetFilters = () => {
@@ -145,6 +197,11 @@ export default function MembersPage() {
     setCourseEndYearFilter("");
     setCompanyFilter("");
     setCountryFilter("");
+    setStateFilter("");
+    setPassedOutYearFilter("");
+    setCourseFilter("");
+    setCollegeNameFilter("");
+    setCurrentWorkFilter("");
     setCurrentPage(1);
   };
 
@@ -163,8 +220,8 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br w-[120rem] my-10 from-gray-50 to-blue-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+      <div className="max-w-[1600px] mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -202,179 +259,256 @@ export default function MembersPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Role Filter */}
-            <div className="space-y-2">
-              <label
-                htmlFor="role-filter"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Role
-              </label>
-              <select
-                id="role-filter"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-              >
-                <option value="">All Roles</option>
-                {ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Worked In Filter */}
-            <div className="space-y-2">
-              <label
-                htmlFor="worked-in-filter"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Worked In
-              </label>
-              <input
-                id="worked-in-filter"
-                type="text"
-                placeholder="Enter Company"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                value={workedInFilter}
-                onChange={(e) => setWorkedInFilter(e.target.value)}
-              />
-            </div>
-
-            {/* Gender Filter */}
-            <div className="space-y-2">
-              <label
-                htmlFor="gender-filter"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Gender
-              </label>
-              <select
-                id="gender-filter"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                value={genderFilter}
-                onChange={(e) => setGenderFilter(e.target.value)}
-              >
-                <option value="">All</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            {/* Course End Year Filter */}
-            <div className="space-y-2">
-              <label
-                htmlFor="course-end-year-filter"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Course End Year
-              </label>
-              <input
-                id="course-end-year-filter"
-                type="number"
-                placeholder="Enter year"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                value={courseEndYearFilter}
-                onChange={(e) => setCourseEndYearFilter(e.target.value)}
-              />
-            </div>
-
-            {/* Company Filter */}
-            <div className="space-y-2">
-              <label
-                htmlFor="company-filter"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Company
-              </label>
-              <input
-                id="company-filter"
-                type="text"
-                placeholder="Enter company name"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                value={companyFilter}
-                onChange={(e) => setCompanyFilter(e.target.value)}
-              />
-            </div>
-
-            {/* Country Filter */}
-            <div className="space-y-2">
-              <label
-                htmlFor="country-filter"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Country
-              </label>
-              <input
-                id="country-filter"
-                type="text"
-                placeholder="Enter country"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                value={countryFilter}
-                onChange={(e) => setCountryFilter(e.target.value)}
-              />
-            </div>
-
-            {/* City Filter */}
-            <div className="space-y-2">
-              <label
-                htmlFor="city-filter"
-                className="block text-sm font-medium text-gray-700"
-              >
-                City
-              </label>
-              <select
-                id="city-filter"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-              >
-                <option value="">All Cities</option>
-                {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Search */}
-            <div className="space-y-2">
-              <label
-                htmlFor="search-box"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Search
-              </label>
-              <div className="relative">
-                <input
-                  id="search-box"
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Search by name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <svg
-                  className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+          {filtersLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="text-gray-600">Loading filters...</span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {/* Role Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="role-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Role
+                </label>
+                <select
+                  id="role-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                >
+                  <option value="">All Roles</option>
+                  {dropdownFilters.role.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Current Work Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="current-work-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                   Working In
+                </label>
+                <select
+                  id="current-work-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={currentWorkFilter}
+                  onChange={(e) => setCurrentWorkFilter(e.target.value)}
+                >
+                  <option value="">All Current Works</option>
+                  {dropdownFilters.current_work.map((work) => (
+                    <option key={work} value={work}>
+                      {work}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Course Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="course-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Course
+                </label>
+                <select
+                  id="course-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={courseFilter}
+                  onChange={(e) => setCourseFilter(e.target.value)}
+                >
+                  <option value="">All Courses</option>
+                  {dropdownFilters.course.map((course) => (
+                    <option key={course} value={course}>
+                      {course}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Passed Out Year Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="passed-out-year-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Passed Out Year
+                </label>
+                <select
+                  id="passed-out-year-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={passedOutYearFilter}
+                  onChange={(e) => setPassedOutYearFilter(e.target.value)}
+                >
+                  <option value="">All Years</option>
+                  {dropdownFilters.passed_out_year.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* City Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="city-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  City
+                </label>
+                <select
+                  id="city-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={cityFilter}
+                  onChange={(e) => setCityFilter(e.target.value)}
+                >
+                  <option value="">All Cities</option>
+                  {dropdownFilters.city.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* State Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="state-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  State
+                </label>
+                <select
+                  id="state-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value)}
+                >
+                  <option value="">All States</option>
+                  {dropdownFilters.state.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Country Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="country-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Country
+                </label>
+                <select
+                  id="country-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={countryFilter}
+                  onChange={(e) => setCountryFilter(e.target.value)}
+                >
+                  <option value="">All Countries</option>
+                  {dropdownFilters.country.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* College Name Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="college-name-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  College Name
+                </label>
+                <select
+                  id="college-name-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={collegeNameFilter}
+                  onChange={(e) => setCollegeNameFilter(e.target.value)}
+                >
+                  <option value="">All Colleges</option>
+                  {dropdownFilters.college_name.map((college) => (
+                    <option key={college} value={college}>
+                      {college}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Gender Filter */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="gender-filter"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Gender
+                </label>
+                <select
+                  id="gender-filter"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
+                  value={genderFilter}
+                  onChange={(e) => setGenderFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              
+
+              {/* Search */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="search-box"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Search
+                </label>
+                <div className="relative">
+                  <input
+                    id="search-box"
+                    type="text"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Search by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Results Summary */}
@@ -383,7 +517,10 @@ export default function MembersPage() {
             <p className="text-gray-700 font-medium">
               {filteredTotal} {filteredTotal === 1 ? "member" : "members"} found
             </p>
-            {(roleFilter || cityFilter || workedInFilter || searchQuery) && (
+            {(roleFilter || cityFilter || workedInFilter || searchQuery || 
+              countryFilter || stateFilter || passedOutYearFilter || courseFilter || 
+              collegeNameFilter || currentWorkFilter || genderFilter || courseEndYearFilter || 
+              companyFilter) && (
               <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
                 Filtered
               </span>

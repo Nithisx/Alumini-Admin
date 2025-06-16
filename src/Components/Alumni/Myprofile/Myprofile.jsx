@@ -691,17 +691,7 @@ const ProfileScreen = () => {
     <div className="min-h-screen bg-green-50">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-green-200 shadow-md">
-        
         <h1 className="text-xl font-bold text-green-900">Profile</h1>
-        <button
-          onClick={() => {
-            setEditPage(0)
-            setModalVisible(true)
-          }}
-          className="p-2"
-        >
-          <Edit className="w-6 h-6 text-green-600" />
-        </button>
       </div>
 
       {/* Profile Header */}
@@ -778,6 +768,18 @@ const ProfileScreen = () => {
           </div>
         </div>
       )}
+
+      {/* Fixed floating action button */}
+      <button
+        onClick={() => {
+          setEditPage(0)
+          setModalVisible(true)
+        }}
+        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-colors"
+        aria-label="Edit Profile"
+      >
+        <Edit className="w-6 h-6" />
+      </button>
     </div>
   )
 }
