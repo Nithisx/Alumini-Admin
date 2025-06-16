@@ -251,8 +251,8 @@ const ProfileScreen = () => {
     switch (activeTab) {
       case 0: // Personal
         return (
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
+          <div className="space-y-4 w-[115rem]">
+            <div className="flex items-start  space-x-3 pb-4 border-b border-green-200">
               <User className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Full Name</p>
@@ -318,7 +318,7 @@ const ProfileScreen = () => {
 
       case 1: // Work
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 w-[115rem]">
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <Briefcase className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
@@ -359,7 +359,7 @@ const ProfileScreen = () => {
 
       case 2: // Contact
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 w-[115rem]">
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
               <Phone className="w-5 h-5 text-green-600 mt-1" />
               <div className="flex-1">
@@ -384,7 +384,7 @@ const ProfileScreen = () => {
 
       case 3: // Social
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 w-[115rem]">
             {profile.social_links && Object.keys(profile.social_links).length > 0 ? (
               Object.entries(profile.social_links).map(([key, value]) => (
                 <div key={key} className="flex items-start space-x-3 pb-4 border-b border-green-200">
@@ -413,7 +413,7 @@ const ProfileScreen = () => {
     switch (editPage) {
       case 0: // Basic Info
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 w-[115rem]">
             <div className="flex justify-center mb-6">
               <div className="relative">
                 <img
@@ -492,7 +492,7 @@ const ProfileScreen = () => {
 
       case 1: // Address
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 w-[115rem]">
             <div>
               <label className="block text-sm font-bold text-green-900 mb-1">Phone</label>
               <input

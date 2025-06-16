@@ -2,9 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faFolderOpen, faPlus, faTimes, faTrash, 
-  faImage, faCheck, faExclamationCircle, faSpinner
+import {
+  faFolderOpen,
+  faPlus,
+  faTimes,
+  faTrash,
+  faImage,
+  faCheck,
+  faExclamationCircle,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumsPage = () => {
@@ -23,13 +29,19 @@ const AlbumsPage = () => {
     const fetchAlbums = async () => {
       try {
         const token = localStorage.getItem("Token");
-        const response = await axios.get("http://134.209.157.195:8000/albums/", {
-          headers: { Authorization: `Token ${token}` },
-        });
+        const response = await axios.get(
+          "http://134.209.157.195:8000/albums/",
+          {
+            headers: { Authorization: `Token ${token}` },
+          }
+        );
         setAlbums(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Error fetching albums:", error);
-        showNotification("Could not load albums. Please try again later.", "error");
+        showNotification(
+          "Could not load albums. Please try again later.",
+          "error"
+        );
         setAlbums([]);
       } finally {
         setLoading(false);
@@ -51,7 +63,7 @@ const AlbumsPage = () => {
       await axios.delete(`http://134.209.157.195:8000/albums/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
-      setAlbums(prev => prev.filter(a => a.id !== id));
+      setAlbums((prev) => prev.filter((a) => a.id !== id));
       showNotification("Album deleted successfully!");
     } catch (error) {
       console.error("Error deleting album:", error);
@@ -59,34 +71,37 @@ const AlbumsPage = () => {
     }
   };
 
-  const handleInputChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
       showNotification("Please enter an album title.", "error");
       return;
     }
-    
+
     setIsCreating(true); // Start loading
-    
+
     try {
       const token = localStorage.getItem("Token");
       const payload = new FormData();
       payload.append("title", formData.title);
       payload.append("description", formData.description);
-      if (uploadedFile) payload.append("cover_image", uploadedFile.file, uploadedFile.name);
-      
+      if (uploadedFile)
+        payload.append("cover_image", uploadedFile.file, uploadedFile.name);
+
       const response = await axios.post(
         "http://134.209.157.195:8000/albums/",
         payload,
-        { headers: {
+        {
+          headers: {
             Authorization: `Token ${token}`,
             "Content-Type": "multipart/form-data",
           },
         }
       );
-      setAlbums(prev => [response.data, ...prev]);
+      setAlbums((prev) => [response.data, ...prev]);
       setIsModalOpen(false);
       setFormData({ title: "", description: "" });
       setUploadedFile(null);
@@ -99,10 +114,14 @@ const AlbumsPage = () => {
     }
   };
 
-  const handleFileSelect = e => {
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      setUploadedFile({ file, name: file.name, preview: URL.createObjectURL(file) });
+      setUploadedFile({
+        file,
+        name: file.name,
+        preview: URL.createObjectURL(file),
+      });
     } else {
       showNotification("Please upload only image files.", "error");
     }
@@ -115,75 +134,130 @@ const AlbumsPage = () => {
 
   // Handle drag and drop box click
   const handleDragBoxClick = () => {
-    document.getElementById('file-upload').click();
+    document.getElementById("file-upload").click();
   };
 
-  const filteredAlbums = searchTerm 
-    ? albums.filter(album => 
-        album.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        album.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAlbums = searchTerm
+    ? albums.filter(
+        (album) =>
+          album.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          album.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : albums;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen w-[120rem] bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section - Updated with green gradient and smaller size */}
         {/* Header Section with search in header */}
-<div className="bg-white shadow-sm pm-4 rounded-lg mb-6">
-  <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-      <h1 className="text-3xl font-bold text-green-700">Albums Dashboard</h1>
-      <div className="flex items-center space-x-3 w-full md:w-auto">
-        <div className="relative flex-1 md:w-64">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search albums..."
-            className="w-full border border-gray-300 rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
+        <div className="bg-white shadow-sm pm-4 rounded-lg mb-6">
+          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <h1 className="text-3xl font-bold text-green-700">
+                Albums Dashboard
+              </h1>
+              <div className="flex items-center space-x-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-64">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search albums..."
+                    className="w-full border border-gray-300 rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div className="flex space-x-2 bg-gray-100 p-1 rounded-md">
+                  <button
+                    className={`p-2 rounded ${
+                      view === "grid"
+                        ? "bg-white shadow text-green-600"
+                        : "text-gray-500"
+                    }`}
+                    onClick={() => setView("grid")}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    className={`p-2 rounded ${
+                      view === "list"
+                        ? "bg-white shadow text-green-600"
+                        : "text-gray-500"
+                    }`}
+                    onClick={() => setView("list")}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center font-medium"
+                >
+                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                  New Album
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex space-x-2 bg-gray-100 p-1 rounded-md">
-          <button
-            className={`p-2 rounded ${view === "grid" ? "bg-white shadow text-green-600" : "text-gray-500"}`}
-            onClick={() => setView("grid")}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </button>
-          <button
-            className={`p-2 rounded ${view === "list" ? "bg-white shadow text-green-600" : "text-gray-500"}`}
-            onClick={() => setView("list")}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center font-medium"
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" />
-          New Album
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
         {/* Notification */}
         {notification.message && (
-          <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition transform translate-y-0 ${notification.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+          <div
+            className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition transform translate-y-0 ${
+              notification.type === "error"
+                ? "bg-red-100 text-red-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
             <div className="flex items-center">
-              <FontAwesomeIcon icon={notification.type === 'error' ? faExclamationCircle : faCheck} className="mr-2" />
+              <FontAwesomeIcon
+                icon={
+                  notification.type === "error" ? faExclamationCircle : faCheck
+                }
+                className="mr-2"
+              />
               <span>{notification.message}</span>
             </div>
           </div>
@@ -198,14 +272,28 @@ const AlbumsPage = () => {
           <div className="bg-white rounded-xl shadow-md p-12 flex flex-col items-center justify-center text-center">
             {searchTerm ? (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-16 w-16 text-gray-300 mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
-                <h3 className="text-2xl font-semibold text-gray-700 mb-2">No matching albums found</h3>
+                <h3 className="text-2xl font-semibold text-gray-700 mb-2">
+                  No matching albums found
+                </h3>
                 <p className="text-gray-500 max-w-md mx-auto">
-                  We couldn't find any albums matching "{searchTerm}". Try a different search term or clear your search.
+                  We couldn't find any albums matching "{searchTerm}". Try a
+                  different search term or clear your search.
                 </p>
-                <button 
+                <button
                   onClick={() => setSearchTerm("")}
                   className="mt-4 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
                 >
@@ -214,12 +302,18 @@ const AlbumsPage = () => {
               </>
             ) : (
               <>
-                <FontAwesomeIcon icon={faFolderOpen} className="text-6xl text-gray-300 mb-4" />
-                <h3 className="text-2xl font-semibold text-gray-700 mb-2">No Albums Yet</h3>
+                <FontAwesomeIcon
+                  icon={faFolderOpen}
+                  className="text-6xl text-gray-300 mb-4"
+                />
+                <h3 className="text-2xl font-semibold text-gray-700 mb-2">
+                  No Albums Yet
+                </h3>
                 <p className="text-gray-500 max-w-md mx-auto">
-                  You haven't created any photo albums yet. Start organizing your photos by creating your first album.
+                  You haven't created any photo albums yet. Start organizing
+                  your photos by creating your first album.
                 </p>
-                <button 
+                <button
                   onClick={() => setIsModalOpen(true)}
                   className="mt-6 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center font-medium"
                 >
@@ -233,7 +327,7 @@ const AlbumsPage = () => {
           <>
             {view === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredAlbums.map(album => (
+                {filteredAlbums.map((album) => (
                   <div
                     key={album.id}
                     onClick={() => navigate(`/admin/albums/${album.id}`)}
@@ -242,12 +336,12 @@ const AlbumsPage = () => {
                     <div className="relative h-48 overflow-hidden">
                       {/* Delete button moved to top left */}
                       <button
-                        onClick={e => handleDeleteAlbum(album.id, e)}
+                        onClick={(e) => handleDeleteAlbum(album.id, e)}
                         className="absolute top-3 left-3 z-10 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
-                      
+
                       {album.cover_image ? (
                         <img
                           src={`http://134.209.157.195:8000${album.cover_image}`}
@@ -256,14 +350,21 @@ const AlbumsPage = () => {
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <FontAwesomeIcon icon={faImage} className="text-3xl text-gray-400" />
+                          <FontAwesomeIcon
+                            icon={faImage}
+                            className="text-3xl text-gray-400"
+                          />
                         </div>
                       )}
                       {/* Removed black background overlay on hover */}
                     </div>
                     <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">{album.title}</h3>
-                      <p className="text-gray-500 text-sm line-clamp-2">{album.description || "No description"}</p>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
+                        {album.title}
+                      </h3>
+                      <p className="text-gray-500 text-sm line-clamp-2">
+                        {album.description || "No description"}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -271,8 +372,8 @@ const AlbumsPage = () => {
             ) : (
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 <ul className="divide-y divide-gray-200">
-                  {filteredAlbums.map(album => (
-                    <li 
+                  {filteredAlbums.map((album) => (
+                    <li
                       key={album.id}
                       onClick={() => navigate(`/staff/albums/${album.id}`)}
                       className="hover:bg-gray-50 cursor-pointer transition"
@@ -287,16 +388,23 @@ const AlbumsPage = () => {
                             />
                           ) : (
                             <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                              <FontAwesomeIcon icon={faImage} className="text-gray-400" />
+                              <FontAwesomeIcon
+                                icon={faImage}
+                                className="text-gray-400"
+                              />
                             </div>
                           )}
                         </div>
                         <div className="ml-4 flex-grow">
-                          <h3 className="text-lg font-medium text-gray-800">{album.title}</h3>
-                          <p className="text-gray-500 text-sm truncate">{album.description || "No description"}</p>
+                          <h3 className="text-lg font-medium text-gray-800">
+                            {album.title}
+                          </h3>
+                          <p className="text-gray-500 text-sm truncate">
+                            {album.description || "No description"}
+                          </p>
                         </div>
                         <button
-                          onClick={e => handleDeleteAlbum(album.id, e)}
+                          onClick={(e) => handleDeleteAlbum(album.id, e)}
                           className="ml-4 p-2 text-gray-400 hover:text-red-500 transition"
                         >
                           <FontAwesomeIcon icon={faTrash} />
@@ -314,15 +422,18 @@ const AlbumsPage = () => {
       {/* Create Album Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-white text-xl font-semibold flex items-center">
                   <FontAwesomeIcon icon={faFolderOpen} className="mr-2" />
                   Create New Album
                 </h3>
-                <button 
-                  onClick={() => setIsModalOpen(false)} 
+                <button
+                  onClick={() => setIsModalOpen(false)}
                   className="text-white hover:text-green-100 transition"
                   disabled={isCreating}
                 >
@@ -332,7 +443,9 @@ const AlbumsPage = () => {
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Album Title</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Album Title
+                </label>
                 <input
                   type="text"
                   name="title"
@@ -345,7 +458,9 @@ const AlbumsPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -358,7 +473,9 @@ const AlbumsPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Cover Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Cover Image
+                </label>
                 {uploadedFile ? (
                   <div className="relative bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
                     <button
@@ -381,7 +498,7 @@ const AlbumsPage = () => {
                     </div>
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition"
                     onClick={handleDragBoxClick}
                   >
@@ -406,7 +523,9 @@ const AlbumsPage = () => {
                         </span>
                         <p className="pl-1">or drag and drop</p>
                       </div>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 10MB
+                      </p>
                     </div>
                     <input
                       id="file-upload"
@@ -437,7 +556,10 @@ const AlbumsPage = () => {
                 >
                   {isCreating ? (
                     <>
-                      <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        className="mr-2 animate-spin"
+                      />
                       Creating...
                     </>
                   ) : (
@@ -454,10 +576,32 @@ const AlbumsPage = () => {
       )}
 
       <style jsx>{`
-        @keyframes fade-in-out { 0%,100% { opacity: 0;} 10%,90% { opacity:1;} }
-        .animate-fade-in-out { animation: fade-in-out 4s ease-in-out forwards; }
-        @keyframes scale-in { from { transform: scale(0.95); opacity: 0;} to { transform: scale(1); opacity: 1;} }
-        .animate-scale-in { animation: scale-in 0.3s ease-out forwards; }
+        @keyframes fade-in-out {
+          0%,
+          100% {
+            opacity: 0;
+          }
+          10%,
+          90% {
+            opacity: 1;
+          }
+        }
+        .animate-fade-in-out {
+          animation: fade-in-out 4s ease-in-out forwards;
+        }
+        @keyframes scale-in {
+          from {
+            transform: scale(0.95);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        .animate-scale-in {
+          animation: scale-in 0.3s ease-out forwards;
+        }
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;

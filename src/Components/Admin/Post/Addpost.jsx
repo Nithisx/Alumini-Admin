@@ -326,7 +326,7 @@ const JobFeed = () => {
   }
 
   return (
-    <div className="min-h-screen md:ml-64  w-full">
+    <div className="min-h-screen md:ml-64 mt-10 w-[90rem]">
       {/* Main Container - Full width with proper centering */}
       <div className="w-full">
         <div className="max-w-2xl mx-auto px-4 py-6">

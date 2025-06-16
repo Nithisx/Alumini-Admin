@@ -91,7 +91,7 @@ export default function NewsList() {
   const featuredPosts = posts.filter(post => post.featured);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 w-[120rem] mx-50 my-10 min-h-screen">
       <div className="max-w-7xl lg:mx-[100px] px-4 py-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-gray-200">

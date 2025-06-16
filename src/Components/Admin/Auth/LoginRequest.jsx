@@ -102,9 +102,9 @@ export default function RegisterRequest() {
 
   // Mobile Card Component
   const MobileCard = ({ req }) => (
-    <div className="bg-white rounded-xl shadow-lg border border-green-100 mb-4 overflow-hidden">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className="bg-white  rounded-xl shadow-lg border  border-green-100 mb-4 overflow-hidden">
+      <div className="p-4 ">
+        <div className="flex  items-center justify-between mb-3">
           <div className="flex items-center">
             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 flex items-center justify-center mr-3">
               <FontAwesomeIcon icon={faUser} className="text-white text-sm" />

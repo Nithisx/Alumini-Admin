@@ -55,7 +55,7 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen  flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
         <div className="text-center p-8 bg-white rounded-3xl shadow-xl border border-green-100">
           <div className="w-20 h-20 border-4 border-green-300 border-t-green-600 rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-xl font-semibold text-green-800">
@@ -69,7 +69,7 @@ const HomePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="min-h-screen flex items-center  justify-center bg-gradient-to-br from-green-50 to-emerald-100">
         <div className="bg-white p-10 rounded-3xl shadow-xl max-w-md w-full border border-red-200">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -113,7 +113,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 w-[120rem] via-emerald-50 to-teal-50">
       <div className="container mx-auto px-6 -mt-8 relative z-20">
         <Herosection />
 
