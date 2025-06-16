@@ -45,9 +45,9 @@ export default function AdminHeader() {
   const handleLogout = () => {
     console.log("Logout clicked");
     // Note: localStorage not available in artifacts
-    // localStorage.removeItem("Token")
-    // localStorage.removeItem("Role")
-    // window.location.href = "/login"
+    localStorage.removeItem("Token")
+    localStorage.removeItem("Role")
+    window.location.href = "/login"
   };
 
   const navItems = [

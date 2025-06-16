@@ -55,7 +55,7 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen  flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
         <div className="text-center p-8 bg-white rounded-3xl shadow-xl border border-green-100">
           <div className="w-20 h-20 border-4 border-green-300 border-t-green-600 rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-xl font-semibold text-green-800">
@@ -69,7 +69,7 @@ const HomePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="min-h-screen flex items-center  justify-center bg-gradient-to-br from-green-50 to-emerald-100">
         <div className="bg-white p-10 rounded-3xl shadow-xl max-w-md w-full border border-red-200">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -113,7 +113,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 w-[120rem] via-emerald-50 to-teal-50">
       <div className="container mx-auto px-6 -mt-8 relative z-20">
         <Herosection />
 
@@ -228,7 +228,7 @@ const HomePage = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/alumni/news/")}
+              onClick={() => navigate("/admin/news/")}
               className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg flex items-center"
             >
               View All News
@@ -402,7 +402,7 @@ const HomePage = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/alumni/event/")}
+              onClick={() => navigate("/admin/event/")}
               className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-3 rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 font-semibold shadow-lg flex items-center"
             >
               View All Events
@@ -423,109 +423,131 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {data.upcoming_events.map((event) => (
-              <div
-                key={event.id}
-                className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-green-100"
-                onClick={() => navigate(`/alumni/event/${event.id}`)}
-              >
-                {event.images && event.images[0] ? (
-                  <div className="relative h-56 overflow-hidden">
-                    <img
-                      src={`${BASE_URL}${event.images[0].image}`}
-                      alt={event.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-green-900/40 to-transparent"></div>
-                    <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2 px-4 rounded-2xl text-sm font-semibold shadow-lg">
-                      {formatDate(event.from_date_time)}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 h-56 flex items-center justify-center relative overflow-hidden">
-                    <svg
-                      className="w-16 h-16 text-white opacity-80"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                  </div>
-                )}
-
-                <div className="p-8">
-                  <h3 className="text-xl font-bold mb-4 text-green-800">
-                    {event.title}
-                  </h3>
-
-                  <div className="flex items-start mb-3">
-                    <svg
-                      className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
-                    <div>
-                      <p className="text-gray-700 font-medium">
+            {Array.isArray(data.upcoming_events) ? (
+              data.upcoming_events.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-green-100"
+                  onClick={() => navigate(`/admin/event/${event.id}`)}
+                >
+                  {event.images && event.images[0] ? (
+                    <div className="relative h-56 overflow-hidden">
+                      <img
+                        src={`${BASE_URL}${event.images[0].image}`}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-green-900/40 to-transparent"></div>
+                      <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2 px-4 rounded-2xl text-sm font-semibold shadow-lg">
                         {formatDate(event.from_date_time)}
-                        {event.to_date_time &&
-                          ` - ${formatDate(event.to_date_time)}`}
-                      </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 h-56 flex items-center justify-center relative overflow-hidden">
+                      <svg
+                        className="w-16 h-16 text-white opacity-80"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
 
-                  <div className="flex items-start mb-6">
-                    <svg
-                      className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="p-8">
+                    <h3 className="text-xl font-bold mb-4 text-green-800">
+                      {event.title}
+                    </h3>
+
+                    <div className="flex items-start mb-3">
+                      <svg
+                        className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                      <div>
+                        <p className="text-gray-700 font-medium">
+                          {formatDate(event.from_date_time)}
+                          {event.to_date_time &&
+                            ` - ${formatDate(event.to_date_time)}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start mb-6">
+                      <svg
+                        className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        ></path>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                      </svg>
+                      <p className="text-gray-700 font-medium">{event.venue}</p>
+                    </div>
+
+                    <p className="text-gray-600 mb-6 line-clamp-2 leading-relaxed">
+                      {event.description}
+                    </p>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/admin/event/${event.id}`);
+                      }}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      ></path>
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      ></path>
-                    </svg>
-                    <p className="text-gray-700 font-medium">{event.venue}</p>
+                      View Details
+                    </button>
                   </div>
-
-                  <p className="text-gray-600 mb-6 line-clamp-2 leading-relaxed">
-                    {event.description}
-                  </p>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/alumni/event/${event.id}`);
-                    }}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg"
-                  >
-                    View Details
-                  </button>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-10 bg-white rounded-xl shadow-md">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-700">No upcoming events</h3>
+                <p className="text-gray-500 mt-2">Check back later for new events</p>
               </div>
-            ))}
+            )}
           </div>
         </section>
 
@@ -540,7 +562,7 @@ const HomePage = () => {
                 <p className="text-green-600">Memories captured in time</p>
               </div>
               <button
-                onClick={() => navigate("/alumni/albums/")}
+                onClick={() => navigate("/admin/albums/")}
                 className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white px-8 py-3 rounded-2xl hover:from-teal-600 hover:to-cyan-700 transition-all duration-200 font-semibold shadow-lg flex items-center"
               >
                 View Gallery
@@ -565,7 +587,7 @@ const HomePage = () => {
                 <div
                   key={album.id}
                   className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-green-100"
-                  onClick={() => navigate(`/alumni/albums/${album.id}/`)}
+                  onClick={() => navigate(`/admin/albums/${album.id}/`)}
                 >
                   <div className="relative h-48 overflow-hidden">
                     {album.cover_image ? (
@@ -702,7 +724,7 @@ const HomePage = () => {
                 <p className="text-green-600">Welcome our newest alumni</p>
               </div>
               <button
-                onClick={() => navigate("/alumni/members/")}
+                onClick={() => navigate("/admin/members/")}
                 className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all duration-200 font-semibold shadow-lg text-sm flex items-center"
               >
                 View All
@@ -732,7 +754,7 @@ const HomePage = () => {
                       : ""
                   }`}
                   onClick={() =>
-                    navigate(`/alumni/members/${member.username}/`)
+                    navigate(`/admin/members/${member.username}/`)
                   }
                 >
                   <div className="mr-4 relative">
