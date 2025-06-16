@@ -137,7 +137,7 @@ const HomePage = () => {
                 </svg>
               </div>
               <p className="text-4xl font-bold text-green-700 mb-2">
-                {data.upcoming_events.length}
+                {data.upcoming_events}
               </p>
               <p className="text-green-600 font-medium">Upcoming Events</p>
             </div>
@@ -165,7 +165,7 @@ const HomePage = () => {
                 </svg>
               </div>
               <p className="text-4xl font-bold text-emerald-700 mb-2">
-                {data.latest_album_images.length}
+                {data.albums_count}
               </p>
               <p className="text-emerald-600 font-medium">Photo Albums</p>
             </div>
@@ -187,7 +187,7 @@ const HomePage = () => {
                 </svg>
               </div>
               <p className="text-4xl font-bold text-teal-700 mb-2">
-                {data.latest_members.length}
+                {data.new_users}
               </p>
               <p className="text-teal-600 font-medium">New Members</p>
             </div>

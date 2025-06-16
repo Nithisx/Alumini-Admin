@@ -78,7 +78,7 @@ export default function SingleMember() {
   } = member;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
+    <div className="min-h-screen bg-gradient-to-br w-[118rem]  mt-[2rem] from-green-50 to-emerald-100 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Main Profile Card */}
         <div className="bg-white shadow-2xl rounded-2xl overflow-hidden border border-green-100">
