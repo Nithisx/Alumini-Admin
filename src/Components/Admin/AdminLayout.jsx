@@ -21,6 +21,7 @@ import BusinessDirectory from './Business/BusinessDirectory';
 import BusinessDetail from './Business/BusinessDetail';
 import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
+import SendMail from "./mail/sendmail";
 const AdminLayout = () => {
   return (
     <div className="">
@@ -48,6 +49,7 @@ const AdminLayout = () => {
           <Route path="business/:id" element={<BusinessDetail />} />
           <Route path="my-profile" element={<Myprofile />} />
           <Route path="my-contribution" element={<Mycontribution />} />
+          <Route path="sendmail" element={<SendMail />} />
           {/* Add more admin routes if needed */}
         </Routes>
       </main>

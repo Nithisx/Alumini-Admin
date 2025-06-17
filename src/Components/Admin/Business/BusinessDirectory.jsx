@@ -218,6 +218,7 @@ const BusinessDirectory = () => {
     onSelect,
     icon,
   }) => (
+    console.log("Rendering SidebarSection:", title, items),
     <div className="mb-6">
       <button
         onClick={() => setCollapsed(!collapsed)}
@@ -251,7 +252,7 @@ const BusinessDirectory = () => {
                 className="mr-2 text-blue-600"
               />
               <span className="text-sm text-gray-600 flex-1">
-                {item.name} {item.count && `(${item.count})`}
+                {item.category || item.name} {item.count && `(${item.count})`}
               </span>
             </label>
           ))}

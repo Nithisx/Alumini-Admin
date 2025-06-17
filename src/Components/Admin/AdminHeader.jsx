@@ -17,6 +17,7 @@ import {
   faUser,
   faHandHoldingHeart,
   faChevronDown,
+  faMailBulk,
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../images/logo.png"; // Adjust the path as necessary
 export default function AdminHeader() {
@@ -45,9 +46,9 @@ export default function AdminHeader() {
   const handleLogout = () => {
     console.log("Logout clicked");
     // Note: localStorage not available in artifacts
-    localStorage.removeItem("Token")
-    localStorage.removeItem("Role")
-    window.location.href = "/login"
+    localStorage.removeItem("Token");
+    localStorage.removeItem("Role");
+    window.location.href = "/login";
   };
 
   const navItems = [
@@ -117,6 +118,12 @@ export default function AdminHeader() {
       label: "Requests",
       color: "text-emerald-600",
     },
+    {
+      path: "/admin/sendmail",
+      icon: faMailBulk,
+      label: "Send a Mail",
+      color: "text-emerald-600",
+    },
   ];
 
   return (
@@ -131,11 +138,11 @@ export default function AdminHeader() {
       >
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 w-full">
-            {/* Left section - Logo */} 
+            {/* Left section - Logo */}
             <div className="flex items-center space-x-2 flex-shrink-0">
               <div
                 className="relative w-10 h-10 flex-shrink-0 cursor-pointer"
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = "/")}
                 title="Go to Home Page"
               >
                 <img
@@ -147,7 +154,7 @@ export default function AdminHeader() {
               </div>
               <div
                 className="leading-tight cursor-pointer hidden sm:block"
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = "/")}
                 title="Go to Home Page"
               >
                 <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
@@ -197,7 +204,10 @@ export default function AdminHeader() {
                   onClick={handleLogout}
                   className="group flex items-center gap-1.5 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300 hover:scale-105"
                 >
-                  <FontAwesomeIcon icon={faSignOutAlt} className="h-3.5 w-3.5" />
+                  <FontAwesomeIcon
+                    icon={faSignOutAlt}
+                    className="h-3.5 w-3.5"
+                  />
                   <span className="text-xs font-medium">Logout</span>
                 </button>
               </div>
@@ -230,14 +240,17 @@ export default function AdminHeader() {
                     </span>
                   </a>
                 ))}
-                
+
                 {/* More dropdown */}
                 <div className="relative group">
                   <button className="flex items-center gap-1 px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-all duration-300">
-                    <FontAwesomeIcon icon={faChevronDown} className="h-3.5 w-3.5" />
+                    <FontAwesomeIcon
+                      icon={faChevronDown}
+                      className="h-3.5 w-3.5"
+                    />
                     <span className="text-xs font-medium">More</span>
                   </button>
-                  
+
                   {/* Dropdown menu */}
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                     <div className="py-2">
@@ -246,13 +259,17 @@ export default function AdminHeader() {
                           key={item.path}
                           href={item.path}
                           className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${
-                            pathname === item.path ? "text-emerald-700 bg-emerald-50" : "text-gray-700"
+                            pathname === item.path
+                              ? "text-emerald-700 bg-emerald-50"
+                              : "text-gray-700"
                           }`}
                         >
                           <FontAwesomeIcon
                             icon={item.icon}
                             className={`h-4 w-4 ${
-                              pathname === item.path ? "text-emerald-600" : item.color
+                              pathname === item.path
+                                ? "text-emerald-600"
+                                : item.color
                             }`}
                           />
                           {item.label}
@@ -269,8 +286,13 @@ export default function AdminHeader() {
                   onClick={handleLogout}
                   className="group flex items-center gap-1.5 px-2 py-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300"
                 >
-                  <FontAwesomeIcon icon={faSignOutAlt} className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium hidden xl:block">Logout</span>
+                  <FontAwesomeIcon
+                    icon={faSignOutAlt}
+                    className="h-3.5 w-3.5"
+                  />
+                  <span className="text-xs font-medium hidden xl:block">
+                    Logout
+                  </span>
                 </button>
               </div>
             </div>
