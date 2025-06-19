@@ -8,8 +8,8 @@ import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
 
 const TOKEN = localStorage.getItem('Token');
-const API_URL = 'http://134.209.157.195:8000/news/';
-const BASE_URL = 'http://134.209.157.195:8000';
+const API_URL = 'http://134.209.157.195/news/';
+const BASE_URL = 'http://134.209.157.195';
 
 export default function NewsList() {
   const [posts, setPosts] = useState([]);

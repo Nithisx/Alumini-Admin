@@ -51,7 +51,7 @@ const BusinessDetail = () => {
   const [categories, setCategories] = useState([]);
   
   const token = localStorage.getItem("Token");
-  const BASE_URL = "http://134.209.157.195:8000";
+  const BASE_URL = "http://134.209.157.195";
 
   // Fetch business details if editing an existing business
   useEffect(() => {

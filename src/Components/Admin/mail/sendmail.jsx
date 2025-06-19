@@ -75,7 +75,7 @@ const SendMail = () => {
     
     setLoadingSuggestions(true);
     try {
-      const response = await axios.get(`http://134.209.157.195:8000/email-suggestions/?query=${query}`, {
+      const response = await axios.get(`http://134.209.157.195/email-suggestions/?query=${query}`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
         },
@@ -187,7 +187,7 @@ const SendMail = () => {
     }
 
     try {
-      const response = await axios.post("http://134.209.157.195:8000/send-email/", data, {
+      const response = await axios.post("http://134.209.157.195/send-email/", data, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
           "Content-Type": "multipart/form-data",

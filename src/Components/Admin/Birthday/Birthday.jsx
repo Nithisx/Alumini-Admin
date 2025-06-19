@@ -15,7 +15,7 @@ const Birthday = () => {
     const fetchBirthdays = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://134.209.157.195:8000/birthdays/', {
+        const response = await fetch('http://134.209.157.195/birthdays/', {
           headers: { Authorization: `Token ${token}` },
         });
         if (!response.ok) throw new Error('Failed to fetch birthdays');
@@ -103,7 +103,7 @@ const Birthday = () => {
       <div className="flex-shrink-0">
         {user.profile_photo ? (
           <img
-            src={`http://134.209.157.195:8000${user.profile_photo}`}
+            src={`http://134.209.157.195${user.profile_photo}`}
             alt={user.username}
             className="w-16 h-16 rounded-full object-cover border-2 border-green-300 hover:border-green-600 transition-colors"
           />

@@ -117,7 +117,7 @@ const AddEvent = () => {
       }
 
       const token = localStorage.getItem("Token");
-      const response = await fetch("http://134.209.157.195:8000/events/", {
+      const response = await fetch("http://134.209.157.195/events/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,

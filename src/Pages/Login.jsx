@@ -5,7 +5,7 @@ import kahelogo from "../assets/kahelogo.png";
 
 // axios instance
 const api = axios.create({
-  baseURL: "http://134.209.157.195:8000",
+  baseURL: "http://134.209.157.195",
   headers: { "Content-Type": "application/json" },
 });
 

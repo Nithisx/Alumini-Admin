@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
 const TOKEN = localStorage.getItem('Token');
-const API_BASE = 'http://134.209.157.195:8000/profile/';
+const API_BASE = 'http://134.209.157.195/profile/';
 
 export default function SingleMember() {
   const { name } = useParams();
@@ -89,7 +89,7 @@ export default function SingleMember() {
             <div className="relative flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
                 <img
-                  src={`http://134.209.157.195:8000${member.profile_photo}`}
+                  src={`http://134.209.157.195${member.profile_photo}`}
                   alt={username}
                   className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl"
                 />

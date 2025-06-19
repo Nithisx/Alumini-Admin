@@ -17,7 +17,7 @@ const AlbumDetailPage = () => {
   const [imageLoading, setImageLoading] = useState(false);
   
   const token = localStorage.getItem("Token"); // Get token from local storage
-  const BASE_URL = "http://134.209.157.195:8000";
+  const BASE_URL = "http://134.209.157.195";
 
   // Image compression function
 const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {

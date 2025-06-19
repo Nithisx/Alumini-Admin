@@ -22,7 +22,7 @@ import {
   Loader2,
 } from "lucide-react"
 
-const API_URL = "http://134.209.157.195:8000/jobs/"
+const API_URL = "http://134.209.157.195/jobs/"
 
 // Helper to get the token
 const getAuthToken = async () => {
@@ -59,7 +59,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return ""
     if (imagePath.startsWith("http")) return imagePath
-    return `http://134.209.157.195:8000${imagePath}`
+    return `http://134.209.157.195${imagePath}`
   }
 
   return (

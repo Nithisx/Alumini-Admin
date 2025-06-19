@@ -8,7 +8,7 @@ const COLORS = {
   text: "#1f2937",
 }
 
-const BASE_URL = "http://134.209.157.195:8000"
+const BASE_URL = "http://134.209.157.195"
 
 // ImageSlider component
 const ImageSlider = ({ images, baseUrl }) => {

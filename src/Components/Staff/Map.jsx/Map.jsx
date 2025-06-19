@@ -6,7 +6,7 @@ import { Search, Map, Layers, Users, RefreshCw, AlertCircle } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 
 // Base URL for media files
-const MEDIA_BASE_URL = 'http://134.209.157.195:8000';
+const MEDIA_BASE_URL = 'http://134.209.157.195';
 
 // Fallback icon if user has no profile photo
 const defaultIconUrl = 'https://img.icons8.com/fluency/48/000000/user-location.png';
