@@ -9,5 +9,6 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
     strictPort: true,
-  }
+  },
+  base: '/ui/'  // This adds the prefix to all asset URLs and generated paths
 })

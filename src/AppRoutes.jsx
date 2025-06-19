@@ -36,7 +36,7 @@ const AppRoutes = () => {
   };
 
   return (
-    <Router>
+    <Router basename="/ui">
       <Routes>
         {/* Initial Route - Redirect based on role or to home */}
         <Route path="/" element={redirectAuthenticated()} />
