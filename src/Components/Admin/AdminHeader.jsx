@@ -154,7 +154,7 @@ export default function AdminHeader() {
               </div>
               <div
                 className="leading-tight cursor-pointer hidden sm:block"
-                onClick={() => (window.location.href = "/")}
+                onClick={() => (window.location.href = "/home")}
                 title="Go to Home Page"
               >
                 <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">

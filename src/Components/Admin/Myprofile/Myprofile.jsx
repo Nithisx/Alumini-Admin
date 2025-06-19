@@ -257,7 +257,7 @@ const ProfileScreen = () => {
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Full Name</p>
                 <p className="text-base text-green-900">
-                  {`${profile.first_name || "John"} ${profile.last_name || "Doe"}`}
+                  {`${profile.first_name} ${profile.last_name}`}
                 </p>
               </div>
             </div>
@@ -302,7 +302,7 @@ const ProfileScreen = () => {
                   className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {forgotPasswordLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
-                  <span>{forgotPasswordLoading ? "Sending..." : "Forgot Password"}</span>
+                  <span>{forgotPasswordLoading ? "Sending..." : "Reset Password"}</span>
                 </button>
               </div>
 
@@ -691,7 +691,7 @@ const ProfileScreen = () => {
           />
         </div>
         <h2 className="text-xl font-bold text-green-900 mb-1">
-          {`${profile.first_name || "John"} ${profile.last_name || "Doe"}`}
+          {`${profile.first_name } ${profile.last_name }`}
         </h2>
         <p className="text-sm text-green-700">{profile.email || "No email"}</p>
         {profile.current_work && (

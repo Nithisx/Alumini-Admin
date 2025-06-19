@@ -69,7 +69,7 @@ const AlumniHeroSection = ({ data }) => {
                             </button>
                             
                             <button  onClick={() => navigate('/about')} className="px-8 py-4 bg-white/80 backdrop-blur-sm text-slate-700 font-semibold rounded-xl border border-slate-200 hover:bg-white hover:border-slate-300 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
-                                Explore Network
+                                About us 
                             </button>
                         </div>
 

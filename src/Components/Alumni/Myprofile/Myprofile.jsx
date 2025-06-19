@@ -48,16 +48,6 @@ const getMediaUrl = (uri) => {
   }
 }
 
-const prepareFile = (file) => {
-  return new Promise((resolve, reject) => {
-    if (file && file.type && file.type.startsWith("image/")) {
-      resolve(file)
-    } else {
-      reject(new Error("Invalid file type"))
-    }
-  })
-}
-
 const ProfileScreen = () => {
   const [profile, setProfile] = useState({
     id: null,
@@ -263,17 +253,17 @@ const ProfileScreen = () => {
         return (
           <div className="space-y-4">
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <User className="w-5 h-5 text-green-600 mt-1" />
+              <User className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Full Name</p>
                 <p className="text-base text-green-900">
-                  {`${profile.first_name || "John"} ${profile.last_name || "Doe"}`}
+                  {`${profile.first_name} ${profile.last_name}`}
                 </p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <Mail className="w-5 h-5 text-green-600 mt-1" />
+              <Mail className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Email</p>
                 <p className="text-base text-green-900">{profile.email || "N/A"}</p>
@@ -281,7 +271,7 @@ const ProfileScreen = () => {
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <FileText className="w-5 h-5 text-green-600 mt-1" />
+              <FileText className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Bio</p>
                 <p className="text-base text-green-900 line-clamp-3">{profile.bio || "No bio available"}</p>
@@ -289,7 +279,7 @@ const ProfileScreen = () => {
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <Calendar className="w-5 h-5 text-green-600 mt-1" />
+              <Calendar className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Date of Birth</p>
                 <p className="text-base text-green-900">{profile.date_of_birth || "N/A"}</p>
@@ -298,9 +288,9 @@ const ProfileScreen = () => {
 
             {/* Forgot Password Section */}
             <div className="pt-4 border-t border-green-200">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center space-x-3">
-                  <Key className="w-5 h-5 text-green-600" />
+                  <Key className="w-5 h-5 text-green-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs font-bold text-green-700 uppercase mb-1">Password Reset</p>
                     <p className="text-sm text-green-600">Reset your account password</p>
@@ -309,10 +299,10 @@ const ProfileScreen = () => {
                 <button
                   onClick={handleForgotPassword}
                   disabled={forgotPasswordLoading || !profile.email}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {forgotPasswordLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
-                  <span>{forgotPasswordLoading ? "Sending..." : "Forgot Password"}</span>
+                  <span>{forgotPasswordLoading ? "Sending..." : "Reset Password"}</span>
                 </button>
               </div>
 
@@ -330,7 +320,7 @@ const ProfileScreen = () => {
         return (
           <div className="space-y-4">
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <Briefcase className="w-5 h-5 text-green-600 mt-1" />
+              <Briefcase className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Current Work</p>
                 <p className="text-base text-green-900">{profile.current_work || "N/A"}</p>
@@ -338,7 +328,7 @@ const ProfileScreen = () => {
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <GraduationCap className="w-5 h-5 text-green-600 mt-1" />
+              <GraduationCap className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Passed Out Year</p>
                 <p className="text-base text-green-900">{profile.passed_out_year || "N/A"}</p>
@@ -346,7 +336,7 @@ const ProfileScreen = () => {
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <TrendingUp className="w-5 h-5 text-green-600 mt-1" />
+              <TrendingUp className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Experience</p>
                 <p className="text-base text-green-900">
@@ -358,7 +348,7 @@ const ProfileScreen = () => {
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <Building className="w-5 h-5 text-green-600 mt-1" />
+              <Building className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Previous Work</p>
                 <p className="text-base text-green-900 line-clamp-2">{profile.Worked_in?.join(", ") || "N/A"}</p>
@@ -371,7 +361,7 @@ const ProfileScreen = () => {
         return (
           <div className="space-y-4">
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <Phone className="w-5 h-5 text-green-600 mt-1" />
+              <Phone className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Phone</p>
                 <p className="text-base text-green-900">{profile.phone || "N/A"}</p>
@@ -379,7 +369,7 @@ const ProfileScreen = () => {
             </div>
 
             <div className="flex items-start space-x-3 pb-4 border-b border-green-200">
-              <MapPin className="w-5 h-5 text-green-600 mt-1" />
+              <MapPin className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Address</p>
                 <p className="text-base text-green-900 line-clamp-3">
@@ -398,7 +388,7 @@ const ProfileScreen = () => {
             {profile.social_links && Object.keys(profile.social_links).length > 0 ? (
               Object.entries(profile.social_links).map(([key, value]) => (
                 <div key={key} className="flex items-start space-x-3 pb-4 border-b border-green-200">
-                  <Globe className="w-5 h-5 text-green-600 mt-1" />
+                  <Globe className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-xs font-bold text-green-700 uppercase mb-1">{key.replace("_link", "")}</p>
                     <p className="text-base text-green-900 truncate">{String(value) || "N/A"}</p>
@@ -431,7 +421,7 @@ const ProfileScreen = () => {
                   alt="Profile"
                   className="w-20 h-20 rounded-full border-3 border-green-600 object-cover"
                 />
-                <label className="absolute bottom-0 right-0 bg-green-600 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer">
+                <label className="absolute bottom-0 right-0 bg-green-600 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer shadow-md hover:bg-green-700 transition-colors">
                   <Camera className="w-4 h-4 text-white" />
                   <input
                     type="file"
@@ -443,7 +433,7 @@ const ProfileScreen = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-green-900 mb-1">First Name</label>
                 <input
@@ -456,7 +446,7 @@ const ProfileScreen = () => {
                       first_name: e.target.value,
                     }))
                   }
-                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
               <div>
@@ -471,7 +461,7 @@ const ProfileScreen = () => {
                       last_name: e.target.value,
                     }))
                   }
-                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
             </div>
@@ -483,7 +473,7 @@ const ProfileScreen = () => {
                 placeholder="Email"
                 value={profile.email || ""}
                 onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
@@ -494,7 +484,7 @@ const ProfileScreen = () => {
                 value={profile.bio || ""}
                 onChange={(e) => setProfile((prev) => ({ ...prev, bio: e.target.value }))}
                 rows={3}
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 resize-none"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
           </div>
@@ -510,11 +500,11 @@ const ProfileScreen = () => {
                 placeholder="Phone Number"
                 value={profile.phone || ""}
                 onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))}
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-green-900 mb-1 mt-3">City</label>
                 <input
@@ -522,7 +512,7 @@ const ProfileScreen = () => {
                   placeholder="City"
                   value={profile.city || ""}
                   onChange={(e) => setProfile((prev) => ({ ...prev, city: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
               <div>
@@ -532,7 +522,7 @@ const ProfileScreen = () => {
                   placeholder="State"
                   value={profile.state || ""}
                   onChange={(e) => setProfile((prev) => ({ ...prev, state: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
             </div>
@@ -544,11 +534,11 @@ const ProfileScreen = () => {
                 placeholder="Country"
                 value={profile.country || ""}
                 onChange={(e) => setProfile((prev) => ({ ...prev, country: e.target.value }))}
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-green-900 mb-1 mt-3">ZIP Code</label>
                 <input
@@ -561,7 +551,7 @@ const ProfileScreen = () => {
                       zip_code: e.target.value,
                     }))
                   }
-                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
               <div>
@@ -575,7 +565,7 @@ const ProfileScreen = () => {
                       date_of_birth: e.target.value,
                     }))
                   }
-                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                  className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
             </div>
@@ -597,7 +587,7 @@ const ProfileScreen = () => {
                     current_work: e.target.value,
                   }))
                 }
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
@@ -613,7 +603,7 @@ const ProfileScreen = () => {
                     passed_out_year: e.target.value,
                   }))
                 }
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
@@ -632,7 +622,7 @@ const ProfileScreen = () => {
                     },
                   }))
                 }
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
@@ -651,7 +641,7 @@ const ProfileScreen = () => {
                     },
                   }))
                 }
-                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900"
+                className="w-full border border-green-300 rounded-lg p-3 bg-white text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
           </div>
@@ -688,23 +678,28 @@ const ProfileScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-green-50">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-green-200 shadow-md">
-        <h1 className="text-xl font-bold text-green-900">Profile</h1>
-      </div>
+    <div className="min-h-screen my-15 w-[117rem] bg-green-50">
+   
 
       {/* Profile Header */}
-      <div className="bg-white text-center py-5 mb-3">
-        <img
-          src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
-          alt="Profile"
-          className="w-20 h-20 rounded-full mx-auto mb-3 border-3 border-green-600 object-cover"
-        />
+      <div className="bg-white text-center py-5 mb-3 shadow-sm">
+        <div className="relative inline-block">
+          <img
+            src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
+            alt="Profile"
+            className="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-green-600 object-cover shadow-md"
+          />
+        </div>
         <h2 className="text-xl font-bold text-green-900 mb-1">
-          {`${profile.first_name || "John"} ${profile.last_name || "Doe"}`}
+          {`${profile.first_name } ${profile.last_name }`}
         </h2>
         <p className="text-sm text-green-700">{profile.email || "No email"}</p>
+        {profile.current_work && (
+          <div className="mt-2 inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+            <Briefcase className="w-3 h-3 mr-1" />
+            {profile.current_work}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -713,8 +708,10 @@ const ProfileScreen = () => {
           <button
             key={index}
             onClick={() => setActiveTab(index)}
-            className={`flex-1 py-3 text-center rounded text-xs font-medium ${
-              activeTab === index ? "bg-green-600 text-white font-bold" : "text-green-700"
+            className={`flex-1 py-3 text-center rounded text-sm font-medium ${
+              activeTab === index 
+                ? "bg-green-600 text-white font-bold shadow-sm" 
+                : "text-green-700 hover:bg-green-50 transition-colors"
             }`}
           >
             {tab}
@@ -723,7 +720,7 @@ const ProfileScreen = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="mx-3">
+      <div className="mx-3 mb-6">
         <div className="bg-white rounded-lg p-5 shadow-md min-h-[400px]">{renderTabContent()}</div>
       </div>
 
@@ -732,28 +729,40 @@ const ProfileScreen = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-green-50 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-4 bg-green-600">
-              <button onClick={() => setModalVisible(false)} className="p-1">
+            <div className="flex items-center justify-between px-5 py-4 bg-green-600 rounded-t-lg">
+              <button 
+                onClick={() => setModalVisible(false)} 
+                className="p-1 hover:bg-green-700 rounded-full transition-colors"
+              >
                 <ArrowLeft className="w-6 h-6 text-white" />
               </button>
               <h2 className="text-lg font-bold text-white">Edit Profile</h2>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-green-800 rounded text-white font-bold disabled:opacity-50"
+                className="px-4 py-2 bg-green-800 rounded-lg text-white font-medium disabled:opacity-50 hover:bg-green-900 transition-colors shadow-sm"
               >
-                {saving ? <Loader className="w-4 h-4 animate-spin" /> : "Save"}
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <Loader className="w-4 h-4 animate-spin" />
+                    <span>Saving...</span>
+                  </div>
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
 
             {/* Edit Tabs */}
-            <div className="flex bg-white mx-3 mt-3 rounded-lg p-1 shadow-md">
+            <div className="flex bg-white mx-3 mt-3 rounded-lg p-1 shadow-sm">
               {editTabs.map((tab, index) => (
                 <button
                   key={index}
                   onClick={() => setEditPage(index)}
                   className={`flex-1 py-3 text-center rounded text-xs font-medium ${
-                    editPage === index ? "bg-green-600 text-white font-bold" : "text-green-700"
+                    editPage === index 
+                      ? "bg-green-600 text-white font-bold" 
+                      : "text-green-700 hover:bg-green-50 transition-colors"
                   }`}
                 >
                   {tab}
@@ -769,13 +778,13 @@ const ProfileScreen = () => {
         </div>
       )}
 
-      {/* Fixed floating action button */}
+      {/* Fixed floating action button (as a backup in case the header button isn't visible) */}
       <button
         onClick={() => {
           setEditPage(0)
           setModalVisible(true)
         }}
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-colors"
+        className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-colors"
         aria-label="Edit Profile"
       >
         <Edit className="w-6 h-6" />
