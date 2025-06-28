@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import logoSrc from "../images/logo.png"
+import logoSrc from "../assets/kahelogo.png"
 
 const Loader = () => {
   // Floating bubbles animation
@@ -24,7 +24,6 @@ const Loader = () => {
     animate: {
       scale: [1, 1.4, 1],
       opacity: [0.05, 0.15, 0.05],
-      transition: {
         duration: 3.5,
         repeat: Number.POSITIVE_INFINITY,
         ease: "easeInOut",

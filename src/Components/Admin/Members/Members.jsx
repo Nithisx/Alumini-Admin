@@ -1,703 +1,932 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
-import Pagination from "../../Shared/Pagination";
-
-const TOKEN = localStorage.getItem("Token");
-const BASE_URL = "http://134.209.157.195:8000";
-const API_URL = `${BASE_URL}/admin-members/`;
-const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
-
-// Placeholder image service
-const getPlaceholderImage = (name) => {
-  const initials = name
-    ? name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : "U";
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    initials
-  )}&background=6366f1&color=white&size=400&font-size=0.4`;
-};
-
-export default function MembersPage() {
-  const [members, setMembers] = useState([]);
-  const [filteredTotal, setFilteredTotal] = useState(0);
-  const [roleFilter, setRoleFilter] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
-  const [workedInFilter, setWorkedInFilter] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [rolesPlayedFilter, setRolesPlayedFilter] = useState("");
-  const [genderFilter, setGenderFilter] = useState("");
-  const [courseEndYearFilter, setCourseEndYearFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
-  const [countryFilter, setCountryFilter] = useState("");
-  const [stateFilter, setStateFilter] = useState("");
-  const [passedOutYearFilter, setPassedOutYearFilter] = useState("");
-  const [courseFilter, setCourseFilter] = useState("");
-  const [collegeNameFilter, setCollegeNameFilter] = useState("");
-  const [currentWorkFilter, setCurrentWorkFilter] = useState("");
-
-  // Store dropdown options
-  const [dropdownFilters, setDropdownFilters] = useState({
-    current_work: [],
-    college_name: [],
-    city: [],
-    state: [],
-    country: [],
-    role: [],
-    passed_out_year: [],
-    course: [],
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [filtersLoading, setFiltersLoading] = useState(true);
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Fetch dropdown filter options
-  const fetchDropdownFilters = async () => {
-    setFiltersLoading(true);
-    try {
-      const response = await axios.get(DROPDOWN_FILTERS_URL, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
+                     ? emitTypedArrayChunk(request, id, "m", value)
+                                : value instanceof DataView
+                                  ? emitTypedArrayChunk(request, id, "V", value)
+                                  : ((value = stringify(value, task.toJSON)),
+                                    emitModelChunk(request, task.id, value));
+    }
+    function erroredTask(request, task, error) {
+      task.timed && emitTimingChunk(request, task.id, performance.now());
+      request.abortableTasks.delete(task);
+      task.status = ERRORED$1;
+      if (
+        "object" === typeof error &&
+        null !== error &&
+        error.$$typeof === REACT_POSTPONE_TYPE
+      )
+        logPostpone(request, error.message, task),
+          emitPostponeChunk(request, task.id, error);
+      else {
+        var digest = logRecoverableError(request, error, task);
+        emitErrorChunk(request, task.id, digest, error);
+      }
+    }
+    function retryTask(request, task) {
+      if (task.status === PENDING$1) {
+        var prevDebugID = debugID;
+        task.status = RENDERING;
+        try {
+          modelRoot = task.model;
+          debugID = task.id;
+          var resolvedModel = renderModelDestructive(
+            request,
+            task,
+            emptyRoot,
+            "",
+            task.model
+          );
+          debugID = null;
+          modelRoot = resolvedModel;
+          task.keyPath = null;
+          task.implicitSlot = !1;
+          var currentEnv = (0, request.environmentName)();
+          currentEnv !== task.environmentName &&
+            (request.pendingChunks++,
+            emitDebugChunk(request, task.id, { env: currentEnv }));
+          task.timed && emitTimingChunk(request, task.id, performance.now());
+          if ("object" === typeof resolvedModel && null !== resolvedModel)
+            request.writtenObjects.set(
+              resolvedModel,
+              serializeByValueID(task.id)
+            ),
+              emitChunk(request, task, resolvedModel);
+          else {
+            var json = stringify(resolvedModel);
+            emitModelChunk(request, task.id, json);
+          }
+          request.abortableTasks.delete(task);
+          task.status = COMPLETED;
+        } catch (thrownValue) {
+          if (request.status === ABORTING)
+            if (
+              (request.abortableTasks.delete(task),
+              (task.status = ABORTED),
+              request.type === PRERENDER)
+            )
+              request.pendingChunks--;
+            else {
+              var model = stringify(serializeByValueID(request.fatalError));
+              emitModelChunk(request, task.id, model);
+            }
+          else {
+            var x =
+              thrownValue === SuspenseException
+                ? getSuspendedThenable()
+                : thrownValue;
+            if (
+              "object" === typeof x &&
+              null !== x &&
+              "function" === typeof x.then
+            ) {
+              task.status = PENDING$1;
+              task.thenableState = getThenableStateAfterSuspending();
+              var ping = task.ping;
+              x.then(ping, ping);
+            } else erroredTask(request, task, x);
+          }
+        } finally {
+          debugID = prevDebugID;
+        }
+      }
+    }
+    function tryStreamTask(request, task) {
+      var prevDebugID = debugID;
+      debugID = null;
+      try {
+        emitChunk(request, task, task.model);
+      } finally {
+        debugID = prevDebugID;
+      }
+    }
+    function performWork(request) {
+      var prevDispatcher = ReactSharedInternalsServer.H;
+      ReactSharedInternalsServer.H = HooksDispatcher;
+      var prevRequest = currentRequest;
+      currentRequest$1 = currentRequest = request;
+      var hadAbortableTasks = 0 < request.abortableTasks.size;
+      try {
+        var pingedTasks = request.pingedTasks;
+        request.pingedTasks = [];
+        for (var i = 0; i < pingedTasks.length; i++)
+          retryTask(request, pingedTasks[i]);
+        null !== request.destination &&
+          flushCompletedChunks(request, request.destination);
+        if (hadAbortableTasks && 0 === request.abortableTasks.size) {
+          var onAllReady = request.onAllReady;
+          onAllReady();
+        }
+      } catch (error) {
+        logRecoverableError(request, error, null), fatalError(request, error);
+      } finally {
+        (ReactSharedInternalsServer.H = prevDispatcher),
+          (currentRequest$1 = null),
+          (currentRequest = prevRequest);
+      }
+    }
+    function abortTask(task, request, errorId) {
+      task.status !== RENDERING &&
+        ((task.status = ABORTED),
+        task.timed && emitTimingChunk(request, task.id, performance.now()),
+        (errorId = serializeByValueID(errorId)),
+        (task = encodeReferenceChunk(request, task.id, errorId)),
+        request.completedErrorChunks.push(task));
+    }
+    function flushCompletedChunks(request, destination) {
+      currentView = new Uint8Array(2048);
+      writtenBytes = 0;
+      try {
+        for (
+          var importsChunks = request.completedImportChunks, i = 0;
+          i < importsChunks.length;
+          i++
+        )
+          if (
+            (request.pendingChunks--,
+            !writeChunkAndReturn(destination, importsChunks[i]))
+          ) {
+            request.destination = null;
+            i++;
+            break;
+          }
+        importsChunks.splice(0, i);
+        var hintChunks = request.completedHintChunks;
+        for (i = 0; i < hintChunks.length; i++)
+          if (!writeChunkAndReturn(destination, hintChunks[i])) {
+            request.destination = null;
+            i++;
+            break;
+          }
+        hintChunks.splice(0, i);
+        var regularChunks = request.completedRegularChunks;
+        for (i = 0; i < regularChunks.length; i++)
+          if (
+            (request.pendingChunks--,
+            !writeChunkAndReturn(destination, regularChunks[i]))
+          ) {
+            request.destination = null;
+            i++;
+            break;
+          }
+        regularChunks.splice(0, i);
+        var errorChunks = request.completedErrorChunks;
+        for (i = 0; i < errorChunks.length; i++)
+          if (
+            (request.pendingChunks--,
+            !writeChunkAndReturn(destination, errorChunks[i]))
+          ) {
+            request.destination = null;
+            i++;
+            break;
+          }
+        errorChunks.splice(0, i);
+      } finally {
+        (request.flushScheduled = !1),
+          currentView &&
+            0 < writtenBytes &&
+            (destination.enqueue(
+              new Uint8Array(currentView.buffer, 0, writtenBytes)
+            ),
+            (currentView = null),
+            (writtenBytes = 0));
+      }
+      0 === request.pendingChunks &&
+        (cleanupTaintQueue(request),
+        (request.status = CLOSED),
+        destination.close(),
+        (request.destination = null));
+    }
+    function startWork(request) {
+      request.flushScheduled = null !== request.destination;
+      scheduleMicrotask(function () {
+        return performWork(request);
       });
-      
-      setDropdownFilters(response.data);
-      setFiltersLoading(false);
-    } catch (error) {
-      console.error("Error fetching dropdown filters:", error);
-      setFiltersLoading(false);
-    }
-  };
-
-  // Fetch dropdown options on component mount
-  useEffect(() => {
-    fetchDropdownFilters();
-  }, []);
-
-  const fetchMembers = async () => {
-    setLoading(true);
-    const params = new URLSearchParams({
-      page: currentPage,
-      page_size: pageSize,
-    });
-
-    if (roleFilter) params.append("role", roleFilter);
-    if (cityFilter) params.append("city", cityFilter);
-    if (workedInFilter) params.append("worked_in", workedInFilter);
-    if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
-    if (searchQuery) params.append("search", searchQuery);
-    if (genderFilter) params.append("gender", genderFilter);
-    if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
-    if (companyFilter) params.append("company", companyFilter);
-    if (countryFilter) params.append("country", countryFilter);
-    if (stateFilter) params.append("state", stateFilter);
-    if (passedOutYearFilter) params.append("passed_out_year", passedOutYearFilter);
-    if (courseFilter) params.append("course", courseFilter);
-    if (collegeNameFilter) params.append("college_name", collegeNameFilter);
-    if (currentWorkFilter) params.append("current_work", currentWorkFilter);
-
-    try {
-      const response = await axios.get(`${API_URL}?${params.toString()}`, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
+      scheduleWork(function () {
+        request.status === OPENING && (request.status = 11);
       });
-
-      const { results, count } = response.data;
-
-      setMembers(results);
-      setFilteredTotal(count);
-      setTotalPages(Math.ceil(count / pageSize));
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching members:", error);
-      setLoading(false);
     }
-  };
-
-  // When filters change, always reset page to 1
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    roleFilter,
-    cityFilter,
-    workedInFilter,
-    searchQuery,
-    rolesPlayedFilter,
-    genderFilter,
-    courseEndYearFilter,
-    companyFilter,
-    countryFilter,
-    stateFilter,
-    passedOutYearFilter,
-    courseFilter,
-    collegeNameFilter,
-    currentWorkFilter,
-  ]);
-
-  // Whenever page or filters change, fetch data
-  useEffect(() => {
-    fetchMembers();
-  }, [
-    currentPage,
-    pageSize,
-    roleFilter,
-    cityFilter,
-    workedInFilter,
-    searchQuery,
-    rolesPlayedFilter,
-    genderFilter,
-    courseEndYearFilter,
-    companyFilter,
-    countryFilter,
-    stateFilter,
-    passedOutYearFilter,
-    courseFilter,
-    collegeNameFilter,
-    currentWorkFilter,
-  ]);
-
-  // Derive unique options from current result set
-  const cities = Array.from(new Set(members.map((m) => m.city))).filter(
-    Boolean
-  );
-  const workedInOptions = Array.from(
-    new Set(members.map((m) => m.worked_in))
-  ).filter(Boolean);
-
-  // Handle page change
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  // Handle page size change
-  const handlePageSizeChange = (size) => {
-    setPageSize(size);
-    setCurrentPage(1); // Reset to first page
-  };
-
-  const handleResetFilters = () => {
-    setRoleFilter("");
-    setCityFilter("");
-    setWorkedInFilter("");
-    setRolesPlayedFilter("");
-    setSearchQuery("");
-    setGenderFilter("");
-    setCourseEndYearFilter("");
-    setCompanyFilter("");
-    setCountryFilter("");
-    setStateFilter("");
-    setPassedOutYearFilter("");
-    setCourseFilter("");
-    setCollegeNameFilter("");
-    setCurrentWorkFilter("");
-    setCurrentPage(1);
-  };
-
-  // Get role badge color
-  const getRoleBadgeColor = (role) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "staff":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "student":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+    function enqueueFlush(request) {
+      !1 === request.flushScheduled &&
+        0 === request.pingedTasks.length &&
+        null !== request.destination &&
+        ((request.flushScheduled = !0),
+        scheduleWork(function () {
+          request.flushScheduled = !1;
+          var destination = request.destination;
+          destination && flushCompletedChunks(request, destination);
+        }));
     }
-  };
+    function startFlowing(request, destination) {
+      if (request.status === CLOSING)
+        (request.status = CLOSED),
+          closeWithError(destination, request.fatalError);
+      else if (request.status !== CLOSED && null === request.destination) {
+        request.destination = destination;
+        try {
+          flushCompletedChunks(request, destination);
+        } catch (error) {
+          logRecoverableError(request, error, null), fatalError(request, error);
+        }
+      }
+    }
+    function abort(request, reason) {
+      try {
+        11 >= request.status && (request.status = ABORTING);
+        var abortableTasks = request.abortableTasks;
+        if (0 < abortableTasks.size) {
+          if (request.type === PRERENDER)
+            abortableTasks.forEach(function (task) {
+              task.status !== RENDERING &&
+                ((task.status = ABORTED), request.pendingChunks--);
+            });
+          else if (
+            "object" === typeof reason &&
+            null !== reason &&
+            reason.$$typeof === REACT_POSTPONE_TYPE
+          ) {
+            logPostpone(request, reason.message, null);
+            var errorId = request.nextChunkId++;
+            request.fatalError = errorId;
+            request.pendingChunks++;
+            emitPostponeChunk(request, errorId, reason);
+            abortableTasks.forEach(function (task) {
+              return abortTask(task, request, errorId);
+            });
+          } else {
+            var error =
+                void 0 === reason
+                  ? Error(
+                      "The render was aborted by the server without a reason."
+                    )
+                  : "object" === typeof reason &&
+                      null !== reason &&
+                      "function" === typeof reason.then
+                    ? Error(
+                        "The render was aborted by the server with a promise."
+                      )
+                    : reason,
+              digest = logRecoverableError(request, error, null),
+              _errorId2 = request.nextChunkId++;
+            request.fatalError = _errorId2;
+            request.pendingChunks++;
+            emitErrorChunk(request, _errorId2, digest, error);
+            abortableTasks.forEach(function (task) {
+              return abortTask(task, request, _errorId2);
+            });
+          }
+          abortableTasks.clear();
+          var onAllReady = request.onAllReady;
+          onAllReady();
+        }
+        var abortListeners = request.abortListeners;
+        if (0 < abortListeners.size) {
+          var _error =
+            "object" === typeof reason &&
+            null !== reason &&
+            reason.$$typeof === REACT_POSTPONE_TYPE
+              ? Error("The render was aborted due to being postponed.")
+              : void 0 === reason
+                ? Error(
+                    "The render was aborted by the server without a reason."
+                  )
+                : "object" === typeof reason &&
+                    null !== reason &&
+                    "function" === typeof reason.then
+                  ? Error(
+                      "The render was aborted by the server with a promise."
+                    )
+                  : reason;
+          abortListeners.forEach(function (callback) {
+            return callback(_error);
+          });
+          abortListeners.clear();
+        }
+        null !== request.destination &&
+          flushCompletedChunks(request, request.destination);
+      } catch (error$2) {
+        logRecoverableError(request, error$2, null),
+          fatalError(request, error$2);
+      }
+    }
+    function resolveServerReference(bundlerConfig, id) {
+      var name = "",
+        resolvedModuleData = bundlerConfig[id];
+      if (resolvedModuleData) name = resolvedModuleData.name;
+      else {
+        var idx = id.lastIndexOf("#");
+        -1 !== idx &&
+          ((name = id.slice(idx + 1)),
+          (resolvedModuleData = bundlerConfig[id.slice(0, idx)]));
+        if (!resolvedModuleData)
+          throw Error(
+            'Could not find the module "' +
+              id +
+              '" in the React Server Manifest. This is probably a bug in the React Server Components bundler.'
+          );
+      }
+      return [resolvedModuleData.id, resolvedModuleData.chunks, name];
+    }
+    function requireAsyncModule(id) {
+      var promise = __turbopack_require__(id);
+      if ("function" !== typeof promise.then || "fulfilled" === promise.status)
+        return null;
+      promise.then(
+        function (value) {
+          promise.status = "fulfilled";
+          promise.value = value;
+        },
+        function (reason) {
+          promise.status = "rejected";
+          promise.reason = reason;
+        }
+      );
+      return promise;
+    }
+    function ignoreReject() {}
+    function preloadModule(metadata) {
+      for (
+        var chunks = metadata[1], promises = [], i = 0;
+        i < chunks.length;
+        i++
+      ) {
+        var chunkFilename = chunks[i],
+          entry = chunkCache.get(chunkFilename);
+        if (void 0 === entry) {
+          entry = __turbopack_load__(chunkFilename);
+          promises.push(entry);
+          var resolve = chunkCache.set.bind(chunkCache, chunkFilename, null);
+          entry.then(resolve, ignoreReject);
+          chunkCache.set(chunkFilename, entry);
+        } else null !== entry && promises.push(entry);
+      }
+      return 4 === metadata.length
+        ? 0 === promises.length
+          ? requireAsyncModule(metadata[0])
+          : Promise.all(promises).then(function () {
+              return requireAsyncModule(metadata[0]);
+            })
+        : 0 < promises.length
+          ? Promise.all(promises)
+          : null;
+    }
+    function requireModule(metadata) {
+      var moduleExports = __turbopack_require__(metadata[0]);
+      if (4 === metadata.length && "function" === typeof moduleExports.then)
+        if ("fulfilled" === moduleExports.status)
+          moduleExports = moduleExports.value;
+        else throw moduleExports.reason;
+      return "*" === metadata[2]
+        ? moduleExports
+        : "" === metadata[2]
+          ? moduleExports.__esModule
+            ? moduleExports.default
+            : moduleExports
+          : moduleExports[metadata[2]];
+    }
+    function Chunk(status, value, reason, response) {
+      this.status = status;
+      this.value = value;
+      this.reason = reason;
+      this._response = response;
+    }
+    function createPendingChunk(response) {
+      return new Chunk("pending", null, null, response);
+    }
+    function wakeChunk(listeners, value) {
+      for (var i = 0; i < listeners.length; i++) (0, listeners[i])(value);
+    }
+    function triggerErrorOnChunk(chunk, error) {
+      if ("pending" !== chunk.status && "blocked" !== chunk.status)
+        chunk.reason.error(error);
+      else {
+        var listeners = chunk.reason;
+        chunk.status = "rejected";
+        chunk.reason = error;
+        null !== listeners && wakeChunk(listeners, error);
+      }
+    }
+    function resolveModelChunk(chunk, value, id) {
+      if ("pending" !== chunk.status)
+        (chunk = chunk.reason),
+          "C" === value[0]
+            ? chunk.close("C" === value ? '"$undefined"' : value.slice(1))
+            : chunk.enqueueModel(value);
+      else {
+        var resolveListeners = chunk.value,
+          rejectListeners = chunk.reason;
+        chunk.status = "resolved_model";
+        chunk.value = value;
+        chunk.reason = id;
+        if (null !== resolveListeners)
+          switch ((initializeModelChunk(chunk), chunk.status)) {
+            case "fulfilled":
+              wakeChunk(resolveListeners, chunk.value);
+              break;
+            case "pending":
+            case "blocked":
+            case "cyclic":
+              if (chunk.value)
+                for (value = 0; value < resolveListeners.length; value++)
+                  chunk.value.push(resolveListeners[value]);
+              else chunk.value = resolveListeners;
+              if (chunk.reason) {
+                if (rejectListeners)
+                  for (value = 0; value < rejectListeners.length; value++)
+                    chunk.reason.push(rejectListeners[value]);
+              } else chunk.reason = rejectListeners;
+              break;
+            case "rejected":
+              rejectListeners && wakeChunk(rejectListeners, chunk.reason);
+          }
+      }
+    }
+    function createResolvedIteratorResultChunk(response, value, done) {
+      return new Chunk(
+        "resolved_model",
+        (done ? '{"done":true,"value":' : '{"done":false,"value":') +
+          value +
+          "}",
+        -1,
+        response
+      );
+    }
+    function resolveIteratorResultChunk(chunk, value, done) {
+      resolveModelChunk(
+        chunk,
+        (done ? '{"done":true,"value":' : '{"done":false,"value":') +
+          value +
+          "}",
+        -1
+      );
+    }
+    function loadServerReference$1(
+      response,
+      id,
+      bound,
+      parentChunk,
+      parentObject,
+      key
+    ) {
+      var serverReference = resolveServerReference(response._bundlerConfig, id);
+      id = preloadModule(serverReference);
+      if (bound)
+        bound = Promise.all([bound, id]).then(function (_ref) {
+          _ref = _ref[0];
+          var fn = requireModule(serverReference);
+          return fn.bind.apply(fn, [null].concat(_ref));
+        });
+      else if (id)
+        bound = Promise.resolve(id).then(function () {
+          return requireModule(serverReference);
+        });
+      else return requireModule(serverReference);
+      bound.then(
+        createModelResolver(
+          parentChunk,
+          parentObject,
+          key,
+          !1,
+          response,
+          createModel,
+          []
+        ),
+        createModelReject(parentChunk)
+      );
+      return null;
+    }
+    function reviveModel(response, parentObj, parentKey, value, reference) {
+      if ("string" === typeof value)
+        return parseModelString(
+          response,
+          parentObj,
+          parentKey,
+          value,
+          reference
+        );
+      if ("object" === typeof value && null !== value)
+        if (
+          (void 0 !== reference &&
+            void 0 !== response._temporaryReferences &&
+            response._temporaryReferences.set(value, reference),
+          Array.isArray(value))
+        )
+          for (var i = 0; i < value.length; i++)
+            value[i] = reviveModel(
+              response,
+              value,
+              "" + i,
+              value[i],
+              void 0 !== reference ? reference + ":" + i : void 0
+            );
+        else
+          for (i in value)
+            hasOwnProperty.call(value, i) &&
+              ((parentObj =
+                void 0 !== reference && -1 === i.indexOf(":")
+                  ? reference + ":" + i
+                  : void 0),
+              (parentObj = reviveModel(
+                response,
+                value,
+                i,
+                value[i],
+                parentObj
+              )),
+              void 0 !== parentObj ? (value[i] = parentObj) : delete value[i]);
+      return value;
+    }
+    function initializeModelChunk(chunk) {
+      var prevChunk = initializingChunk,
+        prevBlocked = initializingChunkBlockedModel;
+      initializingChunk = chunk;
+      initializingChunkBlockedModel = null;
+      var rootReference =
+          -1 === chunk.reason ? void 0 : chunk.reason.toString(16),
+        resolvedModel = chunk.value;
+      chunk.status = "cyclic";
+      chunk.value = null;
+      chunk.reason = null;
+      try {
+        var rawModel = JSON.parse(resolvedModel),
+          value = reviveModel(
+            chunk._response,
+            { "": rawModel },
+            "",
+            rawModel,
+            rootReference
+          );
+        if (
+          null !== initializingChunkBlockedModel &&
+          0 < initializingChunkBlockedModel.deps
+        )
+          (initializingChunkBlockedModel.value = value),
+            (chunk.status = "blocked");
+        else {
+          var resolveListeners = chunk.value;
+          chunk.status = "fulfilled";
+          chunk.value = value;
+          null !== resolveListeners && wakeChunk(resolveListeners, value);
+        }
+      } catch (error) {
+        (chunk.status = "rejected"), (chunk.reason = error);
+      } finally {
+        (initializingChunk = prevChunk),
+          (initializingChunkBlockedModel = prevBlocked);
+      }
+    }
+    function reportGlobalError(response, error) {
+      response._closed = !0;
+      response._closedReason = error;
+      response._chunks.forEach(function (chunk) {
+        "pending" === chunk.status && triggerErrorOnChunk(chunk, error);
+      });
+    }
+    function getChunk(response, id) {
+      var chunks = response._chunks,
+        chunk = chunks.get(id);
+      chunk ||
+        ((chunk = response._formData.get(response._prefix + id)),
+        (chunk =
+          null != chunk
+            ? new Chunk("resolved_model", chunk, id, response)
+            : response._closed
+              ? new Chunk("rejected", null, response._closedReason, response)
+              : createPendingChunk(response)),
+        chunks.set(id, chunk));
+      return chunk;
+    }
+    function createModelResolver(
+      chunk,
+      parentObject,
+      key,
+      cyclic,
+      response,
+      map,
+      path
+    ) {
+      if (initializingChunkBlockedModel) {
+        var blocked = initializingChunkBlockedModel;
+        cyclic || blocked.deps++;
+      } else
+        blocked = initializingChunkBlockedModel = {
+          deps: cyclic ? 0 : 1,
+          value: null
+        };
+      return function (value) {
+        for (var i = 1; i < path.length; i++) value = value[path[i]];
+        parentObject[key] = map(response, value);
+        "" === key &&
+          null === blocked.value &&
+          (blocked.value = parentObject[key]);
+        blocked.deps--;
+        0 === blocked.deps &&
+          "blocked" === chunk.status &&
+          ((value = chunk.value),
+          (chunk.status = "fulfilled"),
+          (chunk.value = blocked.value),
+          null !== value && wakeChunk(value, blocked.value));
+      };
+    }
+    function createModelReject(chunk) {
+      return function (error) {
+        return triggerErrorOnChunk(chunk, error);
+      };
+    }
+    function getOutlinedModel(response, reference, parentObject, key, map) {
+      reference = reference.split(":");
+      var id = parseInt(reference[0], 16);
+      id = getChunk(response, id);
+      switch (id.status) {
+        case "resolved_model":
+          initializeModelChunk(id);
+      }
+      switch (id.status) {
+        case "fulfilled":
+          parentObject = id.value;
+          for (key = 1; key < reference.length; key++)
+            parentObject = parentObject[reference[key]];
+          return map(response, parentObject);
+        case "pending":
+        case "blocked":
+        case "cyclic":
+          var parentChunk = initializingChunk;
+          id.then(
+            createModelResolver(
+              parentChunk,
+              parentObject,
+              key,
+              "cyclic" === id.status,
+              response,
+              map,
+              reference
+            ),
+            createModelReject(parentChunk)
+          );
+          return null;
+        default:
+          throw id.reason;
+      }
+    }
+    function createMap(response, model) {
+      return new Map(model);
+    }
+    function createSet(response, model) {
+      return new Set(model);
+    }
+    function extractIterator(response, model) {
+      return model[Symbol.iterator]();
+    }
+    function createModel(response, model) {
+      return model;
+    }
+    function parseTypedArray(
+      response,
+      reference,
+      constructor,
+      bytesPerElement,
+      parentObject,
+      parentKey
+    ) {
+      reference = parseInt(reference.slice(2), 16);
+      reference = response._formData.get(response._prefix + reference);
+      reference =
+        constructor === ArrayBuffer
+          ? reference.arrayBuffer()
+          : reference.arrayBuffer().then(function (buffer) {
+              return new constructor(buffer);
+            });
+      bytesPerElement = initializingChunk;
+      reference.then(
+        createModelResolver(
+          bytesPerElement,
+          parentObject,
+          parentKey,
+          !1,
+          response,
+          createModel,
+          []
+        ),
+        createModelReject(bytesPerElement)
+      );
+      return null;
+    }
+    function resolveStream(response, id, stream, controller) {
+      var chunks = response._chunks;
+      stream = new Chunk("fulfilled", stream, controller, response);
+      chunks.set(id, stream);
+      response = response._formData.getAll(response._prefix + id);
+      for (id = 0; id < response.length; id++)
+        (chunks = response[id]),
+          "C" === chunks[0]
+            ? controller.close(
+                "C" === chunks ? '"$undefined"' : chunks.slice(1)
+              )
+            : controller.enqueueModel(chunks);
+    }
+    function parseReadableStream(response, reference, type) {
+      reference = parseInt(reference.slice(2), 16);
+      var controller = null;
+      type = new ReadableStream({
+        type: type,
+        start: function (c) {
+          controller = c;
+        }
+      });
+      var previousBlockedChunk = null;
+      resolveStream(response, reference, type, {
+        enqueueModel: function (json) {
+          if (null === previousBlockedChunk) {
+            var chunk = new Chunk("resolved_model", json, -1, response);
+            initializeModelChunk(chunk);
+            "fulfilled" === chunk.status
+              ? controller.enqueue(chunk.value)
+              : (chunk.then(
+                  function (v) {
+                    return controller.enqueue(v);
+                  },
+                  function (e) {
+                    return controller.error(e);
+                  }
+                ),
+                (previousBlockedChunk = chunk));
+          } else {
+            chunk = previousBlockedChunk;
+            var _chunk = createPendingChunk(response);
+            _chunk.then(
+              function (v) {
+                return controller.enqueue(v);
+              },
+              function (e) {
+                return controller.error(e);
+              }
+            );
+            previousBlockedChunk = _chunk;
+            chunk.then(function () {
+              previousBlockedChunk === _chunk && (previousBlockedChunk = null);
+              resolveModelChunk(_chunk, json, -1);
+            });
+          }
+        },
+        close: function () {
+          if (null === previousBlockedChunk) controller.close();
+          else {
+            var blockedChunk = previousBlockedChunk;
+            previousBlockedChunk = null;
+            blockedChunk.then(function () {
+              return controller.close();
+            });
+          }
+        },
+        error: function (error) {
+          if (null === previousBlockedChunk) controller.error(error);
+          else {
+            var blockedChunk = previousBlockedChunk;
+            previousBlockedChunk = null;
+            blockedChunk.then(function () {
+              return controller.error(error);
+            });
+          }
+        }
+      });
+      return type;
+    }
+    function asyncIterator() {
+      return this;
+    }
+    function createIterator(next) {
+      next = { next: next };
+      next[ASYNC_ITERATOR] = asyncIterator;
+      return next;
+    }
+    function parseAsyncIterable(response, reference, iterator) {
+      reference = parseInt(reference.slice(2), 16);
+      var buffer = [],
+        closed = !1,
+        nextWriteIndex = 0,
+        iterable = _defineProperty({}, ASYNC_ITERATOR, function () {
+          var nextReadIndex = 0;
+          return createIterator(function (arg) {
+            if (void 0 !== arg)
+              throw Error(
+                "Values cannot be passed to next() of AsyncIterables passed to Client Components."
+              );
+            if (nextReadIndex === buffer.length) {
+              if (closed)
+                return new Chunk(
+                  "fulfilled",
+                  { done: !0, value: void 0 },
+                  null,
+                  response
+                );
+              buffer[nextReadIndex] = createPendingChunk(response);
+            }
+            return buffer[nextReadIndex++];
+          });
+        });
+      iterator = iterator ? iterable[ASYNC_ITERATOR]() : iterable;
+      resolveStream(response, reference, iterator, {
+        enqueueModel: function (value) {
+          nextWriteIndex === buffer.length
+            ? (buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
+                response,
+                value,
+                !1
+              ))
+            : resolveIteratorResultChunk(buffer[nextWriteIndex], value, !1);
+          nextWriteIndex++;
+        },
+        close: function (value) {
+          closed = !0;
+          nextWriteIndex === buffer.length
+            ? (buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
+                response,
+                value,
+                !0
+              ))
+            : resolveIteratorResultChunk(buffer[nextWriteIndex], value, !0);
+          for (nextWriteIndex++; nextWriteIndex < buffer.length; )
+            resolveIteratorResultChunk(
+              buffer[nextWriteIndex++],
+              '"$undefined"',
+              !0
+            );
+        },
+        error: function (error) {
+          closed = !0;
+          for (
+            nextWriteIndex === buffer.length &&
+            (buffer[nextWriteIndex] = createPendingChunk(response));
+            nextWriteIndex < buffer.length;
 
-  return (
-    <div className="bg-gradient-to-br from-gray-50 my-10 w-[120rem] to-blue-50 min-h-screen">
-      <div className="max-w-[1600px] mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Members Directory
-          </h1>
-          <p className="text-gray-600">
-            Manage and explore our community members
-          </p>
-        </div>
-
-        {/* Filters Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                />
-              </svg>
-              Filter & Search
-            </h2>
-            <button
-              onClick={handleResetFilters}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-
-          {filtersLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="text-gray-600">Loading filters...</span>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {/* Role Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="role-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Role
-                </label>
-                <select
-                  id="role-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                >
-                  <option value="">All Roles</option>
-                  {dropdownFilters.role.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Current Work Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="current-work-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                   Working In
-                </label>
-                <select
-                  id="current-work-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={currentWorkFilter}
-                  onChange={(e) => setCurrentWorkFilter(e.target.value)}
-                >
-                  <option value="">All Current Works</option>
-                  {dropdownFilters.current_work.map((work) => (
-                    <option key={work} value={work}>
-                      {work}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Course Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="course-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Course
-                </label>
-                <select
-                  id="course-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={courseFilter}
-                  onChange={(e) => setCourseFilter(e.target.value)}
-                >
-                  <option value="">All Courses</option>
-                  {dropdownFilters.course.map((course) => (
-                    <option key={course} value={course}>
-                      {course}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Passed Out Year Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="passed-out-year-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Passed Out Year
-                </label>
-                <select
-                  id="passed-out-year-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={passedOutYearFilter}
-                  onChange={(e) => setPassedOutYearFilter(e.target.value)}
-                >
-                  <option value="">All Years</option>
-                  {dropdownFilters.passed_out_year.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* City Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="city-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  City
-                </label>
-                <select
-                  id="city-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={cityFilter}
-                  onChange={(e) => setCityFilter(e.target.value)}
-                >
-                  <option value="">All Cities</option>
-                  {dropdownFilters.city.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* State Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="state-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  State
-                </label>
-                <select
-                  id="state-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={stateFilter}
-                  onChange={(e) => setStateFilter(e.target.value)}
-                >
-                  <option value="">All States</option>
-                  {dropdownFilters.state.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Country Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="country-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Country
-                </label>
-                <select
-                  id="country-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={countryFilter}
-                  onChange={(e) => setCountryFilter(e.target.value)}
-                >
-                  <option value="">All Countries</option>
-                  {dropdownFilters.country.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* College Name Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="college-name-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  College Name
-                </label>
-                <select
-                  id="college-name-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={collegeNameFilter}
-                  onChange={(e) => setCollegeNameFilter(e.target.value)}
-                >
-                  <option value="">All Colleges</option>
-                  {dropdownFilters.college_name.map((college) => (
-                    <option key={college} value={college}>
-                      {college}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Gender Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="gender-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Gender
-                </label>
-                <select
-                  id="gender-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                  value={genderFilter}
-                  onChange={(e) => setGenderFilter(e.target.value)}
-                >
-                  <option value="">All</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              
-
-              {/* Search */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="search-box"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Search
-                </label>
-                <div className="relative">
-                  <input
-                    id="search-box"
-                    type="text"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    placeholder="Search by name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <svg
-                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Results Summary */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
-            <p className="text-gray-700 font-medium">
-              {filteredTotal} {filteredTotal === 1 ? "member" : "members"} found
-            </p>
-            {(roleFilter || cityFilter || workedInFilter || searchQuery || 
-              countryFilter || stateFilter || passedOutYearFilter || courseFilter || 
-              collegeNameFilter || currentWorkFilter || genderFilter || courseEndYearFilter || 
-              companyFilter) && (
-              <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                Filtered
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Loading State */}
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="text-gray-600 font-medium">
-                Loading members...
-              </span>
-            </div>
-          </div>
-        ) : (
-          <>
-            {members.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  No members found
-                </h3>
-                <p className="text-gray-600">
-                  Try adjusting your filters or search terms.
-                </p>
-              </div>
-            ) : (
-              /* Members Grid */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {members.map((member) => (
-                  <Link
-                    to={`/alumni/members/${member.username}`}
-                    key={member.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group"
-                  >
-                    {/* Profile Image */}
-                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-                      <img
-                        src={
-                          member.profile_photo
-                            ? `${BASE_URL}${member.profile_photo}`
-                            : getPlaceholderImage(
-                                `${member.first_name} ${member.last_name}`
-                              )
-                        }
-                        alt={`${member.first_name} ${member.last_name}`}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = getPlaceholderImage(
-                            `${member.first_name} ${member.last_name}`
-                          );
-                        }}
-                      />
-                      {/* Role Badge */}
-                      <div className="absolute top-3 right-3">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
-                            member.role
-                          )}`}
-                        >
-                          {member.role}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Member Info */}
-                    <div className="p-5">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                        {member.first_name} {member.last_name}
-                      </h3>
-
-                      <div className="space-y-2">
-                        {member.city && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <svg
-                              className="w-4 h-4 mr-2 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                            <span className="truncate">{member.city}</span>
-                          </div>
-                        )}
-
-                        {member.worked_in && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <svg
-                              className="w-4 h-4 mr-2 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
-                              />
-                            </svg>
-                            <span className="truncate">{member.worked_in}</span>
-                          </div>
-                        )}
-
-                        {member.course_name && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <svg
-                              className="w-4 h-4 mr-2 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                              />
-                            </svg>
-                            <span className="truncate">
-                              {member.course_name}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {members.length > 0 && (
-              <div className="mt-8">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={filteredTotal}
-                  pageSize={pageSize}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                />
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+          )
+            triggerErrorOnChunk(buffer[nextWriteIndex++], error);
+        }
+      });
+      return iterator;
+    }
+    function parseModelString(response, obj, key, value, reference) {
+      if ("$" === value[0]) {
+        switch (value[1]) {
+          case "$":
+            return value.slice(1);
+          case "@":
+            return (
+              (obj = parseInt(value.slice(2), 16)), getChunk(response, obj)
+            );
+          case "F":
+            return (
+              (value = value.slice(2)),
+              (value = getOutlinedModel(
+                response,
+                value,
+                obj,
+                key,
+                createModel
+              )),
+              loadServerReference$1(
+                response,
+                value.id,
+                value.bound,
+                initializingChunk,
+                obj,
+                key
+              )
+            );
+          case "T":
+            if (
+              void 0 === reference ||
+              void 0 === response._temporaryReferences
+            )
+              throw Error(
+                "Could not reference an opaque temporary reference. This is likely due to misconfiguring the temporaryReferences options on the server."
+              );
+            return createTemporaryReference(
+              response._temporaryReferences,
+              reference
+            );
+          case "Q":
+            return (
+              (value = value.slice(2)),
+              getOutlinedModel(response, value, obj, key, createMap)
+            );
+          case "W":
+            return (
+              (value = value.slice(2)),
+              getOutlinedModel(response, value, obj, key, createSet)
+            );
+          case "K":
+            obj = value.slice(2);
+            var formPrefix = response._prefix + obj + "_",
+              data = new FormData();
+            response._formData.forEach(function (entry, entryKey) {
+              entryKey.startsWith(formPrefix) &&
+                data.append(entryKey.slice(formPrefix.length), entry);
+            });
+            return data;
+          case "i":
+            return (
+              (value = value.slice(2)),
+              getOutlinedModel(response, value, obj, key, extractIterator)
+            );
+          case "I":
+            return Infinity;
+          case "-":
+            return "$-0" === value ? -

@@ -9,6 +9,8 @@ import Leadership from './about_components/LeadershipSection';
 import Faculty from './about_components/FacultySection';
 import Departments from './about_components/DepartmentsSection';
 import Logo from "../images/logo.png"; // Assuming you have a logo image
+import RegisterRequest from '../Components/Admin/Auth/LoginRequest';
+import RegistrationCertificate from './about_components/RegistrationCertificate';
 const About = () => {
   // Track the active section based on URL hash
   const [activeSection, setActiveSection] = useState('overview');
@@ -82,6 +84,13 @@ const About = () => {
               <FontAwesomeIcon icon={faUsers} className="mr-2" />
               Administration
             </button>
+            <button 
+              onClick={() => {window.location.hash = 'RegistrationCertificate'; setActiveSection('RegistrationCertificate')}}
+              className={`px-5 py-2 mx-1 rounded-full font-medium ${activeSection === 'RegistrationCertificate' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-700 hover:bg-green-50'}`}
+            >
+              <FontAwesomeIcon icon={faUsers} className="mr-2" />
+              Registration Certificate
+            </button>
           </div>
           
           {/* Content Sections */}
@@ -135,6 +144,21 @@ const About = () => {
                 {activeAdminSection === 'leadership' && <Leadership />}
                 {activeAdminSection === 'faculty' && <Faculty />}
                 {activeAdminSection === 'departments' && <Departments />}
+              </div>
+            )}
+            {activeSection === 'RegistrationCertificate' && (
+              <div id="RegistrationCertificate">
+                <h2 className="text-2xl font-bold text-green-800 mb-6">Registration Certificate</h2>
+                <RegistrationCertificate/>
+                <div className="space-y-4">
+                  <p className="text-gray-700">
+                    This section contains the registration certificate information for Karpagam Academy of Higher Education.
+                  </p>
+                  {/* You can add the certificate image or details here */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <p className="text-gray-500">Certificate content will be displayed here</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

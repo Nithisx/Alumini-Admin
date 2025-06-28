@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Image1 from "../images/image1.jpeg"
-import Image2 from "../images/image2.jpg"
-import Image3 from "../images/image3.jpg"
+import Image1 from "../images/image1.jpg"
+import Image2 from "../images/image1.jpg"
+import Image3 from "../images/image1.jpg"
 import { useNavigate } from 'react-router-dom';
 const AlumniHeroSection = ({ data }) => {
     const [currentSlide, setCurrentSlide] = useState(0);

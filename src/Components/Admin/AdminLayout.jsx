@@ -13,7 +13,7 @@ import Map from './Map.jsx/Map';
 import NewsRoom from './News/News';
 import SingleNews from './News/Singlenews';
 import Members from './Members/Members';
-import Singlemember from './Members/Singlemember';
+import SingleMember from './Members/Singlemember';
 import Dashboard from './Dashboard/Dashboard';
 import Birthday from "./Birthday/Birthday";
 import Singleevents from './Events/Singleevents';
@@ -21,9 +21,10 @@ import BusinessDirectory from './Business/BusinessDirectory';
 import BusinessDetail from './Business/BusinessDetail';
 import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
+import SendMail from "./mail/sendmail";
 const AdminLayout = () => {
   return (
-    <div className="flex">
+    <div className="">
       {/* Admin Header (Sidebar) */}
       <AdminHeader />
 
@@ -40,7 +41,7 @@ const AdminLayout = () => {
           <Route path="news" element={<NewsRoom />} />
           <Route path="news/:id" element={<SingleNews />} />
           <Route path="members" element={<Members />} />
-          <Route path="members/:name" element={<Singlemember />} />
+          <Route path="members/:name" element={<SingleMember />} />
           <Route path="jobs" element={<Addpost />} />
           <Route path="birthday" element={<Birthday />} />
           <Route path="event/:id" element={<Singleevents />} />
@@ -48,6 +49,7 @@ const AdminLayout = () => {
           <Route path="business/:id" element={<BusinessDetail />} />
           <Route path="my-profile" element={<Myprofile />} />
           <Route path="my-contribution" element={<Mycontribution />} />
+          <Route path="sendmail" element={<SendMail />} />
           {/* Add more admin routes if needed */}
         </Routes>
       </main>

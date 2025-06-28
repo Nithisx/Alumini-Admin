@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import image1 from "../../../images/image1.jpeg";
-import image2 from "../../../images/image2.jpg";
-import image3 from "../../../images/image3.jpg";
+import image1 from "../../../images/image1.jpg";
+import image2 from "../../../images/image1.jpg";
+import image3 from "../../../images/image1.jpg";
 import Herosection from "../../../Pages/Herosection";
 import { format } from "date-fns";
 import Footer from "../../../Pages/about_components/Footer"

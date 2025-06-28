@@ -20,7 +20,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 // Mock logo - replace with actual logo import
-import logo from "../../images/logo.png"; // Make sure this path is correct and the file exists
+import logo from "../../assets/kahelogo.png"; // Make sure this path is correct and the file exists
 
 // If the image is not found, try adjusting the path, for example:
 // import logo from "../../../images/logo.png";

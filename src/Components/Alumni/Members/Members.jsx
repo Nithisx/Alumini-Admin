@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../../Shared/Pagination";
@@ -20,6 +20,138 @@ const getPlaceholderImage = (name) => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
     initials
   )}&background=6366f1&color=white&size=400&font-size=0.4`;
+};
+
+const AutocompleteInput = ({ 
+  id, 
+  label, 
+  placeholder, 
+  value, 
+  onChange, 
+  filterType, 
+  options,
+  icon 
+}) => {
+  const [inputValue, setInputValue] = useState(value || "");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const inputRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Sync input value with parent value
+  useEffect(() => {
+    setInputValue(value || "");
+  }, [value]);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setInputValue(value);
+    onChange(value); // Update parent state
+
+    if (value.trim() === "") {
+      setShowSuggestions(false);
+      setFilteredSuggestions([]);
+    } else {
+      const filtered = options.filter(item =>
+        item.toString().toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleFocus = () => {
+    setFilteredSuggestions(options);
+    setShowSuggestions(true);
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setInputValue(suggestion);
+    onChange(suggestion);
+    setShowSuggestions(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target) &&
+        inputRef.current && 
+        !inputRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="space-y-2 relative">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+          placeholder={placeholder}
+          value={inputValue}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          autoComplete="off"
+        />
+        {icon}
+
+        {/* Dropdown Suggestions */}
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <div
+            ref={dropdownRef}
+            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            {filteredSuggestions.map((suggestion, index) => (
+              <div
+                key={`${filterType}-${index}-${suggestion}`}
+                className="px-3 py-2.5 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0 transition-colors group"
+                onMouseDown={() => handleSuggestionClick(suggestion)}
+              >
+                <span className="text-gray-700 group-hover:text-blue-700 transition-colors truncate">
+                  {suggestion}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* No options message */}
+        {showSuggestions && filteredSuggestions.length === 0 && inputValue.trim() !== "" && (
+          <div
+            ref={dropdownRef}
+            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <div className="px-3 py-4 text-center text-gray-500 text-sm">
+              No options found for "{inputValue}"
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default function MembersPage() {
@@ -70,7 +202,7 @@ export default function MembersPage() {
           "Content-Type": "application/json",
         },
       });
-      
+
       setDropdownFilters(response.data);
       setFiltersLoading(false);
     } catch (error) {
@@ -97,11 +229,13 @@ export default function MembersPage() {
     if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
     if (searchQuery) params.append("search", searchQuery);
     if (genderFilter) params.append("gender", genderFilter);
-    if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
+    if (courseEndYearFilter)
+      params.append("course_end_year", courseEndYearFilter);
     if (companyFilter) params.append("company", companyFilter);
     if (countryFilter) params.append("country", countryFilter);
     if (stateFilter) params.append("state", stateFilter);
-    if (passedOutYearFilter) params.append("passed_out_year", passedOutYearFilter);
+    if (passedOutYearFilter)
+      params.append("passed_out_year", passedOutYearFilter);
     if (courseFilter) params.append("course", courseFilter);
     if (collegeNameFilter) params.append("college_name", collegeNameFilter);
     if (currentWorkFilter) params.append("current_work", currentWorkFilter);
@@ -168,14 +302,6 @@ export default function MembersPage() {
     currentWorkFilter,
   ]);
 
-  // Derive unique options from current result set
-  const cities = Array.from(new Set(members.map((m) => m.city))).filter(
-    Boolean
-  );
-  const workedInOptions = Array.from(
-    new Set(members.map((m) => m.worked_in))
-  ).filter(Boolean);
-
   // Handle page change
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -184,7 +310,7 @@ export default function MembersPage() {
   // Handle page size change
   const handlePageSizeChange = (size) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page
+    setCurrentPage(1);
   };
 
   const handleResetFilters = () => {
@@ -220,7 +346,7 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <div className="bg-gradient-to-br from-gray-50 my-10 w-[120rem] to-blue-50 min-h-screen">
       <div className="max-w-[1600px] mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -269,211 +395,218 @@ export default function MembersPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {/* Role Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="role-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Role
-                </label>
-                <select
-                  id="role-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                >
-                  <option value="">All Roles</option>
-                  {dropdownFilters.role.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Current Work Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="current-work-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                   Working In
-                </label>
-                <select
-                  id="current-work-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={currentWorkFilter}
-                  onChange={(e) => setCurrentWorkFilter(e.target.value)}
-                >
-                  <option value="">All Current Works</option>
-                  {dropdownFilters.current_work.map((work) => (
-                    <option key={work} value={work}>
-                      {work}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                id="role-filter"
+                label="Role"
+                placeholder="Click to see all roles or type to filter..."
+                value={roleFilter}
+                onChange={setRoleFilter}
+                filterType="role"
+                options={dropdownFilters.role || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                }
+              />
 
               {/* Course Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="course-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Course
-                </label>
-                <select
-                  id="course-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={courseFilter}
-                  onChange={(e) => setCourseFilter(e.target.value)}
-                >
-                  <option value="">All Courses</option>
-                  {dropdownFilters.course.map((course) => (
-                    <option key={course} value={course}>
-                      {course}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                id="course-filter"
+                label="Course"
+                placeholder="Click to see all courses or type to filter..."
+                value={courseFilter}
+                onChange={setCourseFilter}
+                filterType="course"
+                options={dropdownFilters.course || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                }
+              />
 
               {/* Passed Out Year Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="passed-out-year-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Passed Out Year
-                </label>
-                <select
-                  id="passed-out-year-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={passedOutYearFilter}
-                  onChange={(e) => setPassedOutYearFilter(e.target.value)}
-                >
-                  <option value="">All Years</option>
-                  {dropdownFilters.passed_out_year.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                id="passed-out-year-filter"
+                label="Passed Out Year"
+                placeholder="Click to see all years or type to filter..."
+                value={passedOutYearFilter}
+                onChange={setPassedOutYearFilter}
+                filterType="passedOutYear"
+                options={dropdownFilters.passed_out_year || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4M8 7h8M8 7H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2"
+                    />
+                  </svg>
+                }
+              />
 
               {/* City Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="city-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  City
-                </label>
-                <select
-                  id="city-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={cityFilter}
-                  onChange={(e) => setCityFilter(e.target.value)}
-                >
-                  <option value="">All Cities</option>
-                  {dropdownFilters.city.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                id="city-filter"
+                label="City"
+                placeholder="Click to see all cities or type to filter..."
+                value={cityFilter}
+                onChange={setCityFilter}
+                filterType="city"
+                options={dropdownFilters.city || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                }
+              />
 
               {/* State Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="state-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  State
-                </label>
-                <select
-                  id="state-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={stateFilter}
-                  onChange={(e) => setStateFilter(e.target.value)}
-                >
-                  <option value="">All States</option>
-                  {dropdownFilters.state.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                id="state-filter"
+                label="State"
+                placeholder="Click to see all states or type to filter..."
+                value={stateFilter}
+                onChange={setStateFilter}
+                filterType="state"
+                options={dropdownFilters.state || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m-6 3l6-3"
+                    />
+                  </svg>
+                }
+              />
 
               {/* Country Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="country-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Country
-                </label>
-                <select
-                  id="country-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={countryFilter}
-                  onChange={(e) => setCountryFilter(e.target.value)}
-                >
-                  <option value="">All Countries</option>
-                  {dropdownFilters.country.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                id="country-filter"
+                label="Country"
+                placeholder="Click to see all countries or type to filter..."
+                value={countryFilter}
+                onChange={setCountryFilter}
+                filterType="country"
+                options={dropdownFilters.country || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                }
+              />
 
               {/* College Name Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="college-name-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  College Name
-                </label>
-                <select
-                  id="college-name-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={collegeNameFilter}
-                  onChange={(e) => setCollegeNameFilter(e.target.value)}
-                >
-                  <option value="">All Colleges</option>
-                  {dropdownFilters.college_name.map((college) => (
-                    <option key={college} value={college}>
-                      {college}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <AutocompleteInput
+                id="college-name-filter"
+                label="College Name"
+                placeholder="Click to see all colleges or type to filter..."
+                value={collegeNameFilter}
+                onChange={setCollegeNameFilter}
+                filterType="collegeName"
+                options={dropdownFilters.college_name || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                }
+              />
 
-              {/* Gender Filter */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="gender-filter"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Gender
-                </label>
-                <select
-                  id="gender-filter"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                  value={genderFilter}
-                  onChange={(e) => setGenderFilter(e.target.value)}
-                >
-                  <option value="">All</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              
+              {/* Working In Filter */}
+              <AutocompleteInput
+                id="current-work-filter"
+                label="Working In"
+                placeholder="Click to see all companies or type to filter..."
+                value={currentWorkFilter}
+                onChange={setCurrentWorkFilter}
+                filterType="currentWork"
+                options={dropdownFilters.current_work || []}
+                icon={
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
+                    />
+                  </svg>
+                }
+              />
 
               {/* Search */}
               <div className="space-y-2">
@@ -517,9 +650,18 @@ export default function MembersPage() {
             <p className="text-gray-700 font-medium">
               {filteredTotal} {filteredTotal === 1 ? "member" : "members"} found
             </p>
-            {(roleFilter || cityFilter || workedInFilter || searchQuery || 
-              countryFilter || stateFilter || passedOutYearFilter || courseFilter || 
-              collegeNameFilter || currentWorkFilter || genderFilter || courseEndYearFilter || 
+            {(roleFilter ||
+              cityFilter ||
+              workedInFilter ||
+              searchQuery ||
+              countryFilter ||
+              stateFilter ||
+              passedOutYearFilter ||
+              courseFilter ||
+              collegeNameFilter ||
+              currentWorkFilter ||
+              genderFilter ||
+              courseEndYearFilter ||
               companyFilter) && (
               <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
                 Filtered
