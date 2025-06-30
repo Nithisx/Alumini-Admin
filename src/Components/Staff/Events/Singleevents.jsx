@@ -14,7 +14,7 @@ const SingleEvents = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const res = await fetch(`http://134.209.157.195/events/${id}`, {
+        const res = await fetch(`http://209.38.121.118/api/events/${id}`, {
           headers: {
             Authorization: `Token ${token}`,
           },
@@ -103,7 +103,7 @@ const SingleEvents = () => {
 
   // Get image URLs
   const hasImages = event.images && event.images.length > 0;
-  const getImageUrl = (image) => `http://134.209.157.195${image.image}`;
+  const getImageUrl = (image) => `http://209.38.121.118/api${image.image}`;
   const currentImageUrl = hasImages ? getImageUrl(event.images[currentImageIndex]) : 'https://via.placeholder.com/600x400?text=No+Image';
 
   const formatDate = (dateString) => {

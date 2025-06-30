@@ -13,7 +13,7 @@ import {
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "http://134.209.157.195/jobs/";
+const API_URL = "http://209.38.121.118/api/jobs/";
 
 const getAuthToken = async () => {
   const token = localStorage.getItem("Token");

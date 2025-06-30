@@ -11,7 +11,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newsSlide, setNewsSlide] = useState(0);
-  const BASE_URL = "http://134.209.157.195";
+  const BASE_URL = "http://209.38.121.118/api";
 
   // Retrieve token directly from localStorage
   const token = localStorage.getItem("Token");
@@ -280,7 +280,7 @@ const HomePage = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
                           <div className="relative">
                             <img
-                              src={`http://134.209.157.195${news.thumbnail}`}
+                              src={`http://209.38.121.118/api${news.thumbnail}`}
                               alt={news.title}
                               className="w-full h-full object-cover"
                             />
@@ -307,7 +307,7 @@ const HomePage = () => {
                             </p>
                             <div className="flex items-center">
                               <img
-                                src={`http://134.209.157.195${news.user.profile_photo}`}
+                                src={`http://209.38.121.118/api${news.user.profile_photo}`}
                                 alt={`${news.user.first_name} ${news.user.last_name}`}
                                 className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-blue-200"
                               />

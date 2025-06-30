@@ -4,7 +4,7 @@ import axios from "axios";
 import Pagination from "../../Shared/Pagination";
 
 const TOKEN = localStorage.getItem("Token");
-const BASE_URL = "http://134.209.157.195";
+const BASE_URL = "http://209.38.121.118/api";
 const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
 

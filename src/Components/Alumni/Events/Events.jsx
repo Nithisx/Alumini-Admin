@@ -41,7 +41,7 @@ export default function Events() {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch("http://134.209.157.195/events/", {
+    fetch("http://209.38.121.118/api/events/", {
       headers: { Authorization: token ? `Token ${token}` : "" },
     })
       .then((res) => res.json())
@@ -125,7 +125,7 @@ export default function Events() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event) => {
               const imgPath = event.images?.[0]?.image;
-              const imgUrl = imgPath ? `http://134.209.157.195${imgPath}` : null;
+              const imgUrl = imgPath ? `http://209.38.121.118/api${imgPath}` : null;
               return (
                 <div
                   key={event.id}

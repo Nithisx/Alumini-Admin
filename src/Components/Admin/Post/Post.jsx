@@ -16,7 +16,7 @@ import {
   faCalendarAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "http://134.209.157.195/jobs/";
+const API_URL = "http://209.38.121.118/api/jobs/";
 
 // Helper to get the token
 const getAuthToken = async () => {

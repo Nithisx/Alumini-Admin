@@ -37,7 +37,7 @@ const BusinessDirectory = () => {
   const [servicesCollapsed, setServicesCollapsed] = useState(false);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "http://134.209.157.195";
+  const BASE_URL = "http://209.38.121.118/api";
 
   // Fetch all businesses and categories when component mounts
   useEffect(() => {

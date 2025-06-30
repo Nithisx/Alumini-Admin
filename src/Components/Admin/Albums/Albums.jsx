@@ -30,7 +30,7 @@ const AlbumsPage = () => {
       try {
         const token = localStorage.getItem("Token");
         const response = await axios.get(
-          "http://134.209.157.195/albums/",
+          "http://209.38.121.118/api/albums/",
           {
             headers: { Authorization: `Token ${token}` },
           }
@@ -60,7 +60,7 @@ const AlbumsPage = () => {
     if (!window.confirm("Are you sure you want to delete this album?")) return;
     try {
       const token = localStorage.getItem("Token");
-      await axios.delete(`http://134.209.157.195/albums/${id}/`, {
+      await axios.delete(`http://209.38.121.118/api/albums/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setAlbums((prev) => prev.filter((a) => a.id !== id));
@@ -92,7 +92,7 @@ const AlbumsPage = () => {
         payload.append("cover_image", uploadedFile.file, uploadedFile.name);
 
       const response = await axios.post(
-        "http://134.209.157.195/albums/",
+        "http://209.38.121.118/api/albums/",
         payload,
         {
           headers: {
@@ -344,7 +344,7 @@ const AlbumsPage = () => {
 
                       {album.cover_image ? (
                         <img
-                          src={`http://134.209.157.195${album.cover_image}`}
+                          src={`http://209.38.121.118/api${album.cover_image}`}
                           alt={album.title}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                         />
@@ -382,7 +382,7 @@ const AlbumsPage = () => {
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
-                              src={`http://134.209.157.195${album.cover_image}`}
+                              src={`http://209.38.121.118/api${album.cover_image}`}
                               alt={album.title}
                               className="h-full w-full object-cover"
                             />

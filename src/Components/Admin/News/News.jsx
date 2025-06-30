@@ -10,8 +10,8 @@ import placeholderWide from '../../../assets/placeholder-wide.svg';
 import placeholderMedium from '../../../assets/placeholder-medium.svg';
 
 const TOKEN = localStorage.getItem('Token');
-const API_URL = 'http://134.209.157.195/news/';
-const BASE_URL = 'http://134.209.157.195';
+const API_URL = 'http://209.38.121.118/api/news/';
+const BASE_URL = 'http://209.38.121.118/api';
 
 export default function NewsList() {
   const [posts, setPosts] = useState([]);

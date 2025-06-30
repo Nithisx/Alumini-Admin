@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
-const SIGNUP_OTP_URL = "http://134.209.157.195/signup-otp/";
-const SIGNUP_URL = "http://134.209.157.195/signup/";
+const SIGNUP_OTP_URL = "http://209.38.121.118/api/signup-otp/";
+const SIGNUP_URL = "http://209.38.121.118/api/signup/";
 
 // Updated REQUIRED_FIELDS without work_experience
 const REQUIRED_FIELDS = [
