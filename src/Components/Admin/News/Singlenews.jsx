@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 
 const TOKEN = localStorage.getItem('Token');
-const API_BASE = 'http://209.38.121.118/api/news/';
-const SERVER_BASE = 'http://209.38.121.118/api';
+const API_BASE = 'http://209.38.121.118:8000/api/news/';
+const SERVER_BASE = 'http://209.38.121.118:8000/api';
 
 export default function SingleNews() {
   const { id } = useParams();

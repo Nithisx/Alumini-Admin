@@ -23,9 +23,9 @@ import {
 } from "lucide-react"
 
 // API Configuration
-const API_URL = "http://209.38.121.118/api/profile/"
-const FORGOT_PASSWORD_URL = "http://209.38.121.118/api/forgot-password/"
-const BASE_URL = "http://209.38.121.118/api"
+const API_URL = "http://209.38.121.118:8000/api/profile/"
+const FORGOT_PASSWORD_URL = "http://209.38.121.118:8000/api/forgot-password/"
+const BASE_URL = "http://209.38.121.118:8000/api"
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 

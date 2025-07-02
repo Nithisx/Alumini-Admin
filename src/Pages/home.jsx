@@ -37,7 +37,7 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://209.38.121.118/api/home/");
+        const response = await fetch("http://209.38.121.118:8000/api/home/");
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -269,7 +269,7 @@ export default function Home() {
                       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
                         <div className="relative">
                           <img
-                            src={`http://209.38.121.118/api${news.thumbnail}`}
+                            src={`http://209.38.121.118:8000/api${news.thumbnail}`}
                             alt={news.title}
                             className="w-full h-full object-cover"
                           />
@@ -296,7 +296,7 @@ export default function Home() {
                           </p>
                           <div className="flex items-center">
                             <img
-                              src={`http://209.38.121.118/api${news.user.profile_photo}`}
+                              src={`http://209.38.121.118:8000/api${news.user.profile_photo}`}
                               alt={`${news.user.first_name} ${news.user.last_name}`}
                               className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-blue-200"
                             />
@@ -400,7 +400,7 @@ export default function Home() {
                     <div className="relative h-64 overflow-hidden">
                       {event.images && event.images.length > 0 ? (
                         <img
-                          src={`http://209.38.121.118/api${event.images[0].image}`}
+                          src={`http://209.38.121.118:8000/api${event.images[0].image}`}
                           alt={event.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
@@ -516,7 +516,7 @@ export default function Home() {
                         <div className="w-full h-full rounded-full overflow-hidden">
                           {member.profile_photo ? (
                             <img
-                              src={`http://209.38.121.118/api${member.profile_photo}`}
+                              src={`http://209.38.121.118:8000/api${member.profile_photo}`}
                               alt={`${member.first_name} ${member.last_name}`}
                               className="w-full h-full object-cover"
                             />

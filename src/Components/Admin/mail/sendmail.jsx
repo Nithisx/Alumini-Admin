@@ -75,7 +75,7 @@ const SendMail = () => {
     
     setLoadingSuggestions(true);
     try {
-      const response = await axios.get(`http://209.38.121.118/api/email-suggestions/?query=${query}`, {
+      const response = await axios.get(`http://209.38.121.118:8000/api/email-suggestions/?query=${query}`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
         },
@@ -187,7 +187,7 @@ const SendMail = () => {
     }
 
     try {
-      const response = await axios.post("http://209.38.121.118/api/send-email/", data, {
+      const response = await axios.post("http://209.38.121.118:8000/api/send-email/", data, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
           "Content-Type": "multipart/form-data",

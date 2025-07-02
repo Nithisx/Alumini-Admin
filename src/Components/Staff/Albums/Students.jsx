@@ -11,7 +11,7 @@ const StudentImageUpload = () => {
       try {
         
         const token = localStorage.getItem("Token")
-        const response = await axios.get("http://209.38.121.118/api/students/", {
+        const response = await axios.get("http://209.38.121.118:8000/api/students/", {
           headers: { Authorization: `Token ${token}` },
         });
         setStudents(response.data);  // Set students in state
@@ -47,7 +47,7 @@ const StudentImageUpload = () => {
       formDataToSend.append("image", formData.image);
 
       const response = await axios.post(
-        "http://209.38.121.118/api/students/",
+        "http://209.38.121.118:8000/api/students/",
         formDataToSend,
         {
           headers: {
@@ -109,7 +109,7 @@ const StudentImageUpload = () => {
           <div key={student.id} className="bg-white rounded-lg shadow p-4">
             {student.image ? (
               <img
-                src={`http://209.38.121.118/api${student.image}`}
+                src={`http://209.38.121.118:8000/api${student.image}`}
                 alt={student.name}
                 className="w-full h-40 object-cover rounded-md"
               />
