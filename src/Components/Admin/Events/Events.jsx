@@ -60,36 +60,14 @@ export default function Events() {
     e.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this event?")) {
-      fetch(`http://209.38.121.118:8000/api/events/${id}`, {
-        method: "DELETE",
-        headers: { 
-          Authorization: token ? `Token ${token}` : "",
-          "Content-Type": "application/json" 
-        },
-      })
-        .then((res) => {
-          if (res.ok) {
-            setEvents(events.filter((e) => e.id !== id));
-          } else {
-            throw new Error("Failed to delete event");
-          }
-        })
-        .catch((error) => {
-          console.error("Error deleting event:", error);
-          alert("Failed to delete event. Please try again.");
-        });
-    }
-  };
-
+ 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 w-[120rem] my-[50px]">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -151,7 +129,7 @@ export default function Events() {
               return (
                 <div
                   key={event.id}
-                  onClick={() => navigate(`/admin/event/${event.id}`)} // 👈 Navigate on click
+                  onClick={() => navigate(`/alumni/event/${event.id}`)} // 👈 Navigate on click
                   className="cursor-pointer bg-white rounded-xl shadow-md overflow-hidden group relative hover:shadow-lg transition-shadow duration-300"
                 >
                   <div className="relative">
@@ -166,16 +144,7 @@ export default function Events() {
                         <FontAwesomeIcon icon={faCalendarAlt} className="text-green-300 text-4xl" />
                       </div>
                     )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // 👈 Prevent card click when deleting
-                        handleDelete(event.id);
-                      }}
-                      className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-700"
-                      title="Delete event"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
+                    
                   </div>
                   <div className="p-5">
                     <h3 className="text-xl font-semibold text-gray-800 mb-2 truncate">{event.title}</h3>
@@ -218,7 +187,7 @@ export default function Events() {
                 {filtered.map((event) => (
                   <tr
                     key={event.id}
-                    onClick={() => navigate(`/admin/event/${event.id}`)} // 👈 Navigate on row click
+                    onClick={() => navigate(`/alumni/event/${event.id}`)} // 👈 Navigate on row click
                     className="hover:bg-gray-50 group cursor-pointer"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -239,15 +208,7 @@ export default function Events() {
                       {event.venue || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation(); // 👈 Prevent row click when deleting
-                          handleDelete(event.id);
-                        }}
-                        className="text-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-red-800"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="mr-1" /> Delete
-                      </button>
+                      
                     </td>
                   </tr>
                 ))}

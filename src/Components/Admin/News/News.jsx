@@ -6,8 +6,6 @@ Using a green-600 theme
 import React, { useEffect, useState } from 'react';
 import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
-import placeholderWide from '../../../assets/placeholder-wide.svg';
-import placeholderMedium from '../../../assets/placeholder-medium.svg';
 
 const TOKEN = localStorage.getItem('Token');
 const API_URL = 'http://209.38.121.118:8000/api/news/';
@@ -91,8 +89,8 @@ export default function NewsList() {
   const featuredPosts = posts.filter(post => post.featured);
 
   return (
-    <div className="bg-gray-50 w-[120rem] mx-50 my-10 min-h-screen">
-      <div className="max-w-7xl lg:mx-[100px] px-4 py-10">
+    <div className="bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-gray-200">
           <div>
@@ -117,10 +115,10 @@ export default function NewsList() {
                 <div key={`featured-${post.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg transition transform hover:scale-[1.02]">
                   <div className="relative h-60">
                     <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : placeholderWide}
+                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/600x400'}
                       alt={post.title}
                       className="w-full h-full object-cover"
-                      onError={e => e.target.src = placeholderWide}
+                      onError={e => e.target.src = 'https://via.placeholder.com/600x400'}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                     <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -142,19 +140,13 @@ export default function NewsList() {
                     <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
                     <div className="flex justify-between items-center">
                       <a
-                        href={`/admin/news/${post.id}/`}
+                        href={`/staff/news/${post.id}/`}
                         className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
                       >
                         Read Full Story
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                      <button
-                        onClick={() => handleDelete(post.id)}
-                        disabled={isDeleting}
-                        className="p-2 text-gray-400 hover:text-red-500 transition"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                     
                     </div>
                   </div>
                 </div>
@@ -205,7 +197,7 @@ export default function NewsList() {
                 <div className="sm:flex">
                   <div className="sm:w-1/3 relative">
                     <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : placeholderMedium}
+                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/400x300'}
                       alt={post.title}
                       className="w-full h-48 sm:h-full object-cover"
                       onError={e => e.target.src = 'https://via.placeholder.com/400x300'}
@@ -225,19 +217,13 @@ export default function NewsList() {
                     <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
                     <div className="flex justify-between items-center">
                       <a
-                        href={`/admin/news/${post.id}/`}
+                        href={`/staff/news/${post.id}/`}
                         className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
                       >
                         Read More
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                      <button
-                        onClick={() => handleDelete(post.id)}
-                        disabled={isDeleting}
-                        className="p-2 text-gray-400 hover:text-red-500 transition"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      
                     </div>
                   </div>
                 </div>

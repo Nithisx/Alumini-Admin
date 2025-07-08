@@ -20,7 +20,7 @@ const MyContributions = () => {
   }
   
   return (
-    <div className="min-h-screen bg-white w-[115rem]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="flex items-center px-4 py-4 border-b border-gray-200">
         

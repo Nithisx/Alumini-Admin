@@ -75,7 +75,7 @@ const Birthday = () => {
   };
 
   const handleUserClick = (userId) => {
-    navigate(`/staff/members/${userId}`);
+    navigate(`/admin/members/${userId}`);
   };
 
   if (loading) {
@@ -97,7 +97,7 @@ const Birthday = () => {
 
   const BirthdayCard = ({ user, showDaysUntil = false }) => (
     <div 
-      className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100 cursor-pointer"
+      className="flex items-center space-x-3 sm:space-x-4 bg-white p-3 sm:p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100 cursor-pointer"
       onClick={() => handleUserClick(user.username)}
     >
       <div className="flex-shrink-0">
@@ -105,13 +105,13 @@ const Birthday = () => {
           <img
             src={`http://209.38.121.118:8000/api${user.profile_photo}`}
             alt={user.username}
-            className="w-16 h-16 rounded-full object-cover border-2 border-green-300 hover:border-green-600 transition-colors"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-green-300 hover:border-green-600 transition-colors"
           />
         ) : (
-          <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-gray-500"
+              className="h-6 w-6 sm:h-8 sm:w-8 text-gray-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -132,10 +132,10 @@ const Birthday = () => {
           </div>
         )}
       </div>
-      <div className="flex-grow">
-        <span className="text-lg font-medium text-gray-800">{user.username}</span>
+      <div className="flex-grow min-w-0">
+        <span className="text-base sm:text-lg font-medium text-gray-800 block truncate">{user.username}</span>
         {showDaysUntil && (
-          <p className="text-sm text-green-600 font-medium">
+          <p className="text-xs sm:text-sm text-green-600 font-medium">
             {user.days_until_birthday === 0 
               ? "Today!" 
               : `in ${user.days_until_birthday} day${user.days_until_birthday !== 1 ? 's' : ''}`}
@@ -143,7 +143,7 @@ const Birthday = () => {
         )}
       </div>
       <div className="flex-shrink-0">
-        <div className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
+        <div className="bg-green-100 text-green-800 text-xs font-medium px-2 sm:px-3 py-1 rounded-full">
           {new Date(user.date_of_birth).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </div>
       </div>
@@ -151,78 +151,90 @@ const Birthday = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 my-[50px] min-h-screen">
-      <h1 className="text-3xl font-bold text-center mb-8 text-green-800">Birthday Calendar</h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Calendar Section */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">Calendar</h2>
-          <div className="birthday-calendar">
-            <Calendar 
-              tileContent={tileContent}
-              tileClassName={tileClassName}
-              onChange={setSelectedDate}
-              value={selectedDate}
-              className="w-full"
-            />
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-10">
+      <div className="max-w-full lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-green-800">Birthday Calendar</h1>
+        
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
+          {/* Calendar Section */}
+          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md order-2 xl:order-1">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Calendar</h2>
+            <div className="birthday-calendar">
+              <Calendar 
+                tileContent={tileContent}
+                tileClassName={tileClassName}
+                onChange={setSelectedDate}
+                value={selectedDate}
+                className="w-full"
+              />
+            </div>
+            
+            {/* Selected Date Birthdays */}
+            {selectedDateBirthdays.length > 0 && (
+              <div className="mt-4 sm:mt-6">
+                <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
+                  Birthdays on {selectedDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
+                </h3>
+                <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
+                  {selectedDateBirthdays.map(user => (
+                    <BirthdayCard key={`selected-${user.id}`} user={user} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
-          {/* Selected Date Birthdays */}
-          {selectedDateBirthdays.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-700">
-                Birthdays on {selectedDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
-              </h3>
-              <div className="space-y-3">
-                {selectedDateBirthdays.map(user => (
-                  <BirthdayCard key={`selected-${user.id}`} user={user} />
-                ))}
-              </div>
+          {/* Birthdays Lists Section */}
+          <div className="space-y-6 sm:space-y-8 order-1 xl:order-2">
+            {/* Today's Birthdays */}
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700 flex items-center">
+                <span className="inline-block w-3 h-3 bg-green-600 rounded-full mr-2"></span>
+                <span className="text-base sm:text-xl">Today's Birthdays</span>
+              </h2>
+              
+              {todayBirthdays.length > 0 ? (
+                <div className="space-y-2 sm:space-y-3">
+                  {todayBirthdays.map(user => (
+                    <BirthdayCard key={`today-${user.id}`} user={user} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4M8 7h8M8 7H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+                    </svg>
+                  </div>
+                  <p className="text-sm sm:text-base">No birthdays today</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        
-        {/* Birthdays Lists Section */}
-        <div className="space-y-8">
-          {/* Today's Birthdays */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700 flex items-center">
-              <span className="inline-block w-3 h-3 bg-green-600 rounded-full mr-2"></span>
-              Today's Birthdays
-            </h2>
-            
-            {todayBirthdays.length > 0 ? (
-              <div className="space-y-3">
-                {todayBirthdays.map(user => (
-                  <BirthdayCard key={`today-${user.id}`} user={user} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No birthdays today</p>
-              </div>
-            )}
-          </div>
 
-          {/* Upcoming Birthdays */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700 flex items-center">
-              <span className="inline-block w-3 h-3 bg-green-600 rounded-full mr-2"></span>
-              Upcoming Birthdays
-            </h2>
-            
-            {upcomingBirthdays.length > 0 ? (
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                {upcomingBirthdays.map(user => (
-                  <BirthdayCard key={`upcoming-${user.id}`} user={user} showDaysUntil={true} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No upcoming birthdays</p>
-              </div>
-            )}
+            {/* Upcoming Birthdays */}
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700 flex items-center">
+                <span className="inline-block w-3 h-3 bg-green-600 rounded-full mr-2"></span>
+                <span className="text-base sm:text-xl">Upcoming Birthdays</span>
+              </h2>
+              
+              {upcomingBirthdays.length > 0 ? (
+                <div className="space-y-2 sm:space-y-3 max-h-64 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2">
+                  {upcomingBirthdays.map(user => (
+                    <BirthdayCard key={`upcoming-${user.id}`} user={user} showDaysUntil={true} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm sm:text-base">No upcoming birthdays</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -233,10 +245,25 @@ const Birthday = () => {
           border: none;
           border-radius: 0.5rem;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          font-size: 0.875rem;
+        }
+        
+        @media (min-width: 640px) {
+          .birthday-calendar .react-calendar {
+            font-size: 1rem;
+          }
         }
         
         .birthday-calendar .react-calendar__tile {
-          padding: 1em 0.5em;
+          padding: 0.75em 0.25em;
+          height: 2.5rem;
+        }
+        
+        @media (min-width: 640px) {
+          .birthday-calendar .react-calendar__tile {
+            padding: 1em 0.5em;
+            height: 3rem;
+          }
         }
         
         .birthday-calendar .birthday-tile {
@@ -245,7 +272,7 @@ const Birthday = () => {
         }
         
         .birthday-calendar .react-calendar__tile--active {
-          background: #16a34a;
+          background: #16a34a !important;
           color: white;
         }
         
@@ -254,21 +281,57 @@ const Birthday = () => {
         }
         
         .birthday-calendar .react-calendar__navigation {
-          margin-bottom: 1em;
+          margin-bottom: 0.75em;
+        }
+        
+        @media (min-width: 640px) {
+          .birthday-calendar .react-calendar__navigation {
+            margin-bottom: 1em;
+          }
         }
         
         .birthday-calendar .react-calendar__navigation button {
-          min-width: 44px;
+          min-width: 32px;
           background: none;
-          font-size: 16px;
+          font-size: 14px;
           font-weight: bold;
           color: #4b5563;
+          padding: 0.5em;
+        }
+        
+        @media (min-width: 640px) {
+          .birthday-calendar .react-calendar__navigation button {
+            min-width: 44px;
+            font-size: 16px;
+          }
         }
         
         .birthday-calendar .react-calendar__month-view__weekdays {
           text-transform: uppercase;
           font-weight: bold;
-          font-size: 0.75em;
+          font-size: 0.625rem;
+        }
+        
+        @media (min-width: 640px) {
+          .birthday-calendar .react-calendar__month-view__weekdays {
+            font-size: 0.75rem;
+          }
+        }
+        
+        .birthday-calendar .react-calendar__month-view__weekdays__weekday {
+          padding: 0.5em 0.25em;
+        }
+        
+        /* Mobile touch improvements */
+        @media (max-width: 640px) {
+          .birthday-calendar .react-calendar__tile {
+            cursor: pointer;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+          }
+          
+          .birthday-calendar .react-calendar__navigation button:hover {
+            background-color: #f3f4f6;
+          }
         }
       `}</style>
     </div>

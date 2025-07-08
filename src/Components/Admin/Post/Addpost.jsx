@@ -1,71 +1,75 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
-import axios from "axios"
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  Trash2,
-  User,
-  MapPin,
-  Building,
-  Briefcase,
-  DollarSign,
-  Clock,
-  Heart,
-  MessageCircle,
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Plus,
-  ImageIcon,
-  X,
-  Upload,
-  Loader2,
-} from "lucide-react"
+  faTrash,
+  faUserCircle,
+  faMapMarkerAlt,
+  faBuilding,
+  faBriefcase,
+  faMoneyBillWave,
+  faClock,
+  faHeart,
+  faComment,
+  faChevronLeft,
+  faChevronRight,
+  faCalendarAlt,
+  faPlus,
+  faImage,
+  faFileAlt,
+  faTimesCircle,
+  faTimes,
+  faUpload,
+  faSpinner,
+} from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "http://209.38.121.118:8000/api/jobs/"
+const API_URL = "http://209.38.121.118:8000/api/jobs/";
 
 // Helper to get the token
 const getAuthToken = async () => {
-  const token = localStorage.getItem("Token")
-  return token
-}
+  const token = localStorage.getItem("Token");
+  return token;
+};
 
 // Format date to a more readable format
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
+  const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
-}
+  });
+};
 
 // Image Gallery Component
 const ImageGallery = ({ images }) => {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!images || images.length === 0) return null
+  if (!images || images.length === 0) return null;
 
   const nextImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length)
-  }
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+  };
 
   const prevImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length)
-  }
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + images.length) % images.length
+    );
+  };
 
+  // Fix for image paths that might be relative
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return ""
-    if (imagePath.startsWith("http")) return imagePath
-    return `http://209.38.121.118:8000/api${imagePath}`
-  }
+    if (!imagePath) return "";
+    if (imagePath.startsWith("http")) return imagePath;
+    return `http://209.38.121.118:8000/api${imagePath}`;
+  };
 
   return (
-    <div className="relative w-full h-48 sm:h-64 bg-gray-100 rounded-lg overflow-hidden my-4">
+    <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden my-3">
       <img
-        src={getImageUrl(images[currentIndex].image) || "/placeholder.svg"}
+        src={getImageUrl(images[currentIndex].image)}
         alt={`Job image ${currentIndex + 1}`}
         className="w-full h-full object-cover"
       />
@@ -76,42 +80,46 @@ const ImageGallery = ({ images }) => {
             onClick={prevImage}
             className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
           >
-            <ChevronLeft size={16} />
+            <FontAwesomeIcon icon={faChevronLeft} />
           </button>
           <button
             onClick={nextImage}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
           >
-            <ChevronRight size={16} />
+            <FontAwesomeIcon icon={faChevronRight} />
           </button>
           <div className="absolute bottom-2 left-0 right-0 flex justify-center">
             {images.map((_, idx) => (
               <div
                 key={idx}
-                className={`h-2 w-2 mx-1 rounded-full cursor-pointer ${idx === currentIndex ? "bg-white" : "bg-gray-400"}`}
+                className={`h-2 w-2 mx-1 rounded-full ${
+                  idx === currentIndex ? "bg-white" : "bg-gray-400"
+                }`}
                 onClick={() => setCurrentIndex(idx)}
-              />
+              ></div>
             ))}
           </div>
         </>
       )}
     </div>
-  )
-}
+  );
+};
 
 // Comment Section Component
 const CommentSection = ({ comments, totalComments }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!comments || comments.length === 0) return null
+  if (!comments || comments.length === 0) return null;
 
   return (
-    <div className="mt-4 pt-4 border-t border-gray-200">
-      <div className="flex justify-between items-center mb-3">
-        <h4 className="font-medium text-gray-700 text-sm">Comments ({totalComments})</h4>
+    <div className="mt-4 border-t pt-3">
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="font-medium text-gray-700">
+          Comments ({totalComments})
+        </h4>
         {totalComments > 2 && (
           <button
-            className="text-green-600 text-sm font-medium hover:text-green-700 transition-colors"
+            className="text-green-600 text-sm font-medium"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             {isExpanded ? "Show less" : "View all"}
@@ -121,188 +129,188 @@ const CommentSection = ({ comments, totalComments }) => {
 
       <div className="space-y-3">
         {(isExpanded ? comments : comments.slice(0, 2)).map((comment) => (
-          <div key={comment.id} className="flex space-x-3">
+          <div key={comment.id} className="flex space-x-2">
             <div className="flex-shrink-0">
               {comment.user.profile_photo ? (
                 <img
-                  src={comment.user.profile_photo || "/placeholder.svg"}
+                  src={comment.user.profile_photo}
                   alt={`${comment.user.first_name}'s avatar`}
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User size={14} className="text-gray-500" />
-                </div>
+                <FontAwesomeIcon
+                  icon={faUserCircle}
+                  className="w-6 h-6 text-gray-400"
+                />
               )}
             </div>
-            <div className="flex-1 bg-gray-50 p-3 rounded-lg">
-              <div className="flex justify-between items-start mb-1">
-                <span className="font-medium text-gray-800 text-sm">
+            <div className="flex-1 bg-gray-50 p-2 rounded-lg">
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-800">
                   {comment.user.first_name} {comment.user.last_name}
                 </span>
-                <span className="text-xs text-gray-500">{formatDate(comment.created_at)}</span>
+                <span className="text-xs text-gray-500">
+                  {formatDate(comment.created_at)}
+                </span>
               </div>
-              <p className="text-gray-700 text-sm">{comment.comment}</p>
+              <p className="text-gray-700">{comment.comment}</p>
             </div>
           </div>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const JobFeed = () => {
   // Posts state
-  const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Modal and file upload states
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
-  const [uploadedFile, setUploadedFile] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const fileInputRef = useRef(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Form field states
-  const [description, setDescription] = useState("")
-  const [companyName, setCompanyName] = useState("")
-  const [role, setRole] = useState("")
-  const [location, setLocation] = useState("")
-  const [salaryRange, setSalaryRange] = useState("")
-  const [jobType, setJobType] = useState("")
-  const [error, setError] = useState("")
+  const [description, setDescription] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [role, setRole] = useState("");
+  const [location, setLocation] = useState("");
+  const [salaryRange, setSalaryRange] = useState("");
+  const [jobType, setJobType] = useState("");
+  const [error, setError] = useState("");
 
   // Fetch posts from backend
   const fetchJobs = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const token = await getAuthToken()
+      const token = await getAuthToken();
       const response = await fetch(API_URL, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: token ? `Token ${token}` : "",
         },
-      })
-      const data = await response.json()
-      setPosts(data)
+      });
+      const data = await response.json();
+      setPosts(data);
     } catch (err) {
-      console.error("Error fetching posts", err)
+      console.error("Error fetching posts", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchJobs()
-  }, [])
+    fetchJobs();
+  }, []);
 
   // Delete a post
   const deletePost = async (postId) => {
     try {
-      const token = await getAuthToken()
+      const token = await getAuthToken();
       const response = await fetch(`${API_URL}${postId}/`, {
         method: "DELETE",
         headers: {
           Authorization: token ? `Token ${token}` : "",
         },
-      })
+      });
       if (response.ok) {
-        setPosts(posts.filter((post) => post.id !== postId))
+        setPosts(posts.filter((post) => post.id !== postId));
       } else {
-        console.error("Error deleting post")
+        console.error("Error deleting post");
       }
     } catch (error) {
-      console.error("Error deleting post", error)
+      console.error("Error deleting post", error);
     }
-  }
+  };
 
   // Handle drop zone events
   const handleDragOver = (e) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = () => setIsDragging(false)
-
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  const handleDragLeave = () => setIsDragging(false);
   const handleDrop = (e) => {
-    e.preventDefault()
-    setIsDragging(false)
+    e.preventDefault();
+    setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0])
+      handleFile(e.dataTransfer.files[0]);
     }
-  }
-
+  };
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0])
+      handleFile(e.target.files[0]);
     }
-  }
-
+  };
   const handleFile = (file) => {
-    const fileType = file.type
+    // Check if file is an image
+    const fileType = file.type;
     if (fileType.startsWith("image/")) {
       setUploadedFile({
         file,
         name: file.name,
         type: fileType,
         preview: URL.createObjectURL(file),
-        size: (file.size / 1024 / 1024).toFixed(2),
-      })
+        size: (file.size / 1024 / 1024).toFixed(2), // Convert to MB
+      });
     } else {
-      alert("Please upload only image files.")
+      alert("Please upload only image files.");
     }
-  }
-
+  };
   const removeFile = () => {
-    if (uploadedFile?.preview) URL.revokeObjectURL(uploadedFile.preview)
-    setUploadedFile(null)
-  }
+    if (uploadedFile?.preview) URL.revokeObjectURL(uploadedFile.preview);
+    setUploadedFile(null);
+  };
 
   // Reset form fields
   const resetForm = () => {
-    setDescription("")
-    setCompanyName("")
-    setRole("")
-    setLocation("")
-    setSalaryRange("")
-    setJobType("")
-    removeFile()
-    setError("")
-  }
+    setDescription("");
+    setCompanyName("");
+    setRole("");
+    setLocation("");
+    setSalaryRange("");
+    setJobType("");
+    removeFile();
+    setError("");
+  };
 
   // Close modal and reset form
   const closeModal = () => {
-    setIsModalOpen(false)
-    resetForm()
-  }
+    setIsModalOpen(false);
+    resetForm();
+  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
+    // Simple validation
     if (!companyName || !role || !location) {
-      setError("Company name, role, and location are required.")
-      return
+      setError("Company name, role, and location are required.");
+      return;
     }
 
-    setIsSubmitting(true)
-    setError("")
+    setIsSubmitting(true);
+    setError("");
 
     try {
-      const token = await getAuthToken()
-      if (!token) throw new Error("Authentication token not found")
+      const token = await getAuthToken();
+      if (!token) throw new Error("Authentication token not found");
 
-      const formData = new FormData()
-      formData.append("description", description)
-      formData.append("company_name", companyName)
-      formData.append("role", role)
-      formData.append("location", location)
-      formData.append("salary_range", salaryRange)
-      formData.append("job_type", jobType)
+      const formData = new FormData();
+      formData.append("description", description);
+      formData.append("company_name", companyName);
+      formData.append("role", role);
+      formData.append("location", location);
+      formData.append("salary_range", salaryRange);
+      formData.append("job_type", jobType);
 
       if (uploadedFile) {
-        formData.append("images", uploadedFile.file)
+        formData.append("images", uploadedFile.file);
       }
 
       const response = await axios.post(API_URL, formData, {
@@ -310,201 +318,216 @@ const JobFeed = () => {
           Authorization: `Token ${token}`,
           "Content-Type": "multipart/form-data",
         },
-      })
+      });
 
       // Add new post to state
-      setPosts([response.data, ...posts])
+      setPosts([response.data, ...posts]);
 
       // Close modal and reset form
-      closeModal()
+      closeModal();
     } catch (error) {
-      console.error("Error creating post:", error)
-      setError(error.response?.data?.message || "Failed to create post. Please try again.")
+      console.error("Error creating post:", error);
+      setError(
+        error.response?.data?.message ||
+          "Failed to create post. Please try again."
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen md:ml-64 mt-10 w-[90rem]">
-      {/* Main Container - Full width with proper centering */}
-      <div className="w-full">
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          {/* Header - Centered */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">Jobs Feed</h1>
-            <div className="w-16 h-1 bg-green-600 rounded mx-auto"></div>
-          </div>
+    <div className="relative bg-gray-50 min-h-screen">
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-green-600">Jobs Feed</h2>
+          <div className="h-1 w-20 bg-green-600 mt-2 rounded"></div>
+        </div>
 
-          {/* Posts List */}
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="animate-spin h-6 w-6 text-green-600" />
-            </div>
-          ) : posts.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Briefcase className="w-6 h-6 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">No job posts yet</h3>
-              <p className="text-gray-500 text-sm">Be the first to share a job opportunity!</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <div
-                  key={post.id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 overflow-hidden w-full"
-                >
-                  {/* Header with user info and actions */}
-                  <div className="flex justify-between items-center p-4 border-b border-gray-100">
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      {post.user?.profile_photo ? (
-                        <img
-                          src={post.user.profile_photo || "/placeholder.svg"}
-                          alt={`${post.user.first_name}'s avatar`}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-gray-100 flex-shrink-0"
+        {/* Posts List */}
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="bg-white p-10 rounded-lg shadow text-center">
+            <p className="text-gray-600 text-lg">No job posts available yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {posts.map((post) => (
+              <div
+                key={post.id}
+                className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition"
+              >
+                {/* Header with user info and actions */}
+                <div className="flex justify-between items-center p-4 border-b">
+                  <div className="flex items-center space-x-3">
+                    {post.user?.profile_photo ? (
+                      <img
+                        src={post.user.profile_photo}
+                        alt={`${post.user.first_name}'s avatar`}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <FontAwesomeIcon
+                        icon={faUserCircle}
+                        className="w-10 h-10 text-gray-400"
+                      />
+                    )}
+                    <div>
+                      <div className="font-semibold text-gray-800">
+                        {post.user?.first_name} {post.user?.last_name}
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="mr-1"
                         />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                          <User className="w-5 h-5 text-green-600" />
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-gray-800 text-sm truncate">
-                          {post.user?.first_name} {post.user?.last_name}
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
-                          <span className="truncate">{formatDate(post.posted_on)}</span>
-                        </div>
+                        <span>{formatDate(post.posted_on)}</span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => deletePost(post.id)}
-                      className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-all duration-200 flex-shrink-0"
-                      title="Delete job post"
-                    >
-                      <Trash2 className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center"></div>
+                </div>
+
+                {/* Green colored tag at top of content */}
+                <div className="bg-green-600 h-1 w-full"></div>
+
+                {/* Job info */}
+                <div className="p-4">
+                  {/* Company and Role */}
+                  <div className="mb-3">
+                    <h3 className="text-xl font-bold text-green-600">
+                      {post.role}
+                    </h3>
+                    <div className="flex items-center text-gray-700 mt-1">
+                      <FontAwesomeIcon
+                        icon={faBuilding}
+                        className="mr-2 text-green-600"
+                      />
+                      <span>{post.company_name}</span>
+                    </div>
+                  </div>
+
+                  {/* Job Details */}
+                  <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+                    <div className="flex items-center">
+                      <FontAwesomeIcon
+                        icon={faMapMarkerAlt}
+                        className="mr-2 text-green-600"
+                      />
+                      <span>{post.location}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FontAwesomeIcon
+                        icon={faMoneyBillWave}
+                        className="mr-2 text-green-600"
+                      />
+                      <span>{post.salary_range || "Not specified"}</span>
+                    </div>
+                    <div className="flex items-center col-span-2">
+                      <FontAwesomeIcon
+                        icon={faClock}
+                        className="mr-2 text-green-600"
+                      />
+                      <span className="capitalize">
+                        {post.job_type || "Not specified"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-gray-700 mb-4">{post.description}</p>
+
+                  {/* Images */}
+                  {post.images && post.images.length > 0 && (
+                    <ImageGallery images={post.images} />
+                  )}
+
+                  {/* Reactions */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                    <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
+                      <FontAwesomeIcon
+                        icon={faHeart}
+                        className={
+                          post.reaction?.like > 0
+                            ? "text-red-500"
+                            : "text-gray-500"
+                        }
+                      />
+                      <span>{post.reaction?.like || 0} likes</span>
+                    </button>
+
+                    <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
+                      <FontAwesomeIcon
+                        icon={faComment}
+                        className="text-gray-500"
+                      />
+                      <span>{post.total_comments || 0} comments</span>
                     </button>
                   </div>
 
-                  {/* Green accent line */}
-                  <div className="h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
-
-                  {/* Job Content */}
-                  <div className="p-4">
-                    {/* Company and Role */}
-                    <div className="mb-4">
-                      <h2 className="text-lg sm:text-xl font-bold text-green-600 mb-2 break-words">{post.role}</h2>
-                      <div className="flex items-center text-gray-700">
-                        <Building className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                        <span className="text-sm font-medium break-words">{post.company_name}</span>
-                      </div>
-                    </div>
-
-                    {/* Job Details Grid */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm">
-                        <MapPin className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 break-words">{post.location}</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <DollarSign className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 break-words">{post.salary_range || "Salary not specified"}</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <Clock className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 capitalize break-words">
-                          {post.job_type?.replace(/([A-Z])/g, " $1").trim() || "Job type not specified"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    {post.description && (
-                      <div className="mb-4">
-                        <p className="text-gray-700 text-sm leading-relaxed break-words">{post.description}</p>
-                      </div>
-                    )}
-
-                    {/* Images */}
-                    {post.images && post.images.length > 0 && <ImageGallery images={post.images} />}
-
-                    {/* Engagement Section */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors duration-200 group">
-                        <Heart
-                          className={`w-4 h-4 transition-colors ${
-                            post.reaction?.like > 0
-                              ? "text-red-500 fill-current"
-                              : "text-gray-500 group-hover:text-red-400"
-                          }`}
-                        />
-                        <span className="text-sm text-gray-600 font-medium">
-                          {post.reaction?.like || 0} {post.reaction?.like === 1 ? "like" : "likes"}
-                        </span>
-                      </button>
-
-                      <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors duration-200 group">
-                        <MessageCircle className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
-                        <span className="text-sm text-gray-600 font-medium">
-                          {post.total_comments || 0} {post.total_comments === 1 ? "comment" : "comments"}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Comments */}
-                    <CommentSection comments={post.comments} totalComments={post.total_comments} />
-                  </div>
+                  {/* Comments */}
+                  <CommentSection
+                    comments={post.comments}
+                    totalComments={post.total_comments}
+                  />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Floating Add Button */}
+      {/* Floating Add Post Button */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-6 right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-green-300 flex items-center justify-center transition-all duration-300 hover:scale-110 z-50"
+        className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg 
+                 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                 flex items-center justify-center transition-all duration-300 hover:scale-110"
       >
-        <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
+        <FontAwesomeIcon icon={faPlus} className="text-xl" />
       </button>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center rounded-t-2xl">
-              <h3 className="text-lg sm:text-xl font-bold text-green-600">Create Job Post</h3>
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-green-600">
+                Create New Job Post
+              </h3>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div className="p-4 sm:p-6">
+              <div className="p-4">
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4 text-sm">
+                  <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">
                     {error}
                   </div>
                 )}
 
                 {/* Form Fields */}
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="company"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Company Name *
                     </label>
                     <input
                       type="text"
                       id="company"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       placeholder="Enter company name"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
@@ -512,15 +535,18 @@ const JobFeed = () => {
                     />
                   </div>
 
-                  <div>
-                    <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="role"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Role/Position *
                     </label>
                     <input
                       type="text"
                       id="role"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                      placeholder="e.g., Senior Frontend Developer"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Enter job role"
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
                       required
@@ -528,14 +554,17 @@ const JobFeed = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label
+                      htmlFor="location"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Location *
                     </label>
                     <input
                       type="text"
                       id="location"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                      placeholder="e.g., San Francisco, CA"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Enter location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       required
@@ -543,30 +572,36 @@ const JobFeed = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="salary" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label
+                      htmlFor="salary"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Salary Range
                     </label>
                     <input
                       type="text"
                       id="salary"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                      placeholder="e.g., $80K - $120K"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="E.g., 25K-30K"
                       value={salaryRange}
                       onChange={(e) => setSalaryRange(e.target.value)}
                     />
                   </div>
 
-                  <div>
-                    <label htmlFor="jobType" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="jobType"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Job Type
                     </label>
                     <select
                       id="jobType"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       value={jobType}
                       onChange={(e) => setJobType(e.target.value)}
                     >
-                      <option value="">Select job type</option>
+                      <option value="">Select a job type</option>
                       <option value="fulltime">Full Time</option>
                       <option value="parttime">Part Time</option>
                       <option value="contract">Contract</option>
@@ -575,42 +610,58 @@ const JobFeed = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Job Description
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Description
                     </label>
                     <textarea
                       id="description"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors resize-none text-sm"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       rows="3"
-                      placeholder="Describe the role, requirements, and what makes this opportunity great..."
+                      placeholder="Write a description for the job..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                    />
+                    ></textarea>
                   </div>
 
                   {/* File Upload Section */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Add Image (Optional)</label>
+                  <div className="md:col-span-2">
                     {!uploadedFile ? (
                       <div
-                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-200
-                                  ${isDragging ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-400 hover:bg-green-50"}`}
+                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+                                  ${
+                                    isDragging
+                                      ? "border-green-500 bg-green-50"
+                                      : "border-gray-300 hover:border-green-400"
+                                  }`}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current.click()}
                       >
                         <div className="flex flex-col items-center">
-                          <div className="mb-3 bg-green-100 p-3 rounded-full">
-                            <Upload className="w-6 h-6 text-green-600" />
+                          <div className="mb-3 bg-gray-100 p-3 rounded-full">
+                            <FontAwesomeIcon
+                              icon={faUpload}
+                              className="text-xl text-green-500"
+                            />
                           </div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Drop image here</h4>
-                          <p className="text-xs text-gray-500 mb-3">or click to browse files</p>
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">
+                            Drop image to upload
+                          </h4>
+                          <p className="text-xs text-gray-500 mb-2">
+                            or click to browse
+                          </p>
 
                           <div className="flex items-center text-xs text-gray-500">
-                            <ImageIcon className="w-3 h-3 text-green-500 mr-1" />
-                            <span>PNG, JPG, GIF up to 10MB</span>
+                            <FontAwesomeIcon
+                              icon={faImage}
+                              className="text-green-500 mr-1"
+                            />
+                            <span>Supported formats: JPG, PNG, GIF</span>
                           </div>
                         </div>
                         <input
@@ -622,30 +673,36 @@ const JobFeed = () => {
                         />
                       </div>
                     ) : (
-                      <div className="border-2 border-green-200 bg-green-50 rounded-lg p-3">
+                      <div className="border rounded-lg p-3">
                         <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-semibold text-gray-700 text-sm">Uploaded Image</h4>
+                          <h4 className="font-medium text-gray-700 text-sm">
+                            Uploaded Image
+                          </h4>
                           <button
                             type="button"
                             onClick={removeFile}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-100 p-1 rounded-full transition-colors"
+                            className="text-red-500 hover:text-red-700"
                           >
-                            <X className="w-4 h-4" />
+                            <FontAwesomeIcon icon={faTimesCircle} />
                           </button>
                         </div>
 
                         <div className="flex items-center">
                           <div className="relative mr-3">
                             <img
-                              src={uploadedFile.preview || "/placeholder.svg"}
+                              src={uploadedFile.preview}
                               alt="Preview"
-                              className="w-16 h-16 object-cover rounded-lg border-2 border-green-200"
+                              className="w-16 h-16 object-cover rounded"
                             />
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-800 truncate text-sm">{uploadedFile.name}</p>
-                            <p className="text-xs text-gray-500">{uploadedFile.size} MB</p>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                              {uploadedFile.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {uploadedFile.size} MB
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -654,24 +711,33 @@ const JobFeed = () => {
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-gray-50 p-4 sm:p-6 border-t border-gray-200 rounded-b-2xl flex justify-end gap-3">
+              <div className="p-4 border-t flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 rounded-lg hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 flex items-center justify-center min-w-[80px] transition-all ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""}`}
+                  className={`px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg
+                            hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500
+                            flex items-center justify-center min-w-[80px]
+                            ${
+                              isSubmitting
+                                ? "opacity-75 cursor-not-allowed"
+                                : ""
+                            }`}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        className="animate-spin"
+                      />
                       Posting...
                     </>
                   ) : (
@@ -684,7 +750,7 @@ const JobFeed = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default JobFeed
+export default JobFeed;

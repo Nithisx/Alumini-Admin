@@ -22,7 +22,7 @@ import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
 const AdminLayout = () => {
   return (
-    <div className="flex">
+    <div className="">
       {/* Admin Header (Sidebar) */}
       <AdminHeader />
 

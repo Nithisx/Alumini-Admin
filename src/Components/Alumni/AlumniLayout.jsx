@@ -7,7 +7,6 @@ import Addpost from "./Post/Addpost";
 import AddEvent from "./Events/Addevents";
 import AlbumsPage from "./Albums/Albums";
 import AlbumDetailPage from "./Albums/Albumsdetails";
-import StudentImageUpload from "./Albums/Students";
 import Map from "./Map.jsx/Map";
 import NewsRoom from "./News/News";
 import SingleNews from "./News/Singlenews";
