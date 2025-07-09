@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
 const TOKEN = localStorage.getItem('Token');
-const API_BASE = 'http://209.38.121.118:8000/api/profile/';
+const API_BASE = 'https://xyndrix.me/api/profile/';
 
 export default function SingleMember() {
   const { name } = useParams();
@@ -113,7 +113,7 @@ export default function SingleMember() {
             <div className="relative flex flex-col items-center gap-4 sm:gap-6">
               <div className="relative">
                 <img
-                  src={`http://209.38.121.118:8000/api${member.profile_photo}`}
+                  src={`https://xyndrix.me/api${member.profile_photo}`}
                   alt={username}
                   className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white shadow-xl"
                 />

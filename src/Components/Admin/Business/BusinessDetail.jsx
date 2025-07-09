@@ -51,7 +51,7 @@ const BusinessDetail = () => {
   const [categories, setCategories] = useState([]);
   
   const token = localStorage.getItem("Token");
-  const BASE_URL = "http://209.38.121.118:8000/api";
+  const BASE_URL = "https://xyndrix.me/api";
 
   // Fetch business details if editing an existing business
   useEffect(() => {

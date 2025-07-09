@@ -11,7 +11,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newsSlide, setNewsSlide] = useState(0);
-  const BASE_URL = "http://209.38.121.118:8000/api";
+  const BASE_URL = "https://xyndrix.me/api";
 
   // Retrieve token directly from localStorage
   const token = localStorage.getItem("Token");
@@ -278,7 +278,7 @@ const HomePage = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px] sm:min-h-[500px]">
                           <div className="relative order-1 lg:order-1">
                             <img
-                              src={`http://209.38.121.118:8000/api${news.thumbnail}`}
+                              src={`https://xyndrix.me/api${news.thumbnail}`}
                               alt={news.title}
                               className="w-full h-64 sm:h-full object-cover"
                             />
@@ -305,7 +305,7 @@ const HomePage = () => {
                             </p>
                             <div className="flex items-center">
                               <img
-                                src={`http://209.38.121.118:8000/api${news.user.profile_photo}`}
+                                src={`https://xyndrix.me/api${news.user.profile_photo}`}
                                 alt={`${news.user.first_name} ${news.user.last_name}`}
                                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4 object-cover border-2 border-blue-200"
                               />

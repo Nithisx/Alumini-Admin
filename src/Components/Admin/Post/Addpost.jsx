@@ -23,7 +23,7 @@ import {
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "http://209.38.121.118:8000/api/jobs/";
+const API_URL = "https://xyndrix.me/api/jobs/";
 
 // Helper to get the token
 const getAuthToken = async () => {
@@ -63,7 +63,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://209.38.121.118:8000/api${imagePath}`;
+    return `https://xyndrix.me/api${imagePath}`;
   };
 
   return (

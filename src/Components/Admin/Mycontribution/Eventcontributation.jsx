@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { MoreVertical, MapPin, Clock, User, Share2, Trash2, X, Heart, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight } from "lucide-react"
 
-const BASE_URL = "http://209.38.121.118:8000/api"
+const BASE_URL = "https://xyndrix.me/api"
 
 // Modern Image Slider Component
 const ImageSlider = ({ images, baseUrl }) => {

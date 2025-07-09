@@ -5,7 +5,7 @@ This component handles adding new news posts via a modal form.
 import React, { useState, useRef } from 'react';
 
 const TOKEN = localStorage.getItem('Token');
-const API_URL = 'http://209.38.121.118:8000/api/news/';
+const API_URL = 'https://xyndrix.me/api/news/';
 const categories = ['Success Stories','Events','Announcements','Press Release','Updates'];
 
 export default function AddNewsModal({ show, onClose, onSuccess }) {
