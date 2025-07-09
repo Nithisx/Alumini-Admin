@@ -19,6 +19,7 @@ import BusinessDirectory from "./Business/BusinessDirectory";
 import BusinessDetail from "./Business/BusinessDetail";
 import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
+import StudentImageUpload from "./Albums/Albums";
 const AlumniLayout = () => {
   return (
     <div>
@@ -36,7 +37,7 @@ const AlumniLayout = () => {
           <Route path="albums/:albumId" element={<AlbumDetailPage />} />
           <Route path="students" element={<StudentImageUpload />} />
           <Route path="map" element={<Map />} />
-          <Route path="news" element={<NewsRoom />} />  ``
+          <Route path="news" element={<NewsRoom />} />
           <Route path="news/:id" element={<SingleNews />} />
           <Route path="members" element={<Members />} />
           <Route path="members/:name" element={<Singlemember />} />
