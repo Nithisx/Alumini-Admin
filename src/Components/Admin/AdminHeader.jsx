@@ -316,7 +316,7 @@ export default function AdminHeader() {
         <div
           className={`md:hidden transition-all duration-300 ease-in-out ${
             isMobileOpen
-              ? "max-h-screen opacity-100 bg-white/95 backdrop-blur-md"
+              ? "max-h-screen overflow-y-auto opacity-100 bg-white/95 backdrop-blur-md"
               : "max-h-0 opacity-0 overflow-hidden"
           }`}
         >
