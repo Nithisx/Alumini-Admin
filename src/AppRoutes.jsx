@@ -30,6 +30,8 @@ const AppRoutes = () => {
         return <Navigate to="/staff/dashboard" replace />;
       case 'alumni':
         return <Navigate to="/alumni/dashboard" replace />;
+      case 'student':
+        return <Navigate to="/alumni/dashboard" replace />;
       default:
         return <Navigate to="/home" replace />;
     }
@@ -73,7 +75,7 @@ const AppRoutes = () => {
         <Route
           path="/alumni/*"
           element={
-            <ProtectedRoute requiredRole="alumni">
+            <ProtectedRoute requiredRole={["alumni", "student"]}>
               <AlumniLayout />
             </ProtectedRoute>
           }

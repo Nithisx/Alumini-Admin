@@ -32,7 +32,7 @@ const CHAPTERS = [
   "KAHE CHAPTER TRICHI",
 ];
 
-const ROLES = ["Student", "Staff"];
+const ROLES = ["Student", "Alumni", "Staff"];
 const GENDERS = ["Male", "Female", "Other"];
 
 // Updated college names
@@ -493,7 +493,8 @@ const Signup = () => {
             label="Role"
             items={ROLES}
             selectedValue={formData.role}
-            onValueChange={(v) => updateField("role", v)}
+            onValueChange={(
+              v) => updateField("role", v)}
             error={fieldErrors.role}
           />
 

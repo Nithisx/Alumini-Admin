@@ -5,10 +5,18 @@ const ProtectedRoute = ({ requiredRole, children }) => {
   const token = localStorage.getItem('Token');
   const role = localStorage.getItem('Role');
 
-  // If no token, redirect to home, if token exists but roles don't match, redirect to login
+  // If no token, redirect to home
   if (!token) {
     return <Navigate to="/home" replace />;
-  } else if (role !== requiredRole) {
+  }
+
+  // Check if role matches (handle both string and array of roles)
+  const hasAccess = Array.isArray(requiredRole) 
+    ? requiredRole.includes(role) 
+    : role === requiredRole;
+
+  // If token exists but roles don't match, redirect to login
+  if (!hasAccess) {
     return <Navigate to="/login" replace />;
   }
 

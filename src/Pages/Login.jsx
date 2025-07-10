@@ -34,6 +34,8 @@ export default function LoginPage() {
         return "/login/admin/";
       case "alumni":
         return "/login/user/";
+      case "student":
+        return "/login/user/";
       default:
         return "/login/staff/";
     }
@@ -63,6 +65,9 @@ export default function LoginPage() {
               navigate("/admin/dashboard");
               break;
             case "alumni":
+              navigate("/alumni/dashboard");
+              break;
+            case "student":
               navigate("/alumni/dashboard");
               break;
             default:
@@ -114,7 +119,9 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center">
           <img src={kahelogo} alt="Logo" className="mx-auto h-20" />
-          <h1 className="mt-4 text-3xl font-bold text-green-600">Karpagam Alumni</h1>
+          <h1 className="mt-4 text-3xl font-bold text-green-600">
+            Karpagam Alumni
+          </h1>
           <p className="text-gray-600">Connect with your college community</p>
         </div>
 
@@ -123,7 +130,9 @@ export default function LoginPage() {
           onSubmit={handleLogin}
           className="bg-white shadow-md rounded-lg px-8 py-6 space-y-4"
         >
-          <h2 className="text-2xl font-bold text-gray-900 text-center">Welcome Back!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 text-center">
+            Welcome Back!
+          </h2>
 
           {error && <ErrorBanner message={error} />}
 
@@ -136,6 +145,7 @@ export default function LoginPage() {
                 { value: "admin", label: "Admin" },
                 { value: "staff", label: "Staff" },
                 { value: "alumni", label: "Alumni" },
+                { value: "student", label: "Student" },
               ]}
             />
 
@@ -151,7 +161,9 @@ export default function LoginPage() {
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
               <div className="relative">
                 <input
                   name="password"
@@ -171,14 +183,41 @@ export default function LoginPage() {
                 >
                   {showPassword ? (
                     // Eye Open SVG
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
                     </svg>
                   ) : (
                     // Eye Closed SVG
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95m3.25-2.61A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.965 9.965 0 01-4.293 5.03M15 12a3 3 0 11-6 0 3 3 0 016 0zm-6.364 6.364l12.728-12.728" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95m3.25-2.61A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.965 9.965 0 01-4.293 5.03M15 12a3 3 0 11-6 0 3 3 0 016 0zm-6.364 6.364l12.728-12.728"
+                      />
                     </svg>
                   )}
                 </button>
@@ -219,8 +258,12 @@ export default function LoginPage() {
         {showForgotPopup && (
           <Popup onClose={() => setShowForgotPopup(false)}>
             <div className="text-center">
-              <div className="text-green-600 text-lg font-semibold mb-2">Check your mail</div>
-              <div className="text-gray-700 mb-4">A password reset link has been sent to your email.</div>
+              <div className="text-green-600 text-lg font-semibold mb-2">
+                Check your mail
+              </div>
+              <div className="text-gray-700 mb-4">
+                A password reset link has been sent to your email.
+              </div>
               <button
                 className="bg-green-600 text-white px-4 py-2 rounded"
                 onClick={() => setShowForgotPopup(false)}
@@ -239,7 +282,9 @@ export default function LoginPage() {
 function Input({ name, label, ...props }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
       <input
         name={name}
         {...props}

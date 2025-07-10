@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/logo.png"; // Adjust the path as necessary
 
 const Header = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const aboutDropdownRef = useRef(null);
   const timeoutRef = useRef(null);
 
-  // Improved navigation function that properly handles hash links
+  // Improved navigation function that properly handles hash links with React Router
   const handleNavigation = (path) => {
     // Close mobile menu if open
     if (menuOpen) {
@@ -20,35 +23,59 @@ const Header = () => {
       setAboutDropdownOpen(false);
     }
 
-    // Check if it's a hash link
+    // Check if it's a hash link to home page sections
     if (path.includes("#")) {
       const [baseUrl, hash] = path.split("#");
 
-      // If already on the correct base page, just scroll to the section
-      if (
-        (baseUrl === "/" || baseUrl === "") &&
-        (window.location.pathname === "/" || window.location.pathname === "")
-      ) {
-        const element = document.getElementById(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
+      // If it's a home page hash link (starts with /)
+      if (baseUrl === "/" || baseUrl === "") {
+        // If we're already on home page, just scroll
+        if (location.pathname === "/" || location.pathname === "/home") {
+          setTimeout(() => {
+            const element = document.getElementById(hash);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 100);
+        } else {
+          // Navigate to home page first, then scroll
+          navigate("/home");
+          setTimeout(() => {
+            const element = document.getElementById(hash);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 300);
         }
+        return;
       }
-      // If we're on the about page and trying to navigate to another section of the about page
-      else if (baseUrl === "/about" && window.location.pathname === "/about") {
-        const element = document.getElementById(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-          // Update URL without reloading
-          window.history.pushState(null, "", path);
+      // If it's an about page hash link
+      else if (baseUrl === "/about") {
+        if (location.pathname === "/about") {
+          setTimeout(() => {
+            const element = document.getElementById(hash);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 100);
+        } else {
+          navigate("/about");
+          setTimeout(() => {
+            const element = document.getElementById(hash);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 300);
         }
+        return;
       }
-      // Otherwise, do a full page navigation
-      else {
-        window.location.href = path;
-      }
+    }
+
+    // For regular navigation (non-hash links)
+    if (path.startsWith("/")) {
+      navigate(path);
     } else {
-      // Regular navigation
+      // For external links or special cases
       window.location.href = path;
     }
   };
@@ -114,7 +141,23 @@ const Header = () => {
               {localStorage.getItem("Token") ? (
                 <>
             <button
-              onClick={() => handleNavigation("/dashboard")}
+              onClick={() => {
+                const role = localStorage.getItem("Role");
+                switch (role) {
+                  case "admin":
+                    navigate("/admin/dashboard");
+                    break;
+                  case "staff":
+                    navigate("/staff/dashboard");
+                    break;
+                  case "alumni":
+                  case "student":
+                    navigate("/alumni/dashboard");
+                    break;
+                  default:
+                    navigate("/home");
+                }
+              }}
               className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
             >
               DASHBOARD
@@ -122,7 +165,8 @@ const Header = () => {
             <button
               onClick={() => {
                 localStorage.removeItem("Token");
-                handleNavigation("/login");
+                localStorage.removeItem("Role");
+                navigate("/login");
               }}
               className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
             >
@@ -132,13 +176,13 @@ const Header = () => {
               ) : (
                 <>
             <button
-              onClick={() => handleNavigation("/signup")}
+              onClick={() => navigate("/signup")}
               className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
             >
               REGISTER
             </button>
             <button
-              onClick={() => handleNavigation("/login")}
+              onClick={() => navigate("/login")}
               className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
             >
               LOGIN
@@ -203,19 +247,67 @@ const Header = () => {
       {menuOpen && (
         <div className="md:hidden px-4 pb-4">
           <div className="text-sm text-gray-800 mb-2 space-x-2 text-right">
-            <button
-              onClick={() => handleNavigation("/signup")}
-              className="hover:underline bg-transparent"
-            >
-              REGISTER
-            </button>
-            <span>::</span>
-            <button
-              onClick={() => handleNavigation("/login")}
-              className="hover:underline bg-transparent"
-            >
-              LOGIN
-            </button>
+            {localStorage.getItem("Token") ? (
+              <>
+                <button
+                  onClick={() => {
+                    const role = localStorage.getItem("Role");
+                    switch (role) {
+                      case "admin":
+                        navigate("/admin/dashboard");
+                        break;
+                      case "staff":
+                        navigate("/staff/dashboard");
+                        break;
+                      case "alumni":
+                      case "student":
+                        navigate("/alumni/dashboard");
+                        break;
+                      default:
+                        navigate("/home");
+                    }
+                    setMenuOpen(false);
+                  }}
+                  className="hover:underline bg-transparent"
+                >
+                  DASHBOARD
+                </button>
+                <span>::</span>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("Token");
+                    localStorage.removeItem("Role");
+                    navigate("/login");
+                    setMenuOpen(false);
+                  }}
+                  className="hover:underline bg-transparent"
+                >
+                  LOGOUT
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    navigate("/signup");
+                    setMenuOpen(false);
+                  }}
+                  className="hover:underline bg-transparent"
+                >
+                  REGISTER
+                </button>
+                <span>::</span>
+                <button
+                  onClick={() => {
+                    navigate("/login");
+                    setMenuOpen(false);
+                  }}
+                  className="hover:underline bg-transparent"
+                >
+                  LOGIN
+                </button>
+              </>
+            )}
           </div>
           <nav className="flex flex-col gap-2 text-sm text-gray-700">
             {/* Mobile About section with submenu */}
@@ -227,24 +319,24 @@ const Header = () => {
                 About Us
               </button>
               <div className="ml-4 mt-1 flex flex-col gap-1">
-                <a
-                  href="/about#overview"
-                  className="text-gray-600 hover:text-green-700 text-left text-xs"
+                <button
+                  onClick={() => handleNavigation("/about#overview")}
+                  className="text-gray-600 hover:text-green-700 text-left text-xs bg-transparent"
                 >
                   Overview
-                </a>
-                <a
-                  href="/about#vision-mission"
-                  className="text-gray-600 hover:text-green-700 text-left text-xs"
+                </button>
+                <button
+                  onClick={() => handleNavigation("/about#vision-mission")}
+                  className="text-gray-600 hover:text-green-700 text-left text-xs bg-transparent"
                 >
                   Vision & Mission
-                </a>
-                <a
-                  href="/about#administration"
-                  className="text-gray-600 hover:text-green-700 text-left text-xs"
+                </button>
+                <button
+                  onClick={() => handleNavigation("/about#administration")}
+                  className="text-gray-600 hover:text-green-700 text-left text-xs bg-transparent"
                 >
                   Administration
-                </a>
+                </button>
               </div>
             </div>
             <button
