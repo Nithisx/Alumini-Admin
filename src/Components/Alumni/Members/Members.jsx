@@ -783,7 +783,7 @@ export default function MembersPage() {
                     
                     <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
                       <img
-                        src={member.profile_photo || getInitialsAvatar(member.first_name, member.last_name)}
+                        src={member.profile_photo || placeholder}
                         alt={`${member.first_name || 'Alumni'} ${member.last_name || ''}`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         onError={(e) => {
