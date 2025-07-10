@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../../Shared/Pagination";
+import placeholder from "../../../assets/placeholder.jpeg"; // Import your placeholder image
 
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "https://xyndrix.me/api";
@@ -9,28 +10,61 @@ const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
 
 // Placeholder image service
-const getPlaceholderImage = (name) => {
-  const initials = name
-    ? name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : "U";
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    initials
-  )}&background=6366f1&color=white&size=400&font-size=0.4`;
+const getInitialsAvatar = (firstName, lastName) => {
+  if (!firstName && !lastName) return placeholder;
+  
+  // Get initials from name
+  const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  
+  // Generate a deterministic color based on name
+  const colors = [
+    '#4299E1', // blue-500
+    '#48BB78', // green-500
+    '#ED8936', // orange-500
+    '#9F7AEA', // purple-500
+    '#F56565', // red-500
+    '#38B2AC', // teal-500
+    '#ECC94B', // yellow-500
+    '#667EEA', // indigo-500
+    '#ED64A6'  // pink-500
+  ];
+  
+  // Simple hash function to get consistent color
+  const hashCode = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+  };
+  
+  const colorIndex = Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length;
+  const backgroundColor = colors[colorIndex];
+  
+  // Create SVG for avatar
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+      <rect width="200" height="200" fill="${backgroundColor}" />
+      <text x="50%" y="50%" dy=".3em" font-family="Arial, sans-serif" font-size="80" 
+        fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+    </svg>
+  `;
+  
+  // Convert SVG to data URL
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
-const AutocompleteInput = ({ 
-  id, 
-  label, 
-  placeholder, 
-  value, 
-  onChange, 
-  filterType, 
+
+const AutocompleteInput = ({
+  id,
+  label,
+  placeholder,
+  value,
+  onChange,
+  filterType,
   options,
-  icon 
+  icon,
 }) => {
   const [inputValue, setInputValue] = useState(value || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -52,7 +86,7 @@ const AutocompleteInput = ({
       setShowSuggestions(false);
       setFilteredSuggestions([]);
     } else {
-      const filtered = options.filter(item =>
+      const filtered = options.filter((item) =>
         item.toString().toLowerCase().includes(value.toLowerCase())
       );
       setFilteredSuggestions(filtered);
@@ -81,9 +115,9 @@ const AutocompleteInput = ({
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        dropdownRef.current && 
+        dropdownRef.current &&
         !dropdownRef.current.contains(event.target) &&
-        inputRef.current && 
+        inputRef.current &&
         !inputRef.current.contains(event.target)
       ) {
         setShowSuggestions(false);
@@ -138,17 +172,19 @@ const AutocompleteInput = ({
         )}
 
         {/* No options message */}
-        {showSuggestions && filteredSuggestions.length === 0 && inputValue.trim() !== "" && (
-          <div
-            ref={dropdownRef}
-            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl"
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <div className="px-3 py-4 text-center text-gray-500 text-sm">
-              No options found for "{inputValue}"
+        {showSuggestions &&
+          filteredSuggestions.length === 0 &&
+          inputValue.trim() !== "" && (
+            <div
+              ref={dropdownRef}
+              className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl"
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                No options found for "{inputValue}"
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );
@@ -391,7 +427,9 @@ export default function MembersPage() {
                 className="lg:hidden text-blue-600 hover:text-blue-800 p-2 rounded-md hover:bg-blue-50 transition-colors"
               >
                 <svg
-                  className={`w-5 h-5 transform transition-transform ${showFilters ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 transform transition-transform ${
+                    showFilters ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -411,11 +449,13 @@ export default function MembersPage() {
             <div className="flex justify-center items-center py-8">
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="text-gray-600 text-sm sm:text-base">Loading filters...</span>
+                <span className="text-gray-600 text-sm sm:text-base">
+                  Loading filters...
+                </span>
               </div>
             </div>
           ) : (
-            <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
+            <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {/* Role Filter */}
                 <AutocompleteInput
@@ -740,22 +780,16 @@ export default function MembersPage() {
                     className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group"
                   >
                     {/* Profile Image */}
+                    
                     <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
                       <img
-                        src={
-                          member.profile_photo
-                            ? `${BASE_URL}${member.profile_photo}`
-                            : getPlaceholderImage(
-                                `${member.first_name} ${member.last_name}`
-                              )
-                        }
-                        alt={`${member.first_name} ${member.last_name}`}
+                        src={member.profile_photo || getInitialsAvatar(member.first_name, member.last_name)}
+                        alt={`${member.first_name || 'Alumni'} ${member.last_name || ''}`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = getPlaceholderImage(
-                            `${member.first_name} ${member.last_name}`
-                          );
+                          e.target.onerror = null; // Prevent infinite loop
+                          // Generate avatar with initials if image fails to load
+                          e.target.src = getInitialsAvatar(member.first_name, member.last_name);
                         }}
                       />
                       {/* Role Badge */}
