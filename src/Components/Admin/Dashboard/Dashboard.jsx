@@ -4,7 +4,7 @@ import image2 from "../../../images/image2.jpg";
 import image3 from "../../../images/image3.jpg";
 import Herosection from "../../../Pages/Herosection";
 import { format } from "date-fns";
-import Footer from "../../../Pages/about_components/Footer"
+import Footer from "../../../Pages/about_components/Footer";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -139,7 +139,9 @@ const HomePage = () => {
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-700 mb-1 sm:mb-2">
                 {data.upcoming_events}
               </p>
-              <p className="text-green-600 font-medium text-sm sm:text-base">Upcoming Events</p>
+              <p className="text-green-600 font-medium text-sm sm:text-base">
+                Upcoming Events
+              </p>
             </div>
 
             <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl">
@@ -167,7 +169,9 @@ const HomePage = () => {
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-700 mb-1 sm:mb-2">
                 {data.albums_count}
               </p>
-              <p className="text-emerald-600 font-medium text-sm sm:text-base">Photo Albums</p>
+              <p className="text-emerald-600 font-medium text-sm sm:text-base">
+                Photo Albums
+              </p>
             </div>
 
             <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl">
@@ -189,7 +193,9 @@ const HomePage = () => {
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-teal-700 mb-1 sm:mb-2">
                 {data.new_users}
               </p>
-              <p className="text-teal-600 font-medium text-sm sm:text-base">New Members</p>
+              <p className="text-teal-600 font-medium text-sm sm:text-base">
+                New Members
+              </p>
             </div>
 
             <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl">
@@ -211,7 +217,9 @@ const HomePage = () => {
               <p className="text-2xl sm:text-2xl lg:text-3xl font-bold text-cyan-700 mb-1 sm:mb-2">
                 {data.total_users}
               </p>
-              <p className="text-cyan-600 font-medium text-sm sm:text-base">Total Members</p>
+              <p className="text-cyan-600 font-medium text-sm sm:text-base">
+                Total Members
+              </p>
             </div>
           </div>
         </div>
@@ -498,7 +506,9 @@ const HomePage = () => {
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         ></path>
                       </svg>
-                      <p className="text-gray-700 font-medium text-sm sm:text-base line-clamp-1">{event.venue}</p>
+                      <p className="text-gray-700 font-medium text-sm sm:text-base line-clamp-1">
+                        {event.venue}
+                      </p>
                     </div>
 
                     <p className="text-gray-600 mb-4 sm:mb-6 line-clamp-2 leading-relaxed text-sm sm:text-base">
@@ -534,8 +544,12 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-700">No upcoming events</h3>
-                <p className="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">Check back later for new events</p>
+                <h3 className="text-base sm:text-lg font-medium text-gray-700">
+                  No upcoming events
+                </h3>
+                <p className="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">
+                  Check back later for new events
+                </p>
               </div>
             )}
           </div>
@@ -549,7 +563,9 @@ const HomePage = () => {
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-800 mb-2">
                   Photo Gallery
                 </h2>
-                <p className="text-green-600 text-sm sm:text-base">Memories captured in time</p>
+                <p className="text-green-600 text-sm sm:text-base">
+                  Memories captured in time
+                </p>
               </div>
               <button
                 onClick={() => navigate("/admin/albums/")}
@@ -711,7 +727,9 @@ const HomePage = () => {
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-800 mb-2">
                   New Members
                 </h2>
-                <p className="text-green-600 text-sm sm:text-base">Welcome our newest alumni</p>
+                <p className="text-green-600 text-sm sm:text-base">
+                  Welcome our newest alumni
+                </p>
               </div>
               <button
                 onClick={() => navigate("/admin/members/")}
@@ -743,9 +761,7 @@ const HomePage = () => {
                       ? "border-b border-green-100"
                       : ""
                   }`}
-                  onClick={() =>
-                    navigate(`/admin/members/${member.username}/`)
-                  }
+                  onClick={() => navigate(`/admin/members/${member.username}/`)}
                 >
                   <div className="mr-3 sm:mr-4 relative">
                     {member.profile_photo ? (
