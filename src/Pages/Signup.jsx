@@ -38,9 +38,9 @@ const GENDERS = ["Male", "Female", "Other"];
 // Updated college names
 const COLLEGE_NAMES = [
   "FOASCM – Faculty of Arts, Science, Commerce, and Management",
-  "FOE – Faculty of Engineering", 
+  "FOE – Faculty of Engineering",
   "FOP – Faculty of Pharmacy",
-  "FOA – Faculty of Architecture & Planning"
+  "FOA – Faculty of Architecture & Planning",
 ];
 
 // Updated courses data structure
@@ -60,8 +60,8 @@ const courses = [
       { stream: "Department of Computer Technology" },
       { stream: "Department of Commerce" },
       { stream: "Department of Management" },
-      { stream: "Department of Astrology" }
-    ]
+      { stream: "Department of Astrology" },
+    ],
   },
   {
     category: "FOE",
@@ -77,58 +77,66 @@ const courses = [
       { stream: "Department of Electronics and Communication Engineering" },
       { stream: "Department of Electrical and Electronics Engineering" },
       { stream: "Department of Mechanical Engineering" },
-      { stream: "Science and Humanities" }
-    ]
+      { stream: "Science and Humanities" },
+    ],
   },
   {
     category: "FOA",
-    courses: [
-      { stream: "Department of Architecture" }
-    ]
+    courses: [{ stream: "Department of Architecture" }],
   },
   {
     category: "FOP",
-    courses: [
-      { stream: "Department of Pharmacy" }
-    ]
-  }
+    courses: [{ stream: "Department of Pharmacy" }],
+  },
 ];
 
-const InputField = React.memo(({ value, onChange, placeholder, error, type, required = true }) => (
-  <div className="mb-4">
-    <input
-      type={type === "password" ? "password" : type === "number" ? "number" : type === "email" ? "email" : "text"}
-      className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-        error ? "border-red-500" : "border-gray-300"
-      }`}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={`${placeholder}${required ? " *" : ""}`}
-    />
-    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-  </div>
-));
+const InputField = React.memo(
+  ({ value, onChange, placeholder, error, type, required = true }) => (
+    <div className="mb-4">
+      <input
+        type={
+          type === "password"
+            ? "password"
+            : type === "number"
+            ? "number"
+            : type === "email"
+            ? "email"
+            : "text"
+        }
+        className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+          error ? "border-red-500" : "border-gray-300"
+        }`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={`${placeholder}${required ? " *" : ""}`}
+      />
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+    </div>
+  )
+);
 
-const AppDropdown = React.memo(({ label, items, selectedValue, onValueChange, error }) => (
-  <div className="mb-4">
-    <label className="block text-gray-600 text-sm mb-2">{label} *</label>
-    <select
-      className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-        error ? "border-red-500" : "border-gray-300"
-      }`}
-      value={selectedValue}
-      onChange={(e) => onValueChange(e.target.value)}
-    >
-      <option value="">{`Select ${label}`}</option>
-      {items.map((item) => (
-        <option key={item} value={item}>
-          {item}
-        </option>
-      ))}
-    </select>
-    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-  </div>
-));
+const AppDropdown = React.memo(
+  ({ label, items, selectedValue, onValueChange, error }) => (
+    <div className="mb-4">
+      <label className="block text-gray-600 text-sm mb-2">{label} *</label>
+      <select
+        className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+          error ? "border-red-500" : "border-gray-300"
+        }`}
+        value={selectedValue}
+        onChange={(e) => onValueChange(e.target.value)}
+      >
+        <option value="">{`Select ${label}`}</option>
+        {items.map((item) => (
+          <option key={item} value={item}>
+            {item}
+          </option>
+        ))}
+      </select>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+    </div>
+  )
+);
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -165,7 +173,9 @@ const Signup = () => {
   // Memoized course data processing
   const processedCourses = useMemo(() => {
     return courses.flatMap((category) =>
-      category.courses.map((course) => `${category.category} - ${course.stream}`)
+      category.courses.map(
+        (course) => `${category.category} - ${course.stream}`
+      )
     );
   }, []);
 
@@ -180,6 +190,16 @@ const Signup = () => {
 
     // Check required fields
     REQUIRED_FIELDS.forEach((field) => {
+      // Skip validation for Staff-specific fields when role is Staff
+      if (
+        formData.role === "Staff" &&
+        (field === "roll_no" ||
+          field === "course_end_year" ||
+          field === "passed_out_year")
+      ) {
+        return;
+      }
+
       if (!formData[field]?.trim()) {
         errors[field] = "This field is required";
       }
@@ -214,13 +234,25 @@ const Signup = () => {
 
     // Year validation
     const currentYear = new Date().getFullYear();
-    if (formData.course_start_year && (parseInt(formData.course_start_year) < 1900 || parseInt(formData.course_start_year) > currentYear + 5)) {
+    if (
+      formData.course_start_year &&
+      (parseInt(formData.course_start_year) < 1900 ||
+        parseInt(formData.course_start_year) > currentYear + 5)
+    ) {
       errors.course_start_year = "Please enter a valid start year";
     }
-    if (formData.course_end_year && (parseInt(formData.course_end_year) < 1900 || parseInt(formData.course_end_year) > currentYear + 10)) {
+    if (
+      formData.course_end_year &&
+      (parseInt(formData.course_end_year) < 1900 ||
+        parseInt(formData.course_end_year) > currentYear + 10)
+    ) {
       errors.course_end_year = "Please enter a valid end year";
     }
-    if (formData.passed_out_year && (parseInt(formData.passed_out_year) < 1900 || parseInt(formData.passed_out_year) > currentYear + 10)) {
+    if (
+      formData.passed_out_year &&
+      (parseInt(formData.passed_out_year) < 1900 ||
+        parseInt(formData.passed_out_year) > currentYear + 10)
+    ) {
       errors.passed_out_year = "Please enter a valid passed out year";
     }
 
@@ -244,15 +276,15 @@ const Signup = () => {
     try {
       console.log("Sending OTP to:", formData.email);
       const response = await fetch(SIGNUP_OTP_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email: formData.email }),
       });
       const data = await response.json();
       console.log("OTP Response:", data);
-      
+
       setIsOtpSent(true);
       setResendTimer(120);
       setError("");
@@ -277,9 +309,9 @@ const Signup = () => {
 
   const pickProfilePhoto = async () => {
     try {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
       input.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -322,10 +354,10 @@ const Signup = () => {
     try {
       // Prepare form data for multipart upload
       const payload = new FormData();
-      
+
       // Add all text fields
-      Object.keys(formData).forEach(key => {
-        if (key !== 'profile_photo' && formData[key]) {
+      Object.keys(formData).forEach((key) => {
+        if (key !== "profile_photo" && formData[key]) {
           payload.append(key, formData[key]);
         }
       });
@@ -343,7 +375,7 @@ const Signup = () => {
 
       console.log("Sending signup request...");
       const response = await fetch(SIGNUP_URL, {
-        method: 'POST',
+        method: "POST",
         body: payload,
       });
       const data = await response.json();
@@ -373,7 +405,9 @@ const Signup = () => {
       {showSuccess && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4 text-center">
-            <h2 className="text-xl font-bold text-green-600 mb-4">Registration Successful!</h2>
+            <h2 className="text-xl font-bold text-green-600 mb-4">
+              Registration Successful!
+            </h2>
             <p className="text-gray-700 mb-4 leading-relaxed">
               Your account is pending admin approval. We will review your
               request shortly. You will receive an email once your account is
@@ -410,8 +444,10 @@ const Signup = () => {
 
         {/* Form Section */}
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-xl font-bold text-gray-800 text-center mb-6">Sign Up</h2>
-          
+          <h2 className="text-xl font-bold text-gray-800 text-center mb-6">
+            Sign Up
+          </h2>
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
               {error}
@@ -465,7 +501,13 @@ const Signup = () => {
               />
             </div>
           </div>
-
+          <AppDropdown
+            label="Role"
+            items={ROLES}
+            selectedValue={formData.role}
+            onValueChange={(v) => updateField("role", v)}
+            error={fieldErrors.role}
+          />
           <AppDropdown
             label="College Name"
             items={COLLEGE_NAMES}
@@ -474,12 +516,15 @@ const Signup = () => {
             error={fieldErrors.college_name}
           />
 
-          <InputField
-            value={formData.roll_no}
-            onChange={(v) => updateField("roll_no", v)}
-            placeholder="Roll Number"
-            error={fieldErrors.roll_no}
-          />
+          {/* Only show Roll Number if not Staff */}
+          {formData.role !== "Staff" && (
+            <InputField
+              value={formData.roll_no}
+              onChange={(v) => updateField("roll_no", v)}
+              placeholder="Roll Number"
+              error={fieldErrors.roll_no}
+            />
+          )}
 
           <AppDropdown
             label="Gender"
@@ -487,15 +532,6 @@ const Signup = () => {
             selectedValue={formData.gender}
             onValueChange={(v) => updateField("gender", v)}
             error={fieldErrors.gender}
-          />
-
-          <AppDropdown
-            label="Role"
-            items={ROLES}
-            selectedValue={formData.role}
-            onValueChange={(
-              v) => updateField("role", v)}
-            error={fieldErrors.role}
           />
 
           <AppDropdown
@@ -522,22 +558,27 @@ const Signup = () => {
               error={fieldErrors.course_start_year}
               type="number"
             />
-            <InputField
-              value={formData.course_end_year}
-              onChange={(v) => updateField("course_end_year", v)}
-              placeholder="End Year"
-              error={fieldErrors.course_end_year}
-              type="number"
-            />
+            {formData.role !== "Staff" && (
+              <InputField
+                value={formData.course_end_year}
+                onChange={(v) => updateField("course_end_year", v)}
+                placeholder="End Year"
+                error={fieldErrors.course_end_year}
+                type="number"
+              />
+            )}
           </div>
 
-          <InputField
-            value={formData.passed_out_year}
-            onChange={(v) => updateField("passed_out_year", v)}
-            placeholder="Passed Out Year"
-            error={fieldErrors.passed_out_year}
-            type="number"
-          />
+          {/* Only show Passed Out Year if not Staff */}
+          {formData.role !== "Staff" && (
+            <InputField
+              value={formData.passed_out_year}
+              onChange={(v) => updateField("passed_out_year", v)}
+              placeholder="Passed Out Year"
+              error={fieldErrors.passed_out_year}
+              type="number"
+            />
+          )}
 
           <div className="mb-4">
             <input
@@ -547,10 +588,12 @@ const Signup = () => {
               }`}
               value={formData.date_of_birth}
               onChange={(e) => updateField("date_of_birth", e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
+              max={new Date().toISOString().split("T")[0]}
             />
             {fieldErrors.date_of_birth && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.date_of_birth}</p>
+              <p className="text-red-500 text-sm mt-1">
+                {fieldErrors.date_of_birth}
+              </p>
             )}
           </div>
 
@@ -563,7 +606,11 @@ const Signup = () => {
                 : "bg-green-600 hover:bg-green-700"
             }`}
           >
-            {loading ? "Sending..." : resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Send OTP"}
+            {loading
+              ? "Sending..."
+              : resendTimer > 0
+              ? `Resend OTP in ${resendTimer}s`
+              : "Send OTP"}
           </button>
 
           {isOtpSent && (
@@ -607,7 +654,10 @@ const Signup = () => {
           <div className="text-center mt-6">
             <p className="text-gray-600">
               Already have an account?{" "}
-              <a href="/login" className="text-blue-600 font-bold hover:underline">
+              <a
+                href="/login"
+                className="text-blue-600 font-bold hover:underline"
+              >
                 Login
               </a>
             </p>

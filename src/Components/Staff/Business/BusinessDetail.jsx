@@ -307,7 +307,7 @@ const BusinessDetail = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button
-            onClick={() => navigate('/staff/business')}
+            onClick={() => navigate('/staff/BusinessDirectory')}
             className="mr-4 text-gray-600 hover:text-gray-800"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />

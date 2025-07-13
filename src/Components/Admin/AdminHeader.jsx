@@ -392,7 +392,7 @@ export default function AdminHeader() {
       <div className="h-16"></div>
 
       {/* Custom scrollbar styles */}
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;

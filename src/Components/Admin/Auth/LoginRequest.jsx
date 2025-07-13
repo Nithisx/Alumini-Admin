@@ -20,7 +20,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function RegisterRequest() {
-  const [requests, setRequests] = useState([]);
+  const [requests, setRequests] = useState([]); // Initialize as empty array
   const [message, setMessage] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
@@ -36,7 +36,20 @@ export default function RegisterRequest() {
     fetch(API_URL)
       .then((response) => response.json())
       .then((data) => {
-        setRequests(data);
+        // Handle paginated response format
+        if (data && data.results && Array.isArray(data.results)) {
+          setRequests(data.results);
+        } else if (Array.isArray(data)) {
+          // Fallback if API directly returns an array
+          setRequests(data);
+        } else {
+          console.error("API did not return an expected format:", data);
+          setRequests([]); // Set to empty array as fallback
+          showMessage({
+            text: "Invalid data format received. Please try again.",
+            type: "error",
+          });
+        }
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
@@ -65,6 +78,7 @@ export default function RegisterRequest() {
         body: JSON.stringify({ email }),
       });
       showMessage({ text: "Request accepted successfully!", type: "success" });
+      // Filter out the accepted request
       setRequests((prev) => prev.filter((req) => req.id !== id));
     } catch (error) {
       console.error("Error accepting request:", error);
@@ -88,6 +102,7 @@ export default function RegisterRequest() {
         body: JSON.stringify({ email }),
       });
       showMessage({ text: "Request rejected successfully!", type: "error" });
+      // Filter out the declined request
       setRequests((prev) => prev.filter((req) => req.id !== id));
     } catch (error) {
       console.error("Error declining request:", error);
@@ -458,7 +473,7 @@ export default function RegisterRequest() {
           {/* Mobile View */}
           <div className="block lg:hidden">
             <div className="p-4">
-              {requests.length === 0 ? (
+              {!requests || requests.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-gray-500 py-12">
                   <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-full p-4 mb-3">
                     <FontAwesomeIcon
@@ -474,7 +489,7 @@ export default function RegisterRequest() {
                   </p>
                 </div>
               ) : (
-                requests.map((req) => <MobileCard key={req.id} req={req} />)
+                Array.isArray(requests) && requests.map((req) => <MobileCard key={req.id} req={req} />)
               )}
             </div>
           </div>
@@ -526,357 +541,358 @@ export default function RegisterRequest() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-green-50">
-                {requests.map((req) => (
-                  <React.Fragment key={req.id}>
-                    <tr
-                      className="table-row-animate card-hover border-l-4 border-l-transparent hover:border-l-green-400"
-                      onClick={() => toggleRowExpansion(req.id)}
-                    >
-                      <td className="px-6 py-6">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-12 w-12">
-                            <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 flex items-center justify-center">
+                {Array.isArray(requests) && requests.length > 0 ? (
+                  requests.map((req) => (
+                    <React.Fragment key={req.id}>
+                      <tr
+                        className="table-row-animate card-hover border-l-4 border-l-transparent hover:border-l-green-400"
+                        onClick={() => toggleRowExpansion(req.id)}
+                      >
+                        <td className="px-6 py-6">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-12 w-12">
+                              <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 flex items-center justify-center">
+                                <FontAwesomeIcon
+                                  icon={faUser}
+                                  className="text-white text-lg"
+                                />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-lg font-semibold text-gray-900 flex items-center">
+                                {req.username ||
+                                  `${req.first_name} ${req.last_name}`.trim() ||
+                                  "N/A"}
+                                <FontAwesomeIcon
+                                  icon={
+                                    expandedRows[req.id]
+                                      ? faChevronUp
+                                      : faChevronDown
+                                  }
+                                  className="ml-2 text-green-500 text-sm transition-transform duration-200"
+                                />
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Click to view details
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="space-y-2">
+                            <div className="flex items-center text-sm text-gray-700">
                               <FontAwesomeIcon
-                                icon={faUser}
-                                className="text-white text-lg"
+                                icon={faEnvelope}
+                                className="mr-2 text-green-500"
                               />
+                              {req.email}
                             </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-lg font-semibold text-gray-900 flex items-center">
-                              {req.username ||
-                                `${req.first_name} ${req.last_name}`.trim() ||
-                                "N/A"}
+                            <div className="flex items-center text-sm text-gray-700">
                               <FontAwesomeIcon
-                                icon={
-                                  expandedRows[req.id]
-                                    ? faChevronUp
-                                    : faChevronDown
-                                }
-                                className="ml-2 text-green-500 text-sm transition-transform duration-200"
+                                icon={faPhone}
+                                className="mr-2 text-green-500"
                               />
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Click to view details
+                              {req.phone}
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <div className="space-y-2">
-                          <div className="flex items-center text-sm text-gray-700">
-                            <FontAwesomeIcon
-                              icon={faEnvelope}
-                              className="mr-2 text-green-500"
-                            />
-                            {req.email}
-                          </div>
-                          <div className="flex items-center text-sm text-gray-700">
-                            <FontAwesomeIcon
-                              icon={faPhone}
-                              className="mr-2 text-green-500"
-                            />
-                            {req.phone}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
-                          <FontAwesomeIcon icon={faUserTag} className="mr-2" />
-                          {req.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-6 text-sm text-gray-700 font-medium">
-                        {req.college_name}
-                      </td>
-                      <td className="px-6 py-6 text-sm text-gray-900">
-                        <div
-                          className="flex justify-center space-x-3"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button
-                            onClick={() => handleAccept(req.id, req.email)}
-                            disabled={processing}
-                            className="btn-animate px-5 py-2 bg-gradient-to-r from-green-400 to-emerald-400 text-white rounded-xl hover:from-green-500 hover:to-emerald-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                        </td>
+                        <td className="px-6 py-6">
+                          <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
+                            <FontAwesomeIcon icon={faUserTag} className="mr-2" />
+                            {req.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-6 text-sm text-gray-700 font-medium">
+                          {req.college_name}
+                        </td>
+                        <td className="px-6 py-6 text-sm text-gray-900">
+                          <div
+                            className="flex justify-center space-x-3"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <FontAwesomeIcon
-                              icon={processing ? faSpinner : faCheck}
-                              className={`mr-2 ${
-                                processing ? "animate-spin" : ""
-                              }`}
-                            />
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleDecline(req.id, req.email)}
-                            disabled={processing}
-                            className="btn-animate px-5 py-2 bg-gradient-to-r from-pink-400 to-red-400 text-white rounded-xl hover:from-pink-500 hover:to-red-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                          >
-                            <FontAwesomeIcon
-                              icon={processing ? faSpinner : faTimes}
-                              className={`mr-2 ${
-                                processing ? "animate-spin" : ""
-                              }`}
-                            />
-                            Decline
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                            <button
+                              onClick={() => handleAccept(req.id, req.email)}
+                              disabled={processing}
+                              className="btn-animate px-5 py-2 bg-gradient-to-r from-green-400 to-emerald-400 text-white rounded-xl hover:from-green-500 hover:to-emerald-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                            >
+                              <FontAwesomeIcon
+                                icon={processing ? faSpinner : faCheck}
+                                className={`mr-2 ${
+                                  processing ? "animate-spin" : ""
+                                }`}
+                              />
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleDecline(req.id, req.email)}
+                              disabled={processing}
+                              className="btn-animate px-5 py-2 bg-gradient-to-r from-pink-400 to-red-400 text-white rounded-xl hover:from-pink-500 hover:to-red-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                            >
+                              <FontAwesomeIcon
+                                icon={processing ? faSpinner : faTimes}
+                                className={`mr-2 ${
+                                  processing ? "animate-spin" : ""
+                                }`}
+                              />
+                              Decline
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
 
-                    {/* Dropdown Content */}
-                    {expandedRows[req.id] && (
-                      <tr>
-                        <td colSpan="5" className="px-0 py-0">
-                          <div className="dropdown-content bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-100">
-                            <div className="px-8 py-6">
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                  <div className="flex items-center mb-3">
-                                    <FontAwesomeIcon
-                                      icon={faUser}
-                                      className="text-green-500 text-lg mr-3"
-                                    />
-                                    <h4 className="font-bold text-green-700">
-                                      Personal Information
-                                    </h4>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        First Name:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.first_name || "N/A"}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Last Name:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.last_name || "N/A"}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Username:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.username || "N/A"}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Gender:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.gender || "N/A"}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Date of Birth:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.date_of_birth || "N/A"}
-                                      </span>
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                  <div className="flex items-center mb-3">
-                                    <FontAwesomeIcon
-                                      icon={faIdCard}
-                                      className="text-green-500 text-lg mr-3"
-                                    />
-                                    <h4 className="font-bold text-green-700">
-                                      Student ID
-                                    </h4>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Roll Number:
-                                      </span>{" "}
-                                      <span className="text-gray-800 font-mono bg-gray-100 px-2 py-1 rounded">
-                                        {req.roll_no || "N/A"}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Chapter:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.chapter || "N/A"}
-                                      </span>
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                  <div className="flex items-center mb-3">
-                                    <FontAwesomeIcon
-                                      icon={faGraduationCap}
-                                      className="text-green-500 text-lg mr-3"
-                                    />
-                                    <h4 className="font-bold text-green-700">
-                                      Academic Details
-                                    </h4>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Course:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.course || "N/A"}
-                                      </span>
-                                    </p>
-                                    <div className="flex items-center">
-                                      <FontAwesomeIcon
-                                        icon={faCalendarAlt}
-                                        className="text-green-500 mr-2"
-                                      />
-                                      <span className="font-semibold text-gray-600">
-                                        Start Year:
-                                      </span>
-                                      <span className="ml-2 text-gray-800 font-semibold">
-                                        {req.course_start_year || "N/A"}
-                                      </span>
-                                    </div>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        End Year:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.course_end_year || "N/A"}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Passed Out Year:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.passed_out_year || "N/A"}
-                                      </span>
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                  <div className="flex items-center mb-3">
-                                    <FontAwesomeIcon
-                                      icon={faEnvelope}
-                                      className="text-green-500 text-lg mr-3"
-                                    />
-                                    <h4 className="font-bold text-green-700">
-                                      Contact Details
-                                    </h4>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Primary Email:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.email}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Secondary Email:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.secondary_email || "N/A"}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Phone:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.phone}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Location:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {req.current_location || "N/A"}
-                                      </span>
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {req.role !== "Student" && (
+                      {/* Dropdown Content */}
+                      {expandedRows[req.id] && (
+                        <tr>
+                          <td colSpan="5" className="px-0 py-0">
+                            <div className="dropdown-content bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-100">
+                              <div className="px-8 py-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                   <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
                                     <div className="flex items-center mb-3">
                                       <FontAwesomeIcon
-                                        icon={faUniversity}
+                                        icon={faUser}
                                         className="text-green-500 text-lg mr-3"
                                       />
                                       <h4 className="font-bold text-green-700">
-                                        Professional Info
+                                        Personal Information
                                       </h4>
                                     </div>
                                     <div className="space-y-2">
                                       <p>
                                         <span className="font-semibold text-gray-600">
-                                          Experience:
+                                          First Name:
                                         </span>{" "}
                                         <span className="text-gray-800">
-                                          {req.work_experience
-                                            ? `${req.work_experience} years`
-                                            : "N/A"}
+                                          {req.first_name || "N/A"}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Last Name:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.last_name || "N/A"}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Username:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.username || "N/A"}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Gender:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.gender || "N/A"}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Date of Birth:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.date_of_birth || "N/A"}
                                         </span>
                                       </p>
                                     </div>
                                   </div>
-                                )}
 
-                                <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                  <div className="flex items-center mb-3">
-                                    <FontAwesomeIcon
-                                      icon={faCalendarAlt}
-                                      className="text-green-500 text-lg mr-3"
-                                    />
-                                    <h4 className="font-bold text-green-700">
-                                      Registration Status
-                                    </h4>
+                                  <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
+                                    <div className="flex items-center mb-3">
+                                      <FontAwesomeIcon
+                                        icon={faIdCard}
+                                        className="text-green-500 text-lg mr-3"
+                                      />
+                                      <h4 className="font-bold text-green-700">
+                                        Student ID
+                                      </h4>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Roll Number:
+                                        </span>{" "}
+                                        <span className="text-gray-800 font-mono bg-gray-100 px-2 py-1 rounded">
+                                          {req.roll_no || "N/A"}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Chapter:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.chapter || "N/A"}
+                                        </span>
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Created At:
-                                      </span>{" "}
-                                      <span className="text-gray-800">
-                                        {new Date(
-                                          req.created_at
-                                        ).toLocaleDateString()}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold text-gray-600">
-                                        Status:
-                                      </span>{" "}
-                                      <span className="text-red-600 font-semibold">
-                                        Pending Approval
-                                      </span>
-                                    </p>
+
+                                  <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
+                                    <div className="flex items-center mb-3">
+                                      <FontAwesomeIcon
+                                        icon={faGraduationCap}
+                                        className="text-green-500 text-lg mr-3"
+                                      />
+                                      <h4 className="font-bold text-green-700">
+                                        Academic Details
+                                      </h4>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Course:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.course || "N/A"}
+                                        </span>
+                                      </p>
+                                      <div className="flex items-center">
+                                        <FontAwesomeIcon
+                                          icon={faCalendarAlt}
+                                          className="text-green-500 mr-2"
+                                        />
+                                        <span className="font-semibold text-gray-600">
+                                          Start Year:
+                                        </span>
+                                        <span className="ml-2 text-gray-800 font-semibold">
+                                          {req.course_start_year || "N/A"}
+                                        </span>
+                                      </div>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          End Year:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.course_end_year || "N/A"}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Passed Out Year:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.passed_out_year || "N/A"}
+                                        </span>
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
+                                    <div className="flex items-center mb-3">
+                                      <FontAwesomeIcon
+                                        icon={faEnvelope}
+                                        className="text-green-500 text-lg mr-3"
+                                      />
+                                      <h4 className="font-bold text-green-700">
+                                        Contact Details
+                                      </h4>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Primary Email:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.email}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Secondary Email:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.secondary_email || "N/A"}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Phone:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.phone}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Location:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {req.current_location || "N/A"}
+                                        </span>
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {req.role !== "Student" && (
+                                    <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
+                                      <div className="flex items-center mb-3">
+                                        <FontAwesomeIcon
+                                          icon={faUniversity}
+                                          className="text-green-500 text-lg mr-3"
+                                        />
+                                        <h4 className="font-bold text-green-700">
+                                          Professional Info
+                                        </h4>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <p>
+                                          <span className="font-semibold text-gray-600">
+                                            Experience:
+                                          </span>{" "}
+                                          <span className="text-gray-800">
+                                            {req.work_experience
+                                              ? `${req.work_experience} years`
+                                              : "N/A"}
+                                          </span>
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
+                                    <div className="flex items-center mb-3">
+                                      <FontAwesomeIcon
+                                        icon={faCalendarAlt}
+                                        className="text-green-500 text-lg mr-3"
+                                      />
+                                      <h4 className="font-bold text-green-700">
+                                        Registration Status
+                                      </h4>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Created At:
+                                        </span>{" "}
+                                        <span className="text-gray-800">
+                                          {new Date(
+                                            req.created_at
+                                          ).toLocaleDateString()}
+                                        </span>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold text-gray-600">
+                                          Status:
+                                        </span>{" "}
+                                        <span className="text-red-600 font-semibold">
+                                          Pending Approval
+                                        </span>
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-                {requests.length === 0 && (
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
                   <tr>
                     <td colSpan="5" className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center text-gray-500">

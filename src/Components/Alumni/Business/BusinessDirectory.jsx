@@ -288,7 +288,7 @@ const BusinessDirectory = () => {
                 Pending Requests
               </button>
               <Link
-                to="/admin/business/add"
+                to="/alumni/business/add"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
               >
                 <Plus className="w-4 h-4" />
@@ -396,14 +396,14 @@ const BusinessDirectory = () => {
                           <div className="flex-1">
                             <div className="flex justify-between items-start mb-2">
                               <Link
-                                to={`/admin/business/${business.id}`}
+                                to={`/alumni/business/${business.id}`}
                                 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition"
                               >
                                 {business.business_name}
                               </Link>
                               <div className="flex space-x-2">
                                 <Link
-                                  to={`/admin/business/${business.id}`}
+                                  to={`/alumni/business/${business.id}`}
                                   className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
                                 >
                                   <Edit className="w-4 h-4" />
