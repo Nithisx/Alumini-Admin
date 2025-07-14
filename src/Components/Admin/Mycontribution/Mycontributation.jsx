@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { ArrowLeft } from 'lucide-react'
 import Jobs from "./Jobcontribution"
 import Events from "./Eventcontributation"
+import News from "./Newscontribution"
 
 // Mock COLORS object since we don't have the theme file
 const COLORS = {
@@ -49,11 +50,23 @@ const MyContributions = () => {
         >
           Events
         </button>
+        <button 
+          className={`flex-1 py-3 text-center ${
+            activeTab === 'news' 
+              ? 'border-b-2 border-blue-500 text-blue-500 font-bold' 
+              : 'text-gray-500'
+          }`}
+          onClick={() => setActiveTab('news')}
+        >
+          News
+        </button>
       </div>
       
       {/* Content */}
       <div className="flex-1">
-        {activeTab === 'jobs' ? <Jobs /> : <Events />}
+        {activeTab === 'jobs' && <Jobs />}
+        {activeTab === 'events' && <Events />}
+        {activeTab === 'news' && <News />}
       </div>
     </div>
   )

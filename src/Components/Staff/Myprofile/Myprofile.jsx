@@ -122,12 +122,26 @@ const ProfileScreen = () => {
       })
       if (!response.ok) throw new Error("Failed to fetch profile.")
       const data = await response.json()
+      
+      // Safe JSON parsing function
+      const safeJsonParse = (value, fallback) => {
+        if (typeof value === "string" && value.trim()) {
+          try {
+            return JSON.parse(value)
+          } catch (e) {
+            console.warn("Failed to parse JSON:", value, e)
+            return fallback
+          }
+        }
+        return value || fallback
+      }
+      
       setProfile((prev) => ({
         ...prev,
         ...data,
-        experience: typeof data.experience === "string" ? JSON.parse(data.experience) : data.experience || {},
-        social_links: typeof data.social_links === "string" ? JSON.parse(data.social_links) : data.social_links || {},
-        Worked_in: typeof data.Worked_in === "string" ? JSON.parse(data.Worked_in) : data.Worked_in || [],
+        experience: safeJsonParse(data.experience, {}),
+        social_links: safeJsonParse(data.social_links, {}),
+        Worked_in: safeJsonParse(data.Worked_in, []),
       }))
     } catch (err) {
       setError(err.message || "Failed to fetch profile.")
