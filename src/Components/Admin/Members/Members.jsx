@@ -207,6 +207,7 @@ export default function MembersPage() {
   const [courseFilter, setCourseFilter] = useState("");
   const [collegeNameFilter, setCollegeNameFilter] = useState("");
   const [currentWorkFilter, setCurrentWorkFilter] = useState("");
+  const [chapterFilter, setChapterFilter] = useState(""); // Add chapter filter state
   const [showFilters, setShowFilters] = useState(false);
 
   // Store dropdown options
@@ -219,6 +220,7 @@ export default function MembersPage() {
     role: [],
     passed_out_year: [],
     course: [],
+    current_location: [], // Add current_location for chapters
   });
 
   const [loading, setLoading] = useState(true);
@@ -248,11 +250,6 @@ export default function MembersPage() {
     }
   };
 
-  // Fetch dropdown options on component mount
-  useEffect(() => {
-    fetchDropdownFilters();
-  }, []);
-
   const fetchMembers = async () => {
     setLoading(true);
     const params = new URLSearchParams({
@@ -276,6 +273,7 @@ export default function MembersPage() {
     if (courseFilter) params.append("course", courseFilter);
     if (collegeNameFilter) params.append("college_name", collegeNameFilter);
     if (currentWorkFilter) params.append("current_work", currentWorkFilter);
+    if (chapterFilter) params.append("current_location", chapterFilter); 
 
     try {
       const response = await axios.get(`${API_URL}?${params.toString()}`, {
@@ -290,12 +288,65 @@ export default function MembersPage() {
       setMembers(results);
       setFilteredTotal(count);
       setTotalPages(Math.ceil(count / pageSize));
+      
+      // Extract unique current_location values for chapter filter
+      if (results && results.length > 0) {
+        const currentLocations = [...new Set(
+          results
+            .map(member => member.current_location)
+            .filter(location => location && location.trim() !== "")
+        )].sort();
+        
+        // Update dropdown filters with current_location options
+        setDropdownFilters(prev => ({
+          ...prev,
+          current_location: currentLocations
+        }));
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error("Error fetching members:", error);
       setLoading(false);
     }
   };
+
+  // Fetch all members for chapter filter options (without pagination)
+  const fetchChapterOptions = async () => {
+    try {
+      // Fetch a larger sample to get more chapter options
+      const response = await axios.get(`${API_URL}?page_size=1000`, {
+        headers: {
+          Authorization: `Token ${TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const { results } = response.data;
+      
+      if (results && results.length > 0) {
+        const currentLocations = [...new Set(
+          results
+            .map(member => member.current_location)
+            .filter(location => location && location.trim() !== "")
+        )].sort();
+        
+        // Update dropdown filters with comprehensive current_location options
+        setDropdownFilters(prev => ({
+          ...prev,
+          current_location: currentLocations
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching chapter options:", error);
+    }
+  };
+
+  // Fetch dropdown options on component mount
+  useEffect(() => {
+    fetchDropdownFilters();
+    fetchChapterOptions(); // Fetch chapter options separately
+  }, []);
 
   // When filters change, always reset page to 1
   useEffect(() => {
@@ -315,6 +366,7 @@ export default function MembersPage() {
     courseFilter,
     collegeNameFilter,
     currentWorkFilter,
+    chapterFilter, // Add chapter filter to dependencies
   ]);
 
   // Whenever page or filters change, fetch data
@@ -337,6 +389,7 @@ export default function MembersPage() {
     courseFilter,
     collegeNameFilter,
     currentWorkFilter,
+    chapterFilter, // Add chapter filter to dependencies
   ]);
 
   // Handle page change
@@ -365,6 +418,7 @@ export default function MembersPage() {
     setCourseFilter("");
     setCollegeNameFilter("");
     setCurrentWorkFilter("");
+    setChapterFilter(""); // Add chapter filter to reset
     setCurrentPage(1);
   };
 
@@ -530,6 +584,32 @@ export default function MembersPage() {
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4M8 7h8M8 7H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2"
+                      />
+                    </svg>
+                  }
+                />
+
+                {/* Chapter Filter - Add this new filter */}
+                <AutocompleteInput
+                  id="chapter-filter"
+                  label="Chapter"
+                  placeholder="Select chapter..."
+                  value={chapterFilter}
+                  onChange={setChapterFilter}
+                  filterType="chapter"
+                  options={dropdownFilters.current_location || []}
+                  icon={
+                    <svg
+                      className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                       />
                     </svg>
                   }
@@ -724,6 +804,7 @@ export default function MembersPage() {
               courseFilter ||
               collegeNameFilter ||
               currentWorkFilter ||
+              chapterFilter || // Add chapter filter to filtered indicator
               genderFilter ||
               courseEndYearFilter ||
               companyFilter) && (
@@ -811,6 +892,28 @@ export default function MembersPage() {
                       </h3>
 
                       <div className="space-y-1.5 sm:space-y-2">
+                        {/* Add Chapter/Current Location display */}
+                        {member.current_location && (
+                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                            <svg
+                              className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                            <span className="truncate" title={member.current_location}>
+                              {member.current_location}
+                            </span>
+                          </div>
+                        )}
+
                         {member.city && (
                           <div className="flex items-center text-xs sm:text-sm text-gray-600">
                             <svg
