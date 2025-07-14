@@ -20,11 +20,15 @@ import {
   AlertCircle,
   Loader,
   Key,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 
 // API Configuration
 const API_URL = "https://xyndrix.me/api/profile/"
 const FORGOT_PASSWORD_URL = "https://xyndrix.me/api/forgot-password/"
+const CHANGE_PASSWORD_URL = "https://xyndrix.me/api/change-password/"
 const BASE_URL = "https://xyndrix.me/api"
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
@@ -80,6 +84,21 @@ const ProfileScreen = () => {
   const [saving, setSaving] = useState(false)
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState("")
+
+  // New state for change password modal and functionality
+  const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false)
+  const [changePasswordLoading, setChangePasswordLoading] = useState(false)
+  const [changePasswordMessage, setChangePasswordMessage] = useState({ text: "", type: "" })
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: "",
+  })
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  })
 
   const tabs = ["Personal", "Work", "Contact", "Social"]
   const editTabs = ["Basic Info", "Address", "Experience"]
@@ -247,6 +266,91 @@ const ProfileScreen = () => {
     }
   }
 
+  // Handle change password form input changes
+  const handleChangePasswordInput = (field, value) => {
+    setChangePasswordForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  // Toggle password visibility
+  const togglePasswordVisibility = (field) => {
+    setShowPassword((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }))
+  }
+
+  // Handle change password submission
+  const handleChangePassword = async () => {
+    // Basic validation
+    if (!changePasswordForm.current_password) {
+      setChangePasswordMessage({ text: "Current password is required", type: "error" })
+      return
+    }
+
+    if (!changePasswordForm.new_password) {
+      setChangePasswordMessage({ text: "New password is required", type: "error" })
+      return
+    }
+
+    if (changePasswordForm.new_password.length < 8) {
+      setChangePasswordMessage({ text: "Password must be at least 8 characters", type: "error" })
+      return
+    }
+
+    if (changePasswordForm.new_password !== changePasswordForm.confirm_password) {
+      setChangePasswordMessage({ text: "Passwords don't match", type: "error" })
+      return
+    }
+
+    setChangePasswordLoading(true)
+    setChangePasswordMessage({ text: "", type: "" })
+
+    try {
+      const token = localStorage.getItem("Token")
+      if (!token) throw new Error("Authentication required.")
+
+      await axios.post(
+        CHANGE_PASSWORD_URL,
+        {
+          old_password: changePasswordForm.current_password,
+          new_password: changePasswordForm.new_password,
+        },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      )
+
+      setChangePasswordMessage({ text: "Password changed successfully", type: "success" })
+
+      // Clear form after successful change
+      setChangePasswordForm({
+        current_password: "",
+        new_password: "",
+        confirm_password: "",
+      })
+
+      // Close modal after 2 seconds on success
+      setTimeout(() => {
+        setChangePasswordModalVisible(false)
+        setChangePasswordMessage({ text: "", type: "" })
+      }, 2000)
+    } catch (error) {
+      console.error("Change password error:", error)
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to change password. Please try again."
+      setChangePasswordMessage({ text: errorMessage, type: "error" })
+    } finally {
+      setChangePasswordLoading(false)
+    }
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 0: // Personal
@@ -286,16 +390,25 @@ const ProfileScreen = () => {
               </div>
             </div>
 
-            {/* Forgot Password Section */}
+            {/* Password Management Section */}
             <div className="pt-3 sm:pt-4 border-t border-green-200">
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex items-start space-x-3">
-                  <Key className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-green-700 uppercase mb-1">Password Reset</p>
-                    <p className="text-xs sm:text-sm text-green-600">Reset your account password</p>
-                  </div>
+              <div className="flex items-start space-x-3 mb-4">
+                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Password Management</p>
+                  <p className="text-xs sm:text-sm text-green-600">Manage your account security settings</p>
                 </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setChangePasswordModalVisible(true)}
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-green-700 text-white rounded-lg font-medium text-sm hover:bg-green-800 disabled:opacity-50 flex items-center justify-center space-x-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>Change Password</span>
+                </button>
+
                 <button
                   onClick={handleForgotPassword}
                   disabled={forgotPasswordLoading || !profile.email}
@@ -306,7 +419,7 @@ const ProfileScreen = () => {
                 </button>
               </div>
 
-              {/* Success Message */}
+              {/* Success Message for Forgot Password */}
               {forgotPasswordMessage && (
                 <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
                   <p className="text-green-800 text-sm font-medium">{forgotPasswordMessage}</p>
@@ -652,6 +765,154 @@ const ProfileScreen = () => {
     }
   }
 
+  // Change Password Modal
+  const renderChangePasswordModal = () => {
+    if (!changePasswordModalVisible) return null
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+          <div className="p-5 bg-green-600 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center">
+                <Lock className="w-5 h-5 mr-2" />
+                Change Password
+              </h3>
+              <button
+                onClick={() => setChangePasswordModalVisible(false)}
+                className="text-white hover:text-green-200 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-4">
+            {/* Current Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword.current ? "text" : "password"}
+                  value={changePasswordForm.current_password}
+                  onChange={(e) => handleChangePasswordInput("current_password", e.target.value)}
+                  className="w-full pr-10 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Enter your current password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => togglePasswordVisibility("current")}
+                >
+                  {showPassword.current ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword.new ? "text" : "password"}
+                  value={changePasswordForm.new_password}
+                  onChange={(e) => handleChangePasswordInput("new_password", e.target.value)}
+                  className="w-full pr-10 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Enter your new password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => togglePasswordVisibility("new")}
+                >
+                  {showPassword.new ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Password must be at least 8 characters</p>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword.confirm ? "text" : "password"}
+                  value={changePasswordForm.confirm_password}
+                  onChange={(e) => handleChangePasswordInput("confirm_password", e.target.value)}
+                  className="w-full pr-10 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Confirm your new password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => togglePasswordVisibility("confirm")}
+                >
+                  {showPassword.confirm ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Error/Success Message */}
+            {changePasswordMessage.text && (
+              <div
+                className={`p-3 rounded-lg ${
+                  changePasswordMessage.type === "success"
+                    ? "bg-green-100 text-green-800 border border-green-300"
+                    : "bg-red-100 text-red-800 border border-red-300"
+                }`}
+              >
+                <p className="text-sm font-medium">{changePasswordMessage.text}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="px-5 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={() => setChangePasswordModalVisible(false)}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleChangePassword}
+              disabled={changePasswordLoading}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium flex items-center justify-center disabled:opacity-50"
+            >
+              {changePasswordLoading ? (
+                <>
+                  <Loader className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Change Password"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-green-50 flex items-center justify-center">
@@ -680,7 +941,6 @@ const ProfileScreen = () => {
   return (
     <div className="min-h-screen bg-green-50 py-4 sm:py-6 lg:py-8">
       <div className="max-w-full lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-
         {/* Profile Header */}
         <div className="bg-white text-center py-4 sm:py-5 mb-3 sm:mb-4 shadow-sm rounded-lg">
           <div className="relative inline-block">
@@ -709,8 +969,8 @@ const ProfileScreen = () => {
               key={index}
               onClick={() => setActiveTab(index)}
               className={`flex-1 min-w-0 py-2.5 sm:py-3 text-center rounded text-xs sm:text-sm font-medium whitespace-nowrap px-2 ${
-                activeTab === index 
-                  ? "bg-green-600 text-white font-bold shadow-sm" 
+                activeTab === index
+                  ? "bg-green-600 text-white font-bold shadow-sm"
                   : "text-green-700 hover:bg-green-50 transition-colors"
               }`}
             >
@@ -730,8 +990,8 @@ const ProfileScreen = () => {
             <div className="bg-green-50 rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
               <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 bg-green-600 rounded-t-lg">
-                <button 
-                  onClick={() => setModalVisible(false)} 
+                <button
+                  onClick={() => setModalVisible(false)}
                   className="p-1 hover:bg-green-700 rounded-full transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -760,8 +1020,8 @@ const ProfileScreen = () => {
                     key={index}
                     onClick={() => setEditPage(index)}
                     className={`flex-1 min-w-0 py-2 sm:py-3 text-center rounded text-xs font-medium whitespace-nowrap px-1 ${
-                      editPage === index 
-                        ? "bg-green-600 text-white font-bold" 
+                      editPage === index
+                        ? "bg-green-600 text-white font-bold"
                         : "text-green-700 hover:bg-green-50 transition-colors"
                     }`}
                   >
@@ -777,6 +1037,9 @@ const ProfileScreen = () => {
             </div>
           </div>
         )}
+
+        {/* Change Password Modal */}
+        {renderChangePasswordModal()}
 
         {/* Fixed floating action button */}
         <button
