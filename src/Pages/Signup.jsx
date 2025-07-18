@@ -372,6 +372,10 @@ const Signup = () => {
         const blob = await response.blob();
         payload.append("profile_photo", blob, "profile_photo.jpg");
       }
+      // Always send the role field, even if it's 'Student'
+      if (formData.role) {
+        payload.set("role", formData.role);
+      }
 
       console.log("Sending signup request...");
       const response = await fetch(SIGNUP_URL, {
