@@ -12,36 +12,39 @@ const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
 // Placeholder image service
 const getInitialsAvatar = (firstName, lastName) => {
   if (!firstName && !lastName) return placeholder;
-  
+
   // Get initials from name
-  const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-  
+  const initials = `${firstName?.charAt(0) || ""}${
+    lastName?.charAt(0) || ""
+  }`.toUpperCase();
+
   // Generate a deterministic color based on name
   const colors = [
-    '#4299E1', // blue-500
-    '#48BB78', // green-500
-    '#ED8936', // orange-500
-    '#9F7AEA', // purple-500
-    '#F56565', // red-500
-    '#38B2AC', // teal-500
-    '#ECC94B', // yellow-500
-    '#667EEA', // indigo-500
-    '#ED64A6'  // pink-500
+    "#4299E1", // blue-500
+    "#48BB78", // green-500
+    "#ED8936", // orange-500
+    "#9F7AEA", // purple-500
+    "#F56565", // red-500
+    "#38B2AC", // teal-500
+    "#ECC94B", // yellow-500
+    "#667EEA", // indigo-500
+    "#ED64A6", // pink-500
   ];
-  
+
   // Simple hash function to get consistent color
   const hashCode = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = (hash << 5) - hash + str.charCodeAt(i);
       hash = hash & hash; // Convert to 32bit integer
     }
     return hash;
   };
-  
-  const colorIndex = Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length;
+
+  const colorIndex =
+    Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length;
   const backgroundColor = colors[colorIndex];
-  
+
   // Create SVG for avatar
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
@@ -50,11 +53,10 @@ const getInitialsAvatar = (firstName, lastName) => {
         fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
     </svg>
   `;
-  
+
   // Convert SVG to data URL
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
-
 
 const AutocompleteInput = ({
   id,
@@ -207,6 +209,7 @@ export default function MembersPage() {
   const [courseFilter, setCourseFilter] = useState("");
   const [collegeNameFilter, setCollegeNameFilter] = useState("");
   const [currentWorkFilter, setCurrentWorkFilter] = useState("");
+  const [emailFilter, setEmailFilter] = useState("");
   const [chapterFilter, setChapterFilter] = useState(""); // Add chapter filter state
   const [showFilters, setShowFilters] = useState(false);
 
@@ -220,6 +223,7 @@ export default function MembersPage() {
     role: [],
     passed_out_year: [],
     course: [],
+    email: [],
     current_location: [], // Add current_location for chapters
   });
 
@@ -273,8 +277,8 @@ export default function MembersPage() {
     if (courseFilter) params.append("course", courseFilter);
     if (collegeNameFilter) params.append("college_name", collegeNameFilter);
     if (currentWorkFilter) params.append("current_work", currentWorkFilter);
-    if (chapterFilter) params.append("current_location", chapterFilter); 
-
+    if (chapterFilter) params.append("current_location", chapterFilter);
+    if (emailFilter) params.append("email", emailFilter);
     try {
       const response = await axios.get(`${API_URL}?${params.toString()}`, {
         headers: {
@@ -288,22 +292,24 @@ export default function MembersPage() {
       setMembers(results);
       setFilteredTotal(count);
       setTotalPages(Math.ceil(count / pageSize));
-      
+
       // Extract unique current_location values for chapter filter
       if (results && results.length > 0) {
-        const currentLocations = [...new Set(
-          results
-            .map(member => member.current_location)
-            .filter(location => location && location.trim() !== "")
-        )].sort();
-        
+        const currentLocations = [
+          ...new Set(
+            results
+              .map((member) => member.current_location)
+              .filter((location) => location && location.trim() !== "")
+          ),
+        ].sort();
+
         // Update dropdown filters with current_location options
-        setDropdownFilters(prev => ({
+        setDropdownFilters((prev) => ({
           ...prev,
-          current_location: currentLocations
+          current_location: currentLocations,
         }));
       }
-      
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching members:", error);
@@ -323,18 +329,20 @@ export default function MembersPage() {
       });
 
       const { results } = response.data;
-      
+
       if (results && results.length > 0) {
-        const currentLocations = [...new Set(
-          results
-            .map(member => member.current_location)
-            .filter(location => location && location.trim() !== "")
-        )].sort();
-        
+        const currentLocations = [
+          ...new Set(
+            results
+              .map((member) => member.current_location)
+              .filter((location) => location && location.trim() !== "")
+          ),
+        ].sort();
+
         // Update dropdown filters with comprehensive current_location options
-        setDropdownFilters(prev => ({
+        setDropdownFilters((prev) => ({
           ...prev,
-          current_location: currentLocations
+          current_location: currentLocations,
         }));
       }
     } catch (error) {
@@ -367,6 +375,7 @@ export default function MembersPage() {
     collegeNameFilter,
     currentWorkFilter,
     chapterFilter, // Add chapter filter to dependencies
+    emailFilter, // Make sure this is here
   ]);
 
   // Whenever page or filters change, fetch data
@@ -390,6 +399,7 @@ export default function MembersPage() {
     collegeNameFilter,
     currentWorkFilter,
     chapterFilter, // Add chapter filter to dependencies
+    emailFilter, // Make sure this is here
   ]);
 
   // Handle page change
@@ -415,6 +425,7 @@ export default function MembersPage() {
     setCountryFilter("");
     setStateFilter("");
     setPassedOutYearFilter("");
+    setEmailFilter("");
     setCourseFilter("");
     setCollegeNameFilter("");
     setCurrentWorkFilter("");
@@ -751,6 +762,31 @@ export default function MembersPage() {
                   }
                 />
 
+                <AutocompleteInput
+                  id="email"
+                  label="Email"
+                  placeholder="Select email..."
+                  value={emailFilter}
+                  onChange={setEmailFilter}
+                  filterType="email"
+                  options={dropdownFilters.email || []}
+                  icon={
+                    <svg
+                      className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
+                      />
+                    </svg>
+                  }
+                />
+
                 {/* Search - spans full width on mobile */}
                 <div className="sm:col-span-2 lg:col-span-1 space-y-2">
                   <label
@@ -861,16 +897,21 @@ export default function MembersPage() {
                     className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group"
                   >
                     {/* Profile Image */}
-                    
+
                     <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
                       <img
                         src={member.profile_photo || placeholder}
-                        alt={`${member.first_name || 'Alumni'} ${member.last_name || ''}`}
+                        alt={`${member.first_name || "Alumni"} ${
+                          member.last_name || ""
+                        }`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         onError={(e) => {
                           e.target.onerror = null; // Prevent infinite loop
                           // Generate avatar with initials if image fails to load
-                          e.target.src = getInitialsAvatar(member.first_name, member.last_name);
+                          e.target.src = getInitialsAvatar(
+                            member.first_name,
+                            member.last_name
+                          );
                         }}
                       />
                       {/* Role Badge */}
@@ -908,7 +949,10 @@ export default function MembersPage() {
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                               />
                             </svg>
-                            <span className="truncate" title={member.current_location}>
+                            <span
+                              className="truncate"
+                              title={member.current_location}
+                            >
                               {member.current_location}
                             </span>
                           </div>
