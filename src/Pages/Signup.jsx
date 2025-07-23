@@ -29,7 +29,7 @@ const REQUIRED_FIELDS = [
 const CHAPTERS = [
   "KAHE CHAPTER CHENNAI",
   "KAHE CHAPTER COIMBATORE",
-  "KAHE CHAPTER TRICHI",
+  "KAHE CHAPTER CALICUT",
 ];
 
 const ROLES = ["Student", "Alumni", "Staff"];

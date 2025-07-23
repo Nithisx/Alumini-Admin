@@ -484,18 +484,18 @@ export default function RegisterRequest() {
       <div className="w-full sm:w-full lg:m-10 mx-auto px-4">
         <div className="bg-white shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden border border-green-100 mb-4 sm:mb-8">
           {/* Header */}
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 sm:px-8 py-4 sm:py-6">
-            <h2 className="text-xl sm:text-3xl font-bold text-white flex items-center">
+          <div className=" px-4 sm:px-8 py-4 sm:py-6">
+            <h2 className="text-xl sm:text-3xl font-bold text-green-600 flex items-center">
               <FontAwesomeIcon
                 icon={faUserTag}
-                className="mr-2 sm:mr-4 text-green-100"
+                className="mr-2 sm:mr-4 text-green-600"
               />
               <span className="hidden sm:inline">
                 Registration Requests Management
               </span>
               <span className="sm:hidden">Registration Requests</span>
             </h2>
-            <p className="text-green-100 mt-1 sm:mt-2 text-sm sm:text-lg">
+            <p className="text-green-600 mt-1 sm:mt-2 text-sm sm:text-lg">
               <span className="hidden sm:inline">
                 Review and manage pending user registrations
               </span>
@@ -651,7 +651,7 @@ export default function RegisterRequest() {
                                 <button
                                   onClick={() => handleAccept(req.id, req.email)}
                                   disabled={processing}
-                                  className="btn-animate px-5 py-2 bg-gradient-to-r from-green-400 to-emerald-400 text-white rounded-xl hover:from-green-500 hover:to-emerald-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                                  className="btn-animate px-5 py-2 bg-green-600 text-white rounded-xl hover:from-green-500 hover:to-emerald-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                                 >
                                   <FontAwesomeIcon
                                     icon={processing ? faSpinner : faCheck}
@@ -664,7 +664,7 @@ export default function RegisterRequest() {
                                 <button
                                   onClick={() => handleDecline(req.id, req.email)}
                                   disabled={processing}
-                                  className="btn-animate px-5 py-2 bg-gradient-to-r from-pink-400 to-red-400 text-white rounded-xl hover:from-pink-500 hover:to-red-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                                  className="btn-animate px-5 py-2 bg-pink-700 text-white rounded-xl hover:from-pink-500 hover:to-red-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                                 >
                                   <FontAwesomeIcon
                                     icon={processing ? faSpinner : faTimes}
