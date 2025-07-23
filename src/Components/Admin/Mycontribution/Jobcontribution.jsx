@@ -8,7 +8,7 @@ const COLORS = {
   text: "#1f2937",
 }
 
-const BASE_URL = "https://xyndrix.me/api"
+const BASE_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api"
 
 // ImageSlider component
 const ImageSlider = ({ images, baseUrl }) => {

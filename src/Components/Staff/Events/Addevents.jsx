@@ -117,7 +117,7 @@ const AddEvent = () => {
       }
 
       const token = localStorage.getItem("Token");
-      const response = await fetch("https://xyndrix.me/api/events/", {
+      const response = await fetch("https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/events/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,

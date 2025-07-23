@@ -29,7 +29,7 @@ const AlbumsPage = () => {
     const fetchAlbums = async () => {
       try {
         const token = localStorage.getItem("Token");
-        const response = await axios.get("https://xyndrix.me/api/albums/", {
+        const response = await axios.get("https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
         setAlbums(Array.isArray(response.data) ? response.data : []);
@@ -57,7 +57,7 @@ const AlbumsPage = () => {
   //   if (!window.confirm("Are you sure you want to delete this album?")) return;
   //   try {
   //     const token = localStorage.getItem("Token");
-  //     await axios.delete(`https://xyndrix.me/api/albums/${id}/`, {
+  //     await axios.delete(`https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/albums/${id}/`, {
   //       headers: { Authorization: `Token ${token}` },
   //     });
   //     setAlbums(prev => prev.filter(a => a.id !== id));
@@ -89,7 +89,7 @@ const AlbumsPage = () => {
         payload.append("cover_image", uploadedFile.file, uploadedFile.name);
 
       const response = await axios.post(
-        "https://xyndrix.me/api/albums/",
+        "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/albums/",
         payload,
         {
           headers: {
@@ -335,7 +335,7 @@ const AlbumsPage = () => {
 
                       {album.cover_image ? (
                         <img
-                          src={`https://xyndrix.me/api${album.cover_image}`}
+                          src={`https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api${album.cover_image}`}
                           alt={album.title}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                         />
@@ -373,7 +373,7 @@ const AlbumsPage = () => {
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
-                              src={`https://xyndrix.me/api${album.cover_image}`}
+                              src={`https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api${album.cover_image}`}
                               alt={album.title}
                               className="h-full w-full object-cover"
                             />

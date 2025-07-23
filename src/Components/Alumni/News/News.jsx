@@ -8,8 +8,8 @@ import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
 
 const TOKEN = localStorage.getItem('Token');
-const API_URL = 'https://xyndrix.me/api/news/';
-const BASE_URL = 'https://xyndrix.me/api';
+const API_URL = 'https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/news/';
+const BASE_URL = 'https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api';
 
 export default function NewsList() {
   const [posts, setPosts] = useState([]);

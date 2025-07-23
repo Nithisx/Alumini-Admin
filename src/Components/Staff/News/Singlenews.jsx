@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 
 const TOKEN = localStorage.getItem('Token');
-const API_BASE = 'https://xyndrix.me/api/news/';
-const SERVER_BASE = 'https://xyndrix.me/api';
+const API_BASE = 'https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/news/';
+const SERVER_BASE = 'https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api';
 
 export default function SingleNews() {
   const { id } = useParams();

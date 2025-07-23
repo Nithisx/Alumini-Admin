@@ -26,10 +26,10 @@ import {
 } from "lucide-react"
 
 // API Configuration
-const API_URL = "https://xyndrix.me/api/profile/"
-const FORGOT_PASSWORD_URL = "https://xyndrix.me/api/forgot-password/"
-const CHANGE_PASSWORD_URL = "https://xyndrix.me/api/change-password/"
-const BASE_URL = "https://xyndrix.me/api"
+const API_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/profile/"
+const FORGOT_PASSWORD_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/forgot-password/"
+const CHANGE_PASSWORD_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/change-password/"
+const BASE_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api"
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 

@@ -26,7 +26,7 @@ export default function RegisterRequest() {
   const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [loading, setLoading] = useState(true); // Add loading state
-  const API_URL = "https://xyndrix.me/api/Approve-signup/";
+  const API_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/Approve-signup/";
 
   // Helper function to show message and auto-clear after 3 seconds
   const showMessage = (msg) => {
