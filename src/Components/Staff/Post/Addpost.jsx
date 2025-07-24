@@ -22,7 +22,7 @@ import {
   Loader2,
 } from "lucide-react"
 
-const API_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/jobs/"
+const API_URL = "https://xyndrix.me/api/jobs/"
 
 // Helper to get the token
 const getAuthToken = async () => {
@@ -59,7 +59,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return ""
     if (imagePath.startsWith("http")) return imagePath
-    return `https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api${imagePath}`
+    return `https://xyndrix.me/api${imagePath}`
   }
 
   return (

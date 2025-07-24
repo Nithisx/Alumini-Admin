@@ -5,7 +5,7 @@ import kahelogo from "../assets/kahelogo.png";
 
 // axios instance
 const api = axios.create({
-  baseURL: "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api",
+  baseURL: "https://xyndrix.me/api",
   headers: { "Content-Type": "application/json" },
 });
 

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
-const SIGNUP_OTP_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/signup-otp/";
-const SIGNUP_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/signup/";
+const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
+const SIGNUP_URL = "https://xyndrix.me/api/signup/";
 
 // Updated REQUIRED_FIELDS without work_experience
 const REQUIRED_FIELDS = [

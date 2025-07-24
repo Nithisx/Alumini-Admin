@@ -37,7 +37,7 @@ const BusinessDirectory = () => {
   const [servicesCollapsed, setServicesCollapsed] = useState(false);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api";
+  const BASE_URL = "https://xyndrix.me/api";
 
   // Fetch all businesses and categories when component mounts
   useEffect(() => {

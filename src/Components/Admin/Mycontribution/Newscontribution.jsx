@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Trash2, Calendar, Eye, AlertCircle, Loader } from "lucide-react";
 
 // API Configuration
-const API_BASE_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api";
+const API_BASE_URL = "https://xyndrix.me/api";
 const NEWS_API_URL = `${API_BASE_URL}/news/`;
 
 const NewsContribution = () => {

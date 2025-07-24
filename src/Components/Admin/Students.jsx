@@ -11,7 +11,7 @@ const StudentImageUpload = () => {
       try {
         
         const token = localStorage.getItem("Token")
-        const response = await axios.get("https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/students/", {
+        const response = await axios.get("https://xyndrix.me/api/students/", {
           headers: { Authorization: `Token ${token}` },
         });
         setStudents(response.data);  // Set students in state
@@ -47,7 +47,7 @@ const StudentImageUpload = () => {
       formDataToSend.append("image", formData.image);
 
       const response = await axios.post(
-        "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/students/",
+        "https://xyndrix.me/api/students/",
         formDataToSend,
         {
           headers: {
@@ -109,7 +109,7 @@ const StudentImageUpload = () => {
           <div key={student.id} className="bg-white rounded-lg shadow p-4">
             {student.image ? (
               <img
-                src={`https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api${student.image}`}
+                src={`https://xyndrix.me/api${student.image}`}
                 alt={student.name}
                 className="w-full h-40 object-cover rounded-md"
               />

@@ -13,7 +13,7 @@ import {
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/jobs/";
+const API_URL = "https://xyndrix.me/api/jobs/";
 
 const getAuthToken = async () => {
   const token = localStorage.getItem("Token");

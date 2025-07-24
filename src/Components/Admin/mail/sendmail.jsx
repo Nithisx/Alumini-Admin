@@ -75,7 +75,7 @@ const SendMail = () => {
     
     setLoadingSuggestions(true);
     try {
-      const response = await axios.get(`https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/email-suggestions/?query=${query}`, {
+      const response = await axios.get(`https://xyndrix.me/api/email-suggestions/?query=${query}`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
         },
@@ -187,7 +187,7 @@ const SendMail = () => {
     }
 
     try {
-      const response = await axios.post("https://0c41dd49b6b06c17e9bfea0690ee4051.serveo.net/api/send-email/", data, {
+      const response = await axios.post("https://xyndrix.me/api/send-email/", data, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
           "Content-Type": "multipart/form-data",
