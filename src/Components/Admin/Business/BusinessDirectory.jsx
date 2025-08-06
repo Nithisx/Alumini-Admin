@@ -285,9 +285,9 @@ const BusinessDirectory = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+              {/* <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
                 Pending Requests
-              </button>
+              </button> */}
               <Link
                 to="/admin/business/add"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
