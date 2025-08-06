@@ -81,6 +81,13 @@ export default function SingleMember() {
     worked_in,
     passed_out_year,
     social_links = {},
+    // Add the new professional fields
+    company,
+    position,
+    work_experience,
+    professional_skills = [],
+    industries_worked_in = [],
+    roles_played = [],
   } = member;
 
   return (
@@ -274,13 +281,82 @@ export default function SingleMember() {
                   <h2 className="text-lg sm:text-xl font-bold text-green-800">Professional</h2>
                 </div>
                 <div className="space-y-2 sm:space-y-3">
-                  {worked_in && (
+                  {/* Company */}
+                  {company && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Company:</span>
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{company}</span>
+                    </div>
+                  )}
+                  
+                  {/* Position */}
+                  {position && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Position:</span>
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{position}</span>
+                    </div>
+                  )}
+                  
+                  {/* Work Experience */}
+                  {work_experience && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Work Experience:</span>
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
+                        {work_experience} {work_experience === 1 ? 'year' : 'years'}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Professional Skills */}
+                  {professional_skills && professional_skills.length > 0 && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Professional Skills:</span>
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
+                        {professional_skills.map((skill, index) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Industries Worked In */}
+                  {industries_worked_in && industries_worked_in.length > 0 && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Industries Worked In:</span>
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
+                        {industries_worked_in.map((industry, index) => (
+                          <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                            {industry}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Roles Played */}
+                  {roles_played && roles_played.length > 0 && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Roles Played:</span>
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
+                        {roles_played.map((role_played, index) => (
+                          <span key={index} className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
+                            {role_played}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Legacy fields - show if new fields are not available */}
+                  {worked_in && !company && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Worked In:</span>
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{worked_in}</span>
                     </div>
                   )}
-                  {current_work && !worked_in && (
+                  {current_work && !company && !worked_in && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Current Work:</span>
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{current_work}</span>

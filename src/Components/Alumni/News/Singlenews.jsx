@@ -50,12 +50,12 @@ export default function SingleNews() {
   const handlePrevious = () => {
     const prevId = Number(id) - 1;
     if (prevId > 0) {
-      navigate(`/staff/news/${prevId}`);
+      navigate(`/alumni/news/${prevId}`);
     }
   };
 
   const handleNext = () => {
-    navigate(`/staff/news/${Number(id) + 1}`);
+    navigate(`/alumni/news/${Number(id) + 1}`);
   };
 
   if (loading) {
@@ -72,7 +72,7 @@ export default function SingleNews() {
         <div className="bg-white p-6 rounded shadow max-w-lg">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">Unable to Load Article</h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Link to="/staff/news" className="inline-block px-4 py-2 bg-blue-600 text-white rounded">
+          <Link to="/alumni/news" className="inline-block px-4 py-2 bg-blue-600 text-white rounded">
             Return to News List
           </Link>
         </div>
@@ -86,7 +86,7 @@ export default function SingleNews() {
         <div className="bg-white p-6 rounded shadow max-w-lg">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">News Article Not Found</h2>
           <p className="text-gray-600 mb-4">The article you're looking for doesn't exist or has been removed.</p>
-          <Link to="/staff/news" className="inline-block px-4 py-2 bg-blue-600 text-white rounded">
+          <Link to="/alumni/news" className="inline-block px-4 py-2 bg-blue-600 text-white rounded">
             Browse All News
           </Link>
         </div>
@@ -101,7 +101,7 @@ export default function SingleNews() {
       {/* Simple Header */}
       <div className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/staff/news" className="flex items-center text-blue-600">
+          <Link to="/alumni/news" className="flex items-center text-blue-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
             </svg>
@@ -200,7 +200,7 @@ export default function SingleNews() {
         {/* Simple Navigation Footer */}
         <div className="flex justify-between items-center">
           <Link 
-            to="/staff/news" 
+            to="/alumni/news" 
             className="text-blue-600"
           >
             View All News
