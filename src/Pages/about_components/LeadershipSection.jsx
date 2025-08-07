@@ -10,12 +10,14 @@ const LeadershipSection = () => {
       id: 1,
       name: "Dr. R. Vasanthakumar",
       position: "President",
+      photo:
+        "https://kahedu.edu.in/n/wp-content/uploads/2019/11/President-1.jpg",
       shortDescription: "Leading the strategic vision and mission of KAHE.",
       fullBio: `Dr. R. Vasanthakumar, a philanthropist par excellence and our founder promoter, is the President of Karpagam Academy of Higher Education. An enterprising industrialist, he is the Chairman and Managing Director of Karpagam Industries Private Limited, Bannariamman Engineering Industries Private Limited, Karpagam Yarns Private Limited, Karpagambigai Investments Limited and Karpagam Infrastructure Private Limited that together employ over 700 personnel.
 
 A Gold Medalist from Madras University, he graduated with Honours in Electrical & Electronics Engineering. It is probably his deep-rooted academic interest that has fuelled Dr. R. Vasanthakumar's endeavours in the field of education.
 
-Besides education, Dr. R. Vasanthakumar is a renowned name in myriad philanthropic causes. His contribution to temple maintenance and renovation of dilapidated temples is priceless. He has also been instrumental in incepting the Panniru Thirumurai Aaivu Mayyam which is involved in Research of Ancient Tamil Saivism Literature like Thevaram, Thiruvasagam & Saiva Siddantham and spreading Saivism by conducting conferences and seminars once in 2 months.
+Besides education, Dr. R Vasanthakumar is a renowned name in myriad philanthropic causes. His contribution to temple maintenance and renovation of dilapidated temples is priceless. He has also been instrumental in incepting the Panniru Thirumurai Aaivu Mayyam which is involved in Research of Ancient Tamil Saivism Literature like Thevaram, Thiruvasagam & Saiva Siddantham and spreading Saivism by conducting conferences and seminars once in 2 months.
 
 Dr. R. Vasanthakumar's noteworthy contributions have been rightly commended through several titles and recognitions. An Honorary Doctorate conferred on him by Avinashilingam University in 2004 stands testimony to his role as an exemplary academician and an extraordinary philanthropist. NIA Institutions, Pollachi has awarded the title "Kongu Nattu Sathanaiyalar" on the occasion of the 51st Founder's day of Shri. Nachimuthu Gounder. He has served as President, COSIEMA (Coimbatore Sidco Industrial Estate Management Association) during 1998 and 2000 and Tamil Nadu Private College Management Association (Coimbatore Chapter) during 2000-2002. He is also the President of ENFUSE (Energy & fuel User's Association) Coimbatore Chapter and Renovation Committees of many SHIVA Temples. He is the Governing Council Member of Sri Ramakrishna Mission Vidyalaya Polytechnic College, Sri Dhandayuthapani Polytechnic College and Thavathiru Santhalinga Adigalar Tamil College.
 
@@ -27,24 +29,30 @@ Dr. R. Vasanthakumar's extensive travelling has taken him around the world, prim
       id: 2,
       name: "Shrimathi V. Damayanthi",
       position: "Trustee",
-      shortDescription: "Contributing to institutional governance and oversight.",
+      photo:
+        "https://via.placeholder.com/300x300/10b981/ffffff?text=V.+Damayanthi",
+      shortDescription:
+        "Contributing to institutional governance and oversight.",
     },
     {
       id: 3,
       name: "Shri V. Karthick",
       position: "Trustee",
+      photo:
+        "https://via.placeholder.com/300x300/059669/ffffff?text=V.+Karthick",
       shortDescription: "Supporting the strategic initiatives of KAHE.",
     },
     {
       id: 4,
       name: "Er. K. Murugaiah",
       position: "CEO",
+      photo: "https://kahedu.edu.in/n/wp-content/uploads/2019/11/Advisor.jpg",
       shortDescription: "CEO for Karpagam Educational Institutions",
       fullBio: `Er. K. Murugaiah, is the Chief Executive Officer of Karpagam Academy of Higher Education. A Member of the Board of Management of Karpagam Charity Trust / Karpagam Academy of Higher Education, he joined as Administrative Officer in the Trust and since 1994, and he has been designated as the Chief Executive Officer. A Gold Medalist from Madras University, his efforts have always been instrumental in uplifting Karpagam to greater heights.
 
 A keen advisor, Er. K. Murugaiah's expertise is always solicited for creative and constructive implementation of new techniques in teaching-learning process and other academic activities in all the institutions. He is also a member in Governing council of Karpagam Educational Institutions.
 
-Er. K. Murugaiah is known for his cordial rapport with higher officials of the State and Central Government and Private Sector. His exposure and expertise in the theoretical and practical aspects of engineering are highly revered. His engineering and administrative acumen will continue to be a guiding force to Karpagam Institutions.`
+Er. K. Murugaiah is known for his cordial rapport with higher officials of the State and Central Government and Private Sector. His exposure and expertise in the theoretical and practical aspects of engineering are highly revered. His engineering and administrative acumen will continue to be a guiding force to Karpagam Institutions.`,
     },
   ];
 
@@ -72,26 +80,45 @@ Er. K. Murugaiah is known for his cordial rapport with higher officials of the S
             className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             onClick={() => openModal(leader)}
           >
-            <h4 className="text-lg font-bold text-gray-800 mb-2">
-              {leader.name}
-            </h4>
-            <p className="text-gray-600 mb-1">{leader.position}</p>
-            <p className="text-gray-500">{leader.shortDescription}</p>
-            <div className="mt-3 text-green-600 text-sm font-medium flex items-center">
-              View Details
-              <svg
-                className="w-4 h-4 ml-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 5l7 7-7 7"
-                ></path>
-              </svg>
+            {/* Photo Section */}
+            <div className="mb-4 flex justify-center">
+              <img
+                src={leader.photo}
+                alt={leader.name}
+                className="w-20 h-20 rounded-full object-cover border-4 border-green-100 shadow-md"
+                onError={(e) => {
+                  e.target.src =
+                    "https://via.placeholder.com/80x80/d1d5db/ffffff?text=Photo";
+                }}
+              />
+            </div>
+
+            <div className="text-center">
+              <h4 className="text-lg font-bold text-gray-800 mb-2">
+                {leader.name}
+              </h4>
+              <p className="text-green-600 font-medium mb-2">
+                {leader.position}
+              </p>
+              <p className="text-gray-500 text-sm mb-3">
+                {leader.shortDescription}
+              </p>
+              <div className="text-green-600 text-sm font-medium flex items-center justify-center">
+                View Details
+                <svg
+                  className="w-4 h-4 ml-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5l7 7-7 7"
+                  ></path>
+                </svg>
+              </div>
             </div>
           </div>
         ))}
@@ -102,14 +129,26 @@ Er. K. Murugaiah is known for his cordial rapport with higher officials of the S
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    {selectedLeader.name}
-                  </h3>
-                  <p className="text-green-600 font-medium">
-                    {selectedLeader.position}
-                  </p>
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-start space-x-4">
+                  {/* Modal Photo */}
+                  <img
+                    src={selectedLeader.photo}
+                    alt={selectedLeader.name}
+                    className="w-24 h-24 rounded-full object-cover border-4 border-green-100 shadow-lg flex-shrink-0"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/96x96/d1d5db/ffffff?text=Photo";
+                    }}
+                  />
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      {selectedLeader.name}
+                    </h3>
+                    <p className="text-green-600 font-medium text-lg">
+                      {selectedLeader.position}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={closeModal}

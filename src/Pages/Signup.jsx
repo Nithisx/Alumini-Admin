@@ -29,7 +29,7 @@ const REQUIRED_FIELDS = [
 const CHAPTERS = [
   "KAHE CHAPTER CHENNAI",
   "KAHE CHAPTER COIMBATORE",
-  "KAHE CHAPTER CALICUT",
+  "KAHE CHAPTER TRICHY",
 ];
 
 const ROLES = ["Student", "Alumni", "Staff"];
@@ -185,6 +185,7 @@ const Signup = () => {
     setError("");
   }, []);
 
+  // Update the validation function to skip chapter for Staff
   const validate = useCallback(() => {
     const errors = {};
 
@@ -195,7 +196,8 @@ const Signup = () => {
         formData.role === "Staff" &&
         (field === "roll_no" ||
           field === "course_end_year" ||
-          field === "passed_out_year")
+          field === "passed_out_year" ||
+          field === "chapter") // Add chapter to the skip list for Staff
       ) {
         return;
       }
@@ -538,13 +540,16 @@ const Signup = () => {
             error={fieldErrors.gender}
           />
 
-          <AppDropdown
-            label="Chapter"
-            items={CHAPTERS}
-            selectedValue={formData.chapter}
-            onValueChange={(v) => updateField("chapter", v)}
-            error={fieldErrors.chapter}
-          />
+          {/* Only show Chapter if not Staff */}
+          {formData.role !== "Staff" && (
+            <AppDropdown
+              label="Chapter"
+              items={CHAPTERS}
+              selectedValue={formData.chapter}
+              onValueChange={(v) => updateField("chapter", v)}
+              error={fieldErrors.chapter}
+            />
+          )}
 
           <AppDropdown
             label="Course/Department"
