@@ -13,7 +13,7 @@ const ViceChancellorSection = () => {
             }}
           />
       <p className="text-gray-600 mb-4">
-        Prof. Dr. S. Ravi, Vice Chancellor (i/c), Karpagam Academy of Higher Education is a learned personality, revered for his nature of simplicity and academic accomplishments. He obtained his Doctorate in Chemistry from Bharathiar University, Coimbatore in 1992.
+        Prof. Dr. S. Ravi, Vice Chancellor, Karpagam Academy of Higher Education is a learned personality, revered for his nature of simplicity and academic accomplishments. He obtained his Doctorate in Chemistry from Bharathiar University, Coimbatore in 1992.
       </p>
       <p className="text-gray-600 mb-4">
         He began his career as an Assistant Manager, Research & Development at M/s Hindustan Photo Films Manufacturing Company Limited, Udhagamandalam, The Nilgiris. Over the next 15 years, he served in various capacities as Deputy Manager and Manager R & D, until 2007. Later, he worked as a Senior Scientist, Phytochemistry Division, Centre for Medicinal Plant Research, Arya Vaidya Sala, Kottakkal, Kerala for a year (2007-2008).
