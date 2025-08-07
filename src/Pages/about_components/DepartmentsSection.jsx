@@ -4,8 +4,16 @@ const ViceChancellorSection = () => {
   return (
     <div className="mb-8">
       <h3 className="text-xl font-semibold mb-4 text-blue-700">Vice Chancellor</h3>
+       <img
+            src="https://kahedu.edu.in/n/wp-content/uploads/2025/06/Prof.-Dr-S-Ravi.jpg"
+            alt="Dr. K. Ramasamy"
+            className="w-48 h-60 object-cover rounded-lg shadow-lg border-4 border-blue-100"
+            onError={(e) => {
+              e.target.src = "https://kahedu.edu.in/n/wp-content/uploads/2025/06/Prof.-Dr-S-Ravi.jpg";
+            }}
+          />
       <p className="text-gray-600 mb-4">
-        Prof. Dr. S. Ravi, Vice Chancellor (i/c), Karpagam Academy of Higher Education is a learned personality, revered for his nature of simplicity and academic accomplishments. He obtained his Doctorate in Chemistry from Bharathiar University, Coimbatore in 1992.
+        Prof. Dr. S. Ravi, Vice Chancellor, Karpagam Academy of Higher Education is a learned personality, revered for his nature of simplicity and academic accomplishments. He obtained his Doctorate in Chemistry from Bharathiar University, Coimbatore in 1992.
       </p>
       <p className="text-gray-600 mb-4">
         He began his career as an Assistant Manager, Research & Development at M/s Hindustan Photo Films Manufacturing Company Limited, Udhagamandalam, The Nilgiris. Over the next 15 years, he served in various capacities as Deputy Manager and Manager R & D, until 2007. Later, he worked as a Senior Scientist, Phytochemistry Division, Centre for Medicinal Plant Research, Arya Vaidya Sala, Kottakkal, Kerala for a year (2007-2008).

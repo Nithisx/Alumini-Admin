@@ -60,7 +60,7 @@ const AlbumsPage = () => {
       await axios.delete(`https://xyndrix.me/api/albums/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
-      setAlbums((prev) => prev.filter((a) => a.id !== id));
+      setAlbums(prev => prev.filter(a => a.id !== id));
       showNotification("Album deleted successfully!");
     } catch (error) {
       console.error("Error deleting album:", error);
@@ -143,7 +143,7 @@ const AlbumsPage = () => {
     : albums;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 my-[50px]">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section - Updated with green gradient and smaller size */}
         {/* Header Section with search in header */}
@@ -328,15 +328,16 @@ const AlbumsPage = () => {
                   <div
                     key={album.id}
                     onClick={() => navigate(`/staff/albums/${album.id}`)}
-                    className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer"
+                    className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer relative"
                   >
                     <div className="relative h-48 overflow-hidden">
-                      {/* Delete button moved to top left */}
+                      {/* Delete button in top right corner */}
                       <button
                         onClick={(e) => handleDeleteAlbum(album.id, e)}
-                        className="absolute top-3 left-3 z-10 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition"
+                        className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+                        title="Delete album"
                       >
-                        <FontAwesomeIcon icon={faTrash} />
+                        <FontAwesomeIcon icon={faTrash} className="text-sm" />
                       </button>
 
                       {album.cover_image ? (
@@ -353,7 +354,6 @@ const AlbumsPage = () => {
                           />
                         </div>
                       )}
-                      {/* Removed black background overlay on hover */}
                     </div>
                     <div className="p-4">
                       <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
@@ -372,10 +372,12 @@ const AlbumsPage = () => {
                   {filteredAlbums.map((album) => (
                     <li
                       key={album.id}
-                      onClick={() => navigate(`/staff/albums/${album.id}`)}
-                      className="hover:bg-gray-50 cursor-pointer transition"
+                      className="hover:bg-gray-50 transition group"
                     >
-                      <div className="flex items-center p-4">
+                      <div
+                        className="flex items-center p-4 cursor-pointer"
+                        onClick={() => navigate(`/staff/albums/${album.id}`)}
+                      >
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
@@ -400,11 +402,13 @@ const AlbumsPage = () => {
                             {album.description || "No description"}
                           </p>
                         </div>
+                        {/* Delete button for list view */}
                         <button
                           onClick={(e) => handleDeleteAlbum(album.id, e)}
-                          className="ml-4 p-2 text-gray-400 hover:text-red-500 transition"
+                          className="ml-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100"
+                          title="Delete album"
                         >
-                          <FontAwesomeIcon icon={faTrash} />
+                          <FontAwesomeIcon icon={faTrash} className="text-sm" />
                         </button>
                       </div>
                     </li>
@@ -572,33 +576,11 @@ const AlbumsPage = () => {
         </div>
       )}
 
-      <style jsx>{`
-        @keyframes fade-in-out {
-          0%,
-          100% {
-            opacity: 0;
-          }
-          10%,
-          90% {
-            opacity: 1;
-          }
-        }
-        .animate-fade-in-out {
-          animation: fade-in-out 4s ease-in-out forwards;
-        }
-        @keyframes scale-in {
-          from {
-            transform: scale(0.95);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        .animate-scale-in {
-          animation: scale-in 0.3s ease-out forwards;
-        }
+      <style>{`
+        @keyframes fade-in-out { 0%,100% { opacity: 0;} 10%,90% { opacity:1;} }
+        .animate-fade-in-out { animation: fade-in-out 4s ease-in-out forwards; }
+        @keyframes scale-in { from { transform: scale(0.95); opacity: 0;} to { transform: scale(1); opacity: 1;} }
+        .animate-scale-in { animation: scale-in 0.3s ease-out forwards; }
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;

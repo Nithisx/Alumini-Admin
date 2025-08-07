@@ -129,7 +129,7 @@ export default function Events() {
               return (
                 <div
                   key={event.id}
-                  onClick={() => navigate(`/alumni/event/${event.id}`)} // 👈 Navigate on click
+                  onClick={() => navigate(`/admin/event/${event.id}`)} // 👈 Navigate on click
                   className="cursor-pointer bg-white rounded-xl shadow-md overflow-hidden group relative hover:shadow-lg transition-shadow duration-300"
                 >
                   <div className="relative">
@@ -187,7 +187,7 @@ export default function Events() {
                 {filtered.map((event) => (
                   <tr
                     key={event.id}
-                    onClick={() => navigate(`/alumni/event/${event.id}`)} // 👈 Navigate on row click
+                    onClick={() => navigate(`/admin/event/${event.id}`)} // 👈 Navigate on row click
                     className="hover:bg-gray-50 group cursor-pointer"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">

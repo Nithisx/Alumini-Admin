@@ -16,6 +16,7 @@ import VisionMissionSection from "./about_components/VisionMissionSection";
 import Leadership from "./about_components/LeadershipSection";
 import Faculty from "./about_components/FacultySection";
 import Departments from "./about_components/DepartmentsSection";
+import Registrar from "./about_components/RegistrarSection";
 import Logo from "../images/logo.png"; // Assuming you have a logo image
 import RegisterRequest from "../Components/Admin/Auth/LoginRequest";
 import RegistrationCertificate from "./about_components/RegistrstionCertificate";
@@ -198,12 +199,25 @@ const About = () => {
                     <FontAwesomeIcon icon={faSitemap} className="mr-2" />
                     Vice Chancellor
                   </button>
+
+                  <button
+                    onClick={() => handleAdminSectionChange("registrar")}
+                    className={`px-4 py-2 mr-2 ${
+                      activeAdminSection === "registrar"
+                        ? "border-b-2 border-green-600 text-green-700 font-medium"
+                        : "text-gray-600 hover:text-green-700"
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faUserTie} className="mr-2" />
+                    Registrar
+                  </button>
                 </div>
 
                 {/* Admin Content */}
                 {activeAdminSection === "leadership" && <Leadership />}
                 {activeAdminSection === "faculty" && <Faculty />}
                 {activeAdminSection === "departments" && <Departments />}
+                {activeAdminSection === "registrar" && <Registrar />}
               </div>
             )}
 

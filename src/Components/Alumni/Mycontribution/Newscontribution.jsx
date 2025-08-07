@@ -1,55 +1,318 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Calendar, Eye, AlertCircle, Loader, Edit, X, Save } from "lucide-react";
+import { MoreVertical, Share2, Trash2, X, Calendar, Eye, MessageCircle, Heart, RefreshCw } from 'lucide-react';
 
-// API Configuration
-const API_BASE_URL = "https://xyndrix.me/api";
-const NEWS_API_URL = `${API_BASE_URL}/news/`;
+const COLORS = {
+  primary: "#059669", // green-600
+  text: "#1f2937",
+};
+
+const BASE_URL = "https://xyndrix.me/api";
+
+// ImageSlider component for news with multiple images
+const ImageSlider = ({ images, baseUrl }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  
+  const nextImage = () => {
+    setActiveIndex((prev) => (prev + 1) % images.length);
+  };
+  
+  const prevImage = () => {
+    setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  return (
+    <div className="relative mb-6">
+      <div className="relative overflow-hidden rounded-xl shadow-sm">
+        <img
+          src={`${baseUrl}${images[activeIndex].image}`}
+          alt="News"
+          className="w-full h-80 object-cover"
+        />
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black/80 transition-all duration-200 backdrop-blur-sm"
+            >
+              ←
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black/80 transition-all duration-200 backdrop-blur-sm"
+            >
+              →
+            </button>
+          </>
+        )}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+          <div className="bg-black/40 backdrop-blur-sm rounded-full px-3 py-1">
+            <span className="text-white text-sm font-medium">
+              {activeIndex + 1} / {images.length}
+            </span>
+          </div>
+        </div>
+      </div>
+      {images.length > 1 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveIndex(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                activeIndex === index ? 'bg-green-600 scale-110' : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// NewsItem Component with menu
+const NewsItem = ({ item, onDelete }) => {
+  const [showComments, setShowComments] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  
+  const handleDelete = () => {
+    setShowMenu(false);
+    setShowDeleteConfirm(true);
+  };
+  
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete(item.id);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+  
+  return (
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden hover:shadow-xl transition-all duration-300">
+      {/* Post Header */}
+      <div className="flex items-center justify-between p-6 pb-4">
+        <div className="flex items-center space-x-4">
+          {item.user && item.user.profile_photo && (
+            <img
+              src={item.user.profile_photo.startsWith("http")
+                ? item.user.profile_photo
+                : `${BASE_URL}${item.user.profile_photo}`}
+              alt="Profile"
+              className="w-12 h-12 rounded-full bg-gray-200 ring-2 ring-green-100"
+            />
+          )}
+          <div>
+            <p className="font-semibold text-gray-900 text-lg">
+              {item.user ? `${item.user.first_name} ${item.user.last_name}` : 'Anonymous'}
+            </p>
+            <p className="text-gray-500 text-sm flex items-center">
+              <Calendar size={14} className="mr-1" />
+              {new Date(item.posted_on || item.created_at).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })}
+            </p>
+          </div>
+        </div>
+        <div className="relative">
+          <button 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            onClick={() => setShowMenu(!showMenu)}
+          >
+            <MoreVertical size={20} className="text-gray-600" />
+          </button>
+          
+          {/* Menu Popup */}
+          {showMenu && (
+            <div className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-36 overflow-hidden">
+              <button 
+                className="flex items-center w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors duration-200"
+                onClick={handleDelete}
+              >
+                <Trash2 size={16} className="mr-3" />
+                Delete
+              </button>
+              <button 
+                className="flex items-center w-full px-4 py-3 text-left hover:bg-gray-50 text-gray-600 transition-colors duration-200"
+                onClick={() => setShowMenu(false)}
+              >
+                <X size={16} className="mr-3" />
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div className="mx-6 mb-4 bg-red-50 border border-red-200 rounded-xl p-6">
+          <h4 className="text-red-800 font-semibold mb-2">Delete News Article</h4>
+          <p className="text-red-700 mb-4">Are you sure you want to delete this news article? This action cannot be undone.</p>
+          <div className="flex space-x-3">
+            <button 
+              className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button 
+              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors duration-200 font-medium"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* News Content */}
+      <div className="px-6">
+        {/* Title */}
+        <div className="mb-4">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">{item.title}</h3>
+        </div>
+
+        {/* News Images */}
+        {item.images && item.images.length > 0 && (
+          item.images.length === 1 ? (
+            <div className="mb-6">
+              <img
+                src={`${BASE_URL}${item.images[0].image}`}
+                alt="News"
+                className="w-full h-80 object-cover rounded-xl shadow-sm"
+              />
+            </div>
+          ) : (
+            <ImageSlider images={item.images} baseUrl={BASE_URL} />
+          )
+        )}
+        
+        {/* Content/Description */}
+        <div className="mb-6">
+          <p className="text-gray-700 leading-relaxed text-base">
+            {item.content || item.description || 'No content available'}
+          </p>
+        </div>
+        
+        {/* Engagement Stats */}
+        <div className="flex items-center justify-between py-4 border-t border-gray-100 mb-4">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center text-gray-600">
+              <Heart size={18} className="mr-2 text-red-500" />
+              <span className="font-medium">{item.total_reactions || 0}</span>
+              <span className="ml-1 text-sm">likes</span>
+            </div>
+            <div className="flex items-center text-gray-600">
+              <MessageCircle size={18} className="mr-2 text-blue-500" />
+              <span className="font-medium">{item.total_comments || 0}</span>
+              <span className="ml-1 text-sm">comments</span>
+            </div>
+          </div>
+          
+          <button className="flex items-center text-green-600 hover:text-green-700 transition-colors duration-200 bg-green-50 px-4 py-2 rounded-lg hover:bg-green-100">
+            <Share2 size={16} className="mr-2" />
+            <span className="font-medium">Share</span>
+          </button>
+        </div>
+      </div>
+      
+      {/* Comments Section */}
+      <div className="border-t border-gray-100">
+        <button 
+          className="w-full text-center text-green-700 font-semibold py-4 hover:bg-green-50 transition-colors duration-200 flex items-center justify-center"
+          onClick={() => setShowComments(!showComments)}
+        >
+          <MessageCircle size={18} className="mr-2" />
+          {showComments ? "Hide Comments" : "Show Comments"}
+        </button>
+        
+        {showComments && item.comments && item.comments.length > 0 && (
+          <div className="bg-gray-50 p-6 space-y-4">
+            <h4 className="font-semibold text-gray-900 mb-4">Comments ({item.comments.length})</h4>
+            {item.comments.map((comment) => (
+              <div key={comment.id} className="bg-white p-4 rounded-xl shadow-sm">
+                <div className="flex items-start space-x-3">
+                  {comment.user && comment.user.profile_photo && (
+                    <img
+                      src={comment.user.profile_photo.startsWith("http")
+                        ? comment.user.profile_photo
+                        : `${BASE_URL}${comment.user.profile_photo}`}
+                      alt="Commenter"
+                      className="w-10 h-10 rounded-full bg-gray-200 ring-2 ring-gray-100"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <p className="font-semibold text-gray-900">
+                        {comment.user ? `${comment.user.first_name} ${comment.user.last_name}` : 'Anonymous'}
+                      </p>
+                      <span className="text-green-600 text-sm">
+                        @{comment.user ? comment.user.username : 'anonymous'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-2">
+                      {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                    <p className="text-gray-700 leading-relaxed">
+                      {comment.comment}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const NewsContribution = () => {
   const [news, setNews] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editLoading, setEditLoading] = useState(false);
-  const [editForm, setEditForm] = useState({
-    title: "",
-    content: "",
-    category: "",
-    featured: false,
-    image: null
-  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch news from API
   const fetchNews = async () => {
-    setIsLoading(true);
-    setError("");
+    setLoading(true);
     try {
       const token = localStorage.getItem("Token");
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      const response = await fetch(NEWS_API_URL, {
-        headers: {
+      if (!token) throw new Error("Token not found");
+      
+      const response = await fetch(`${BASE_URL}/myposts/`, { 
+        headers: { 
           Authorization: `Token ${token}`,
           "Content-Type": "application/json",
-        },
+        }
       });
-
+      
       if (!response.ok) {
         throw new Error(`Failed to fetch news: ${response.status}`);
       }
-
+      
       const data = await response.json();
-      setNews(Array.isArray(data) ? data : data.results || []);
-    } catch (err) {
-      console.error("Error fetching news:", err);
-      setError(err.message || "Failed to fetch news");
+      const newsData = data.news || data.results || [];
+      setNews(newsData);
+    } catch (error) {
+      console.error("Error fetching news", error);
+      alert("Failed to fetch news. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -57,421 +320,74 @@ const NewsContribution = () => {
     fetchNews();
   }, []);
 
-  const handleAddNews = () => {
-    console.log("Add new news article");
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchNews();
+    setRefreshing(false);
   };
 
-  const handleEditNews = (article) => {
-    setEditingId(article.id);
-    setEditForm({
-      title: article.title || "",
-      content: article.content || "",
-      category: article.category || "",
-      featured: article.featured || false,
-      image: null
-    });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditForm({
-      title: "",
-      content: "",
-      category: "",
-      featured: false,
-      image: null
-    });
-  };
-
-  const handleSaveEdit = async (articleId) => {
-    setEditLoading(true);
-    try {
-      const token = localStorage.getItem("Token");
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      // Prepare form data for multipart/form-data
-      const formData = new FormData();
-      formData.append("title", editForm.title);
-      formData.append("content", editForm.content);
-      formData.append("category", editForm.category);
-      formData.append("featured", editForm.featured);
-      
-      // Only append image if a new one was selected
-      if (editForm.image) {
-        formData.append("thumbnail", editForm.image);
-      }
-
-      const response = await fetch(`${NEWS_API_URL}${articleId}/`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update news: ${response.status}`);
-      }
-
-      const updatedArticle = await response.json();
-
-      // Update the news in local state
-      setNews((prevNews) =>
-        prevNews.map((article) =>
-          article.id === articleId ? updatedArticle : article
-        )
-      );
-
-      // Reset edit state
-      setEditingId(null);
-      setEditForm({
-        title: "",
-        content: "",
-        category: "",
-        featured: false,
-        image: null
-      });
-
-      alert("News article updated successfully!");
-    } catch (err) {
-      console.error("Error updating news:", err);
-      alert(err.message || "Failed to update news article");
-    } finally {
-      setEditLoading(false);
-    }
-  };
-
-  const handleDeleteNews = async (newsId) => {
+  const deleteNews = async (newsId) => {
     if (!window.confirm("Are you sure you want to delete this news article?")) {
       return;
     }
 
-    setDeleteLoading(newsId);
     try {
       const token = localStorage.getItem("Token");
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      const response = await fetch(`${NEWS_API_URL}${newsId}/`, {
-        method: "DELETE",
-        headers: {
+      if (!token) throw new Error("Token not found");
+      
+      const response = await fetch(`${BASE_URL}/news/${newsId}/`, {
+        method: 'DELETE',
+        headers: { 
           Authorization: `Token ${token}`,
           "Content-Type": "application/json",
-        },
+        }
       });
-
+      
       if (!response.ok) {
         throw new Error(`Failed to delete news: ${response.status}`);
       }
-
-      // Remove the deleted news from the local state
-      setNews((prevNews) =>
-        prevNews.filter((article) => article.id !== newsId)
-      );
-
+      
+      setNews(prevNews => prevNews.filter(article => article.id !== newsId));
       alert("News article deleted successfully!");
-    } catch (err) {
-      console.error("Error deleting news:", err);
-      alert(err.message || "Failed to delete news article");
-    } finally {
-      setDeleteLoading(null);
+    } catch (error) {
+      console.error("Error deleting news:", error);
+      alert(error.message || "Failed to delete news article");
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "published":
-        return "bg-green-100 text-green-800";
-      case "draft":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const handleInputChange = (field, value) => {
-    setEditForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setEditForm(prev => ({
-        ...prev,
-        image: file
-      }));
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-96 bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading your news articles...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4">
-      {/* Header with Add Button */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">News Contributions</h2>
-      </div>
-
-      {/* Error State */}
-      {error && (
-        <div className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-            <p className="text-red-500 text-center mb-3">{error}</p>
-            <button
-              onClick={fetchNews}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Loading State */}
-      {isLoading && !error && (
-        <div className="flex justify-center items-center py-8">
-          <div className="text-center">
-            <Loader className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-3" />
-            <p className="text-gray-600">Loading news articles...</p>
-          </div>
-        </div>
-      )}
-
-      {/* News List */}
-      {!isLoading && !error && (
-        <div className="space-y-4">
-          {news.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-400 text-lg mb-2">
-                No news articles yet
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {news.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="bg-white rounded-2xl shadow-lg p-12 max-w-md mx-auto">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Eye size={32} className="text-green-600" />
               </div>
-              <p className="text-gray-500">
-                Start by adding your first news contribution
-              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No News Articles Yet</h3>
+              <p className="text-gray-600">You haven't created any news articles yet. Start contributing to share important updates!</p>
             </div>
-          ) : (
-            news.map((article) => (
-              <div
-                key={article.id}
-                className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
-              >
-                {editingId === article.id ? (
-                  /* Edit Mode */
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Edit Article
-                      </h3>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="p-1 text-gray-500 hover:text-gray-700"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Title
-                        </label>
-                        <input
-                          type="text"
-                          value={editForm.title}
-                          onChange={(e) => handleInputChange("title", e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Category
-                        </label>
-                        <input
-                          type="text"
-                          value={editForm.category}
-                          onChange={(e) => handleInputChange("category", e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Image
-                        </label>
-                        
-                        {/* Current Image Preview */}
-                        {article.thumbnail && !editForm.image && (
-                          <div className="mb-3">
-                            <p className="text-sm text-gray-600 mb-2">Current Image:</p>
-                            <img
-                              src={article.thumbnail.startsWith('http') ? article.thumbnail : `https://xyndrix.me${article.thumbnail}`}
-                              alt={article.title}
-                              className="w-32 h-24 object-cover rounded-lg border"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
-                        
-                        {/* New Image Preview */}
-                        {editForm.image && (
-                          <div className="mb-3">
-                            <p className="text-sm text-gray-600 mb-2">New Image:</p>
-                            <img
-                              src={URL.createObjectURL(editForm.image)}
-                              alt="Preview"
-                              className="w-32 h-24 object-cover rounded-lg border"
-                            />
-                          </div>
-                        )}
-                        
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {editForm.image && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            Selected: {editForm.image.name}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Content
-                        </label>
-                        <textarea
-                          value={editForm.content}
-                          onChange={(e) => handleInputChange("content", e.target.value)}
-                          rows={6}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div className="md:col-span-2 flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`featured-${article.id}`}
-                          checked={editForm.featured}
-                          onChange={(e) => handleInputChange("featured", e.target.checked)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor={`featured-${article.id}`} className="ml-2 block text-sm text-gray-700">
-                          Featured Article
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-4">
-                      <button
-                        onClick={handleCancelEdit}
-                        className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handleSaveEdit(article.id)}
-                        disabled={editLoading}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        {editLoading ? (
-                          <Loader size={16} className="animate-spin" />
-                        ) : (
-                          <Save size={16} />
-                        )}
-                        Save Changes
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* Display Mode */
-                  <>
-                    {/* Article Image */}
-                    {article.thumbnail && (
-                      <div className="mb-4">
-                        <img
-                          src={article.thumbnail.startsWith('http') ? article.thumbnail : `https://xyndrix.me${article.thumbnail}`}
-                          alt={article.title}
-                          className="w-full h-48 object-cover rounded-lg"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-xl font-semibold text-gray-900 flex-1">
-                        {article.title}
-                      </h3>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          article.status
-                        )}`}
-                      >
-                        {article.status || "draft"}
-                      </span>
-                    </div>
-
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {article.content ||
-                        article.description ||
-                        "No content available"}
-                    </p>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar size={16} />
-                          {new Date(
-                            article.published_on || article.created_at || article.createdAt
-                          ).toLocaleDateString()}
-                        </div>
-                        {(article.status === "published" || !article.status) &&
-                          article.views && (
-                            <div className="flex items-center gap-1">
-                              <Eye size={16} />
-                              {article.views} views
-                            </div>
-                          )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEditNews(article)}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteNews(article.id)}
-                          disabled={deleteLoading === article.id}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {deleteLoading === article.id ? (
-                            <Loader size={16} className="animate-spin" />
-                          ) : (
-                            <Trash2 size={16} />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {news.map((article) => (
+              <NewsItem key={article.id} item={article} onDelete={deleteNews} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

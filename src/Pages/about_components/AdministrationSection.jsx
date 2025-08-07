@@ -2,6 +2,7 @@ import React from "react";
 import LeadershipSection from "./LeadershipSection";
 import FacultySection from "./FacultySection";
 import DepartmentsSection from "./DepartmentsSection";
+import RegistrarSection from "./RegistrarSection"; // Fix the import
 
 const AdministrationSection = ({ isOpen, toggle }) => {
   return (
@@ -19,6 +20,7 @@ const AdministrationSection = ({ isOpen, toggle }) => {
           <LeadershipSection />
           <FacultySection />
           <DepartmentsSection />
+          <RegistrarSection /> 
         </div>
       )}
     </div>
