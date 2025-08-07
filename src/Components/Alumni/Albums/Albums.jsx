@@ -52,21 +52,21 @@ const AlbumsPage = () => {
     setTimeout(() => setNotification({ message: "", type: "" }), 4000);
   };
 
-  // const handleDeleteAlbum = async (id, e) => {
-  //   e.stopPropagation();
-  //   if (!window.confirm("Are you sure you want to delete this album?")) return;
-  //   try {
-  //     const token = localStorage.getItem("Token");
-  //     await axios.delete(`https://xyndrix.me/api/albums/${id}/`, {
-  //       headers: { Authorization: `Token ${token}` },
-  //     });
-  //     setAlbums(prev => prev.filter(a => a.id !== id));
-  //     showNotification("Album deleted successfully!");
-  //   } catch (error) {
-  //     console.error("Error deleting album:", error);
-  //     showNotification("Could not delete album.", "error");
-  //   }
-  // };
+  const handleDeleteAlbum = async (id, e) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this album?")) return;
+    try {
+      const token = localStorage.getItem("Token");
+      await axios.delete(`https://xyndrix.me/api/albums/${id}/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setAlbums(prev => prev.filter(a => a.id !== id));
+      showNotification("Album deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting album:", error);
+      showNotification("Could not delete album.", "error");
+    }
+  };
 
   const handleInputChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -328,10 +328,17 @@ const AlbumsPage = () => {
                   <div
                     key={album.id}
                     onClick={() => navigate(`/alumni/albums/${album.id}`)}
-                    className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer"
+                    className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer relative"
                   >
                     <div className="relative h-48 overflow-hidden">
-                      {/* Delete button moved to top left */}
+                      {/* Delete button in top right corner */}
+                      <button
+                        onClick={(e) => handleDeleteAlbum(album.id, e)}
+                        className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+                        title="Delete album"
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                      </button>
 
                       {album.cover_image ? (
                         <img
@@ -347,7 +354,6 @@ const AlbumsPage = () => {
                           />
                         </div>
                       )}
-                      {/* Removed black background overlay on hover */}
                     </div>
                     <div className="p-4">
                       <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
@@ -366,10 +372,12 @@ const AlbumsPage = () => {
                   {filteredAlbums.map((album) => (
                     <li
                       key={album.id}
-                      onClick={() => navigate(`/alumni/albums/${album.id}`)}
-                      className="hover:bg-gray-50 cursor-pointer transition"
+                      className="hover:bg-gray-50 transition group"
                     >
-                      <div className="flex items-center p-4">
+                      <div
+                        className="flex items-center p-4 cursor-pointer"
+                        onClick={() => navigate(`/alumni/albums/${album.id}`)}
+                      >
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
@@ -394,6 +402,14 @@ const AlbumsPage = () => {
                             {album.description || "No description"}
                           </p>
                         </div>
+                        {/* Delete button for list view */}
+                        <button
+                          onClick={(e) => handleDeleteAlbum(album.id, e)}
+                          className="ml-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100"
+                          title="Delete album"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                        </button>
                       </div>
                     </li>
                   ))}
