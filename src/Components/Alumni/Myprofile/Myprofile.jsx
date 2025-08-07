@@ -101,7 +101,7 @@ const ProfileScreen = () => {
   })
 
   const tabs = ["Personal", "Work", "Contact", "Social"]
-  const editTabs = ["Basic Info", "Address", "Experience"]
+  const editTabs = ["Basic Info", "Contact & Address", "Work & Social"]
 
   const handleError = (error, customMessage) => {
     console.error(customMessage, error)
@@ -122,12 +122,26 @@ const ProfileScreen = () => {
       })
       if (!response.ok) throw new Error("Failed to fetch profile.")
       const data = await response.json()
+      
+      // Safe JSON parsing function
+      const safeJsonParse = (value, fallback) => {
+        if (typeof value === "string" && value.trim()) {
+          try {
+            return JSON.parse(value)
+          } catch (e) {
+            console.warn("Failed to parse JSON:", value, e)
+            return fallback
+          }
+        }
+        return value || fallback
+      }
+      
       setProfile((prev) => ({
         ...prev,
         ...data,
-        experience: typeof data.experience === "string" ? JSON.parse(data.experience) : data.experience || {},
-        social_links: typeof data.social_links === "string" ? JSON.parse(data.social_links) : data.social_links || {},
-        Worked_in: typeof data.Worked_in === "string" ? JSON.parse(data.Worked_in) : data.Worked_in || [],
+        experience: safeJsonParse(data.experience, {}),
+        social_links: safeJsonParse(data.social_links, {}),
+        Worked_in: safeJsonParse(data.Worked_in, []),
       }))
     } catch (err) {
       setError(err.message || "Failed to fetch profile.")
@@ -546,6 +560,44 @@ const ProfileScreen = () => {
               </div>
             </div>
 
+            {/* Add Cover Photo Upload */}
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Cover Photo</label>
+              <div className="relative">
+                <img
+                  src={profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE}
+                  alt="Cover"
+                  className="w-full h-32 sm:h-40 rounded-lg object-cover border-2 border-green-300"
+                />
+                <label className="absolute bottom-2 right-2 bg-green-600 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer shadow-md hover:bg-green-700 transition-colors">
+                  <Camera className="w-4 h-4 text-white" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload("cover_photo", e)}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Add Salutation Field */}
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Salutation</label>
+              <select
+                value={profile.salutation || ""}
+                onChange={(e) => setProfile((prev) => ({ ...prev, salutation: e.target.value }))}
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+              >
+                <option value="">Select Salutation</option>
+                <option value="Mr.">Mr.</option>
+                <option value="Ms.">Ms.</option>
+                <option value="Mrs.">Mrs.</option>
+                <option value="Dr.">Dr.</option>
+                <option value="Prof.">Prof.</option>
+              </select>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">First Name</label>
@@ -600,10 +652,25 @@ const ProfileScreen = () => {
                 className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Birth Date</label>
+              <input
+                type="date"
+                value={profile.date_of_birth || ""}
+                onChange={(e) =>
+                  setProfile((prev) => ({
+                    ...prev,
+                    date_of_birth: e.target.value,
+                  }))
+                }
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+              />
+            </div>
           </div>
         )
 
-      case 1: // Address
+      case 1: // Contact & Address
         return (
           <div className="space-y-4">
             <div>
@@ -614,6 +681,18 @@ const ProfileScreen = () => {
                 value={profile.phone || ""}
                 onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))}
                 className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+              />
+            </div>
+
+            {/* Add Address Field */}
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Address</label>
+              <textarea
+                placeholder="Full Address"
+                value={profile.Address || ""}
+                onChange={(e) => setProfile((prev) => ({ ...prev, Address: e.target.value }))}
+                rows={2}
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
@@ -640,18 +719,17 @@ const ProfileScreen = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Country</label>
-              <input
-                type="text"
-                placeholder="Country"
-                value={profile.country || ""}
-                onChange={(e) => setProfile((prev) => ({ ...prev, country: e.target.value }))}
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-              />
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Country</label>
+                <input
+                  type="text"
+                  placeholder="Country"
+                  value={profile.country || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, country: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">ZIP Code</label>
                 <input
@@ -667,25 +745,11 @@ const ProfileScreen = () => {
                   className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Birth Date</label>
-                <input
-                  type="date"
-                  value={profile.date_of_birth || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      date_of_birth: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
             </div>
           </div>
         )
 
-      case 2: // Experience
+      case 2: // Work & Experience & Social
         return (
           <div className="space-y-4">
             <div>
@@ -720,42 +784,162 @@ const ProfileScreen = () => {
               />
             </div>
 
+            {/* Add Experience Role and Years */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Experience Role</label>
+                <input
+                  type="text"
+                  placeholder="Job Role/Position"
+                  value={profile.experience?.role || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      experience: {
+                        ...prev.experience,
+                        role: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Years of Experience</label>
+                <input
+                  type="number"
+                  placeholder="Years"
+                  value={profile.experience?.years || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      experience: {
+                        ...prev.experience,
+                        years: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+            </div>
+
+            {/* Add Previous Work Companies - Make it editable */}
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">LinkedIn</label>
-              <input
-                type="url"
-                placeholder="LinkedIn URL"
-                value={profile.social_links?.linkedin_link || ""}
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Previous Companies</label>
+              <textarea
+                placeholder="Enter companies separated by commas (e.g., Company A, Company B, Company C)"
+                value={Array.isArray(profile.Worked_in) ? profile.Worked_in.join(", ") : ""}
                 onChange={(e) =>
                   setProfile((prev) => ({
                     ...prev,
-                    social_links: {
-                      ...prev.social_links,
-                      linkedin_link: e.target.value,
-                    },
+                    Worked_in: e.target.value.split(",").map(item => item.trim()).filter(item => item),
                   }))
                 }
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                rows={2}
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
-            <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Website</label>
-              <input
-                type="url"
-                placeholder="Website URL"
-                value={profile.social_links?.website_link || ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    social_links: {
-                      ...prev.social_links,
-                      website_link: e.target.value,
-                    },
-                  }))
-                }
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-              />
+            {/* Social Links Section */}
+            <div className="border-t border-green-200 pt-4 mt-6">
+              <h3 className="text-sm font-bold text-green-900 mb-3">Social Links</h3>
+              
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">LinkedIn</label>
+                <input
+                  type="url"
+                  placeholder="LinkedIn URL"
+                  value={profile.social_links?.linkedin_link || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      social_links: {
+                        ...prev.social_links,
+                        linkedin_link: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Website</label>
+                <input
+                  type="url"
+                  placeholder="Website URL"
+                  value={profile.social_links?.website_link || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      social_links: {
+                        ...prev.social_links,
+                        website_link: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+
+              {/* Add more social links */}
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Twitter</label>
+                <input
+                  type="url"
+                  placeholder="Twitter URL"
+                  value={profile.social_links?.twitter_link || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      social_links: {
+                        ...prev.social_links,
+                        twitter_link: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Facebook</label>
+                <input
+                  type="url"
+                  placeholder="Facebook URL"
+                  value={profile.social_links?.facebook_link || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      social_links: {
+                        ...prev.social_links,
+                        facebook_link: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Instagram</label>
+                <input
+                  type="url"
+                  placeholder="Instagram URL"
+                  value={profile.social_links?.instagram_link || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      social_links: {
+                        ...prev.social_links,
+                        instagram_link: e.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
             </div>
           </div>
         )
