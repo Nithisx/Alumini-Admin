@@ -779,11 +779,14 @@ export default function MembersPage() {
                     key={member.id}
                     className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group"
                   >
-                    {/* Profile Image */}
                     
                     <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
                       <img
-                        src={member.profile_photo || placeholder}
+                        src={
+                          member.profile_photo
+                            ? `https://xyndrix.me/api${member.profile_photo}`
+                            : placeholder
+                        }
                         alt={`${member.first_name || 'Alumni'} ${member.last_name || ''}`}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         onError={(e) => {
