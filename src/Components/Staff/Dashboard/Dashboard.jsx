@@ -117,10 +117,14 @@ const HomePage = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
         <Herosection />
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Now with Navigation */}
         <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 border border-green-100">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl">
+            {/* Upcoming Events Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/staff/event/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -142,9 +146,16 @@ const HomePage = () => {
               <p className="text-green-600 font-medium text-sm sm:text-base">
                 Upcoming Events
               </p>
+              <div className="mt-2 text-xs text-green-500 opacity-75">
+                Click to view all events
+              </div>
             </div>
 
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl">
+            {/* Photo Albums Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/staff/albums/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -172,9 +183,16 @@ const HomePage = () => {
               <p className="text-emerald-600 font-medium text-sm sm:text-base">
                 Photo Albums
               </p>
+              <div className="mt-2 text-xs text-emerald-500 opacity-75">
+                Click to view gallery
+              </div>
             </div>
 
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl">
+            {/* New Members Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/staff/members/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -196,9 +214,16 @@ const HomePage = () => {
               <p className="text-teal-600 font-medium text-sm sm:text-base">
                 New Members
               </p>
+              <div className="mt-2 text-xs text-teal-500 opacity-75">
+                Click to view new members
+              </div>
             </div>
 
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl">
+            {/* Total Members Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/staff/members/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -220,6 +245,9 @@ const HomePage = () => {
               <p className="text-cyan-600 font-medium text-sm sm:text-base">
                 Total Members
               </p>
+              <div className="mt-2 text-xs text-cyan-500 opacity-75">
+                Click to view all members
+              </div>
             </div>
           </div>
         </div>
@@ -761,7 +789,9 @@ const HomePage = () => {
                       ? "border-b border-green-100"
                       : ""
                   }`}
-                  onClick={() => navigate(`/staff/members/${member.username}/`)}
+                  onClick={() =>
+                    navigate(`/staff/members/${member.username}/`)
+                  }
                 >
                   <div className="mr-3 sm:mr-4 relative">
                     {member.profile_photo ? (

@@ -4,7 +4,7 @@ import image2 from "../../../images/image2.jpg";
 import image3 from "../../../images/image3.jpg";
 import Herosection from "../../../Pages/Herosection";
 import { format } from "date-fns";
-import Footer from "../../../Pages/about_components/Footer"
+import Footer from "../../../Pages/about_components/Footer";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -117,10 +117,14 @@ const HomePage = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
         <Herosection />
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Now with Navigation */}
         <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 border border-green-100">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl">
+            {/* Upcoming Events Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/alumni/event/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -139,10 +143,19 @@ const HomePage = () => {
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-700 mb-1 sm:mb-2">
                 {data.upcoming_events}
               </p>
-              <p className="text-green-600 font-medium text-sm sm:text-base">Upcoming Events</p>
+              <p className="text-green-600 font-medium text-sm sm:text-base">
+                Upcoming Events
+              </p>
+              <div className="mt-2 text-xs text-green-500 opacity-75">
+                Click to view all events
+              </div>
             </div>
 
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl">
+            {/* Photo Albums Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/alumni/albums/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -167,10 +180,19 @@ const HomePage = () => {
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-700 mb-1 sm:mb-2">
                 {data.albums_count}
               </p>
-              <p className="text-emerald-600 font-medium text-sm sm:text-base">Photo Albums</p>
+              <p className="text-emerald-600 font-medium text-sm sm:text-base">
+                Photo Albums
+              </p>
+              <div className="mt-2 text-xs text-emerald-500 opacity-75">
+                Click to view gallery
+              </div>
             </div>
 
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl">
+            {/* New Members Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/alumni/members/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -189,10 +211,19 @@ const HomePage = () => {
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-teal-700 mb-1 sm:mb-2">
                 {data.new_users}
               </p>
-              <p className="text-teal-600 font-medium text-sm sm:text-base">New Members</p>
+              <p className="text-teal-600 font-medium text-sm sm:text-base">
+                New Members
+              </p>
+              <div className="mt-2 text-xs text-teal-500 opacity-75">
+                Click to view new members
+              </div>
             </div>
 
-            <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl">
+            {/* Total Members Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/alumni/members/")}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
                   className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -211,7 +242,12 @@ const HomePage = () => {
               <p className="text-2xl sm:text-2xl lg:text-3xl font-bold text-cyan-700 mb-1 sm:mb-2">
                 {data.total_users}
               </p>
-              <p className="text-cyan-600 font-medium text-sm sm:text-base">Total Members</p>
+              <p className="text-cyan-600 font-medium text-sm sm:text-base">
+                Total Members
+              </p>
+              <div className="mt-2 text-xs text-cyan-500 opacity-75">
+                Click to view all members
+              </div>
             </div>
           </div>
         </div>
@@ -498,7 +534,9 @@ const HomePage = () => {
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         ></path>
                       </svg>
-                      <p className="text-gray-700 font-medium text-sm sm:text-base line-clamp-1">{event.venue}</p>
+                      <p className="text-gray-700 font-medium text-sm sm:text-base line-clamp-1">
+                        {event.venue}
+                      </p>
                     </div>
 
                     <p className="text-gray-600 mb-4 sm:mb-6 line-clamp-2 leading-relaxed text-sm sm:text-base">
@@ -534,8 +572,12 @@ const HomePage = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-700">No upcoming events</h3>
-                <p className="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">Check back later for new events</p>
+                <h3 className="text-base sm:text-lg font-medium text-gray-700">
+                  No upcoming events
+                </h3>
+                <p className="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">
+                  Check back later for new events
+                </p>
               </div>
             )}
           </div>
@@ -549,7 +591,9 @@ const HomePage = () => {
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-800 mb-2">
                   Photo Gallery
                 </h2>
-                <p className="text-green-600 text-sm sm:text-base">Memories captured in time</p>
+                <p className="text-green-600 text-sm sm:text-base">
+                  Memories captured in time
+                </p>
               </div>
               <button
                 onClick={() => navigate("/alumni/albums/")}
@@ -711,7 +755,9 @@ const HomePage = () => {
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-800 mb-2">
                   New Members
                 </h2>
-                <p className="text-green-600 text-sm sm:text-base">Welcome our newest alumni</p>
+                <p className="text-green-600 text-sm sm:text-base">
+                  Welcome our newest alumni
+                </p>
               </div>
               <button
                 onClick={() => navigate("/alumni/members/")}
