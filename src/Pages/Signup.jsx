@@ -37,10 +37,11 @@ const GENDERS = ["Male", "Female", "Other"];
 
 // Updated college names
 const COLLEGE_NAMES = [
-  "FOASCM – Faculty of Arts, Science, Commerce, and Management",
-  "FOE – Faculty of Engineering",
-  "FOP – Faculty of Pharmacy",
-  "FOA – Faculty of Architecture & Planning",
+        "FASCM-Faculty of Arts, Science, Commerce and Management",
+        "FOADP-Faculty of Architecture, Designing and Planning",
+        "FOE-Faculty of Engineering",
+        "FOE–Faculty of Engineering",
+        "FOP-Faculty of Pharmacy"
 ];
 
 // Updated courses data structure

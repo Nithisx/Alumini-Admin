@@ -782,16 +782,20 @@ export default function MembersPage() {
                     {/* Profile Image */}
                     
                     <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-                      <img
-                        src={member.profile_photo || placeholder}
-                        alt={`${member.first_name || 'Alumni'} ${member.last_name || ''}`}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.onerror = null; // Prevent infinite loop
-                          // Generate avatar with initials if image fails to load
-                          e.target.src = getInitialsAvatar(member.first_name, member.last_name);
-                        }}
-                      />
+                       <img
+                                              src={
+                                                member.profile_photo
+                                                  ? `https://xyndrix.me/api${member.profile_photo}`
+                                                  : placeholder
+                                              }
+                                              alt={`${member.first_name || 'Alumni'} ${member.last_name || ''}`}
+                                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                              onError={(e) => {
+                                                e.target.onerror = null; // Prevent infinite loop
+                                                // Generate avatar with initials if image fails to load
+                                                e.target.src = getInitialsAvatar(member.first_name, member.last_name);
+                                              }}
+                                            />
                       {/* Role Badge */}
                       <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                         <span
