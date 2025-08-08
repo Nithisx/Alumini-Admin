@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumDetailPage = () => {
   const { albumId } = useParams();
@@ -312,19 +314,7 @@ const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
                     onClick={() => handleDelete(event.id)}
                     className="absolute top-2 right-2 bg-red-500 p-2 rounded hover:bg-red-400 transition duration-300 opacity-0 group-hover:opacity-100"
                   >
-                    {/* Inline SVG Delete Icon */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-white"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M9 2a1 1 0 01.894.553L10 3h4a1 1 0 110 2h-1v10a2 2 0 01-2 2H8a2 2 0 01-2-2V5H5a1 1 0 110-2h4l.106-.447A1 1 0 019 2zm-1 4v10a1 1 0 001 1h4a1 1 0 001-1V6H8z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                     <FontAwesomeIcon icon={faTrash} className="text-sm" />
                   </button>
                 </div>
               ))

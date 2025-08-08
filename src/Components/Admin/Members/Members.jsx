@@ -549,7 +549,7 @@ export default function MembersPage() {
                 />
 
                 {/* Course Filter */}
-                <AutocompleteInput
+                {/* <AutocompleteInput
                   id="course-filter"
                   label="Course"
                   placeholder="Select course..."
@@ -572,7 +572,7 @@ export default function MembersPage() {
                       />
                     </svg>
                   }
-                />
+                /> */}
 
                 {/* Passed Out Year Filter */}
                 <AutocompleteInput
