@@ -601,7 +601,7 @@ export default function MembersPage() {
                 />
 
                 {/* Chapter Filter - Add this new filter */}
-                <AutocompleteInput
+                {/* <AutocompleteInput
                   id="chapter-filter"
                   label="Chapter"
                   placeholder="Select chapter..."
@@ -624,7 +624,7 @@ export default function MembersPage() {
                       />
                     </svg>
                   }
-                />
+                /> */}
 
                 {/* City Filter */}
                 <AutocompleteInput
