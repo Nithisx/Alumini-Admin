@@ -217,7 +217,7 @@ export default function NewsList() {
                     <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
                     <div className="flex justify-between items-center">
                       <a
-                        href={`/admin/news/${post.id}/`}
+                        href={`/staff/news/${post.id}/`}
                         className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
                       >
                         Read More

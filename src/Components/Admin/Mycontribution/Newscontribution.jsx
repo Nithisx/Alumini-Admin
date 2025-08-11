@@ -1,7 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MoreVertical, Share2, Trash2, X, Calendar, Eye, MessageCircle, Heart, RefreshCw } from 'lucide-react';
+import {
+  MoreVertical,
+  Share2,
+  Trash2,
+  X,
+  Calendar,
+  Eye,
+  MessageCircle,
+  Heart,
+  RefreshCw,
+} from "lucide-react";
 
 const COLORS = {
   primary: "#059669", // green-600
@@ -13,11 +23,11 @@ const BASE_URL = "https://xyndrix.me/api";
 // ImageSlider component for news with multiple images
 const ImageSlider = ({ images, baseUrl }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  
+
   const nextImage = () => {
     setActiveIndex((prev) => (prev + 1) % images.length);
   };
-  
+
   const prevImage = () => {
     setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
   };
@@ -61,7 +71,9 @@ const ImageSlider = ({ images, baseUrl }) => {
               key={index}
               onClick={() => setActiveIndex(index)}
               className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                activeIndex === index ? 'bg-green-600 scale-110' : 'bg-gray-300 hover:bg-gray-400'
+                activeIndex === index
+                  ? "bg-green-600 scale-110"
+                  : "bg-gray-300 hover:bg-gray-400"
               }`}
             />
           ))}
@@ -78,12 +90,12 @@ const NewsItem = ({ item, onDelete }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  
+
   const handleDelete = () => {
     setShowMenu(false);
     setShowDeleteConfirm(true);
   };
-  
+
   const confirmDelete = async () => {
     setIsDeleting(true);
     try {
@@ -93,7 +105,7 @@ const NewsItem = ({ item, onDelete }) => {
       setShowDeleteConfirm(false);
     }
   };
-  
+
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden hover:shadow-xl transition-all duration-300">
       {/* Post Header */}
@@ -101,46 +113,53 @@ const NewsItem = ({ item, onDelete }) => {
         <div className="flex items-center space-x-4">
           {item.user && item.user.profile_photo && (
             <img
-              src={item.user.profile_photo.startsWith("http")
-                ? item.user.profile_photo
-                : `${BASE_URL}${item.user.profile_photo}`}
+              src={
+                item.user.profile_photo.startsWith("http")
+                  ? item.user.profile_photo
+                  : `${BASE_URL}${item.user.profile_photo}`
+              }
               alt="Profile"
               className="w-12 h-12 rounded-full bg-gray-200 ring-2 ring-green-100"
             />
           )}
           <div>
             <p className="font-semibold text-gray-900 text-lg">
-              {item.user ? `${item.user.first_name} ${item.user.last_name}` : 'Anonymous'}
+              {item.user
+                ? `${item.user.first_name} ${item.user.last_name}`
+                : "Anonymous"}
             </p>
             <p className="text-gray-500 text-sm flex items-center">
               <Calendar size={14} className="mr-1" />
-              {new Date(item.posted_on || item.created_at).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })}
+              {new Date(item.posted_on || item.created_at).toLocaleDateString(
+                "en-US",
+                {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                }
+              )}
             </p>
           </div>
         </div>
         <div className="relative">
-          <button 
+          <button
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             onClick={() => setShowMenu(!showMenu)}
           >
             <MoreVertical size={20} className="text-gray-600" />
           </button>
-          
+
           {/* Menu Popup */}
           {showMenu && (
             <div className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-36 overflow-hidden">
-              <button 
+              <button
                 className="flex items-center w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors duration-200"
                 onClick={handleDelete}
               >
                 <Trash2 size={16} className="mr-3" />
                 Delete
               </button>
-              <button 
+              <button
                 className="flex items-center w-full px-4 py-3 text-left hover:bg-gray-50 text-gray-600 transition-colors duration-200"
                 onClick={() => setShowMenu(false)}
               >
@@ -151,41 +170,49 @@ const NewsItem = ({ item, onDelete }) => {
           )}
         </div>
       </div>
-      
+
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <div className="mx-6 mb-4 bg-red-50 border border-red-200 rounded-xl p-6">
-          <h4 className="text-red-800 font-semibold mb-2">Delete News Article</h4>
-          <p className="text-red-700 mb-4">Are you sure you want to delete this news article? This action cannot be undone.</p>
+          <h4 className="text-red-800 font-semibold mb-2">
+            Delete News Article
+          </h4>
+          <p className="text-red-700 mb-4">
+            Are you sure you want to delete this news article? This action
+            cannot be undone.
+          </p>
           <div className="flex space-x-3">
-            <button 
+            <button
               className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isDeleting}
             >
               Cancel
             </button>
-            <button 
+            <button
               className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors duration-200 font-medium"
               onClick={confirmDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
       )}
-      
+
       {/* News Content */}
       <div className="px-6">
         {/* Title */}
         <div className="mb-4">
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">{item.title}</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            {item.title}
+          </h3>
         </div>
 
         {/* News Images */}
-        {item.images && item.images.length > 0 && (
-          item.images.length === 1 ? (
+        {item.images &&
+          item.images.length > 0 &&
+          (item.images.length === 1 ? (
             <div className="mb-6">
               <img
                 src={`${BASE_URL}${item.images[0].image}`}
@@ -195,16 +222,15 @@ const NewsItem = ({ item, onDelete }) => {
             </div>
           ) : (
             <ImageSlider images={item.images} baseUrl={BASE_URL} />
-          )
-        )}
-        
+          ))}
+
         {/* Content/Description */}
         <div className="mb-6">
           <p className="text-gray-700 leading-relaxed text-base">
-            {item.content || item.description || 'No content available'}
+            {item.content || item.description || "No content available"}
           </p>
         </div>
-        
+
         {/* Engagement Stats */}
         <div className="flex items-center justify-between py-4 border-t border-gray-100 mb-4">
           <div className="flex items-center space-x-6">
@@ -219,35 +245,42 @@ const NewsItem = ({ item, onDelete }) => {
               <span className="ml-1 text-sm">comments</span>
             </div>
           </div>
-          
+
           <button className="flex items-center text-green-600 hover:text-green-700 transition-colors duration-200 bg-green-50 px-4 py-2 rounded-lg hover:bg-green-100">
             <Share2 size={16} className="mr-2" />
             <span className="font-medium">Share</span>
           </button>
         </div>
       </div>
-      
+
       {/* Comments Section */}
       <div className="border-t border-gray-100">
-        <button 
+        <button
           className="w-full text-center text-green-700 font-semibold py-4 hover:bg-green-50 transition-colors duration-200 flex items-center justify-center"
           onClick={() => setShowComments(!showComments)}
         >
           <MessageCircle size={18} className="mr-2" />
           {showComments ? "Hide Comments" : "Show Comments"}
         </button>
-        
+
         {showComments && item.comments && item.comments.length > 0 && (
           <div className="bg-gray-50 p-6 space-y-4">
-            <h4 className="font-semibold text-gray-900 mb-4">Comments ({item.comments.length})</h4>
+            <h4 className="font-semibold text-gray-900 mb-4">
+              Comments ({item.comments.length})
+            </h4>
             {item.comments.map((comment) => (
-              <div key={comment.id} className="bg-white p-4 rounded-xl shadow-sm">
+              <div
+                key={comment.id}
+                className="bg-white p-4 rounded-xl shadow-sm"
+              >
                 <div className="flex items-start space-x-3">
                   {comment.user && comment.user.profile_photo && (
                     <img
-                      src={comment.user.profile_photo.startsWith("http")
-                        ? comment.user.profile_photo
-                        : `${BASE_URL}${comment.user.profile_photo}`}
+                      src={
+                        comment.user.profile_photo.startsWith("http")
+                          ? comment.user.profile_photo
+                          : `${BASE_URL}${comment.user.profile_photo}`
+                      }
                       alt="Commenter"
                       className="w-10 h-10 rounded-full bg-gray-200 ring-2 ring-gray-100"
                     />
@@ -255,19 +288,24 @@ const NewsItem = ({ item, onDelete }) => {
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
                       <p className="font-semibold text-gray-900">
-                        {comment.user ? `${comment.user.first_name} ${comment.user.last_name}` : 'Anonymous'}
+                        {comment.user
+                          ? `${comment.user.first_name} ${comment.user.last_name}`
+                          : "Anonymous"}
                       </p>
                       <span className="text-green-600 text-sm">
-                        @{comment.user ? comment.user.username : 'anonymous'}
+                        @{comment.user ? comment.user.username : "anonymous"}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mb-2">
-                      {new Date(comment.created_at).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
+                      {new Date(comment.created_at).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
                     </p>
                     <p className="text-gray-700 leading-relaxed">
                       {comment.comment}
@@ -293,18 +331,18 @@ const NewsContribution = () => {
     try {
       const token = localStorage.getItem("Token");
       if (!token) throw new Error("Token not found");
-      
-      const response = await fetch(`${BASE_URL}/myposts/`, { 
-        headers: { 
+
+      const response = await fetch(`${BASE_URL}/myposts/`, {
+        headers: {
           Authorization: `Token ${token}`,
           "Content-Type": "application/json",
-        }
+        },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch news: ${response.status}`);
       }
-      
+
       const data = await response.json();
       const newsData = data.news || data.results || [];
       setNews(newsData);
@@ -334,20 +372,22 @@ const NewsContribution = () => {
     try {
       const token = localStorage.getItem("Token");
       if (!token) throw new Error("Token not found");
-      
+
       const response = await fetch(`${BASE_URL}/news/${newsId}/`, {
-        method: 'DELETE',
-        headers: { 
+        method: "DELETE",
+        headers: {
           Authorization: `Token ${token}`,
           "Content-Type": "application/json",
-        }
+        },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to delete news: ${response.status}`);
       }
-      
-      setNews(prevNews => prevNews.filter(article => article.id !== newsId));
+
+      setNews((prevNews) =>
+        prevNews.filter((article) => article.id !== newsId)
+      );
       alert("News article deleted successfully!");
     } catch (error) {
       console.error("Error deleting news:", error);
@@ -360,7 +400,9 @@ const NewsContribution = () => {
       <div className="flex justify-center items-center h-96 bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading your news articles...</p>
+          <p className="text-gray-600 font-medium">
+            Loading your news articles...
+          </p>
         </div>
       </div>
     );
@@ -376,8 +418,13 @@ const NewsContribution = () => {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Eye size={32} className="text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No News Articles Yet</h3>
-              <p className="text-gray-600">You haven't created any news articles yet. Start contributing to share important updates!</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No News Articles Yet
+              </h3>
+              <p className="text-gray-600">
+                You haven't created any news articles yet. Start contributing to
+                share important updates!
+              </p>
             </div>
           </div>
         ) : (

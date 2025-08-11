@@ -49,7 +49,7 @@ const AppRoutes = () => {
         
         {/* Login and Signup */}
         <Route path="/login" element={token ? redirectAuthenticated() : <LoginPage />} />
-        <Route path="/Signup" element={token ? redirectAuthenticated() : <Signup />} />
+        <Route path="/signup" element={token ? redirectAuthenticated() : <Signup />} />
 
         {/* Admin Routes */}
         <Route

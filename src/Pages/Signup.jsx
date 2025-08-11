@@ -541,7 +541,7 @@ const Signup = () => {
           />
 
           {/* Only show Chapter if not Staff */}
-          {formData.role !== "Staff" && (
+          {/* {formData.role !== "Staff" && (
             <AppDropdown
               label="Chapter"
               items={CHAPTERS}
@@ -549,7 +549,7 @@ const Signup = () => {
               onValueChange={(v) => updateField("chapter", v)}
               error={fieldErrors.chapter}
             />
-          )}
+          )} */}
 
           <AppDropdown
             label="Course/Department"
