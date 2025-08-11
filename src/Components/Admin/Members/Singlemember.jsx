@@ -96,7 +96,7 @@ export default function SingleMember() {
         {/* Back Button */}
         <div className="mb-4 sm:mb-6">
           <Link
-            to="/staff/members"
+            to="/admin/members"
             className="inline-flex items-center text-green-600 hover:text-green-800 font-medium transition-colors group"
           >
             <svg 
