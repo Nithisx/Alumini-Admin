@@ -446,7 +446,7 @@ const JobFeed = () => {
                   )}
 
                   {/* Reactions */}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  {/* <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
                       <FontAwesomeIcon
                         icon={faHeart}
@@ -466,13 +466,13 @@ const JobFeed = () => {
                       />
                       <span>{post.total_comments || 0} comments</span>
                     </button>
-                  </div>
+                  </div> */}
 
                   {/* Comments */}
-                  <CommentSection
+                  {/* <CommentSection
                     comments={post.comments}
                     totalComments={post.total_comments}
-                  />
+                  /> */}
                 </div>
               </div>
             ))}

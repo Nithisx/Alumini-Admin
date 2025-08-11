@@ -432,7 +432,7 @@ const JobFeed = () => {
                     {post.images && post.images.length > 0 && <ImageGallery images={post.images} />}
 
                     {/* Engagement Section */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    {/* <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors duration-200 group">
                         <Heart
                           className={`w-4 h-4 transition-colors ${
@@ -452,10 +452,10 @@ const JobFeed = () => {
                           {post.total_comments || 0} {post.total_comments === 1 ? "comment" : "comments"}
                         </span>
                       </button>
-                    </div>
+                    </div> */}
 
                     {/* Comments */}
-                    <CommentSection comments={post.comments} totalComments={post.total_comments} />
+                    {/* <CommentSection comments={post.comments} totalComments={post.total_comments} /> */}
                   </div>
                 </div>
               ))}
