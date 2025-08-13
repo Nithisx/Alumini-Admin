@@ -43,6 +43,14 @@ const formatDate = (dateString) => {
   });
 };
 
+// Helper function to get the correct image URL for profile photos
+const getProfileImageUrl = (profilePhotoPath) => {
+  if (!profilePhotoPath) return "";
+  if (profilePhotoPath.startsWith("http")) return profilePhotoPath;
+  // Remove /api from the URL for media files
+  return `https://xyndrix.me${profilePhotoPath}`;
+};
+
 // Image Gallery Component
 const ImageGallery = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -63,7 +71,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `https://xyndrix.me/api${imagePath}`;
+    return `https://xyndrix.me${imagePath}`;
   };
 
   return (
@@ -92,7 +100,7 @@ const ImageGallery = ({ images }) => {
             {images.map((_, idx) => (
               <div
                 key={idx}
-                className={`h-2 w-2 mx-1 rounded-full ${
+                className={`h-2 w-2 mx-1 rounded-full cursor-pointer ${
                   idx === currentIndex ? "bg-white" : "bg-gray-400"
                 }`}
                 onClick={() => setCurrentIndex(idx)}
@@ -133,9 +141,9 @@ const CommentSection = ({ comments, totalComments }) => {
             <div className="flex-shrink-0">
               {comment.user.profile_photo ? (
                 <img
-                  src={comment.user.profile_photo}
+                  src={getProfileImageUrl(comment.user.profile_photo)}
                   alt={`${comment.user.first_name}'s avatar`}
-                  className="w-8 h-8 rounded-full"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
                 <FontAwesomeIcon
@@ -365,16 +373,22 @@ const JobFeed = () => {
                   <div className="flex items-center space-x-3">
                     {post.user?.profile_photo ? (
                       <img
-                        src={post.user.profile_photo}
+                        src={getProfileImageUrl(post.user.profile_photo)}
                         alt={`${post.user.first_name}'s avatar`}
                         className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                        onError={(e) => {
+                          console.log("Profile image failed to load:", post.user.profile_photo);
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
                       />
-                    ) : (
-                      <FontAwesomeIcon
-                        icon={faUserCircle}
-                        className="w-10 h-10 text-gray-400"
-                      />
-                    )}
+                    ) : null}
+                    {/* Fallback icon */}
+                    <FontAwesomeIcon
+                      icon={faUserCircle}
+                      className="w-10 h-10 text-gray-400"
+                      style={{ display: post.user?.profile_photo ? 'none' : 'block' }}
+                    />
                     <div>
                       <div className="font-semibold text-gray-800">
                         {post.user?.first_name} {post.user?.last_name}
@@ -446,7 +460,7 @@ const JobFeed = () => {
                   )}
 
                   {/* Reactions */}
-                  {/* <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <button className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-100 transition">
                       <FontAwesomeIcon
                         icon={faHeart}
@@ -466,13 +480,13 @@ const JobFeed = () => {
                       />
                       <span>{post.total_comments || 0} comments</span>
                     </button>
-                  </div> */}
+                  </div>
 
                   {/* Comments */}
-                  {/* <CommentSection
+                  <CommentSection
                     comments={post.comments}
                     totalComments={post.total_comments}
-                  /> */}
+                  />
                 </div>
               </div>
             ))}
@@ -736,7 +750,7 @@ const JobFeed = () => {
                     <>
                       <FontAwesomeIcon
                         icon={faSpinner}
-                        className="animate-spin"
+                        className="animate-spin mr-2"
                       />
                       Posting...
                     </>
