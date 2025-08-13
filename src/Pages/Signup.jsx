@@ -61,13 +61,16 @@ const COURSES = [
   "Master of Computer Applications",
   "Master of Engineering",
   "Master of Planning",
-  "Master of Science"
+  "Master of Science",
 ];
 
 const COURSE_BRANCH_MAPPING = {
   "Bachelor of Architecture": ["General"],
   "Bachelor of Arts": ["English Literature", "General"],
-  "Bachelor of Business Administration": ["General", "Business Process Services"],
+  "Bachelor of Business Administration": [
+    "General",
+    "Business Process Services",
+  ],
   "Bachelor of Commerce": ["General", "Professional Accounting"],
   "Bachelor of Computer Applications": ["Computer Application", "General"],
   "Bachelor of Design": ["Interior Design", "General"],
@@ -83,7 +86,7 @@ const COURSE_BRANCH_MAPPING = {
     "Electronics & Communication Engineering",
     "Food Technology",
     "Information Technology",
-    "Mechanical Engineering"
+    "Mechanical Engineering",
   ],
   "Bachelor of Pharmacy": ["Pharmacy"],
   "Bachelor of Science": [
@@ -97,7 +100,7 @@ const COURSE_BRANCH_MAPPING = {
     "Mathematics",
     "Microbiology",
     "Physics",
-    "General"
+    "General",
   ],
   "Bachelor of Technology": [
     "Aeronautical Engineering",
@@ -111,7 +114,7 @@ const COURSE_BRANCH_MAPPING = {
     "Electronics & Communication Engineering",
     "Food Technology",
     "Information Technology",
-    "Mechanical Engineering"
+    "Mechanical Engineering",
   ],
   "Master of Architecture": ["General"],
   "Master of Building and Engineering Management": ["General"],
@@ -136,7 +139,7 @@ const COURSE_BRANCH_MAPPING = {
     "Structural Engineering",
     "Structural Engineering (Part Time)",
     "VLSI",
-    "Water Resources And Environmental Engineering"
+    "Water Resources And Environmental Engineering",
   ],
   "Master of Planning": ["General"],
   "Master of Science": [
@@ -150,8 +153,8 @@ const COURSE_BRANCH_MAPPING = {
     "Mathematics",
     "Microbiology",
     "Physics",
-    "General"
-  ]
+    "General",
+  ],
 };
 
 // Remove old courses array and update function
@@ -245,8 +248,8 @@ const Signup = () => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
       // If course changes, reset branch
-      if (field === 'course') {
-        newData.branch = '';
+      if (field === "course") {
+        newData.branch = "";
       }
       return newData;
     });
@@ -608,7 +611,6 @@ const Signup = () => {
             error={fieldErrors.gender}
           />
 
-
           {/* Course Selection */}
           <AppDropdown
             label="Course"
@@ -705,7 +707,7 @@ const Signup = () => {
           <InputField
             value={formData.password}
             onChange={(v) => updateField("password", v)}
-            placeholder="Password"
+            placeholder="dd/mm/yyyy"
             error={fieldErrors.password}
             type="password"
           />

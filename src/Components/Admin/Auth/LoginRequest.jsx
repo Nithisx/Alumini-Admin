@@ -788,6 +788,14 @@ export default function RegisterRequest() {
                                               {req.course || "N/A"}
                                             </span>
                                           </p>
+                                          <p>
+                                            <span className="font-semibold text-gray-600">
+                                              Branch:
+                                            </span>{" "}
+                                            <span className="text-gray-800">
+                                              {req.branch || "N/A"}
+                                            </span>
+                                          </p>
                                           <div className="flex items-center">
                                             <FontAwesomeIcon
                                               icon={faCalendarAlt}
