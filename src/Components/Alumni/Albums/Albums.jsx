@@ -332,13 +332,7 @@ const AlbumsPage = () => {
                   >
                     <div className="relative h-48 overflow-hidden">
                       {/* Delete button in top right corner */}
-                      <button
-                        onClick={(e) => handleDeleteAlbum(album.id, e)}
-                        className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
-                        title="Delete album"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="text-sm" />
-                      </button>
+                      
 
                       {album.cover_image ? (
                         <img
