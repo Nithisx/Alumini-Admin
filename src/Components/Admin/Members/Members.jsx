@@ -211,6 +211,7 @@ export default function MembersPage() {
   const [currentWorkFilter, setCurrentWorkFilter] = useState("");
   const [emailFilter, setEmailFilter] = useState("");
   const [chapterFilter, setChapterFilter] = useState(""); // Add chapter filter state
+  const [branchFilter, setBranchFilter] = useState(""); // Add branch filter state
   const [showFilters, setShowFilters] = useState(false);
 
   // Store dropdown options
@@ -225,6 +226,7 @@ export default function MembersPage() {
     course: [],
     email: [],
     current_location: [], // Add current_location for chapters
+    branch: [], // Add branch for chapters
   });
 
   const [loading, setLoading] = useState(true);
@@ -279,6 +281,7 @@ export default function MembersPage() {
     if (currentWorkFilter) params.append("current_work", currentWorkFilter);
     if (chapterFilter) params.append("current_location", chapterFilter);
     if (emailFilter) params.append("email", emailFilter);
+    if (branchFilter) params.append("branch", branchFilter);
     try {
       const response = await axios.get(`${API_URL}?${params.toString()}`, {
         headers: {
@@ -376,6 +379,7 @@ export default function MembersPage() {
     currentWorkFilter,
     chapterFilter, // Add chapter filter to dependencies
     emailFilter, // Make sure this is here
+    branchFilter, // Add branch filter to dependencies
   ]);
 
   // Whenever page or filters change, fetch data
@@ -400,6 +404,7 @@ export default function MembersPage() {
     currentWorkFilter,
     chapterFilter, // Add chapter filter to dependencies
     emailFilter, // Make sure this is here
+    branchFilter, // Add branch filter to dependencies
   ]);
 
   // Handle page change
@@ -430,6 +435,7 @@ export default function MembersPage() {
     setCollegeNameFilter("");
     setCurrentWorkFilter("");
     setChapterFilter(""); // Add chapter filter to reset
+    setBranchFilter(""); // Add branch filter to reset
     setCurrentPage(1);
   };
 
@@ -557,6 +563,31 @@ export default function MembersPage() {
                   onChange={setCourseFilter}
                   filterType="course"
                   options={dropdownFilters.course || []}
+                  icon={
+                    <svg
+                      className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  }
+                />
+
+                <AutocompleteInput
+                  id="branch-filter"
+                  label="Branch"
+                  placeholder="Select branch..."
+                  value={branchFilter}
+                  onChange={setBranchFilter}
+                  filterType="branch"
+                  options={dropdownFilters.branch || []}
                   icon={
                     <svg
                       className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"

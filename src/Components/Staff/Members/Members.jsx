@@ -6,42 +6,45 @@ import placeholder from "../../../assets/placeholder.jpeg"; // Import your place
 
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "https://xyndrix.me/api";
-const API_URL = `${BASE_URL}/admin-members/`;
+const API_URL = `${BASE_URL}/staff-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
 
 // Placeholder image service
 const getInitialsAvatar = (firstName, lastName) => {
   if (!firstName && !lastName) return placeholder;
-  
+
   // Get initials from name
-  const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-  
+  const initials = `${firstName?.charAt(0) || ""}${
+    lastName?.charAt(0) || ""
+  }`.toUpperCase();
+
   // Generate a deterministic color based on name
   const colors = [
-    '#4299E1', // blue-500
-    '#48BB78', // green-500
-    '#ED8936', // orange-500
-    '#9F7AEA', // purple-500
-    '#F56565', // red-500
-    '#38B2AC', // teal-500
-    '#ECC94B', // yellow-500
-    '#667EEA', // indigo-500
-    '#ED64A6'  // pink-500
+    "#4299E1", // blue-500
+    "#48BB78", // green-500
+    "#ED8936", // orange-500
+    "#9F7AEA", // purple-500
+    "#F56565", // red-500
+    "#38B2AC", // teal-500
+    "#ECC94B", // yellow-500
+    "#667EEA", // indigo-500
+    "#ED64A6", // pink-500
   ];
-  
+
   // Simple hash function to get consistent color
   const hashCode = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = (hash << 5) - hash + str.charCodeAt(i);
       hash = hash & hash; // Convert to 32bit integer
     }
     return hash;
   };
-  
-  const colorIndex = Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length;
+
+  const colorIndex =
+    Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length;
   const backgroundColor = colors[colorIndex];
-  
+
   // Create SVG for avatar
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
@@ -50,11 +53,10 @@ const getInitialsAvatar = (firstName, lastName) => {
         fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
     </svg>
   `;
-  
+
   // Convert SVG to data URL
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
-
 
 const AutocompleteInput = ({
   id,
@@ -207,6 +209,9 @@ export default function MembersPage() {
   const [courseFilter, setCourseFilter] = useState("");
   const [collegeNameFilter, setCollegeNameFilter] = useState("");
   const [currentWorkFilter, setCurrentWorkFilter] = useState("");
+  const [emailFilter, setEmailFilter] = useState("");
+  const [chapterFilter, setChapterFilter] = useState(""); // Add chapter filter state
+  const [branchFilter, setBranchFilter] = useState(""); // Add branch filter state
   const [showFilters, setShowFilters] = useState(false);
 
   // Store dropdown options
@@ -219,6 +224,9 @@ export default function MembersPage() {
     role: [],
     passed_out_year: [],
     course: [],
+    email: [],
+    current_location: [], // Add current_location for chapters
+    branch: [], // Add branch for chapters
   });
 
   const [loading, setLoading] = useState(true);
@@ -248,11 +256,6 @@ export default function MembersPage() {
     }
   };
 
-  // Fetch dropdown options on component mount
-  useEffect(() => {
-    fetchDropdownFilters();
-  }, []);
-
   const fetchMembers = async () => {
     setLoading(true);
     const params = new URLSearchParams({
@@ -276,7 +279,9 @@ export default function MembersPage() {
     if (courseFilter) params.append("course", courseFilter);
     if (collegeNameFilter) params.append("college_name", collegeNameFilter);
     if (currentWorkFilter) params.append("current_work", currentWorkFilter);
-
+    if (chapterFilter) params.append("current_location", chapterFilter);
+    if (emailFilter) params.append("email", emailFilter);
+    if (branchFilter) params.append("branch", branchFilter);
     try {
       const response = await axios.get(`${API_URL}?${params.toString()}`, {
         headers: {
@@ -290,12 +295,69 @@ export default function MembersPage() {
       setMembers(results);
       setFilteredTotal(count);
       setTotalPages(Math.ceil(count / pageSize));
+
+      // Extract unique current_location values for chapter filter
+      if (results && results.length > 0) {
+        const currentLocations = [
+          ...new Set(
+            results
+              .map((member) => member.current_location)
+              .filter((location) => location && location.trim() !== "")
+          ),
+        ].sort();
+
+        // Update dropdown filters with current_location options
+        setDropdownFilters((prev) => ({
+          ...prev,
+          current_location: currentLocations,
+        }));
+      }
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching members:", error);
       setLoading(false);
     }
   };
+
+  // Fetch all members for chapter filter options (without pagination)
+  const fetchChapterOptions = async () => {
+    try {
+      // Fetch a larger sample to get more chapter options
+      const response = await axios.get(`${API_URL}?page_size=1000`, {
+        headers: {
+          Authorization: `Token ${TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const { results } = response.data;
+
+      if (results && results.length > 0) {
+        const currentLocations = [
+          ...new Set(
+            results
+              .map((member) => member.current_location)
+              .filter((location) => location && location.trim() !== "")
+          ),
+        ].sort();
+
+        // Update dropdown filters with comprehensive current_location options
+        setDropdownFilters((prev) => ({
+          ...prev,
+          current_location: currentLocations,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching chapter options:", error);
+    }
+  };
+
+  // Fetch dropdown options on component mount
+  useEffect(() => {
+    fetchDropdownFilters();
+    fetchChapterOptions(); // Fetch chapter options separately
+  }, []);
 
   // When filters change, always reset page to 1
   useEffect(() => {
@@ -315,6 +377,9 @@ export default function MembersPage() {
     courseFilter,
     collegeNameFilter,
     currentWorkFilter,
+    chapterFilter, // Add chapter filter to dependencies
+    emailFilter, // Make sure this is here
+    branchFilter, // Add branch filter to dependencies
   ]);
 
   // Whenever page or filters change, fetch data
@@ -337,6 +402,9 @@ export default function MembersPage() {
     courseFilter,
     collegeNameFilter,
     currentWorkFilter,
+    chapterFilter, // Add chapter filter to dependencies
+    emailFilter, // Make sure this is here
+    branchFilter, // Add branch filter to dependencies
   ]);
 
   // Handle page change
@@ -362,9 +430,12 @@ export default function MembersPage() {
     setCountryFilter("");
     setStateFilter("");
     setPassedOutYearFilter("");
+    setEmailFilter("");
     setCourseFilter("");
     setCollegeNameFilter("");
     setCurrentWorkFilter("");
+    setChapterFilter(""); // Add chapter filter to reset
+    setBranchFilter(""); // Add branch filter to reset
     setCurrentPage(1);
   };
 
@@ -509,6 +580,31 @@ export default function MembersPage() {
                   }
                 />
 
+                <AutocompleteInput
+                  id="branch-filter"
+                  label="Branch"
+                  placeholder="Select branch..."
+                  value={branchFilter}
+                  onChange={setBranchFilter}
+                  filterType="branch"
+                  options={dropdownFilters.branch || []}
+                  icon={
+                    <svg
+                      className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  }
+                />
+
                 {/* Passed Out Year Filter */}
                 <AutocompleteInput
                   id="passed-out-year-filter"
@@ -534,6 +630,32 @@ export default function MembersPage() {
                     </svg>
                   }
                 />
+
+                {/* Chapter Filter - Add this new filter */}
+                {/* <AutocompleteInput
+                  id="chapter-filter"
+                  label="Chapter"
+                  placeholder="Select chapter..."
+                  value={chapterFilter}
+                  onChange={setChapterFilter}
+                  filterType="chapter"
+                  options={dropdownFilters.current_location || []}
+                  icon={
+                    <svg
+                      className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                  }
+                /> */}
 
                 {/* City Filter */}
                 <AutocompleteInput
@@ -671,6 +793,31 @@ export default function MembersPage() {
                   }
                 />
 
+                <AutocompleteInput
+                  id="email"
+                  label="Email"
+                  placeholder="Select email..."
+                  value={emailFilter}
+                  onChange={setEmailFilter}
+                  filterType="email"
+                  options={dropdownFilters.email || []}
+                  icon={
+                    <svg
+                      className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
+                      />
+                    </svg>
+                  }
+                />
+
                 {/* Search - spans full width on mobile */}
                 <div className="sm:col-span-2 lg:col-span-1 space-y-2">
                   <label
@@ -724,6 +871,7 @@ export default function MembersPage() {
               courseFilter ||
               collegeNameFilter ||
               currentWorkFilter ||
+              chapterFilter || // Add chapter filter to filtered indicator
               genderFilter ||
               courseEndYearFilter ||
               companyFilter) && (
@@ -780,7 +928,7 @@ export default function MembersPage() {
                     className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group"
                   >
                     {/* Profile Image */}
-                    
+
                     <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
                        <img
                                               src={
@@ -815,6 +963,31 @@ export default function MembersPage() {
                       </h3>
 
                       <div className="space-y-1.5 sm:space-y-2">
+                        {/* Add Chapter/Current Location display */}
+                        {member.current_location && (
+                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                            <svg
+                              className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                            <span
+                              className="truncate"
+                              title={member.current_location}
+                            >
+                              {member.current_location}
+                            </span>
+                          </div>
+                        )}
+
                         {member.city && (
                           <div className="flex items-center text-xs sm:text-sm text-gray-600">
                             <svg
