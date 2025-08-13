@@ -6,7 +6,7 @@ import placeholder from "../../../assets/placeholder.jpeg"; // Import your place
 
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "https://xyndrix.me/api";
-const API_URL = `${BASE_URL}/alumini-members/`;
+const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
 
 // Placeholder image service
