@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
 const SIGNUP_URL = "https://xyndrix.me/api/signup/";
 
-// Updated REQUIRED_FIELDS without work_experience
+// Updated REQUIRED_FIELDS with branch instead of course
 const REQUIRED_FIELDS = [
   "first_name",
   "last_name",
@@ -14,6 +14,7 @@ const REQUIRED_FIELDS = [
   "college_name",
   "roll_no",
   "course",
+  "branch",
   "role",
   "chapter",
   "course_start_year",
@@ -43,53 +44,119 @@ const COLLEGE_NAMES = [
   "FOP-Faculty of Pharmacy",
 ];
 
-// Updated courses data structure
-const courses = [
-  {
-    category: "FOASCM",
-    courses: [
-      { stream: "Department of Mathematics" },
-      { stream: "Department of Physics" },
-      { stream: "Department of Chemistry" },
-      { stream: "Department of Languages" },
-      { stream: "Department of Microbiology" },
-      { stream: "Department of Biotechnology" },
-      { stream: "Department of Biochemistry" },
-      { stream: "Department of Computer Application" },
-      { stream: "Department of Computer Science" },
-      { stream: "Department of Computer Technology" },
-      { stream: "Department of Commerce" },
-      { stream: "Department of Management" },
-      { stream: "Department of Astrology" },
-    ],
-  },
-  {
-    category: "FOE",
-    courses: [
-      { stream: "Department of Biotechnology" },
-      { stream: "Department of Biomedical Engineering" },
-      { stream: "Department of Chemical Engineering" },
-      { stream: "Department of Civil Engineering" },
-      { stream: "Department of Food Technology" },
-      { stream: "Department of Artificial Intelligence and Data Science" },
-      { stream: "Department of Computer Science and Engineering" },
-      { stream: "Department of Cyber Security" },
-      { stream: "Department of Electronics and Communication Engineering" },
-      { stream: "Department of Electrical and Electronics Engineering" },
-      { stream: "Department of Mechanical Engineering" },
-      { stream: "Science and Humanities" },
-    ],
-  },
-  {
-    category: "FOA",
-    courses: [{ stream: "Department of Architecture" }],
-  },
-  {
-    category: "FOP",
-    courses: [{ stream: "Department of Pharmacy" }],
-  },
+// Course and Branch mapping
+const COURSES = [
+  "Bachelor of Architecture",
+  "Bachelor of Arts",
+  "Bachelor of Business Administration",
+  "Bachelor of Commerce",
+  "Bachelor of Computer Applications",
+  "Bachelor of Design",
+  "Bachelor of Engineering",
+  "Bachelor of Pharmacy",
+  "Bachelor of Science",
+  "Bachelor of Technology",
+  "Master of Architecture",
+  "Master of Building and Engineering Management",
+  "Master of Business Administration",
+  "Master of Commerce",
+  "Master of Computer Applications",
+  "Master of Engineering",
+  "Master of Planning",
+  "Master of Science"
 ];
 
+const COURSE_BRANCH_MAPPING = {
+  "Bachelor of Architecture": ["General"],
+  "Bachelor of Arts": ["English Literature", "General"],
+  "Bachelor of Business Administration": ["General", "Business Process Services"],
+  "Bachelor of Commerce": ["General", "Professional Accounting"],
+  "Bachelor of Computer Applications": ["Computer Application", "General"],
+  "Bachelor of Design": ["Interior Design", "General"],
+  "Bachelor of Engineering": [
+    "Aeronautical Engineering",
+    "Aerospace Engineering",
+    "Automobile Engineering",
+    "Bio Medical Engineering",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Computer Science Engineering",
+    "Electrical & Electronics Engineering",
+    "Electronics & Communication Engineering",
+    "Food Technology",
+    "Information Technology",
+    "Mechanical Engineering"
+  ],
+  "Bachelor of Pharmacy": ["Pharmacy"],
+  "Bachelor of Science": [
+    "BioTechnology",
+    "Biochemistry",
+    "Bioinformatics",
+    "Chemistry",
+    "Cognitive Science",
+    "Computer Science",
+    "Computer Technology",
+    "Mathematics",
+    "Microbiology",
+    "Physics",
+    "General"
+  ],
+  "Bachelor of Technology": [
+    "Aeronautical Engineering",
+    "Aerospace Engineering",
+    "Automobile Engineering",
+    "Bio Medical Engineering",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Computer Science Engineering",
+    "Electrical & Electronics Engineering",
+    "Electronics & Communication Engineering",
+    "Food Technology",
+    "Information Technology",
+    "Mechanical Engineering"
+  ],
+  "Master of Architecture": ["General"],
+  "Master of Building and Engineering Management": ["General"],
+  "Master of Business Administration": ["General", "Business Process Services"],
+  "Master of Commerce": ["General", "Professional Accounting"],
+  "Master of Computer Applications": ["Computer Application", "General"],
+  "Master of Engineering": [
+    "Aeronautical Engineering",
+    "Aerospace Engineering",
+    "Automobile Engineering",
+    "Bio Medical Engineering",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Computer Science Engineering",
+    "Electrical & Electronics Engineering",
+    "Electronics & Communication Engineering",
+    "Food Technology",
+    "Information Technology",
+    "Mechanical Engineering",
+    "Power Electronics and Drives",
+    "Power System Engineering",
+    "Structural Engineering",
+    "Structural Engineering (Part Time)",
+    "VLSI",
+    "Water Resources And Environmental Engineering"
+  ],
+  "Master of Planning": ["General"],
+  "Master of Science": [
+    "BioTechnology",
+    "Biochemistry",
+    "Bioinformatics",
+    "Chemistry",
+    "Cognitive Science",
+    "Computer Science",
+    "Computer Technology",
+    "Mathematics",
+    "Microbiology",
+    "Physics",
+    "General"
+  ]
+};
+
+// Remove old courses array and update function
 const InputField = React.memo(
   ({ value, onChange, placeholder, error, type, required = true }) => (
     <div className="mb-4">
@@ -149,6 +216,7 @@ const Signup = () => {
     college_name: "",
     roll_no: "",
     course: "",
+    branch: "",
     role: "",
     chapter: "",
     course_start_year: "",
@@ -170,17 +238,21 @@ const Signup = () => {
   const [resendTimer, setResendTimer] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Memoized course data processing
-  const processedCourses = useMemo(() => {
-    return courses.flatMap((category) =>
-      category.courses.map(
-        (course) => `${category.category} - ${course.stream}`
-      )
-    );
-  }, []);
+  // Memoized available branches based on selected course
+  const availableBranches = useMemo(() => {
+    if (!formData.course) return [];
+    return COURSE_BRANCH_MAPPING[formData.course] || [];
+  }, [formData.course]);
 
   const updateField = useCallback((field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+      // If course changes, reset branch
+      if (field === 'course') {
+        newData.branch = '';
+      }
+      return newData;
+    });
     setFieldErrors((prev) => ({ ...prev, [field]: "" }));
     setError("");
   }, []);
@@ -551,13 +623,25 @@ const Signup = () => {
             />
           )} */}
 
+          {/* Course Selection */}
           <AppDropdown
-            label="Course/Department"
-            items={processedCourses}
+            label="Course"
+            items={COURSES}
             selectedValue={formData.course}
             onValueChange={(v) => updateField("course", v)}
             error={fieldErrors.course}
           />
+
+          {/* Branch Selection - Only show if course is selected */}
+          {formData.course && availableBranches.length > 0 && (
+            <AppDropdown
+              label="Branch"
+              items={availableBranches}
+              selectedValue={formData.branch}
+              onValueChange={(v) => updateField("branch", v)}
+              error={fieldErrors.branch}
+            />
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
