@@ -14,9 +14,7 @@ const REQUIRED_FIELDS = [
   "college_name",
   "roll_no",
   "course",
-  "branch",
   "role",
-  "chapter",
   "course_start_year",
   "course_end_year",
   "passed_out_year",
@@ -218,7 +216,6 @@ const Signup = () => {
     course: "",
     branch: "",
     role: "",
-    chapter: "",
     course_start_year: "",
     course_end_year: "",
     passed_out_year: "",
@@ -268,8 +265,7 @@ const Signup = () => {
         formData.role === "Staff" &&
         (field === "roll_no" ||
           field === "course_end_year" ||
-          field === "passed_out_year" ||
-          field === "chapter") // Add chapter to the skip list for Staff
+          field === "passed_out_year")
       ) {
         return;
       }
@@ -612,16 +608,6 @@ const Signup = () => {
             error={fieldErrors.gender}
           />
 
-          {/* Only show Chapter if not Staff */}
-          {/* {formData.role !== "Staff" && (
-            <AppDropdown
-              label="Chapter"
-              items={CHAPTERS}
-              selectedValue={formData.chapter}
-              onValueChange={(v) => updateField("chapter", v)}
-              error={fieldErrors.chapter}
-            />
-          )} */}
 
           {/* Course Selection */}
           <AppDropdown
