@@ -707,7 +707,7 @@ const Signup = () => {
           <InputField
             value={formData.password}
             onChange={(v) => updateField("password", v)}
-            placeholder="dd/mm/yyyy"
+            placeholder="Password"
             error={fieldErrors.password}
             type="password"
           />
