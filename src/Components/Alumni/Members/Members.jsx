@@ -744,8 +744,8 @@ export default function MembersPage() {
                 {/* College Name Filter */}
                 <AutocompleteInput
                   id="college-name-filter"
-                  label="College Name"
-                  placeholder="Select college..."
+                  label="Faculty"
+                  placeholder="Select Faculty ..."
                   value={collegeNameFilter}
                   onChange={setCollegeNameFilter}
                   filterType="collegeName"
