@@ -87,6 +87,7 @@ const COURSE_BRANCH_MAPPING = {
     "Food Technology",
     "Information Technology",
     "Mechanical Engineering",
+    "Computer Science Engineering(Cyber)"
   ],
   "Bachelor of Pharmacy": ["Pharmacy"],
   "Bachelor of Science": [
@@ -115,6 +116,7 @@ const COURSE_BRANCH_MAPPING = {
     "Food Technology",
     "Information Technology",
     "Mechanical Engineering",
+    "Artificial Intelligence/Data Science"
   ],
   "Master of Architecture": ["General"],
   "Master of Building and Engineering Management": ["General"],
