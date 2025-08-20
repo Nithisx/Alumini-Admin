@@ -215,7 +215,7 @@ const SendMail = () => {
     }
   };
 
-  const roleOptions = ["Alumni", "Staff"];
+  const roleOptions = ["Alumni", "Staff" , "Student"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 py-4 sm:py-10">
