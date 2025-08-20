@@ -739,7 +739,7 @@ const Events = () => {
       const token = localStorage.getItem("Token")
       if (!token) throw new Error("Token not found")
 
-      const response = await fetch(`${BASE_URL}/events/${eventId}/`, {
+      const response = await fetch(`${BASE_URL}/events/${eventId}`, {
         method: "DELETE",
         headers: { Authorization: `Token ${token}` },
       })
