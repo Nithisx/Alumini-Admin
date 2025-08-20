@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
 const SIGNUP_URL = "https://xyndrix.me/api/signup/";
 
-// Updated REQUIRED_FIELDS with branch instead of course
+
 const REQUIRED_FIELDS = [
   "first_name",
   "last_name",
