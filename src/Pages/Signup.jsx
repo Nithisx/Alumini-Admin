@@ -239,6 +239,8 @@ const Signup = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameDebounceTimer, setUsernameDebounceTimer] = useState(null);
 
   // Memoized available branches based on selected course
   const availableBranches = useMemo(() => {
@@ -478,6 +480,56 @@ const Signup = () => {
     }
   }, [formData, validate, isOtpSent, fieldErrors]);
 
+const checkUsernameAvailability = useCallback((username) => {
+  // Clear any existing timer
+  if (usernameDebounceTimer) {
+    clearTimeout(usernameDebounceTimer);
+  }
+  
+  // Don't check empty usernames
+  if (!username.trim()) {
+    return;
+  }
+  
+  // Set a new timer to delay the API call (debounce)
+  const timer = setTimeout(async () => {
+    setIsCheckingUsername(true);
+    try {
+      const response = await fetch(`https://xyndrix.me/api/check-username/?username=${encodeURIComponent(username)}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // API error
+        setFieldErrors((prev) => ({
+          ...prev,
+          username: "Error checking username"
+        }));
+      } else if (data.exists || data.available === false) {
+        // Username is taken
+        setFieldErrors((prev) => ({
+          ...prev,
+          username: "This username is already taken"
+        }));
+      } else if (data.available === true) {
+        // Username is available
+        setFieldErrors((prev) => ({
+          ...prev,
+          username: ""
+        }));
+      }
+    } catch (err) {
+      console.error("Error checking username:", err);
+      setFieldErrors((prev) => ({
+        ...prev,
+        username: "Error checking username"
+      }));
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  }, 500); // Wait for 500ms after user stops typing
+  
+  setUsernameDebounceTimer(timer);
+}, [usernameDebounceTimer]);
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       {/* Success Modal */}
@@ -556,12 +608,31 @@ const Signup = () => {
             type="email"
           />
 
-          <InputField
-            value={formData.username}
-            onChange={(v) => updateField("username", v)}
-            placeholder="Username"
-            error={fieldErrors.username}
-          />
+          <div className="relative">
+            <InputField
+              value={formData.username}
+              onChange={(v) => {
+                updateField("username", v);
+                checkUsernameAvailability(v);
+              }}
+              placeholder={isCheckingUsername ? "Checking username..." : "Username"}
+              error={fieldErrors.username}
+            />
+            {formData.username && !isCheckingUsername && (
+              <div className="absolute right-3 top-3">
+                {fieldErrors.username ? (
+                  <span className="text-red-500 text-xl">✗</span>
+                ) : (
+                  <span className="text-green-500 text-xl">✓</span>
+                )}
+              </div>
+            )}
+            {isCheckingUsername && (
+              <div className="absolute right-3 top-3">
+                <div className="h-5 w-5 border-t-2 border-blue-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-3 gap-4">
             <InputField
