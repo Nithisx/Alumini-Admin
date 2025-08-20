@@ -13,7 +13,6 @@ const REQUIRED_FIELDS = [
   "phone",
   "college_name",
   "roll_no",
-  "course",
   "role",
   "course_start_year",
   "course_end_year",
@@ -40,6 +39,7 @@ const COLLEGE_NAMES = [
   "FOADP-Faculty of Architecture, Designing and Planning",
   "FOE-Faculty of Engineering",
   "FOP-Faculty of Pharmacy",
+  "KAHE",
 ];
 
 // Course and Branch mapping
@@ -188,7 +188,7 @@ const InputField = React.memo(
 const AppDropdown = React.memo(
   ({ label, items, selectedValue, onValueChange, error }) => (
     <div className="mb-4">
-      <label className="block text-gray-600 text-sm mb-2">{label} *</label>
+      <label className="block text-gray-600 text-sm mb-2">{label} </label>
       <select
         className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
           error ? "border-red-500" : "border-gray-300"
@@ -664,6 +664,9 @@ const Signup = () => {
           )}
 
           <div className="mb-4">
+            <h6 className="">
+              Date of Birth
+            </h6>
             <input
               type="date"
               className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
