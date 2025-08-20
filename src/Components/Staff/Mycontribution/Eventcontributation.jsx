@@ -634,10 +634,10 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
               )}
             </div>
             
-            <button className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg">
+            {/* <button className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg">
               <Share2 size={14} />
               <span className="text-xs font-medium">Share</span>
-            </button>
+            </button> */}
           </div>
 
           {/* Comments Section - Compact */}
