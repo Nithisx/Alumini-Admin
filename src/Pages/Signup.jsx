@@ -93,6 +93,8 @@ const COURSE_BRANCH_MAPPING = {
     "Computer Science Engineering(Cyber)"
   ],
   "Bachelor of Pharmacy": ["Pharmacy"],
+  "Master of Pharmacy": ["Pharmacy"],
+
   "Bachelor of Science": [
     "BioTechnology",
     "Biochemistry",
