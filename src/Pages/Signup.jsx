@@ -54,6 +54,7 @@ const COURSES = [
   "Bachelor of Pharmacy",
   "Bachelor of Science",
   "Bachelor of Technology",
+  "Bachelor of Philosophy",
   "Master of Architecture",
   "Master of Building and Engineering Management",
   "Master of Business Administration",
@@ -62,6 +63,8 @@ const COURSES = [
   "Master of Engineering",
   "Master of Planning",
   "Master of Science",
+  "Master of Pharmacy",
+  "Master of Philosophy"
 ];
 
 const COURSE_BRANCH_MAPPING = {
@@ -261,7 +264,7 @@ const Signup = () => {
     setError("");
   }, []);
 
-  // Update the validation function to skip chapter for Staff
+  // Update the validation function to include @ symbol check for username
   const validate = useCallback(() => {
     const errors = {};
 
@@ -281,6 +284,11 @@ const Signup = () => {
         errors[field] = "This field is required";
       }
     });
+
+    // Username validation - no @ symbol
+    if (formData.username && formData.username.includes('@')) {
+      errors.username = "Username cannot contain @ symbol";
+    }
 
     // Special validation for OTP - only required if OTP was sent
     if (isOtpSent && !formData.otp?.trim()) {
@@ -491,6 +499,15 @@ const checkUsernameAvailability = useCallback((username) => {
     return;
   }
   
+  // Check for @ symbol first
+  if (username.includes('@')) {
+    setFieldErrors((prev) => ({
+      ...prev,
+      username: "Username cannot contain @ symbol"
+    }));
+    return;
+  }
+  
   // Set a new timer to delay the API call (debounce)
   const timer = setTimeout(async () => {
     setIsCheckingUsername(true);
@@ -530,6 +547,8 @@ const checkUsernameAvailability = useCallback((username) => {
   
   setUsernameDebounceTimer(timer);
 }, [usernameDebounceTimer]);
+
+
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       {/* Success Modal */}
