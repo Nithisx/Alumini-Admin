@@ -8,6 +8,9 @@ export default function SingleMember() {
   const { name } = useParams();
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedMember, setEditedMember] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     console.log('Fetching specfing member data...');
@@ -18,10 +21,57 @@ export default function SingleMember() {
       },
     })
       .then(res => res.ok ? res.json() : Promise.reject(res.status))
-      .then(data => setMember(data))
+      .then(data => {
+        setMember(data);
+        setEditedMember(data); // Initialize edited member with original data
+      })
       .catch(err => console.error('Error fetching member:', err))
       .finally(() => setLoading(false));
   }, [name]);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setEditedMember({ ...member }); // Reset edited data to current member data
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedMember({ ...member }); // Reset to original data
+  };
+
+  const handleSaveEdit = async () => {
+    setSaving(true);
+    try {
+      // Dummy API call - replace with actual endpoint
+      const response = await fetch(`${API_BASE}${name}/update/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Token ${TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedMember),
+      });
+      
+      if (response.ok) {
+        setMember(editedMember); // Update the displayed data
+        setIsEditing(false);
+        console.log('Member updated successfully');
+      } else {
+        console.error('Failed to update member');
+      }
+    } catch (error) {
+      console.error('Error updating member:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedMember(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   if (loading) {
     return (
@@ -114,6 +164,54 @@ export default function SingleMember() {
         {/* Main Profile Card */}
         <div className="bg-white shadow-lg sm:shadow-2xl rounded-xl sm:rounded-2xl overflow-hidden border border-green-100">
           
+          {/* Action Buttons */}
+          <div className="bg-gray-50 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-gray-200">
+            <div className="flex justify-end gap-2 sm:gap-3">
+              {!isEditing ? (
+                <button
+                  onClick={handleEditClick}
+                  className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={saving}
+                    className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Header Section with Gradient */}
           <div className="relative bg-gradient-to-r from-green-600 to-emerald-600 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
@@ -168,27 +266,85 @@ export default function SingleMember() {
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
                     <span className="font-medium text-green-700 text-sm sm:text-base">First Name:</span>
-                    <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{first_name}</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.first_name || ''}
+                        onChange={(e) => handleInputChange('first_name', e.target.value)}
+                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{first_name}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Last Name:</span>
-                    <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{last_name}</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.last_name || ''}
+                        onChange={(e) => handleInputChange('last_name', e.target.value)}
+                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{last_name}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Gender:</span>
-                    <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{gender}</span>
+                    {isEditing ? (
+                      <select
+                        value={editedMember.gender || ''}
+                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    ) : (
+                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{gender}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Date of Birth:</span>
-                    <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{date_of_birth}</span>
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={editedMember.date_of_birth || ''}
+                        onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
+                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{date_of_birth}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Role:</span>
-                    <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{role}</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.role || ''}
+                        onChange={(e) => handleInputChange('role', e.target.value)}
+                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{role}</span>
+                    )}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Chapter:</span>
-                    <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{chapter}</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.chapter || ''}
+                        onChange={(e) => handleInputChange('chapter', e.target.value)}
+                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{chapter}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -246,25 +402,82 @@ export default function SingleMember() {
                   {college_name && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">College:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{college_name}</span>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editedMember.college_name || ''}
+                          onChange={(e) => handleInputChange('college_name', e.target.value)}
+                          className="text-gray-700 text-sm mt-1 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{college_name}</span>
+                      )}
                     </div>
                   )}
                   {(course || stream) && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Course:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{[course, stream].filter(Boolean).join(', ')}</span>
+                      {isEditing ? (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder="Course"
+                            value={editedMember.course || ''}
+                            onChange={(e) => handleInputChange('course', e.target.value)}
+                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Stream/Branch"
+                            value={editedMember.stream || ''}
+                            onChange={(e) => handleInputChange('stream', e.target.value)}
+                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{[course, stream].filter(Boolean).join(', ')}</span>
+                      )}
                     </div>
                   )}
                   {(start_year || end_year) && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Duration:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{start_year} – {end_year}</span>
+                      {isEditing ? (
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="number"
+                            placeholder="Start Year"
+                            value={editedMember.start_year || ''}
+                            onChange={(e) => handleInputChange('start_year', e.target.value)}
+                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                          <span className="text-gray-500">–</span>
+                          <input
+                            type="number"
+                            placeholder="End Year"
+                            value={editedMember.end_year || ''}
+                            onChange={(e) => handleInputChange('end_year', e.target.value)}
+                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{start_year} – {end_year}</span>
+                      )}
                     </div>
                   )}
                   {passed_out_year && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Passed Out:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{passed_out_year}</span>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editedMember.passed_out_year || ''}
+                          onChange={(e) => handleInputChange('passed_out_year', e.target.value)}
+                          className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{passed_out_year}</span>
+                      )}
                     </div>
                   )}
                 </div>

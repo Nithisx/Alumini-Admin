@@ -168,7 +168,7 @@ export default function LoginPage() {
                 <input
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="mmddyyyy"
+                  placeholder="ddmmyy"
                   value={form.password}
                   onChange={handleChange}
                   required
