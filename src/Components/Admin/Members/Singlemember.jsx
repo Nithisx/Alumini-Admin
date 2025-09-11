@@ -4,6 +4,143 @@ import { useParams, Link } from 'react-router-dom';
 const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'https://xyndrix.me/api/profile/';
 
+// Dropdown data from Signup page
+const ROLES = ["Student", "Alumni", "Staff"];
+
+const CHAPTERS = [
+  "KAHE CHAPTER CHENNAI",
+  "KAHE CHAPTER COIMBATORE",
+  "KAHE CHAPTER TRICHY",
+];
+
+const COLLEGE_NAMES = [
+  "FASCM-Faculty of Arts, Science, Commerce and Management",
+  "FOADP-Faculty of Architecture, Designing and Planning",
+  "FOE-Faculty of Engineering",
+  "FOP-Faculty of Pharmacy",
+  "KAHE",
+];
+
+const COURSES = [
+  "Bachelor of Architecture",
+  "Bachelor of Arts",
+  "Bachelor of Business Administration",
+  "Bachelor of Commerce",
+  "Bachelor of Computer Applications",
+  "Bachelor of Design",
+  "Bachelor of Engineering",
+  "Bachelor of Pharmacy",
+  "Bachelor of Science",
+  "Bachelor of Technology",
+  "Bachelor of Philosophy",
+  "Master of Architecture",
+  "Master of Building and Engineering Management",
+  "Master of Business Administration",
+  "Master of Commerce",
+  "Master of Computer Applications",
+  "Master of Engineering",
+  "Master of Planning",
+  "Master of Science",
+  "Master of Pharmacy",
+  "Master of Philosophy"
+];
+
+const COURSE_BRANCH_MAPPING = {
+  "Bachelor of Architecture": ["General"],
+  "Bachelor of Arts": ["English Literature", "General"],
+  "Bachelor of Business Administration": [
+    "General",
+    "Business Process Services",
+  ],
+  "Bachelor of Commerce": ["General", "Professional Accounting"],
+  "Bachelor of Computer Applications": ["Computer Application", "General"],
+  "Bachelor of Design": ["Interior Design", "General"],
+  "Bachelor of Engineering": [
+    "Aeronautical Engineering",
+    "Aerospace Engineering",
+    "Automobile Engineering",
+    "Bio Medical Engineering",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Computer Science Engineering",
+    "Electrical & Electronics Engineering",
+    "Electronics & Communication Engineering",
+    "Food Technology",
+    "Information Technology",
+    "Mechanical Engineering",
+    "Computer Science Engineering(Cyber)"
+  ],
+  "Bachelor of Pharmacy": ["Pharmacy"],
+  "Master of Pharmacy": ["Pharmacy"],
+  "Bachelor of Science": [
+    "BioTechnology",
+    "Biochemistry",
+    "Bioinformatics",
+    "Chemistry",
+    "Cognitive Science",
+    "Computer Science",
+    "Computer Technology",
+    "Mathematics",
+    "Microbiology",
+    "Physics",
+    "General",
+  ],
+  "Bachelor of Technology": [
+    "Aeronautical Engineering",
+    "Aerospace Engineering",
+    "Automobile Engineering",
+    "Bio Medical Engineering",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Computer Science Engineering",
+    "Electrical & Electronics Engineering",
+    "Electronics & Communication Engineering",
+    "Food Technology",
+    "Information Technology",
+    "Mechanical Engineering",
+    "Artificial Intelligence/Data Science"
+  ],
+  "Master of Architecture": ["General"],
+  "Master of Building and Engineering Management": ["General"],
+  "Master of Business Administration": ["General", "Business Process Services"],
+  "Master of Commerce": ["General", "Professional Accounting"],
+  "Master of Computer Applications": ["Computer Application", "General"],
+  "Master of Engineering": [
+    "Aeronautical Engineering",
+    "Aerospace Engineering",
+    "Automobile Engineering",
+    "Bio Medical Engineering",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Computer Science Engineering",
+    "Electrical & Electronics Engineering",
+    "Electronics & Communication Engineering",
+    "Food Technology",
+    "Information Technology",
+    "Mechanical Engineering",
+    "Power Electronics and Drives",
+    "Power System Engineering",
+    "Structural Engineering",
+    "Structural Engineering (Part Time)",
+    "VLSI",
+    "Water Resources And Environmental Engineering",
+  ],
+  "Master of Planning": ["General"],
+  "Master of Science": [
+    "BioTechnology",
+    "Biochemistry",
+    "Bioinformatics",
+    "Chemistry",
+    "Cognitive Science",
+    "Computer Science",
+    "Computer Technology",
+    "Mathematics",
+    "Microbiology",
+    "Physics",
+    "General",
+  ],
+};
+
 export default function SingleMember() {
   const { name } = useParams();
   const [member, setMember] = useState(null);
@@ -11,6 +148,9 @@ export default function SingleMember() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedMember, setEditedMember] = useState({});
   const [saving, setSaving] = useState(false);
+  const [availableBranches, setAvailableBranches] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     console.log('Fetching specific member data...');
@@ -25,6 +165,11 @@ export default function SingleMember() {
         console.log('Member data received:', data);
         setMember(data);
         setEditedMember(data); // Initialize edited member with original data
+        
+        // Set available branches based on current course
+        if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
+          setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
+        }
       })
       .catch(err => console.error('Error fetching member:', err))
       .finally(() => setLoading(false));
@@ -33,28 +178,68 @@ export default function SingleMember() {
   const handleEditClick = () => {
     setIsEditing(true);
     setEditedMember({ ...member }); // Reset edited data to current member data
+    
+    // Set available branches based on current course
+    if (member.course && COURSE_BRANCH_MAPPING[member.course]) {
+      setAvailableBranches(COURSE_BRANCH_MAPPING[member.course]);
+    } else {
+      setAvailableBranches([]);
+    }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedMember({ ...member }); // Reset to original data
+    resetImageSelection(); // Reset image selection
   };
 
   const handleSaveEdit = async () => {
     setSaving(true);
     try {
-      // Prepare form data for multipart/form-data submission
+      // Prepare FormData for multipart/form-data submission
       const formData = new FormData();
       
-      // Add all edited fields to formData except social_links
+      // Add the profile image if one was selected
+      if (selectedImage) {
+        formData.append('profile_photo', selectedImage);
+      }
+      
+      // Add all edited fields to formData
       Object.entries(editedMember).forEach(([key, value]) => {
-        // Skip social_links
-        if (key === 'social_links') return;
+        // Skip these fields to avoid validation errors
+        if (key === 'profile_photo' || key === 'Worked_in' || key === 'experience') return;
         
-        // Handle array fields by converting to JSON strings
-        if (Array.isArray(value)) {
+        // Handle array fields by converting to JSON strings (as expected by the API)
+        if (key === 'professional_skills' || key === 'industries_worked_in' || key === 'roles_played') {
+          const arrayValue = Array.isArray(value) ? value : (value ? [value] : []);
+          formData.append(key, JSON.stringify(arrayValue));
+        } 
+        // Handle social_links object - convert to JSON string
+        else if (key === 'social_links' && value && typeof value === 'object') {
           formData.append(key, JSON.stringify(value));
-        } else if (value !== null && value !== undefined) {
+        }
+        // Handle work_experience field - map to experience and send as JSON number
+        else if (key === 'work_experience' && value) {
+          formData.append('experience', JSON.stringify(parseInt(value) || 0));
+        }
+        // Handle worked_in field (lowercase) - convert to JSON string if it's an array or object
+        else if (key === 'worked_in' && value) {
+          if (Array.isArray(value) || typeof value === 'object') {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, JSON.stringify([value])); // Convert string to array
+          }
+        }
+        // Handle current_work field - keep as string if it's simple text
+        else if (key === 'current_work' && value) {
+          if (Array.isArray(value) || typeof value === 'object') {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value); // Keep as string if it's just a string
+          }
+        }
+        // Handle other fields - only send non-empty values
+        else if (value !== null && value !== undefined && value !== '') {
           formData.append(key, value);
         }
       });
@@ -64,6 +249,7 @@ export default function SingleMember() {
         method: 'PUT',
         headers: {
           'Authorization': `Token ${TOKEN}`,
+          // Don't set Content-Type header - let the browser set it with boundary for FormData
         },
         body: formData,
       });
@@ -75,6 +261,7 @@ export default function SingleMember() {
         setMember(data.user);
         setEditedMember(data.user);
         setIsEditing(false);
+        resetImageSelection(); // Reset image selection after successful save
         
         // Show success notification (you could implement a toast notification here)
         console.log(data.message); // User updated successfully
@@ -84,6 +271,7 @@ export default function SingleMember() {
       } else {
         // Handle error case
         console.error('Failed to update member:', data.message || 'Unknown error');
+        console.error('Error details:', data);
         // toast.error(data.message || 'Failed to update profile');
       }
     } catch (error) {
@@ -95,10 +283,39 @@ export default function SingleMember() {
   };
 
   const handleInputChange = (field, value) => {
-    setEditedMember(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setEditedMember(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      
+      // If course is changed, reset the stream/branch and update available branches
+      if (field === 'course') {
+        updated.stream = '';
+        setAvailableBranches(value && COURSE_BRANCH_MAPPING[value] ? COURSE_BRANCH_MAPPING[value] : []);
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const resetImageSelection = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
   };
 
   if (loading) {
@@ -246,7 +463,7 @@ export default function SingleMember() {
             <div className="relative flex flex-col items-center gap-4 sm:gap-6">
               <div className="relative">
                 <img
-                  src={`https://xyndrix.me/api${member.profile_photo}`}
+                  src={imagePreview || `https://xyndrix.me/api${member.profile_photo}`}
                   alt={username}
                   className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white shadow-xl"
                 />
@@ -255,7 +472,41 @@ export default function SingleMember() {
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
+                
+                {/* Edit Image Button */}
+                {isEditing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                    <label htmlFor="profile-image-input" className="cursor-pointer text-white hover:text-green-200 transition-colors">
+                      <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </label>
+                    <input
+                      id="profile-image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </div>
+                )}
               </div>
+              
+              {/* Image Change Status */}
+              {isEditing && selectedImage && (
+                <div className="text-center text-white text-sm">
+                  <p className="bg-green-500 px-3 py-1 rounded-full">
+                    New image selected: {selectedImage.name}
+                  </p>
+                  <button
+                    onClick={resetImageSelection}
+                    className="mt-2 text-green-200 hover:text-white underline text-xs"
+                  >
+                    Remove new image
+                  </button>
+                </div>
+              )}
               <div className="text-center text-white">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-1 sm:mb-2">
                   {salutation} {first_name} {last_name}
@@ -351,12 +602,18 @@ export default function SingleMember() {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Role:</span>
                     {isEditing ? (
-                      <input
-                        type="text"
+                      <select
                         value={editedMember.role || ''}
                         onChange={(e) => handleInputChange('role', e.target.value)}
                         className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
+                      >
+                        <option value="">Select Role</option>
+                        {ROLES.map((roleOption) => (
+                          <option key={roleOption} value={roleOption}>
+                            {roleOption}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
                       <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{role}</span>
                     )}
@@ -364,12 +621,18 @@ export default function SingleMember() {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Chapter:</span>
                     {isEditing ? (
-                      <input
-                        type="text"
+                      <select
                         value={editedMember.chapter || ''}
                         onChange={(e) => handleInputChange('chapter', e.target.value)}
                         className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
+                      >
+                        <option value="">Select Chapter</option>
+                        {CHAPTERS.map((chapterOption) => (
+                          <option key={chapterOption} value={chapterOption}>
+                            {chapterOption}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
                       <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">{chapter}</span>
                     )}
@@ -427,46 +690,62 @@ export default function SingleMember() {
                   <h2 className="text-lg sm:text-xl font-bold text-green-800">Education</h2>
                 </div>
                 <div className="space-y-2 sm:space-y-3">
-                  {college_name && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">College:</span>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editedMember.college_name || ''}
-                          onChange={(e) => handleInputChange('college_name', e.target.value)}
-                          className="text-gray-700 text-sm mt-1 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        />
-                      ) : (
-                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{college_name}</span>
-                      )}
-                    </div>
-                  )}
-                  {(course || stream) && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Course:</span>
-                      {isEditing ? (
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            placeholder="Course"
-                            value={editedMember.course || ''}
-                            onChange={(e) => handleInputChange('course', e.target.value)}
-                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Stream/Branch"
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">College:</span>
+                    {isEditing ? (
+                      <select
+                        value={editedMember.college_name || ''}
+                        onChange={(e) => handleInputChange('college_name', e.target.value)}
+                        className="text-gray-700 text-sm mt-1 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      >
+                        <option value="">Select College</option>
+                        {COLLEGE_NAMES.map((college) => (
+                          <option key={college} value={college}>
+                            {college}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{college_name || 'Not specified'}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Course:</span>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <select
+                          value={editedMember.course || ''}
+                          onChange={(e) => handleInputChange('course', e.target.value)}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                        >
+                          <option value="">Select Course</option>
+                          {COURSES.map((courseOption) => (
+                            <option key={courseOption} value={courseOption}>
+                              {courseOption}
+                            </option>
+                          ))}
+                        </select>
+                        {editedMember.course && COURSE_BRANCH_MAPPING[editedMember.course] && (
+                          <select
                             value={editedMember.stream || ''}
                             onChange={(e) => handleInputChange('stream', e.target.value)}
-                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                        </div>
-                      ) : (
-                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{[course, stream].filter(Boolean).join(', ')}</span>
-                      )}
-                    </div>
-                  )}
+                            className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                          >
+                            <option value="">Select Branch/Stream</option>
+                            {COURSE_BRANCH_MAPPING[editedMember.course].map((branchOption) => (
+                              <option key={branchOption} value={branchOption}>
+                                {branchOption}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
+                        {[course, stream].filter(Boolean).join(', ') || 'Not specified'}
+                      </span>
+                    )}
+                  </div>
                   {(start_year || end_year) && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Duration:</span>
@@ -539,15 +818,15 @@ export default function SingleMember() {
                   )}
                   
                   {/* Work Experience */}
-                  {work_experience && (
+                  {/* {work_experience && (
                     <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Work Experience:</span>
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Work Experience</span>
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
                         {work_experience} {work_experience === 1 ? 'year' : 'years'}
                       </span>
                     </div>
                   )}
-                  
+                   */}
                   {/* Professional Skills */}
                   {professional_skills && professional_skills.length > 0 && (
                     <div className="flex flex-col space-y-1">
