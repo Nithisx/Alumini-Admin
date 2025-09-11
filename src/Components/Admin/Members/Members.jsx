@@ -1,13 +1,18 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
-import Pagination from "../../Shared/Pagination";
-import placeholder from "../../../assets/placeholder.jpeg"; // Import your placeholder image
+"use client";
 
-const TOKEN = localStorage.getItem("Token");
+import { useEffect, useState, useRef } from "react";
+import axios from "axios";
+import * as XLSX from "xlsx";
+import Pagination from "../Shared/Pagination";
+
+const TOKEN =
+  typeof window !== "undefined" ? localStorage.getItem("Token") : null;
 const BASE_URL = "https://xyndrix.me/api";
 const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
+
+const placeholder =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
 
 // Placeholder image service
 const getInitialsAvatar = (firstName, lastName) => {
@@ -49,8 +54,8 @@ const getInitialsAvatar = (firstName, lastName) => {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
       <rect width="200" height="200" fill="${backgroundColor}" />
-      <text x="50%" y="50%" dy=".3em" font-family="Arial, sans-serif" font-size="80" 
-        fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+      <text x="50%" y="50%" dy=".3em" fontFamily="Arial, sans-serif" fontSize="80" 
+        fill="white" textAnchor="middle" dominantBaseline="middle">${initials}</text>
     </svg>
   `;
 
@@ -195,6 +200,9 @@ const AutocompleteInput = ({
 export default function MembersPage() {
   const [members, setMembers] = useState([]);
   const [filteredTotal, setFilteredTotal] = useState(0);
+  const [selectedMembers, setSelectedMembers] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+
   const [roleFilter, setRoleFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [workedInFilter, setWorkedInFilter] = useState("");
@@ -209,9 +217,9 @@ export default function MembersPage() {
   const [courseFilter, setCourseFilter] = useState("");
   const [collegeNameFilter, setCollegeNameFilter] = useState("");
   const [currentWorkFilter, setCurrentWorkFilter] = useState("");
-  const [emailFilter, setEmailFilter] = useState("");
   const [chapterFilter, setChapterFilter] = useState(""); // Add chapter filter state
   const [branchFilter, setBranchFilter] = useState(""); // Add branch filter state
+  const [emailFilter, setEmailFilter] = useState(""); // Declare emailFilter state
   const [showFilters, setShowFilters] = useState(false);
 
   // Store dropdown options
@@ -231,6 +239,8 @@ export default function MembersPage() {
 
   const [loading, setLoading] = useState(true);
   const [filtersLoading, setFiltersLoading] = useState(true);
+  const [selectAllLoading, setSelectAllLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -359,6 +369,227 @@ export default function MembersPage() {
     fetchChapterOptions(); // Fetch chapter options separately
   }, []);
 
+  const handleMemberSelect = (memberId) => {
+    const newSelected = new Set(selectedMembers);
+    if (newSelected.has(memberId)) {
+      newSelected.delete(memberId);
+    } else {
+      newSelected.add(memberId);
+    }
+    setSelectedMembers(newSelected);
+
+    // Update select all state based on current page members
+    setSelectAll(members.every((member) => newSelected.has(member.id)));
+  };
+
+  const fetchAllFilteredMembers = async () => {
+    console.log("[v0] Fetching all filtered members for export... ");
+    let allMembers = [];
+    let page = 1;
+    let hasMore = true;
+
+    const baseParams = new URLSearchParams({
+      page_size: 1000, // Use maximum allowed page size
+    });
+
+    if (roleFilter) baseParams.append("role", roleFilter);
+    if (cityFilter) baseParams.append("city", cityFilter);
+    if (workedInFilter) baseParams.append("worked_in", workedInFilter);
+    if (rolesPlayedFilter) baseParams.append("roles_played", rolesPlayedFilter);
+    if (searchQuery) baseParams.append("search", searchQuery);
+    if (genderFilter) baseParams.append("gender", genderFilter);
+    if (courseEndYearFilter)
+      baseParams.append("course_end_year", courseEndYearFilter);
+    if (companyFilter) baseParams.append("company", companyFilter);
+    if (countryFilter) baseParams.append("country", countryFilter);
+    if (stateFilter) baseParams.append("state", stateFilter);
+    if (passedOutYearFilter)
+      baseParams.append("passed_out_year", passedOutYearFilter);
+    if (courseFilter) baseParams.append("course", courseFilter);
+    if (collegeNameFilter) baseParams.append("college_name", collegeNameFilter);
+    if (currentWorkFilter) baseParams.append("current_work", currentWorkFilter);
+    if (chapterFilter) baseParams.append("current_location", chapterFilter);
+    if (emailFilter) baseParams.append("email", emailFilter);
+    if (branchFilter) baseParams.append("branch", branchFilter);
+
+    try {
+      while (hasMore) {
+        const params = new URLSearchParams(baseParams);
+        params.append("page", page.toString());
+
+        console.log(`[v0] Fetching page ${page} for select all...`);
+
+        const response = await axios.get(`${API_URL}?${params.toString()}`, {
+          headers: {
+            Authorization: `Token ${TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const { results, next } = response.data;
+
+        if (results && results.length > 0) {
+          allMembers = [...allMembers, ...results];
+          console.log(
+            `[v0] Page ${page}: Got ${results.length} members, total so far: ${allMembers.length}`
+          );
+        }
+
+        // Check if there are more pages
+        hasMore = !!next && results && results.length > 0;
+        page++;
+
+        // Safety check to prevent infinite loops
+        if (page > 100) {
+          console.warn(
+            "[v0] Reached maximum page limit (100), stopping pagination"
+          );
+          break;
+        }
+      }
+
+      console.log(
+        `[v0] Finished fetching all filtered members: ${allMembers.length} total`
+      );
+      return allMembers;
+    } catch (error) {
+      console.error("Error fetching all filtered members:", error);
+      return [];
+    }
+  };
+
+  const handleSelectAll = async () => {
+    if (selectAll) {
+      setSelectedMembers(new Set());
+      setSelectAll(false);
+    } else {
+      setSelectAllLoading(true);
+      try {
+        // Fetch all filtered members to get their IDs
+        const allFilteredMembers = await fetchAllFilteredMembers();
+        if (allFilteredMembers && allFilteredMembers.length > 0) {
+          const allMemberIds = new Set(
+            allFilteredMembers.map((member) => member.id)
+          );
+          setSelectedMembers(allMemberIds);
+          setSelectAll(true);
+        }
+      } catch (error) {
+        console.error("Error in select all:", error);
+      } finally {
+        setSelectAllLoading(false);
+      }
+    }
+  };
+
+  const exportToExcel = async () => {
+    if (selectedMembers.size === 0) {
+      alert("Please select at least one member to export.");
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      // If we have selected members that might not be in current page, fetch all filtered members
+      let selectedMembersData = [];
+
+      if (selectAll || selectedMembers.size > members.length) {
+        // Fetch all filtered members to get complete data
+        const allFilteredMembers = await fetchAllFilteredMembers();
+        selectedMembersData = allFilteredMembers.filter((member) =>
+          selectedMembers.has(member.id)
+        );
+      } else {
+        // Use current page members if all selected are visible
+        selectedMembersData = members.filter((member) =>
+          selectedMembers.has(member.id)
+        );
+      }
+
+      // Prepare data for Excel export with all important fields
+      const excelData = selectedMembersData.map((member) => ({
+        ID: member.id,
+        Username: member.username,
+        "First Name": member.first_name,
+        "Last Name": member.last_name,
+        Email: member.email,
+        "Secondary Email": member.secondary_email,
+        Phone: member.phone,
+        Gender: member.gender,
+        "Date of Birth": member.date_of_birth,
+        Role: member.role,
+        "Roll Number": member.roll_no,
+        Course: member.course,
+        Stream: member.stream,
+        Branch: member.branch,
+        "Course Start Year": member.course_start_year,
+        "Course End Year": member.course_end_year,
+        "Passed Out Year": member.passed_out_year,
+        "College Name": member.college_name,
+        "Current Location/Chapter": member.current_location,
+        "Home Town": member.home_town,
+        City: member.city,
+        State: member.state,
+        Country: member.country,
+        Address: member.Address,
+        "Zip Code": member.zip_code,
+        Company: member.company,
+        Position: member.position,
+        "Current Work": member.current_work,
+        "Work Experience": member.work_experience,
+        "Professional Skills": member.professional_skills,
+        "Industries Worked In": member.industries_worked_in,
+        "Roles Played": member.roles_played,
+        Bio: member.bio,
+        "Educational Course": member.educational_course,
+        "Educational Institute": member.educational_institute,
+        "Account Status": member.approval_status?.status_display,
+        "Account Type": member.approval_status?.account_type,
+        "Is Active": member.approval_status?.is_active ? "Yes" : "No",
+        "Is Staff": member.approval_status?.is_staff ? "Yes" : "No",
+        "Last Login": member.approval_status?.last_login,
+        "Date Joined": member.approval_status?.date_joined,
+      }));
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Auto-size columns
+      const colWidths = [];
+      const headers = Object.keys(excelData[0] || {});
+      headers.forEach((header, index) => {
+        const maxLength = Math.max(
+          header.length,
+          ...excelData.map((row) => String(row[header] || "").length)
+        );
+        colWidths[index] = { wch: Math.min(maxLength + 2, 50) };
+      });
+      ws["!cols"] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Members");
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split("T")[0];
+      const filename = `members_export_${timestamp}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+
+      // Show success message
+      alert(
+        `Successfully exported ${selectedMembers.size} members to ${filename}`
+      );
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      alert("Error exporting data to Excel. Please try again.");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   // When filters change, always reset page to 1
   useEffect(() => {
     setCurrentPage(1);
@@ -380,6 +611,30 @@ export default function MembersPage() {
     chapterFilter, // Add chapter filter to dependencies
     emailFilter, // Make sure this is here
     branchFilter, // Add branch filter to dependencies
+  ]);
+
+  useEffect(() => {
+    setSelectedMembers(new Set());
+    setSelectAll(false);
+  }, [
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    searchQuery,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    currentPage,
   ]);
 
   // Whenever page or filters change, fetch data
@@ -430,7 +685,7 @@ export default function MembersPage() {
     setCountryFilter("");
     setStateFilter("");
     setPassedOutYearFilter("");
-    setEmailFilter("");
+    setEmailFilter(""); // Add emailFilter to reset
     setCourseFilter("");
     setCollegeNameFilter("");
     setCurrentWorkFilter("");
@@ -516,6 +771,109 @@ export default function MembersPage() {
             </div>
           </div>
 
+          {/* Selection Controls - Always visible */}
+          {members.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      id="selectAll"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      disabled={selectAllLoading}
+                      className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${
+                        selectAllLoading ? "opacity-50 cursor-wait" : ""
+                      }`}
+                    />
+                    {selectAllLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-t-blue-600 border-r-blue-600 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                  <label
+                    htmlFor="selectAll"
+                    className={`ml-2 text-sm font-medium text-gray-700 ${
+                      selectAllLoading ? "opacity-50" : ""
+                    }`}
+                  >
+                    {selectAllLoading
+                      ? "Selecting all..."
+                      : `Select All (${filteredTotal} total filtered results)`}
+                  </label>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {selectedMembers.size} selected
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedMembers(new Set());
+                    setSelectAll(false);
+                  }}
+                  disabled={selectedMembers.size === 0}
+                  className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    selectedMembers.size === 0
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-red-50 text-red-600 hover:bg-red-100 focus:ring-2 focus:ring-red-500 border border-red-200"
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Clear Selection
+                </button>
+                <button
+                  onClick={exportToExcel}
+                  disabled={selectedMembers.size === 0 || exportLoading}
+                  className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    selectedMembers.size === 0 || exportLoading
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500"
+                  }`}
+                >
+                  {exportLoading ? (
+                    <>
+                      <div className="w-4 h-4 mr-2 border-2 border-t-white border-r-white border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Export to Excel ({selectedMembers.size})
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Filters Loading State or Grid */}
           {filtersLoading ? (
             <div className="flex justify-center items-center py-8">
               <div className="flex items-center space-x-2">
@@ -632,7 +990,7 @@ export default function MembersPage() {
                 />
 
                 {/* Chapter Filter - Add this new filter */}
-                {/* <AutocompleteInput
+                <AutocompleteInput
                   id="chapter-filter"
                   label="Chapter"
                   placeholder="Select chapter..."
@@ -655,7 +1013,7 @@ export default function MembersPage() {
                       />
                     </svg>
                   }
-                /> */}
+                />
 
                 {/* City Filter */}
                 <AutocompleteInput
@@ -874,7 +1232,8 @@ export default function MembersPage() {
               chapterFilter || // Add chapter filter to filtered indicator
               genderFilter ||
               courseEndYearFilter ||
-              companyFilter) && (
+              companyFilter ||
+              emailFilter) && (
               <span className="text-xs sm:text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full w-fit">
                 Filtered
               </span>
@@ -894,6 +1253,24 @@ export default function MembersPage() {
           </div>
         ) : (
           <>
+            {/* Results Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2 sm:gap-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+                {filteredTotal > 0 ? (
+                  <>
+                    Showing {members.length} of {filteredTotal} members
+                    {selectedMembers.size > 0 && (
+                      <span className="ml-2 text-sm font-normal text-blue-600">
+                        ({selectedMembers.size} selected)
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  "No members found"
+                )}
+              </h2>
+            </div>
+
             {members.length === 0 ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -922,144 +1299,161 @@ export default function MembersPage() {
               /* Members Grid */
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
                 {members.map((member) => (
-                  <Link
-                    to={`/admin/members/${member.username}`}
-                    key={member.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group"
-                  >
-                    {/* Profile Image */}
-
-                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-                       <img
-                                              src={
-                                                member.profile_photo
-                                                  ? `https://xyndrix.me/api${member.profile_photo}`
-                                                  : placeholder
-                                              }
-                                              alt={`${member.first_name || 'Alumni'} ${member.last_name || ''}`}
-                                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                              onError={(e) => {
-                                                e.target.onerror = null; // Prevent infinite loop
-                                                // Generate avatar with initials if image fails to load
-                                                e.target.src = getInitialsAvatar(member.first_name, member.last_name);
-                                              }}
-                                            />
-                      {/* Role Badge */}
-                      <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-                        <span
-                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
-                            member.role
-                          )}`}
-                        >
-                          {member.role}
-                        </span>
-                      </div>
+                  <div key={member.id} className="relative">
+                    <div className="absolute top-2 left-2 z-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers.has(member.id)}
+                        onChange={() => handleMemberSelect(member.id)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded bg-white shadow-sm"
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </div>
 
-                    {/* Member Info */}
-                    <div className="p-3 sm:p-5">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
-                        {member.first_name} {member.last_name}
-                      </h3>
+                    <div
+                      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group cursor-pointer"
+                      onClick={() => {
+                        window.location.href = `/admin/members/${member.username}`;
+                      }}
+                    >
+                      {/* Profile Image */}
+                      <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                        <img
+                          src={
+                            member.profile_photo
+                              ? `https://xyndrix.me/api${member.profile_photo}`
+                              : placeholder
+                          }
+                          alt={`${member.first_name || "Alumni"} ${
+                            member.last_name || ""
+                          }`}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.onerror = null; // Prevent infinite loop
+                            // Generate avatar with initials if image fails to load
+                            e.target.src = getInitialsAvatar(
+                              member.first_name,
+                              member.last_name
+                            );
+                          }}
+                        />
+                        {/* Role Badge */}
+                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
+                          <span
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
+                              member.role
+                            )}`}
+                          >
+                            {member.role}
+                          </span>
+                        </div>
+                      </div>
 
-                      <div className="space-y-1.5 sm:space-y-2">
-                        {/* Add Chapter/Current Location display */}
-                        {member.current_location && (
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                            <svg
-                              className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                              />
-                            </svg>
-                            <span
-                              className="truncate"
-                              title={member.current_location}
-                            >
-                              {member.current_location}
-                            </span>
-                          </div>
-                        )}
+                      {/* Member Info */}
+                      <div className="p-3 sm:p-5">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                          {member.first_name} {member.last_name}
+                        </h3>
 
-                        {member.city && (
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                            <svg
-                              className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                            <span className="truncate">{member.city}</span>
-                          </div>
-                        )}
+                        <div className="space-y-1.5 sm:space-y-2">
+                          {/* Add Chapter/Current Location display */}
+                          {member.current_location && (
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                              <svg
+                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                />
+                              </svg>
+                              <span
+                                className="truncate"
+                                title={member.current_location}
+                              >
+                                {member.current_location}
+                              </span>
+                            </div>
+                          )}
 
-                        {member.worked_in && (
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                            <svg
-                              className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
-                              />
-                            </svg>
-                            <span className="truncate">{member.worked_in}</span>
-                          </div>
-                        )}
+                          {member.city && (
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                              <svg
+                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                              <span className="truncate">{member.city}</span>
+                            </div>
+                          )}
 
-                        {member.course_name && (
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                            <svg
-                              className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                              />
-                            </svg>
-                            <span className="truncate">
-                              {member.course_name}
-                            </span>
-                          </div>
-                        )}
+                          {member.worked_in && (
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                              <svg
+                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
+                                />
+                              </svg>
+                              <span className="truncate">
+                                {member.worked_in}
+                              </span>
+                            </div>
+                          )}
+
+                          {member.course_name && (
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                              <svg
+                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                />
+                              </svg>
+                              <span className="truncate">
+                                {member.course_name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}
-
-            {/* Pagination */}
             {members.length > 0 && (
               <div className="mt-6 sm:mt-8">
                 <Pagination

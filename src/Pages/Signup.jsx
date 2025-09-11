@@ -3,7 +3,6 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
 const SIGNUP_URL = "https://xyndrix.me/api/signup/";
 
-
 const REQUIRED_FIELDS = [
   "first_name",
   "last_name",
@@ -24,16 +23,9 @@ const REQUIRED_FIELDS = [
   "otp",
 ];
 
-const CHAPTERS = [
-  "KAHE CHAPTER CHENNAI",
-  "KAHE CHAPTER COIMBATORE",
-  "KAHE CHAPTER TRICHY",
-];
-
 const ROLES = ["Student", "Alumni", "Staff"];
 const GENDERS = ["Male", "Female", "Other"];
 
-// Updated college names
 const COLLEGE_NAMES = [
   "FASCM-Faculty of Arts, Science, Commerce and Management",
   "FOADP-Faculty of Architecture, Designing and Planning",
@@ -42,7 +34,6 @@ const COLLEGE_NAMES = [
   "KAHE",
 ];
 
-// Course and Branch mapping
 const COURSES = [
   "Bachelor of Architecture",
   "Bachelor of Arts",
@@ -94,7 +85,6 @@ const COURSE_BRANCH_MAPPING = {
   ],
   "Bachelor of Pharmacy": ["Pharmacy"],
   "Master of Pharmacy": ["Pharmacy"],
-
   "Bachelor of Science": [
     "BioTechnology",
     "Biochemistry",
@@ -164,51 +154,53 @@ const COURSE_BRANCH_MAPPING = {
   ],
 };
 
-// Remove old courses array and update function
 const InputField = React.memo(
-  ({ value, onChange, placeholder, error, type, required = true }) => (
-    <div className="mb-4">
+  ({ value, onChange, placeholder, error, type, required = true, label }) => (
+    <div className="space-y-1">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
       <input
-        type={
-          type === "password"
-            ? "password"
-            : type === "number"
-            ? "number"
-            : type === "email"
-            ? "email"
-            : "text"
-        }
-        className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-          error ? "border-red-500" : "border-gray-300"
+        type={type || "text"}
+        className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+          error 
+            ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
+            : "border-gray-300"
         }`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={`${placeholder}${required ? " *" : ""}`}
+        placeholder={placeholder}
       />
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   )
 );
 
-const AppDropdown = React.memo(
-  ({ label, items, selectedValue, onValueChange, error }) => (
-    <div className="mb-4">
-      <label className="block text-gray-600 text-sm mb-2">{label} </label>
+const SelectField = React.memo(
+  ({ label, options, value, onChange, error, required = true }) => (
+    <div className="space-y-1">
+      <label className="block text-sm font-medium text-gray-700">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
       <select
-        className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-          error ? "border-red-500" : "border-gray-300"
+        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+          error 
+            ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
+            : "border-gray-300"
         }`}
-        value={selectedValue}
-        onChange={(e) => onValueChange(e.target.value)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       >
-        <option value="">{`Select ${label}`}</option>
-        {items.map((item) => (
-          <option key={item} value={item}>
-            {item}
+        <option value="">Select {label}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
           </option>
         ))}
       </select>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   )
 );
@@ -247,7 +239,6 @@ const Signup = () => {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameDebounceTimer, setUsernameDebounceTimer] = useState(null);
 
-  // Memoized available branches based on selected course
   const availableBranches = useMemo(() => {
     if (!formData.course) return [];
     return COURSE_BRANCH_MAPPING[formData.course] || [];
@@ -256,7 +247,6 @@ const Signup = () => {
   const updateField = useCallback((field, value) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
-      // If course changes, reset branch
       if (field === "course") {
         newData.branch = "";
       }
@@ -266,13 +256,10 @@ const Signup = () => {
     setError("");
   }, []);
 
-  // Update the validation function to include @ symbol check for username
   const validate = useCallback(() => {
     const errors = {};
 
-    // Check required fields
     REQUIRED_FIELDS.forEach((field) => {
-      // Skip validation for Staff-specific fields when role is Staff
       if (
         formData.role === "Staff" &&
         (field === "roll_no" ||
@@ -287,39 +274,40 @@ const Signup = () => {
       }
     });
 
-    // Username validation - no @ symbol
+    if (formData.role !== "Staff" && !formData.course?.trim()) {
+      errors.course = "This field is required";
+    }
+
+    if (formData.course && availableBranches.length > 0 && !formData.branch?.trim()) {
+      errors.branch = "This field is required";
+    }
+
     if (formData.username && formData.username.includes('@')) {
       errors.username = "Username cannot contain @ symbol";
     }
 
-    // Special validation for OTP - only required if OTP was sent
     if (isOtpSent && !formData.otp?.trim()) {
       errors.otp = "OTP is required";
     } else if (!isOtpSent) {
       delete errors.otp;
     }
 
-    // Email validation
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = "Invalid email format";
     }
 
-    // Password validation
     if (formData.password && formData.password.length < 8) {
       errors.password = "Password must be at least 8 characters";
     }
 
-    // Confirm password validation
     if (formData.password !== formData.confirm_password) {
       errors.confirm_password = "Passwords do not match";
     }
 
-    // Phone validation
     if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
       errors.phone = "Phone number must be 10 digits";
     }
 
-    // Year validation
     const currentYear = new Date().getFullYear();
     if (
       formData.course_start_year &&
@@ -343,10 +331,9 @@ const Signup = () => {
       errors.passed_out_year = "Please enter a valid passed out year";
     }
 
-    console.log("Validation errors:", errors);
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [formData, isOtpSent]);
+  }, [formData, isOtpSent, availableBranches]);
 
   const handleSendOtp = useCallback(async () => {
     if (!formData.email.trim()) {
@@ -361,7 +348,6 @@ const Signup = () => {
 
     setLoading(true);
     try {
-      console.log("Sending OTP to:", formData.email);
       const response = await fetch(SIGNUP_OTP_URL, {
         method: "POST",
         headers: {
@@ -370,14 +356,11 @@ const Signup = () => {
         body: JSON.stringify({ email: formData.email }),
       });
       const data = await response.json();
-      console.log("OTP Response:", data);
 
       setIsOtpSent(true);
       setResendTimer(120);
       setError("");
-      alert("OTP sent to your email address");
     } catch (err) {
-      console.error("OTP Error:", err.response?.data || err.message);
       setError(err.response?.data?.error || "Failed to send OTP");
     } finally {
       setLoading(false);
@@ -412,25 +395,16 @@ const Signup = () => {
       input.click();
     } catch (error) {
       console.error("Image picker error:", error);
-      alert("Failed to pick image");
     }
   };
 
   const handleSignup = useCallback(async () => {
-    console.log("=== SIGNUP ATTEMPT ===");
-    console.log("Form data:", formData);
-    console.log("Is OTP sent:", isOtpSent);
-
-    // Check if OTP is sent first
     if (!isOtpSent) {
       setError("Please send and verify OTP first");
-      alert("Please send OTP to your email first");
       return;
     }
 
-    // Validate form
     if (!validate()) {
-      console.log("Validation failed, errors:", fieldErrors);
       setError("Please fill all required fields correctly");
       return;
     }
@@ -439,407 +413,470 @@ const Signup = () => {
     setError("");
 
     try {
-      // Prepare form data for multipart upload
       const payload = new FormData();
 
-      // Add all text fields
       Object.keys(formData).forEach((key) => {
         if (key !== "profile_photo" && formData[key]) {
           payload.append(key, formData[key]);
         }
       });
 
-      // Add full name
       payload.append("name", `${formData.first_name} ${formData.last_name}`);
 
-      // Handle profile photo if selected
       if (formData.profile_photo) {
-        // Convert base64 to blob for form data
         const response = await fetch(formData.profile_photo);
         const blob = await response.blob();
         payload.append("profile_photo", blob, "profile_photo.jpg");
       }
-      // Always send the role field, even if it's 'Student'
+      
       if (formData.role) {
         payload.set("role", formData.role);
       }
 
-      console.log("Sending signup request...");
       const response = await fetch(SIGNUP_URL, {
         method: "POST",
         body: payload,
       });
       const data = await response.json();
-      console.log("Signup response:", data);
 
       if (data.success || data.token || response.ok) {
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
-          // Handle navigation to login page here
           window.location.href = "/login";
-        }, 9000);
+        }, 3000);
       } else {
         setError(data.error || data.message || "Registration failed");
       }
     } catch (err) {
-      console.error("Signup error:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setSignLoading(false);
     }
-  }, [formData, validate, isOtpSent, fieldErrors]);
+  }, [formData, validate, isOtpSent]);
 
-const checkUsernameAvailability = useCallback((username) => {
-  // Clear any existing timer
-  if (usernameDebounceTimer) {
-    clearTimeout(usernameDebounceTimer);
-  }
-  
-  // Don't check empty usernames
-  if (!username.trim()) {
-    return;
-  }
-  
-  // Check for @ symbol first
-  if (username.includes('@')) {
-    setFieldErrors((prev) => ({
-      ...prev,
-      username: "Username cannot contain @ symbol"
-    }));
-    return;
-  }
-  
-  // Set a new timer to delay the API call (debounce)
-  const timer = setTimeout(async () => {
-    setIsCheckingUsername(true);
-    try {
-      const response = await fetch(`https://xyndrix.me/api/check-username/?username=${encodeURIComponent(username)}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        // API error
+  const checkUsernameAvailability = useCallback((username) => {
+    if (usernameDebounceTimer) {
+      clearTimeout(usernameDebounceTimer);
+    }
+    
+    if (!username.trim()) {
+      return;
+    }
+    
+    if (username.includes('@')) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        username: "Username cannot contain @ symbol"
+      }));
+      return;
+    }
+    
+    const timer = setTimeout(async () => {
+      setIsCheckingUsername(true);
+      try {
+        const response = await fetch(`https://xyndrix.me/api/check-username/?username=${encodeURIComponent(username)}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            username: "Error checking username"
+          }));
+        } else if (data.exists || data.available === false) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            username: "This username is already taken"
+          }));
+        } else if (data.available === true) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            username: ""
+          }));
+        }
+      } catch (err) {
         setFieldErrors((prev) => ({
           ...prev,
           username: "Error checking username"
         }));
-      } else if (data.exists || data.available === false) {
-        // Username is taken
-        setFieldErrors((prev) => ({
-          ...prev,
-          username: "This username is already taken"
-        }));
-      } else if (data.available === true) {
-        // Username is available
-        setFieldErrors((prev) => ({
-          ...prev,
-          username: ""
-        }));
+      } finally {
+        setIsCheckingUsername(false);
       }
-    } catch (err) {
-      console.error("Error checking username:", err);
-      setFieldErrors((prev) => ({
-        ...prev,
-        username: "Error checking username"
-      }));
-    } finally {
-      setIsCheckingUsername(false);
-    }
-  }, 500); // Wait for 500ms after user stops typing
-  
-  setUsernameDebounceTimer(timer);
-}, [usernameDebounceTimer]);
-
+    }, 500);
+    
+    setUsernameDebounceTimer(timer);
+  }, [usernameDebounceTimer]);
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       {/* Success Modal */}
       {showSuccess && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4 text-center">
-            <h2 className="text-xl font-bold text-green-600 mb-4">
-              Registration Successful!
-            </h2>
-            <p className="text-gray-700 mb-4 leading-relaxed">
-              Your account is pending admin approval. We will review your
-              request shortly. You will receive an email once your account is
-              approved.
-            </p>
-            <p className="text-gray-500 text-sm italic">
-              Redirecting to login page...
-            </p>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-8 border w-96 shadow-lg rounded-lg bg-white">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">Registration Successful</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Your account is pending admin approval. You will receive an email once approved.
+              </p>
+              <p className="mt-4 text-xs text-gray-400">Redirecting to login...</p>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto">
-        {/* Profile Photo Section */}
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          {formData.profile_photo ? (
-            <img
-              src={formData.profile_photo}
-              alt="Profile"
-              className="w-24 h-24 rounded-full mx-auto object-cover"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-gray-300 mx-auto flex items-center justify-center">
-              <span className="text-gray-600 text-sm">No Photo</span>
-            </div>
-          )}
-          <button
-            onClick={pickProfilePhoto}
-            className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Upload Profile Photo
-          </button>
+          <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <p className="mt-2 text-sm text-gray-600">Join our academic community</p>
         </div>
 
-        {/* Form Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-xl font-bold text-gray-800 text-center mb-6">
-            Sign Up
-          </h2>
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              value={formData.first_name}
-              onChange={(v) => updateField("first_name", v)}
-              placeholder="First Name"
-              error={fieldErrors.first_name}
-            />
-            <InputField
-              value={formData.last_name}
-              onChange={(v) => updateField("last_name", v)}
-              placeholder="Last Name"
-              error={fieldErrors.last_name}
-            />
-          </div>
-
-          <InputField
-            value={formData.email}
-            onChange={(v) => updateField("email", v)}
-            placeholder="Email"
-            error={fieldErrors.email}
-            type="email"
-          />
-
-          <div className="relative">
-            <InputField
-              value={formData.username}
-              onChange={(v) => {
-                updateField("username", v);
-                checkUsernameAvailability(v);
-              }}
-              placeholder={isCheckingUsername ? "Checking username..." : "Username"}
-              error={fieldErrors.username}
-            />
-            {formData.username && !isCheckingUsername && (
-              <div className="absolute right-3 top-3">
-                {fieldErrors.username ? (
-                  <span className="text-red-500 text-xl">✗</span>
+        <div className="bg-white shadow-lg rounded-lg">
+          {/* Profile Photo Section */}
+          <div className="px-8 pt-8 pb-6 border-b border-gray-200">
+            <div className="flex items-center space-x-6">
+              <div className="shrink-0">
+                {formData.profile_photo ? (
+                  <img
+                    className="h-20 w-20 object-cover rounded-full ring-2 ring-gray-200"
+                    src={formData.profile_photo}
+                    alt="Profile"
+                  />
                 ) : (
-                  <span className="text-green-500 text-xl">✓</span>
+                  <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                  </div>
                 )}
               </div>
-            )}
-            {isCheckingUsername && (
-              <div className="absolute right-3 top-3">
-                <div className="h-5 w-5 border-t-2 border-blue-500 rounded-full animate-spin"></div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Profile Photo</h3>
+                <p className="text-sm text-gray-500">Upload a professional photo</p>
+                <button
+                  type="button"
+                  onClick={pickProfilePhoto}
+                  className="mt-2 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Change
+                </button>
               </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <InputField
-              value={formData.country_code}
-              onChange={(v) => updateField("country_code", v)}
-              placeholder="Code"
-              error={fieldErrors.country_code}
-            />
-            <div className="col-span-2">
-              <InputField
-                value={formData.phone}
-                onChange={(v) => updateField("phone", v)}
-                placeholder="Phone"
-                error={fieldErrors.phone}
-                type="number"
-              />
             </div>
           </div>
-          <AppDropdown
-            label="Role"
-            items={ROLES}
-            selectedValue={formData.role}
-            onValueChange={(v) => updateField("role", v)}
-            error={fieldErrors.role}
-          />
-          <AppDropdown
-            label="College Name"
-            items={COLLEGE_NAMES}
-            selectedValue={formData.college_name}
-            onValueChange={(v) => updateField("college_name", v)}
-            error={fieldErrors.college_name}
-          />
 
-          {/* Only show Roll Number if not Staff */}
-          {formData.role !== "Staff" && (
-            <InputField
-              value={formData.roll_no}
-              onChange={(v) => updateField("roll_no", v)}
-              placeholder="Roll Number"
-              error={fieldErrors.roll_no}
-            />
-          )}
-
-          <AppDropdown
-            label="Gender"
-            items={GENDERS}
-            selectedValue={formData.gender}
-            onValueChange={(v) => updateField("gender", v)}
-            error={fieldErrors.gender}
-          />
-
-          {/* Course Selection */}
-          <AppDropdown
-            label="Course"
-            items={COURSES}
-            selectedValue={formData.course}
-            onValueChange={(v) => updateField("course", v)}
-            error={fieldErrors.course}
-          />
-
-          {/* Branch Selection - Only show if course is selected */}
-          {formData.course && availableBranches.length > 0 && (
-            <AppDropdown
-              label="Branch"
-              items={availableBranches}
-              selectedValue={formData.branch}
-              onValueChange={(v) => updateField("branch", v)}
-              error={fieldErrors.branch}
-            />
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              value={formData.course_start_year}
-              onChange={(v) => updateField("course_start_year", v)}
-              placeholder="Start Year"
-              error={fieldErrors.course_start_year}
-              type="number"
-            />
-            {formData.role !== "Staff" && (
-              <InputField
-                value={formData.course_end_year}
-                onChange={(v) => updateField("course_end_year", v)}
-                placeholder="End Year"
-                error={fieldErrors.course_end_year}
-                type="number"
-              />
+          <div className="px-8 py-6">
+            {error && (
+              <div className="mb-6 rounded-md bg-red-50 p-4">
+                <div className="flex">
+                  <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
+              </div>
             )}
+
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              {/* Personal Information */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <InputField
+                    label="First Name"
+                    value={formData.first_name}
+                    onChange={(v) => updateField("first_name", v)}
+                    placeholder="Enter your first name"
+                    error={fieldErrors.first_name}
+                  />
+                  <InputField
+                    label="Last Name"
+                    value={formData.last_name}
+                    onChange={(v) => updateField("last_name", v)}
+                    placeholder="Enter your last name"
+                    error={fieldErrors.last_name}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <InputField
+                    label="Email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(v) => updateField("email", v)}
+                    placeholder="Enter your email"
+                    error={fieldErrors.email}
+                  />
+                  <div className="relative">
+                    <InputField
+                      label="Username"
+                      value={formData.username}
+                      onChange={(v) => {
+                        updateField("username", v);
+                        checkUsernameAvailability(v);
+                      }}
+                      placeholder="Choose a username"
+                      error={fieldErrors.username}
+                    />
+                    {formData.username && (
+                      <div className="absolute right-3 top-8">
+                        {isCheckingUsername ? (
+                          <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                        ) : fieldErrors.username ? (
+                          <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                          </svg>
+                        ) : (
+                          <svg className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-6">
+                  <InputField
+                    label="Country Code"
+                    value={formData.country_code}
+                    onChange={(v) => updateField("country_code", v)}
+                    placeholder="+91"
+                    error={fieldErrors.country_code}
+                  />
+                  <div className="sm:col-span-2">
+                    <InputField
+                      label="Phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(v) => updateField("phone", v)}
+                      placeholder="Enter your phone number"
+                      error={fieldErrors.phone}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <SelectField
+                    label="Gender"
+                    options={GENDERS}
+                    value={formData.gender}
+                    onChange={(v) => updateField("gender", v)}
+                    error={fieldErrors.gender}
+                  />
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Date of Birth <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                        fieldErrors.date_of_birth 
+                          ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
+                          : "border-gray-300"
+                      }`}
+                      value={formData.date_of_birth}
+                      onChange={(e) => updateField("date_of_birth", e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                    />
+                    {fieldErrors.date_of_birth && <p className="text-sm text-red-600">{fieldErrors.date_of_birth}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Academic Information */}
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Academic Information</h3>
+                
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <SelectField
+                    label="Role"
+                    options={ROLES}
+                    value={formData.role}
+                    onChange={(v) => updateField("role", v)}
+                    error={fieldErrors.role}
+                  />
+                  <SelectField
+                    label="Faculty"
+                    options={COLLEGE_NAMES}
+                    value={formData.college_name}
+                    onChange={(v) => updateField("college_name", v)}
+                    error={fieldErrors.college_name}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <InputField
+                    label="Roll Number"
+                    value={formData.roll_no}
+                    onChange={(v) => updateField("roll_no", v)}
+                    placeholder="Enter your roll number"
+                    error={fieldErrors.roll_no}
+                    required={formData.role !== "Staff"}
+                  />
+                  <SelectField
+                    label="Course"
+                    options={COURSES}
+                    value={formData.course}
+                    onChange={(v) => updateField("course", v)}
+                    error={fieldErrors.course}
+                    required={formData.role !== "Staff"}
+                  />
+                </div>
+
+                {formData.course && availableBranches.length > 0 && (
+                  <div className="mt-6">
+                    <SelectField
+                      label="Branch"
+                      options={availableBranches}
+                      value={formData.branch}
+                      onChange={(v) => updateField("branch", v)}
+                      error={fieldErrors.branch}
+                    />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-6">
+                  <InputField
+                    label="Course Start Year"
+                    type="number"
+                    value={formData.course_start_year}
+                    onChange={(v) => updateField("course_start_year", v)}
+                    placeholder="2020"
+                    error={fieldErrors.course_start_year}
+                  />
+                  <InputField
+                    label="Course End Year"
+                    type="number"
+                    value={formData.course_end_year}
+                    onChange={(v) => updateField("course_end_year", v)}
+                    placeholder="2024"
+                    error={fieldErrors.course_end_year}
+                    required={formData.role !== "Staff"}
+                  />
+                  <InputField
+                    label="Passed Out Year"
+                    type="number"
+                    value={formData.passed_out_year}
+                    onChange={(v) => updateField("passed_out_year", v)}
+                    placeholder="2024"
+                    error={fieldErrors.passed_out_year}
+                    required={formData.role !== "Staff"}
+                  />
+                </div>
+              </div>
+
+              {/* Email Verification */}
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Email Verification</h3>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Verify your email address</p>
+                      <p className="text-sm text-blue-700">We'll send you a verification code</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={resendTimer > 0 || loading}
+                      className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
+                        resendTimer > 0 || loading
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      }`}
+                    >
+                      {loading ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : "Send OTP"}
+                    </button>
+                  </div>
+                </div>
+
+                {isOtpSent && (
+                  <div className="mb-4">
+                    <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                      <div className="flex">
+                        <svg className="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div className="ml-3">
+                          <p className="text-sm text-green-700">OTP sent to your email successfully!</p>
+                        </div>
+                      </div>
+                    </div>
+                    <InputField
+                      label="Verification Code"
+                      type="number"
+                      value={formData.otp}
+                      onChange={(v) => updateField("otp", v)}
+                      placeholder="Enter 6-digit code"
+                      error={fieldErrors.otp}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Password Section */}
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Security</h3>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <InputField
+                    label="Password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(v) => updateField("password", v)}
+                    placeholder="Create a strong password"
+                    error={fieldErrors.password}
+                  />
+                  <InputField
+                    label="Confirm Password"
+                    type="password"
+                    value={formData.confirm_password}
+                    onChange={(v) => updateField("confirm_password", v)}
+                    placeholder="Confirm your password"
+                    error={fieldErrors.confirm_password}
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleSignup}
+                  disabled={signLoading}
+                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                    signLoading
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  }`}
+                >
+                  {signLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin -ml-1 mr-3 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                      Creating Account...
+                    </div>
+                  ) : (
+                    "Create Account"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
+        </div>
 
-          {/* Only show Passed Out Year if not Staff */}
-          {formData.role !== "Staff" && (
-            <InputField
-              value={formData.passed_out_year}
-              onChange={(v) => updateField("passed_out_year", v)}
-              placeholder="Passed Out Year"
-              error={fieldErrors.passed_out_year}
-              type="number"
-            />
-          )}
-
-          <div className="mb-4">
-            <h6 className="">
-              Date of Birth
-            </h6>
-            <input
-              type="date"
-              className={`w-full px-4 py-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                fieldErrors.date_of_birth ? "border-red-500" : "border-gray-300"
-              }`}
-              value={formData.date_of_birth}
-              onChange={(e) => updateField("date_of_birth", e.target.value)}
-              max={new Date().toISOString().split("T")[0]}
-            />
-            {fieldErrors.date_of_birth && (
-              <p className="text-red-500 text-sm mt-1">
-                {fieldErrors.date_of_birth}
-              </p>
-            )}
-          </div>
-
-          <button
-            onClick={handleSendOtp}
-            disabled={resendTimer > 0 || loading}
-            className={`w-full py-3 rounded-lg font-bold text-white mb-4 transition-colors ${
-              resendTimer > 0 || loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
-          >
-            {loading
-              ? "Sending..."
-              : resendTimer > 0
-              ? `Resend OTP in ${resendTimer}s`
-              : "Send OTP"}
-          </button>
-
-          {isOtpSent && (
-            <InputField
-              value={formData.otp}
-              onChange={(v) => updateField("otp", v)}
-              placeholder="Enter OTP"
-              error={fieldErrors.otp}
-              type="number"
-            />
-          )}
-
-          <InputField
-            value={formData.password}
-            onChange={(v) => updateField("password", v)}
-            placeholder="Password"
-            error={fieldErrors.password}
-            type="password"
-          />
-
-          <InputField
-            value={formData.confirm_password}
-            onChange={(v) => updateField("confirm_password", v)}
-            placeholder="Confirm Password"
-            error={fieldErrors.confirm_password}
-            type="password"
-          />
-
-          <button
-            onClick={handleSignup}
-            disabled={signLoading}
-            className={`w-full py-3 rounded-lg font-bold text-white mt-6 transition-colors ${
-              signLoading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
-          >
-            {signLoading ? "Creating Account..." : "Create Account"}
-          </button>
-
-          <div className="text-center mt-6">
-            <p className="text-gray-600">
-              Already have an account?{" "}
-              <a
-                href="/login"
-                className="text-blue-600 font-bold hover:underline"
-              >
-                Login
-              </a>
-            </p>
-          </div>
+        {/* Login Link */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-600">
+            Already have an account?{" "}
+            <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              Sign in here
+            </a>
+          </p>
         </div>
       </div>
     </div>
