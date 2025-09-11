@@ -128,12 +128,12 @@ export default function AdminHeader() {
       label: "Requests",
       color: "text-emerald-600",
     },
-    {
-      path: "/admin/sendmail",
-      icon: faMailBulk,
-      label: "Send a Mail",
-      color: "text-emerald-600",
-    },
+    // {
+    //   path: "/admin/sendmail",
+    //   icon: faMailBulk,
+    //   label: "Send a Mail",
+    //   color: "text-emerald-600",
+    // },
   ];
 
   return (
