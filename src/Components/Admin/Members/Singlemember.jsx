@@ -13,7 +13,7 @@ export default function SingleMember() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    console.log('Fetching specfing member data...');
+    console.log('Fetching specific member data...');
     fetch(`${API_BASE}${name}`, {
       headers: {
         'Authorization': `Token ${TOKEN}`,
@@ -22,6 +22,7 @@ export default function SingleMember() {
     })
       .then(res => res.ok ? res.json() : Promise.reject(res.status))
       .then(data => {
+        console.log('Member data received:', data);
         setMember(data);
         setEditedMember(data); // Initialize edited member with original data
       })
@@ -42,25 +43,52 @@ export default function SingleMember() {
   const handleSaveEdit = async () => {
     setSaving(true);
     try {
-      // Dummy API call - replace with actual endpoint
-      const response = await fetch(`${API_BASE}${name}/update/`, {
+      // Prepare form data for multipart/form-data submission
+      const formData = new FormData();
+      
+      // Add all edited fields to formData except social_links
+      Object.entries(editedMember).forEach(([key, value]) => {
+        // Skip social_links
+        if (key === 'social_links') return;
+        
+        // Handle array fields by converting to JSON strings
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+      
+      // Make the API request with user ID instead of name
+      const response = await fetch(`${API_BASE}${member.id}/update/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Token ${TOKEN}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editedMember),
+        body: formData,
       });
       
-      if (response.ok) {
-        setMember(editedMember); // Update the displayed data
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Update the member state with the returned user data
+        setMember(data.user);
+        setEditedMember(data.user);
         setIsEditing(false);
-        console.log('Member updated successfully');
+        
+        // Show success notification (you could implement a toast notification here)
+        console.log(data.message); // User updated successfully
+        
+        // You could add a toast notification here:
+        // toast.success(data.message);
       } else {
-        console.error('Failed to update member');
+        // Handle error case
+        console.error('Failed to update member:', data.message || 'Unknown error');
+        // toast.error(data.message || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating member:', error);
+      // toast.error('Network error while updating profile');
     } finally {
       setSaving(false);
     }
