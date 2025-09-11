@@ -775,11 +775,11 @@ const Signup = () => {
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Email Verification</h3>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-blue-900">Verify your email address</p>
-                      <p className="text-sm text-blue-700">We'll send you a verification code</p>
+                      <p className="text-sm font-medium text-green-900">Verify your email address</p>
+                      <p className="text-sm text-green-700">We'll send you a verification code</p>
                     </div>
                     <button
                       type="button"
@@ -788,7 +788,7 @@ const Signup = () => {
                       className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
                         resendTimer > 0 || loading
                           ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       }`}
                     >
                       {loading ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : "Send OTP"}
@@ -852,7 +852,7 @@ const Signup = () => {
                   className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
                     signLoading
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   }`}
                 >
                   {signLoading ? (
