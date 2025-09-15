@@ -17,23 +17,24 @@ import ProtectedRoute from './Components/Shared/ProtectedRoute';
 
 const AppRoutes = () => {
   const token = localStorage.getItem('Token');
-  const role = localStorage.getItem('Role');
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const isStaff = localStorage.getItem('isStaff') === 'true';
+  const isAlumni = localStorage.getItem('isAlumni') === 'true';
+  const isStudent = localStorage.getItem('isStudent') === 'true';
+  const userType = localStorage.getItem('userType');
 
   // Redirect authenticated users to their respective dashboards
   const redirectAuthenticated = () => {
     if (!token) return <Navigate to="/home" replace />;
 
-    switch (role) {
-      case 'admin':
-        return <Navigate to="/admin/dashboard" replace />;
-      case 'staff':
-        return <Navigate to="/staff/dashboard" replace />;
-      case 'alumni':
-        return <Navigate to="/alumni/dashboard" replace />;
-      case 'student':
-        return <Navigate to="/alumni/dashboard" replace />;
-      default:
-        return <Navigate to="/home" replace />;
+    if (isAdmin) {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (isStaff) {
+      return <Navigate to="/staff/dashboard" replace />;
+    } else if (isAlumni || isStudent) {
+      return <Navigate to="/alumni/dashboard" replace />;
+    } else {
+      return <Navigate to="/home" replace />;
     }
   };
 
