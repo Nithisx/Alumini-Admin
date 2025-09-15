@@ -207,7 +207,7 @@ export default function SingleMember() {
       // Add all edited fields to formData
       Object.entries(editedMember).forEach(([key, value]) => {
         // Skip these fields to avoid validation errors
-        if (key === 'profile_photo' || key === 'Worked_in' || key === 'experience') return;
+        if (key === 'profile_photo' || key === 'experience') return;
         
         // Handle array fields by converting to JSON strings (as expected by the API)
         if (key === 'professional_skills' || key === 'industries_worked_in' || key === 'roles_played') {
@@ -220,23 +220,20 @@ export default function SingleMember() {
         }
         // Handle work_experience field - map to experience and send as JSON number
         else if (key === 'work_experience' && value) {
+          // Send both work_experience and experience to ensure both fields are updated
+          formData.append('work_experience', JSON.stringify(parseInt(value) || 0));
           formData.append('experience', JSON.stringify(parseInt(value) || 0));
         }
-        // Handle worked_in field (lowercase) - convert to JSON string if it's an array or object
+        // Handle worked_in field with special care for capitalization (backend expects Worked_in with capital W)
         else if (key === 'worked_in' && value) {
-          if (Array.isArray(value) || typeof value === 'object') {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, JSON.stringify([value])); // Convert string to array
-          }
+          // Use the correct field name expected by backend (Worked_in with capital W)
+          formData.append('Worked_in', JSON.stringify(value)); // Send as proper JSON string
+          // Also send lowercase version for backward compatibility
+          formData.append('worked_in', JSON.stringify(value));
         }
-        // Handle current_work field - keep as string if it's simple text
+        // Handle current_work field - send as plain string to avoid double quotes in UI
         else if (key === 'current_work' && value) {
-          if (Array.isArray(value) || typeof value === 'object') {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, value); // Keep as string if it's just a string
-          }
+          formData.append(key, value.toString()); // Send as plain string to avoid JSON quotes
         }
         // Handle other fields - only send non-empty values
         else if (value !== null && value !== undefined && value !== '') {
@@ -258,8 +255,19 @@ export default function SingleMember() {
       
       if (response.ok && data.success) {
         // Update the member state with the returned user data
-        setMember(data.user);
-        setEditedMember(data.user);
+        // Handle the capitalization differences and JSON parsing
+        const updatedUser = {
+          ...data.user,
+          // Make sure worked_in (lowercase) is available for display
+          worked_in: data.user.Worked_in || data.user.worked_in,
+          // Parse current_work if it's a stringified JSON
+          current_work: data.user.current_work ? 
+            (typeof data.user.current_work === 'string' && data.user.current_work.startsWith('"') ? 
+              JSON.parse(data.user.current_work) : data.user.current_work) : ''
+        };
+        
+        setMember(updatedUser);
+        setEditedMember(updatedUser);
         setIsEditing(false);
         resetImageSelection(); // Reset image selection after successful save
         
@@ -1038,13 +1046,16 @@ export default function SingleMember() {
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editedMember.worked_in || ''}
+                        value={editedMember.worked_in || editedMember.Worked_in || ''}
                         onChange={(e) => handleInputChange('worked_in', e.target.value)}
                         className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                     ) : (
-                      worked_in ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{worked_in}</span> : 
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                      worked_in || member.Worked_in ? 
+                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
+                          {worked_in || (Array.isArray(member.Worked_in) ? member.Worked_in.join(', ') : member.Worked_in)}
+                        </span> : 
+                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
                     )}
                   </div>
                   
@@ -1053,12 +1064,29 @@ export default function SingleMember() {
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editedMember.current_work || ''}
+                        value={typeof editedMember.current_work === 'string' && editedMember.current_work.startsWith('"') ? 
+                          JSON.parse(editedMember.current_work) : (editedMember.current_work || '')}
                         onChange={(e) => handleInputChange('current_work', e.target.value)}
                         className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                     ) : (
-                      current_work ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{current_work}</span> : 
+                      current_work ? 
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
+                        {(() => {
+                            if (typeof current_work === 'string') {
+                              try {
+                                // Try to parse if it looks like JSON (starts and ends with quotes)
+                                if (current_work.startsWith('"') && current_work.endsWith('"')) {
+                                  return JSON.parse(current_work);
+                                }
+                              } catch (e) {
+                                // If parsing fails, just use the original string
+                                console.log('Failed to parse current_work:', e);
+                              }
+                            }
+                            return current_work;
+                          })()}
+                      </span> : 
                       <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
                     )}
                   </div>
