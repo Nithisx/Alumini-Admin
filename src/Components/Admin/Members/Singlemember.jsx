@@ -211,12 +211,15 @@ export default function SingleMember() {
         
         // Handle array fields by converting to JSON strings (as expected by the API)
         if (key === 'professional_skills' || key === 'industries_worked_in' || key === 'roles_played') {
+          // Always send these fields, even if empty, to allow clearing
           const arrayValue = Array.isArray(value) ? value : (value ? [value] : []);
           formData.append(key, JSON.stringify(arrayValue));
         } 
         // Handle social_links object - convert to JSON string
-        else if (key === 'social_links' && value && typeof value === 'object') {
-          formData.append(key, JSON.stringify(value));
+        else if (key === 'social_links') {
+          // Always send this field, even if empty, to allow clearing
+          const socialLinksValue = (value && typeof value === 'object') ? value : {};
+          formData.append(key, JSON.stringify(socialLinksValue));
         }
         // Handle work_experience field - map to experience and send as JSON number
         else if (key === 'work_experience' && value) {
@@ -225,19 +228,23 @@ export default function SingleMember() {
           formData.append('experience', JSON.stringify(parseInt(value) || 0));
         }
         // Handle worked_in field with special care for capitalization (backend expects Worked_in with capital W)
-        else if (key === 'worked_in' && value) {
+        else if (key === 'worked_in') {
+          // Always send this field even if empty, to allow clearing the field
+          const valueToSend = value || '';
           // Use the correct field name expected by backend (Worked_in with capital W)
-          formData.append('Worked_in', JSON.stringify(value)); // Send as proper JSON string
+          formData.append('Worked_in', JSON.stringify(valueToSend)); // Send as proper JSON string
           // Also send lowercase version for backward compatibility
-          formData.append('worked_in', JSON.stringify(value));
+          formData.append('worked_in', JSON.stringify(valueToSend));
         }
         // Handle current_work field - send as plain string to avoid double quotes in UI
-        else if (key === 'current_work' && value) {
-          formData.append(key, value.toString()); // Send as plain string to avoid JSON quotes
+        else if (key === 'current_work') {
+          // Always send this field even if empty, to allow clearing the field
+          formData.append(key, (value || '').toString()); // Send as plain string to avoid JSON quotes
         }
-        // Handle other fields - only send non-empty values
-        else if (value !== null && value !== undefined && value !== '') {
-          formData.append(key, value);
+        // Handle other fields - send all fields including empty ones to allow clearing
+        else {
+          // Use empty string for null/undefined values
+          formData.append(key, value !== null && value !== undefined ? value : '');
         }
       });
       
@@ -259,7 +266,9 @@ export default function SingleMember() {
         const updatedUser = {
           ...data.user,
           // Make sure worked_in (lowercase) is available for display
-          worked_in: data.user.Worked_in || data.user.worked_in,
+          worked_in: data.user.worked_in || data.user.Worked_in || '',
+          // Also ensure Worked_in (uppercase) is set for consistency
+          Worked_in: data.user.worked_in || data.user.Worked_in || '',
           // Parse current_work if it's a stringified JSON
           current_work: data.user.current_work ? 
             (typeof data.user.current_work === 'string' && data.user.current_work.startsWith('"') ? 
@@ -301,6 +310,12 @@ export default function SingleMember() {
       if (field === 'course') {
         updated.stream = '';
         setAvailableBranches(value && COURSE_BRANCH_MAPPING[value] ? COURSE_BRANCH_MAPPING[value] : []);
+      }
+      
+      // Special handling for worked_in field to handle capitalization issues
+      if (field === 'worked_in') {
+        // Update both lowercase and capitalized versions to ensure consistency
+        updated.Worked_in = value;
       }
       
       return updated;
@@ -1046,7 +1061,7 @@ export default function SingleMember() {
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editedMember.worked_in || editedMember.Worked_in || ''}
+                        value={editedMember.worked_in === undefined ? '' : editedMember.worked_in}
                         onChange={(e) => handleInputChange('worked_in', e.target.value)}
                         className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />

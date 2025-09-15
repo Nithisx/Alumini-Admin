@@ -246,6 +246,10 @@ export default function MembersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
+  
+  // Sorting states
+  const [sortField, setSortField] = useState('first_name');
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
 
   // Fetch dropdown filter options
   const fetchDropdownFilters = async () => {
@@ -272,6 +276,10 @@ export default function MembersPage() {
       page: currentPage,
       page_size: pageSize,
     });
+
+    // Add sorting parameter
+    const orderingValue = sortDirection === 'desc' ? `-${sortField}` : sortField;
+    params.append("ordering", orderingValue);
 
     if (roleFilter) params.append("role", roleFilter);
     if (cityFilter) params.append("city", cityFilter);
@@ -637,7 +645,7 @@ export default function MembersPage() {
     currentPage,
   ]);
 
-  // Whenever page or filters change, fetch data
+  // Whenever page, filters, or sorting change, fetch data
   useEffect(() => {
     fetchMembers();
   }, [
@@ -660,6 +668,8 @@ export default function MembersPage() {
     chapterFilter, // Add chapter filter to dependencies
     emailFilter, // Make sure this is here
     branchFilter, // Add branch filter to dependencies
+    sortField, // Add sorting field to dependencies
+    sortDirection, // Add sorting direction to dependencies
   ]);
 
   // Handle page change
@@ -670,6 +680,21 @@ export default function MembersPage() {
   // Handle page size change
   const handlePageSizeChange = (size) => {
     setPageSize(size);
+    setCurrentPage(1);
+  };
+  
+  // Handle sorting changes
+  const handleSortChange = (field) => {
+    // If clicking the same field, toggle direction
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    
+    // Reset to first page when sorting changes
     setCurrentPage(1);
   };
 
@@ -1269,6 +1294,43 @@ export default function MembersPage() {
                   "No members found"
                 )}
               </h2>
+              
+              {/* Sorting Controls */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">
+                  Sort by:
+                </label>
+                <select
+                  id="sort-select"
+                  value={sortField}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="first_name">First Name</option>
+                  <option value="last_name">Last Name</option>
+                  <option value="passed_out_year">Passed Out Year</option>
+                  <option value="college_name">College</option>
+                  <option value="course">Course</option>
+                  <option value="branch">Branch</option>
+                  <option value="role">Role</option>
+                  <option value="city">City</option>
+                </select>
+                
+                <button 
+                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  className="flex items-center gap-1 text-sm border border-gray-300 rounded-md px-2 py-1 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+                  <svg 
+                    className={`w-4 h-4 ${sortDirection === 'asc' ? 'rotate-0' : 'rotate-180'} transition-transform`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {members.length === 0 ? (
