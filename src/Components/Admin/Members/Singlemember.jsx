@@ -654,28 +654,101 @@ export default function SingleMember() {
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex flex-col space-y-1">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Email:</span>
-                    <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{email}</span>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        value={editedMember.email || ''}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{email}</span>
+                    )}
                   </div>
-                  {secondary_email && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Secondary Email:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{secondary_email}</span>
-                    </div>
-                  )}
+                  
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Secondary Email:</span>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        value={editedMember.secondary_email || ''}
+                        onChange={(e) => handleInputChange('secondary_email', e.target.value)}
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      secondary_email ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{secondary_email}</span> : 
+                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                    )}
+                  </div>
+                  
                   <div className="flex flex-col space-y-1">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Phone:</span>
-                    <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{phone}</span>
+                    {isEditing ? (
+                      <input
+                        type="tel"
+                        value={editedMember.phone || ''}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{phone}</span>
+                    )}
                   </div>
+                  
                   <div className="flex flex-col space-y-1">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Location:</span>
-                    <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{current_location || `${city}, ${state}, ${country}`}</span>
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Current Location"
+                          value={editedMember.current_location || ''}
+                          onChange={(e) => handleInputChange('current_location', e.target.value)}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            placeholder="City"
+                            value={editedMember.city || ''}
+                            onChange={(e) => handleInputChange('city', e.target.value)}
+                            className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                          <input
+                            type="text"
+                            placeholder="State"
+                            value={editedMember.state || ''}
+                            onChange={(e) => handleInputChange('state', e.target.value)}
+                            className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Country"
+                            value={editedMember.country || ''}
+                            onChange={(e) => handleInputChange('country', e.target.value)}
+                            className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{current_location || `${city}, ${state}, ${country}`}</span>
+                    )}
                   </div>
-                  {home_town && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Home Town:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{home_town}</span>
-                    </div>
-                  )}
+                  
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Home Town:</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.home_town || ''}
+                        onChange={(e) => handleInputChange('home_town', e.target.value)}
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      home_town ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{home_town}</span> : 
+                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -805,7 +878,17 @@ export default function SingleMember() {
                   {company && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Company:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{company}</span>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editedMember.company || ''}
+                          onChange={(e) => handleInputChange('company', e.target.value)}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      ) : (
+                        company ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{company}</span> : 
+                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                      )}
                     </div>
                   )}
                   
@@ -813,75 +896,172 @@ export default function SingleMember() {
                   {position && (
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Position:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{position}</span>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editedMember.position || ''}
+                          onChange={(e) => handleInputChange('position', e.target.value)}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      ) : (
+                        position ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{position}</span> : 
+                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                      )}
                     </div>
                   )}
                   
                   {/* Work Experience */}
-                  {/* {work_experience && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Work Experience</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {work_experience} {work_experience === 1 ? 'year' : 'years'}
-                      </span>
-                    </div>
-                  )}
-                   */}
-                  {/* Professional Skills */}
-                  {professional_skills && professional_skills.length > 0 && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Professional Skills:</span>
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        {professional_skills.map((skill, index) => (
-                          <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {skill}
-                          </span>
-                        ))}
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Work Experience:</span>
+                    {isEditing ? (
+                      <div className="flex items-center">
+                        <input
+                          type="number"
+                          min="0"
+                          value={editedMember.work_experience || ''}
+                          onChange={(e) => handleInputChange('work_experience', e.target.value)}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-20"
+                        />
+                        <span className="ml-2 text-gray-600">years</span>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      work_experience && work_experience > 0 ? 
+                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
+                          {work_experience} {work_experience === 1 ? 'year' : 'years'}
+                        </span> : 
+                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                    )}
+                  </div>
+                  
+                  {/* Professional Skills */}
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Professional Skills:</span>
+                    {isEditing ? (
+                      <div className="space-y-1">
+                        <input
+                          type="text"
+                          placeholder="Enter skills, separated by commas"
+                          value={editedMember.professional_skills_text || 
+                            (Array.isArray(editedMember.professional_skills) ? 
+                              editedMember.professional_skills.join(', ') : '')}
+                          onChange={(e) => {
+                            handleInputChange('professional_skills_text', e.target.value);
+                            const skillsArray = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                            handleInputChange('professional_skills', skillsArray);
+                          }}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                        />
+                        <p className="text-xs text-gray-500">Enter skills separated by commas (e.g. "React, Node.js, UI Design")</p>
+                      </div>
+                    ) : (
+                      professional_skills && professional_skills.length > 0 ? 
+                        <div className="flex flex-wrap gap-1 sm:gap-2">
+                          {professional_skills.map((skill, index) => (
+                            <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                              {skill}
+                            </span>
+                          ))}
+                        </div> :
+                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">No skills listed</span>
+                    )}
+                  </div>
                   
                   {/* Industries Worked In */}
-                  {industries_worked_in && industries_worked_in.length > 0 && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Industries Worked In:</span>
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        {industries_worked_in.map((industry, index) => (
-                          <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {industry}
-                          </span>
-                        ))}
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Industries Worked In:</span>
+                    {isEditing ? (
+                      <div className="space-y-1">
+                        <input
+                          type="text"
+                          placeholder="Enter industries, separated by commas"
+                          value={editedMember.industries_worked_in_text || 
+                            (Array.isArray(editedMember.industries_worked_in) ? 
+                              editedMember.industries_worked_in.join(', ') : '')}
+                          onChange={(e) => {
+                            handleInputChange('industries_worked_in_text', e.target.value);
+                            const industriesArray = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                            handleInputChange('industries_worked_in', industriesArray);
+                          }}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                        />
+                        <p className="text-xs text-gray-500">Enter industries separated by commas (e.g. "IT, Healthcare, Education")</p>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      industries_worked_in && industries_worked_in.length > 0 ? 
+                        <div className="flex flex-wrap gap-1 sm:gap-2">
+                          {industries_worked_in.map((industry, index) => (
+                            <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                              {industry}
+                            </span>
+                          ))}
+                        </div> :
+                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">No industries listed</span>
+                    )}
+                  </div>
                   
                   {/* Roles Played */}
-                  {roles_played && roles_played.length > 0 && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Roles Played:</span>
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        {roles_played.map((role_played, index) => (
-                          <span key={index} className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
-                            {role_played}
-                          </span>
-                        ))}
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Roles Played:</span>
+                    {isEditing ? (
+                      <div className="space-y-1">
+                        <input
+                          type="text"
+                          placeholder="Enter roles, separated by commas"
+                          value={editedMember.roles_played_text || 
+                            (Array.isArray(editedMember.roles_played) ? 
+                              editedMember.roles_played.join(', ') : '')}
+                          onChange={(e) => {
+                            handleInputChange('roles_played_text', e.target.value);
+                            const rolesArray = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                            handleInputChange('roles_played', rolesArray);
+                          }}
+                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                        />
+                        <p className="text-xs text-gray-500">Enter roles separated by commas (e.g. "Developer, Team Lead, Product Manager")</p>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      roles_played && roles_played.length > 0 ? 
+                        <div className="flex flex-wrap gap-1 sm:gap-2">
+                          {roles_played.map((role_played, index) => (
+                            <span key={index} className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
+                              {role_played}
+                            </span>
+                          ))}
+                        </div> :
+                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">No roles listed</span>
+                    )}
+                  </div>
                   
                   {/* Legacy fields - show if new fields are not available */}
-                  {worked_in && !company && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Worked In:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{worked_in}</span>
-                    </div>
-                  )}
-                  {current_work && !company && !worked_in && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">Current Work:</span>
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{current_work}</span>
-                    </div>
-                  )}
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Worked In:</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.worked_in || ''}
+                        onChange={(e) => handleInputChange('worked_in', e.target.value)}
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      worked_in ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{worked_in}</span> : 
+                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium text-green-700 text-sm sm:text-base">Current Work:</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.current_work || ''}
+                        onChange={(e) => handleInputChange('current_work', e.target.value)}
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    ) : (
+                      current_work ? <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{current_work}</span> : 
+                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">Not provided</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -897,13 +1077,26 @@ export default function SingleMember() {
                   </div>
                   <h2 className="text-lg sm:text-xl font-bold text-green-800">About</h2>
                 </div>
-                <div className="bg-white rounded-lg p-3 sm:p-4">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">{bio}</p>
-                </div>
+                {isEditing ? (
+                  <textarea
+                    value={editedMember.bio || ''}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    placeholder="Enter your bio here..."
+                    className="text-gray-700 text-sm sm:text-base w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[120px]"
+                  ></textarea>
+                ) : (
+                  <div className="bg-white rounded-lg p-3 sm:p-4">
+                    {bio ? (
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">{bio}</p>
+                    ) : (
+                      <p className="text-gray-500 italic text-sm">No bio provided</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Social Links */}
+            {/* Social Links Section */}
             {Object.keys(social_links).length > 0 && (
               <div className="mt-6 sm:mt-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
                 <div className="flex items-center mb-3 sm:mb-4">
@@ -914,18 +1107,114 @@ export default function SingleMember() {
                   </div>
                   <h2 className="text-lg sm:text-xl font-bold text-green-800">Social Links</h2>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                  {Object.entries(social_links).map(([key, url]) => (
-                    <a
-                      key={key}
-                      href={url.startsWith('http') ? url : `https://${url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white hover:bg-green-50 border border-green-200 hover:border-green-400 text-green-700 hover:text-green-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all duration-200 flex items-center justify-center font-medium capitalize shadow-sm hover:shadow-md text-sm"
-                    >
-                      {key.replace('_link', '')}
-                    </a>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-600">LinkedIn</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.social_links?.linkedin_link || ''}
+                        onChange={(e) => handleInputChange('social_links', {
+                          ...editedMember.social_links,
+                          linkedin_link: e.target.value
+                        })}
+                        placeholder="LinkedIn URL"
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{social_links.linkedin_link}</span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-600">Twitter</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.social_links?.twitter_link || ''}
+                        onChange={(e) => handleInputChange('social_links', {
+                          ...editedMember.social_links,
+                          twitter_link: e.target.value
+                        })}
+                        placeholder="Twitter URL"
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{social_links.twitter_link}</span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-600">Facebook</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.social_links?.facebook_link || ''}
+                        onChange={(e) => handleInputChange('social_links', {
+                          ...editedMember.social_links,
+                          facebook_link: e.target.value
+                        })}
+                        placeholder="Facebook URL"
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{social_links.facebook_link}</span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-600">Instagram</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.social_links?.instagram_link || ''}
+                        onChange={(e) => handleInputChange('social_links', {
+                          ...editedMember.social_links,
+                          instagram_link: e.target.value
+                        })}
+                        placeholder="Instagram URL"
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{social_links.instagram_link}</span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-600">GitHub</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.social_links?.github_link || ''}
+                        onChange={(e) => handleInputChange('social_links', {
+                          ...editedMember.social_links,
+                          github_link: e.target.value
+                        })}
+                        placeholder="GitHub URL"
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{social_links.github_link}</span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-600">Website</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedMember.social_links?.website_link || ''}
+                        onChange={(e) => handleInputChange('social_links', {
+                          ...editedMember.social_links,
+                          website_link: e.target.value
+                        })}
+                        placeholder="Personal Website URL"
+                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
+                      />
+                    ) : (
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{social_links.website_link}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
