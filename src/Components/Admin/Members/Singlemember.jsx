@@ -147,6 +147,7 @@ export default function SingleMember() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedMember, setEditedMember] = useState({});
+  const [changedFields, setChangedFields] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [availableBranches, setAvailableBranches] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -178,6 +179,7 @@ export default function SingleMember() {
   const handleEditClick = () => {
     setIsEditing(true);
     setEditedMember({ ...member }); // Reset edited data to current member data
+    setChangedFields(new Set()); // Clear the changed fields set when starting edit mode
     
     // Set available branches based on current course
     if (member.course && COURSE_BRANCH_MAPPING[member.course]) {
@@ -191,6 +193,7 @@ export default function SingleMember() {
     setIsEditing(false);
     setEditedMember({ ...member }); // Reset to original data
     resetImageSelection(); // Reset image selection
+    setChangedFields(new Set()); // Clear the changed fields set
   };
 
   const handleSaveEdit = async () => {
@@ -199,52 +202,52 @@ export default function SingleMember() {
       // Prepare FormData for multipart/form-data submission
       const formData = new FormData();
       
-      // Add the profile image if one was selected
+      // Add the profile image if one was selected (profile image is always considered changed if selected)
       if (selectedImage) {
         formData.append('profile_photo', selectedImage);
+        // Mark profile_photo as changed
+        setChangedFields(current => new Set([...current, 'profile_photo']));
       }
       
-      // Add all edited fields to formData
+      // Add only edited fields to formData
       Object.entries(editedMember).forEach(([key, value]) => {
         // Skip these fields to avoid validation errors
         if (key === 'profile_photo' || key === 'experience') return;
         
-        // Handle array fields by converting to JSON strings (as expected by the API)
-        if (key === 'professional_skills' || key === 'industries_worked_in' || key === 'roles_played') {
-          // Always send these fields, even if empty, to allow clearing
-          const arrayValue = Array.isArray(value) ? value : (value ? [value] : []);
-          formData.append(key, JSON.stringify(arrayValue));
-        } 
-        // Handle social_links object - convert to JSON string
-        else if (key === 'social_links') {
-          // Always send this field, even if empty, to allow clearing
-          const socialLinksValue = (value && typeof value === 'object') ? value : {};
-          formData.append(key, JSON.stringify(socialLinksValue));
-        }
-        // Handle work_experience field - map to experience and send as JSON number
-        else if (key === 'work_experience' && value) {
-          // Send both work_experience and experience to ensure both fields are updated
-          formData.append('work_experience', JSON.stringify(parseInt(value) || 0));
-          formData.append('experience', JSON.stringify(parseInt(value) || 0));
-        }
-        // Handle worked_in field with special care for capitalization (backend expects Worked_in with capital W)
-        else if (key === 'worked_in') {
-          // Always send this field even if empty, to allow clearing the field
-          const valueToSend = value || '';
-          // Use the correct field name expected by backend (Worked_in with capital W)
-          formData.append('Worked_in', JSON.stringify(valueToSend)); // Send as proper JSON string
-          // Also send lowercase version for backward compatibility
-          formData.append('worked_in', JSON.stringify(valueToSend));
-        }
-        // Handle current_work field - send as plain string to avoid double quotes in UI
-        else if (key === 'current_work') {
-          // Always send this field even if empty, to allow clearing the field
-          formData.append(key, (value || '').toString()); // Send as plain string to avoid JSON quotes
-        }
-        // Handle other fields - send all fields including empty ones to allow clearing
-        else {
-          // Use empty string for null/undefined values
-          formData.append(key, value !== null && value !== undefined ? value : '');
+        // Only process fields that were actually changed
+        if (changedFields.has(key)) {
+          // Handle array fields by converting to JSON strings (as expected by the API)
+          if (key === 'professional_skills' || key === 'industries_worked_in' || key === 'roles_played') {
+            const arrayValue = Array.isArray(value) ? value : (value ? [value] : []);
+            formData.append(key, JSON.stringify(arrayValue));
+          } 
+          // Handle social_links object - convert to JSON string
+          else if (key === 'social_links') {
+            const socialLinksValue = (value && typeof value === 'object') ? value : {};
+            formData.append(key, JSON.stringify(socialLinksValue));
+          }
+          // Handle work_experience field - map to experience and send as JSON number
+          else if (key === 'work_experience' && value) {
+            formData.append('work_experience', JSON.stringify(parseInt(value) || 0));
+            formData.append('experience', JSON.stringify(parseInt(value) || 0));
+          }
+          // Handle worked_in field with special care for capitalization (backend expects Worked_in with capital W)
+          else if (key === 'worked_in') {
+            const valueToSend = value || '';
+            // Use the correct field name expected by backend (Worked_in with capital W)
+            formData.append('Worked_in', JSON.stringify(valueToSend)); // Send as proper JSON string
+            // Also send lowercase version for backward compatibility
+            formData.append('worked_in', JSON.stringify(valueToSend));
+          }
+          // Handle current_work field - send as plain string to avoid double quotes in UI
+          else if (key === 'current_work') {
+            formData.append(key, (value || '').toString()); // Send as plain string to avoid JSON quotes
+          }
+          // Handle other fields - send only changed fields
+          else {
+            // Use empty string for null/undefined values
+            formData.append(key, value !== null && value !== undefined ? value : '');
+          }
         }
       });
       
@@ -279,6 +282,7 @@ export default function SingleMember() {
         setEditedMember(updatedUser);
         setIsEditing(false);
         resetImageSelection(); // Reset image selection after successful save
+        setChangedFields(new Set()); // Clear the changed fields set after successful save
         
         // Show success notification (you could implement a toast notification here)
         console.log(data.message); // User updated successfully
@@ -310,12 +314,19 @@ export default function SingleMember() {
       if (field === 'course') {
         updated.stream = '';
         setAvailableBranches(value && COURSE_BRANCH_MAPPING[value] ? COURSE_BRANCH_MAPPING[value] : []);
+        // Mark stream as changed too since we're resetting it
+        setChangedFields(current => new Set([...current, field, 'stream']));
+      } else {
+        // Mark field as changed
+        setChangedFields(current => new Set([...current, field]));
       }
       
       // Special handling for worked_in field to handle capitalization issues
       if (field === 'worked_in') {
         // Update both lowercase and capitalized versions to ensure consistency
         updated.Worked_in = value;
+        // Mark Worked_in as changed too
+        setChangedFields(current => new Set([...current, field, 'Worked_in']));
       }
       
       return updated;
@@ -326,6 +337,9 @@ export default function SingleMember() {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
+      
+      // Mark profile_photo as changed
+      setChangedFields(current => new Set([...current, 'profile_photo']));
       
       // Create preview URL
       const reader = new FileReader();
@@ -398,6 +412,7 @@ export default function SingleMember() {
     current_work,
     worked_in,
     passed_out_year,
+    roll_no,
     social_links = {},
     // Add the new professional fields
     company,
@@ -880,6 +895,21 @@ export default function SingleMember() {
                         />
                       ) : (
                         <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{passed_out_year}</span>
+                      )}
+                    </div>
+                  )}
+                   {passed_out_year && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Roll No:</span>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editedMember.roll_no || ''}
+                          onChange={(e) => handleInputChange('roll_no', e.target.value)}
+                          className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{roll_no}</span>
                       )}
                     </div>
                   )}
