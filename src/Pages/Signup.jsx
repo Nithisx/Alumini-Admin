@@ -258,10 +258,13 @@ const Signup = () => {
 
   const validate = useCallback(() => {
     const errors = {};
+    
+    // Use account type instead of role for form validation
+    const isStaffAccount = formData.account_type === "staff" || formData.role === "Staff";
 
     REQUIRED_FIELDS.forEach((field) => {
       if (
-        formData.role === "Staff" &&
+        isStaffAccount &&
         (field === "roll_no" ||
           field === "course_end_year" ||
           field === "passed_out_year")
@@ -274,7 +277,7 @@ const Signup = () => {
       }
     });
 
-    if (formData.role !== "Staff" && !formData.course?.trim()) {
+    if (!isStaffAccount && !formData.course?.trim()) {
       errors.course = "This field is required";
     }
 
@@ -429,8 +432,20 @@ const Signup = () => {
         payload.append("profile_photo", blob, "profile_photo.jpg");
       }
       
+      // Use account_type instead of role
       if (formData.role) {
-        payload.set("role", formData.role);
+        payload.set("account_type", formData.role);
+        
+        // Set permission flags based on role selection
+        const isAdmin = formData.role === "Admin";
+        const isStaff = formData.role === "Staff";
+        const isAlumni = formData.role === "Alumni";
+        const isStudent = formData.role === "Student";
+        
+        payload.set("is_admin", isAdmin ? "true" : "false");
+        payload.set("is_staff", isStaff ? "true" : "false");
+        payload.set("is_alumni", isAlumni ? "true" : "false");
+        payload.set("is_student", isStudent ? "true" : "false");
       }
 
       const response = await fetch(SIGNUP_URL, {
@@ -717,7 +732,7 @@ const Signup = () => {
                     onChange={(v) => updateField("roll_no", v)}
                     placeholder="Enter your roll number"
                     error={fieldErrors.roll_no}
-                    required={formData.role !== "Staff"}
+                    required={!isStaffAccount}
                   />
                   <SelectField
                     label="Course"
@@ -757,7 +772,7 @@ const Signup = () => {
                     onChange={(v) => updateField("course_end_year", v)}
                     placeholder="2024"
                     error={fieldErrors.course_end_year}
-                    required={formData.role !== "Staff"}
+                    required={!isStaffAccount}
                   />
                   <InputField
                     label="Passed Out Year"
@@ -766,7 +781,7 @@ const Signup = () => {
                     onChange={(v) => updateField("passed_out_year", v)}
                     placeholder="2024"
                     error={fieldErrors.passed_out_year}
-                    required={formData.role !== "Staff"}
+                    required={!isStaffAccount}
                   />
                 </div>
               </div>

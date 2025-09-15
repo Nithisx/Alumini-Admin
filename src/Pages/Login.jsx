@@ -59,7 +59,16 @@ export default function LoginPage() {
 
         if (data.token) {
           localStorage.setItem("Token", data.token);
-          localStorage.setItem("Role", form.role);
+          
+          // Store permission flags instead of role
+          localStorage.setItem("isAdmin", form.role === "admin" ? "true" : "false");
+          localStorage.setItem("isStaff", form.role === "staff" ? "true" : "false");
+          localStorage.setItem("isAlumni", form.role === "alumni" ? "true" : "false");
+          localStorage.setItem("isStudent", form.role === "student" ? "true" : "false");
+          
+          // Store user type for UI purposes (not for security checks)
+          localStorage.setItem("userType", form.role);
+          
           switch (form.role) {
             case "admin":
               navigate("/admin/dashboard");

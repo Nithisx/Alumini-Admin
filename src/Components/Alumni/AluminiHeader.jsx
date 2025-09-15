@@ -55,9 +55,13 @@ export default function alumniHeader() {
 
   const handleLogout = () => {
     console.log("Logout clicked");
-    // Note: localStorage not available in artifacts
+    // Remove all authentication and permission data
     localStorage.removeItem("Token");
-    localStorage.removeItem("Role");
+    localStorage.removeItem("isAdmin");
+    localStorage.removeItem("isStaff");
+    localStorage.removeItem("isAlumni");
+    localStorage.removeItem("isStudent");
+    localStorage.removeItem("userType");
     window.location.href = "/login";
   };
 

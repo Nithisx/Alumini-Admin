@@ -142,20 +142,19 @@ const Header = () => {
                 <>
             <button
               onClick={() => {
-                const role = localStorage.getItem("Role");
-                switch (role) {
-                  case "admin":
-                    navigate("/admin/dashboard");
-                    break;
-                  case "staff":
-                    navigate("/staff/dashboard");
-                    break;
-                  case "alumni":
-                  case "student":
-                    navigate("/alumni/dashboard");
-                    break;
-                  default:
-                    navigate("/home");
+                const isAdmin = localStorage.getItem("isAdmin") === "true";
+                const isStaff = localStorage.getItem("isStaff") === "true";
+                const isAlumni = localStorage.getItem("isAlumni") === "true";
+                const isStudent = localStorage.getItem("isStudent") === "true";
+                
+                if (isAdmin) {
+                  navigate("/admin/dashboard");
+                } else if (isStaff) {
+                  navigate("/staff/dashboard");
+                } else if (isAlumni || isStudent) {
+                  navigate("/alumni/dashboard");
+                } else {
+                  navigate("/home");
                 }
               }}
               className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
@@ -251,20 +250,19 @@ const Header = () => {
               <>
                 <button
                   onClick={() => {
-                    const role = localStorage.getItem("Role");
-                    switch (role) {
-                      case "admin":
-                        navigate("/admin/dashboard");
-                        break;
-                      case "staff":
-                        navigate("/staff/dashboard");
-                        break;
-                      case "alumni":
-                      case "student":
-                        navigate("/alumni/dashboard");
-                        break;
-                      default:
-                        navigate("/home");
+                    const isAdmin = localStorage.getItem("isAdmin") === "true";
+                    const isStaff = localStorage.getItem("isStaff") === "true";
+                    const isAlumni = localStorage.getItem("isAlumni") === "true";
+                    const isStudent = localStorage.getItem("isStudent") === "true";
+                    
+                    if (isAdmin) {
+                      navigate("/admin/dashboard");
+                    } else if (isStaff) {
+                      navigate("/staff/dashboard");
+                    } else if (isAlumni || isStudent) {
+                      navigate("/alumni/dashboard");
+                    } else {
+                      navigate("/home");
                     }
                     setMenuOpen(false);
                   }}

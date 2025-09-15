@@ -20,16 +20,24 @@ export default function HomeNavbar() {
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem("Token");
-    const role = localStorage.getItem("Role");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    const isStaff = localStorage.getItem("isStaff") === "true";
+    const isAlumni = localStorage.getItem("isAlumni") === "true";
+    const isStudent = localStorage.getItem("isStudent") === "true";
+    const userType = localStorage.getItem("userType");
 
     setIsLoggedIn(!!token);
-    setUserRole(role);
+    setUserRole(userType);
   }, []);
 
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("Token");
-    localStorage.removeItem("Role");
+    localStorage.removeItem("isAdmin");
+    localStorage.removeItem("isStaff");
+    localStorage.removeItem("isAlumni");
+    localStorage.removeItem("isStudent");
+    localStorage.removeItem("userType");
     setIsLoggedIn(false);
     setUserRole(null);
     navigate("/home");
@@ -37,8 +45,17 @@ export default function HomeNavbar() {
 
   // Navigate to dashboard based on user role
   const goToDashboard = () => {
-    if (userRole) {
-      navigate(`/${userRole}/dashboard`);
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    const isStaff = localStorage.getItem("isStaff") === "true";
+    const isAlumni = localStorage.getItem("isAlumni") === "true";
+    const isStudent = localStorage.getItem("isStudent") === "true";
+    
+    if (isAdmin) {
+      navigate("/admin/dashboard");
+    } else if (isStaff) {
+      navigate("/staff/dashboard");
+    } else if (isAlumni || isStudent) {
+      navigate("/alumni/dashboard");
     }
   };
 

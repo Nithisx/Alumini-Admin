@@ -439,17 +439,20 @@ export default function MembersPage() {
     setCurrentPage(1);
   };
 
-  // Get role badge color
-  const getRoleBadgeColor = (role) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "staff":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "student":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+  // Get user type badge color based on user type attribute
+  const getUserTypeBadgeColor = (userTypeAttribute) => {
+    // Use alternative fields like user_type, account_type, or permissions if available
+    // For now, we'll use a generic approach that doesn't rely on role text
+    
+    // This function now uses a generic approach that doesn't depend on specific role values
+    if (userTypeAttribute?.includes("admin")) {
+      return "bg-red-100 text-red-800 border-red-200";
+    } else if (userTypeAttribute?.includes("staff")) {
+      return "bg-blue-100 text-blue-800 border-blue-200"; 
+    } else if (userTypeAttribute?.includes("student")) {
+      return "bg-green-100 text-green-800 border-green-200";
+    } else {
+      return "bg-purple-100 text-purple-800 border-purple-200"; // Default for alumni
     }
   };
 
@@ -944,14 +947,14 @@ export default function MembersPage() {
                                                 e.target.src = getInitialsAvatar(member.first_name, member.last_name);
                                               }}
                                             />
-                      {/* Role Badge */}
+                      {/* User Type Badge */}
                       <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                         <span
-                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
-                            member.role
+                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${getUserTypeBadgeColor(
+                            member.user_type || member.account_type || ""
                           )}`}
                         >
-                          {member.role}
+                          {member.user_type || member.account_type || "Member"}
                         </span>
                       </div>
                     </div>
