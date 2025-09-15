@@ -149,6 +149,7 @@ export default function SingleMember() {
   const [editedMember, setEditedMember] = useState({});
   const [changedFields, setChangedFields] = useState(new Set());
   const [saving, setSaving] = useState(false);
+  const [usernameError, setUsernameError] = useState('');
   const [availableBranches, setAvailableBranches] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -197,6 +198,19 @@ export default function SingleMember() {
   };
 
   const handleSaveEdit = async () => {
+    // Check for errors before saving
+    if (usernameError) {
+      alert(`Cannot save: ${usernameError}`);
+      return;
+    }
+    
+    // Check if username is being changed and is empty
+    if (changedFields.has('username') && (!editedMember.username || editedMember.username.trim() === '')) {
+      setUsernameError('Username cannot be empty');
+      alert('Username cannot be empty');
+      return;
+    }
+    
     setSaving(true);
     try {
       // Prepare FormData for multipart/form-data submission
@@ -310,8 +324,36 @@ export default function SingleMember() {
         [field]: value
       };
       
+      // Special handling for username (prevent special characters)
+      if (field === 'username') {
+        // Remove @ symbol and special characters from username
+        const sanitizedUsername = value.replace(/[@\s#$%^&*()+=[\]\\';,./{}|":<>?~]/g, '');
+        
+        // Only proceed if username actually changed
+        if (sanitizedUsername !== member.username) {
+          updated[field] = sanitizedUsername;
+          setChangedFields(current => new Set([...current, field]));
+          
+          // Clear previous errors
+          setUsernameError('');
+          
+          // Check if username is not empty
+          if (sanitizedUsername.trim() === '') {
+            setUsernameError('Username cannot be empty');
+          }
+          // Don't need to check availability since the backend will handle this
+          // We're only doing basic validation on the frontend
+        } else {
+          // Username unchanged, remove from changedFields
+          setChangedFields(current => {
+            const newSet = new Set([...current]);
+            newSet.delete(field);
+            return newSet;
+          });
+        }
+      }
       // If course is changed, reset the stream/branch and update available branches
-      if (field === 'course') {
+      else if (field === 'course') {
         updated.stream = '';
         setAvailableBranches(value && COURSE_BRANCH_MAPPING[value] ? COURSE_BRANCH_MAPPING[value] : []);
         // Mark stream as changed too since we're resetting it
@@ -549,7 +591,25 @@ export default function SingleMember() {
                 <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-1 sm:mb-2">
                   {salutation} {first_name} {last_name}
                 </h1>
-                <p className="text-green-100 text-base sm:text-lg lg:text-xl mb-2 sm:mb-3">@{username}</p>
+                {isEditing ? (
+                  <div className="flex flex-col items-center justify-center mb-2 sm:mb-3">
+                    <div className="flex items-center">
+                      <span className="text-green-100 text-base sm:text-lg lg:text-xl mr-1">@</span>
+                      <input
+                        type="text"
+                        value={editedMember.username || ''}
+                        onChange={(e) => handleInputChange('username', e.target.value)}
+                        className={`bg-green-700 text-green-100 text-base sm:text-lg lg:text-xl border ${usernameError ? 'border-red-400' : 'border-green-300'} rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-300`}
+                        placeholder="username"
+                      />
+                    </div>
+                    {usernameError && (
+                      <p className="text-red-300 text-xs mt-1">{usernameError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-green-100 text-base sm:text-lg lg:text-xl mb-2 sm:mb-3">@{username}</p>
+                )}
                 <div className="flex flex-wrap gap-2 justify-center">
                   {role && (
                     <span className="bg-white text-green-600 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg">
