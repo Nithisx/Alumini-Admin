@@ -280,7 +280,7 @@ export default function MembersPage() {
     });
 
     // Add sorting parameter
-    const orderingValue = sortDirection === 'desc' ? `-${sortField}` : sortField;
+    const orderingValue = sortDirection === 'asc' ? `-${sortField}` : sortField;
     params.append("ordering", orderingValue);
 
     if (roleFilter) params.append("role", roleFilter);
