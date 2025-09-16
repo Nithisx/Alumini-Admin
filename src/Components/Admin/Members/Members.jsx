@@ -250,7 +250,7 @@ export default function MembersPage() {
   const [totalPages, setTotalPages] = useState(1);
   
   // Sorting states
-  const [sortField, setSortField] = useState('first_name');
+  const [sortField, setSortField] = useState('id');
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
 
   // Fetch dropdown filter options
