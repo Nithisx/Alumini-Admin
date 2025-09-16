@@ -1331,7 +1331,7 @@ export default function MembersPage() {
               
               {/* Sorting Controls */}
               <div className="flex items-center gap-2">
-                <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">
+                {/* <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">
                   Sort by:
                 </label>
                 <select
@@ -1348,7 +1348,7 @@ export default function MembersPage() {
                   <option value="branch">Branch</option>
                   <option value="role">Role</option>
                   <option value="city">City</option>
-                </select>
+                </select> */}
                 
                 <button 
                   onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
