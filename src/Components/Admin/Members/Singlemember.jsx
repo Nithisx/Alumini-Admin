@@ -963,7 +963,7 @@ export default function SingleMember() {
                       <span className="font-medium text-green-700 text-sm sm:text-base">Roll No:</span>
                       {isEditing ? (
                         <input
-                          type="number"
+                          type="text"
                           value={editedMember.roll_no || ''}
                           onChange={(e) => handleInputChange('roll_no', e.target.value)}
                           className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
