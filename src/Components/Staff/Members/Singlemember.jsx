@@ -42,7 +42,7 @@ export default function SingleMember() {
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Member Not Found</h2>
           <p className="text-gray-600 text-sm sm:text-base">The requested member profile could not be found.</p>
           <Link
-            to="/alumni/members"
+            to="/staff/members"
             className="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
             Back to Members
@@ -81,6 +81,7 @@ export default function SingleMember() {
     worked_in,
     passed_out_year,
     social_links = {},
+    roll_no,
     // Add the new professional fields
     company,
     position,
@@ -215,10 +216,7 @@ export default function SingleMember() {
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">{secondary_email}</span>
                     </div>
                   )}
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">Phone:</span>
-                    <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{phone}</span>
-                  </div>
+               
                   <div className="flex flex-col space-y-1">
                     <span className="font-medium text-green-700 text-sm sm:text-base">Location:</span>
                     <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{current_location || `${city}, ${state}, ${country}`}</span>
@@ -265,6 +263,13 @@ export default function SingleMember() {
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Passed Out:</span>
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{passed_out_year}</span>
+                    </div>
+                  )}
+
+                  {roll_no && (
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium text-green-700 text-sm sm:text-base">Roll No:</span>
+                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{roll_no}</span>
                     </div>
                   )}
                 </div>
