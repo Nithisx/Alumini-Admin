@@ -36,6 +36,7 @@ export default function Events() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const token = localStorage.getItem("Token");
   const navigate = useNavigate(); // 👈 Add useNavigate hook
 
@@ -54,6 +55,25 @@ export default function Events() {
         setIsLoading(false);
       });
   }, [token]);
+
+  const handleDelete = async (eventId) => {
+    if (!window.confirm("Are you sure you want to delete this event?")) return;
+    setDeletingId(eventId);
+    try {
+      const res = await fetch(`https://xyndrix.me/api/events/${eventId}/`, {
+        method: "DELETE",
+        headers: { Authorization: token ? `Token ${token}` : "" },
+      });
+      if (res.ok) {
+        setEvents((prev) => prev.filter((e) => e.id !== eventId));
+      } else {
+        alert("Failed to delete event.");
+      }
+    } catch (err) {
+      alert("Error deleting event.");
+    }
+    setDeletingId(null);
+  };
 
   const filtered = events.filter((e) =>
     e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,7 +149,7 @@ export default function Events() {
               return (
                 <div
                   key={event.id}
-                  onClick={() => navigate(`/admin/event/${event.id}`)} // 👈 Navigate on click
+                  onClick={() => navigate(`/admin/event/${event.id}`)}
                   className="cursor-pointer bg-white rounded-xl shadow-md overflow-hidden group relative hover:shadow-lg transition-shadow duration-300"
                 >
                   <div className="relative">
@@ -159,6 +179,18 @@ export default function Events() {
                         <span className="truncate">{event.venue}</span>
                       </div>
                     )}
+                    {/* Delete button (top-right corner) */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(event.id);
+                      }}
+                      disabled={deletingId === event.id}
+                      className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition"
+                      title="Delete Event"
+                    >
+                      <FontAwesomeIcon icon={faTrash} spin={deletingId === event.id} />
+                    </button>
                   </div>
                 </div>
               );
@@ -187,7 +219,7 @@ export default function Events() {
                 {filtered.map((event) => (
                   <tr
                     key={event.id}
-                    onClick={() => navigate(`/admin/event/${event.id}`)} // 👈 Navigate on row click
+                    onClick={() => navigate(`/admin/event/${event.id}`)}
                     className="hover:bg-gray-50 group cursor-pointer"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -208,7 +240,17 @@ export default function Events() {
                       {event.venue || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(event.id);
+                        }}
+                        disabled={deletingId === event.id}
+                        className="bg-red-50 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition"
+                        title="Delete Event"
+                      >
+                        <FontAwesomeIcon icon={faTrash} spin={deletingId === event.id} />
+                      </button>
                     </td>
                   </tr>
                 ))}

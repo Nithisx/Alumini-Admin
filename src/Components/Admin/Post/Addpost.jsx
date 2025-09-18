@@ -51,7 +51,13 @@ const getProfilePhotoUrl = (photoPath) => {
 const ImageGallery = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!images || images.length === 0) return null;
+  if (!images || images.length === 0)
+    return (
+      <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden my-3 flex items-center justify-center">
+        {/* Placeholder image or icon */}
+        <FontAwesomeIcon icon={faImage} className="text-5xl text-gray-300" />
+      </div>
+    );
 
   const nextImage = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -233,10 +239,8 @@ const JobCard = ({ post, onDelete }) => {
           </p>
         )}
 
-        {/* Images */}
-        {post.images && post.images.length > 0 && (
-          <ImageGallery images={post.images} />
-        )}
+        {/* Images - Always render ImageGallery to show placeholder when no images */}
+        <ImageGallery images={post.images || []} />
       </div>
 
       {/* Bottom border accent */}
