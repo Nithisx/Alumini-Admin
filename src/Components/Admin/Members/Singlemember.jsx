@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 
 const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'https://xyndrix.me/api/profile/';
+const API_USER_ACTIONS = 'https://xyndrix.me/api/';
 
 // Dropdown data from Signup page
 const ROLES = ["Student", "Alumni", "Staff"];
@@ -143,6 +144,7 @@ const COURSE_BRANCH_MAPPING = {
 
 export default function SingleMember() {
   const { name } = useParams();
+  const navigate = useNavigate();
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -153,6 +155,9 @@ export default function SingleMember() {
   const [availableBranches, setAvailableBranches] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  // New state for user actions
+  const [deactivating, setDeactivating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     console.log('Fetching specific member data...');
@@ -397,6 +402,95 @@ export default function SingleMember() {
     setImagePreview(null);
   };
 
+  // Deactivate/Activate User Function
+  const handleDeactivateUser = async () => {
+    const action = member.is_active ? 'deactivate' : 'activate';
+    const confirmMessage = member.is_active 
+      ? `Are you sure you want to deactivate ${member.first_name} ${member.last_name}? They will no longer be able to access their account.`
+      : `Are you sure you want to activate ${member.first_name} ${member.last_name}? They will regain access to their account.`;
+    
+    if (!window.confirm(confirmMessage)) return;
+    
+    setDeactivating(true);
+    try {
+      const response = await fetch(`${API_USER_ACTIONS}deactivate-user/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: member.id
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Update the member state with new is_active status
+        const updatedMember = {
+          ...member,
+          is_active: !member.is_active
+        };
+        setMember(updatedMember);
+        setEditedMember(updatedMember);
+        
+        alert(`User ${action}d successfully!`);
+      } else {
+        console.error(`Failed to ${action} user:`, data.message || 'Unknown error');
+        alert(`Failed to ${action} user: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing user:`, error);
+      alert(`Network error while ${action}ing user`);
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
+  // Delete User Function
+  const handleDeleteUser = async () => {
+    const confirmMessage = `⚠️ WARNING: Are you sure you want to permanently delete ${member.first_name} ${member.last_name}?\n\nThis action cannot be undone and will:\n- Delete all user data\n- Remove their profile permanently\n- Cannot be recovered\n\nType "DELETE" below to confirm:`;
+    
+    const userInput = prompt(confirmMessage);
+    if (userInput !== 'DELETE') {
+      if (userInput !== null) { // User didn't cancel
+        alert('Deletion cancelled. You must type "DELETE" exactly to confirm.');
+      }
+      return;
+    }
+    
+    setDeleting(true);
+    try {
+      const response = await fetch(`${API_USER_ACTIONS}delete-user/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: member.id
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        alert('User deleted successfully!');
+        // Redirect to members list
+        navigate('/admin/members');
+      } else {
+        console.error('Failed to delete user:', data.message || 'Unknown error');
+        alert(`Failed to delete user: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Network error while deleting user');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
@@ -456,6 +550,7 @@ export default function SingleMember() {
     passed_out_year,
     roll_no,
     social_links = {},
+    is_active = true,
     // Add the new professional fields
     company,
     position,
@@ -491,49 +586,110 @@ export default function SingleMember() {
           
           {/* Action Buttons */}
           <div className="bg-gray-50 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-gray-200">
-            <div className="flex justify-end gap-2 sm:gap-3">
-              {!isEditing ? (
-                <button
-                  onClick={handleEditClick}
-                  className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit Profile
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveEdit}
-                    disabled={saving}
-                    className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
-                  >
-                    {saving ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
+            <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-3">
+              {/* User Status Indicator */}
+              <div className="flex items-center">
+                <div className={`w-3 h-3 rounded-full mr-2 ${is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className={`text-sm font-medium ${is_active ? 'text-green-700' : 'text-red-700'}`}>
+                  {is_active ? 'Active User' : 'Inactive User'}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                {!isEditing ? (
+                  <>
+                    <button
+                      onClick={handleEditClick}
+                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit Profile
+                    </button>
+                    
+                    <button
+                      onClick={handleDeactivateUser}
+                      disabled={deactivating}
+                      className={`inline-flex items-center px-3 sm:px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed ${
+                        is_active 
+                          ? 'bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400' 
+                          : 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400'
+                      }`}
+                    >
+                      {deactivating ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                          {is_active ? 'Deactivating...' : 'Activating...'}
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {is_active ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            )}
+                          </svg>
+                          {is_active ? 'Deactivate User' : 'Activate User'}
+                        </>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={handleDeleteUser}
+                      disabled={deleting}
+                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+                    >
+                      {deleting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete User
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={saving}
+                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+                    >
+                      {saving ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -547,9 +703,13 @@ export default function SingleMember() {
                   alt={username}
                   className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white shadow-xl"
                 />
-                <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 bg-green-500 text-white rounded-full p-1.5 sm:p-2 shadow-lg">
+                <div className={`absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 ${is_active ? 'bg-green-500' : 'bg-red-500'} text-white rounded-full p-1.5 sm:p-2 shadow-lg`}>
                   <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    {is_active ? (
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    ) : (
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    )}
                   </svg>
                 </div>
                 
@@ -621,6 +781,13 @@ export default function SingleMember() {
                       {chapter}
                     </span>
                   )}
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg ${
+                    is_active 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-red-500 text-white'
+                  }`}>
+                    {is_active ? 'Active' : 'Inactive'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1235,7 +1402,7 @@ export default function SingleMember() {
                 <div className="flex items-center mb-3 sm:mb-4">
                   <div className="bg-green-600 text-white p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3a4 4 0 00-1.414-1.414l-3 3z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <h2 className="text-lg sm:text-xl font-bold text-green-800">Social Links</h2>
