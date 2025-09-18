@@ -2,20 +2,26 @@
 File: AddNewsModal.js
 This component handles adding new news posts via a modal form.
 */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 
-const TOKEN = localStorage.getItem('Token');
-const API_URL = 'https://xyndrix.me/api/news/';
-const categories = ['Success Stories','Events','Announcements','Press Release','Updates'];
+const TOKEN = localStorage.getItem("Token");
+const API_URL = "https://xyndrix.me/api/news/";
+const categories = [
+  "Success Stories",
+  "Events",
+  "Announcements",
+  "Press Release",
+  "Updates",
+];
 
 export default function AddNewsModal({ show, onClose, onSuccess }) {
-  const [form, setForm] = useState({ 
-    title: '', 
-    content: '', 
-    category: 'Success Stories', 
-    thumbnail: null, 
-    featured: false, 
-    images: [] 
+  const [form, setForm] = useState({
+    title: "",
+    content: "",
+    category: "Success Stories",
+    thumbnail: null,
+    featured: false,
+    images: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -23,100 +29,102 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
   const titleRef = useRef(null);
   const contentRef = useRef(null);
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-    if (type === 'file') {
-      if (name === 'thumbnail') {
+    if (type === "file") {
+      if (name === "thumbnail") {
         const file = files[0];
-        setForm(prev => ({ ...prev, thumbnail: file }));
+        setForm((prev) => ({ ...prev, thumbnail: file }));
         // Create preview URL for thumbnail
         if (file) {
           setPreviewUrl(URL.createObjectURL(file));
         }
+      } else if (name === "images") {
+        setForm((prev) => ({
+          ...prev,
+          images: [...prev.images, ...Array.from(files)],
+        }));
       }
-      else if (name === 'images') {
-        setForm(prev => ({ ...prev, images: [...prev.images, ...Array.from(files)] }));
-      }
-    } else if (type === 'checkbox') {
-      setForm(prev => ({ ...prev, [name]: checked }));
+    } else if (type === "checkbox") {
+      setForm((prev) => ({ ...prev, [name]: checked }));
     } else {
-      setForm(prev => ({ ...prev, [name]: value }));
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleRemoveImage = idx => {
-    setForm(prev => ({ 
-      ...prev, 
-      images: prev.images.filter((_, i) => i !== idx) 
+  const handleRemoveImage = (idx) => {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== idx),
     }));
   };
 
   const handleRemoveThumbnail = () => {
-    setForm(prev => ({ ...prev, thumbnail: null }));
+    setForm((prev) => ({ ...prev, thumbnail: null }));
     setPreviewUrl(null);
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
     try {
       const data = new FormData();
-      data.append('title', form.title.trim());
-      data.append('content', form.content.trim());
-      data.append('category', form.category);
-      data.append('featured', form.featured);
-      if (form.thumbnail) data.append('thumbnail', form.thumbnail);
-      
+      data.append("title", form.title.trim());
+      data.append("content", form.content.trim());
+      data.append("category", form.category);
+      data.append("featured", form.featured);
+      if (form.thumbnail) data.append("thumbnail", form.thumbnail);
+
       // Fix: Change the way images are appended to FormData
       // The current format with [${i}] may not be what the backend expects
-      form.images.forEach((img, i) => { 
+      form.images.forEach((img, i) => {
         // Try one of these formats based on your backend API:
-        
+
         // Option 1: Simple array format (most common)
-        data.append('images', img);
-        
+        data.append("images", img);
+
         // Option 2: If backend expects indexed format
         // data.append(`images[${i}]`, img);
-        
+
         // Option 3: If backend expects separate image and caption fields
         // data.append(`images`, img);
         // data.append(`captions`, ''); // or whatever caption value
       });
 
-      const res = await fetch(API_URL, { 
-        method: 'POST', 
-        headers: { 'Authorization': `Token ${TOKEN}` }, 
-        body: data 
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { Authorization: `Token ${TOKEN}` },
+        body: data,
       });
-      
+
       // Debug: Log the FormData contents
-      console.log('FormData contents:');
+      console.log("FormData contents:");
       for (let [key, value] of data.entries()) {
         console.log(key, value);
       }
-      
+
       const json = await res.json();
-      
+
       if (!res.ok) {
-        console.error('Server response:', json);
-        throw new Error(json.detail || json.message || 'Failed to create post');
+        console.error("Server response:", json);
+        throw new Error(json.detail || json.message || "Failed to create post");
       }
-      
+
       // Reset form and notify parent of success with the response data
-      setForm({ 
-        title: '',
-        content: '',
-        category: 'Success Stories',
+      setForm({
+        title: "",
+        content: "",
+        category: "Success Stories",
         thumbnail: null,
         featured: false,
-        images: [] 
+        images: [],
       });
       setPreviewUrl(null);
       onSuccess(json);
     } catch (err) {
-      console.error('Submit error:', err);
-      setSubmitError(err.message || 'An unexpected error occurred');
+      console.error("Submit error:", err);
+      setSubmitError(err.message || "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -124,13 +132,13 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
 
   // Close the modal and reset everything
   const handleClose = () => {
-    setForm({ 
-      title: '',
-      content: '',
-      category: 'Success Stories',
+    setForm({
+      title: "",
+      content: "",
+      category: "Success Stories",
       thumbnail: null,
       featured: false,
-      images: [] 
+      images: [],
     });
     setPreviewUrl(null);
     setSubmitError(null);
@@ -142,87 +150,109 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-full overflow-y-auto p-6 relative">
-        <button 
-          onClick={handleClose} 
+        <button
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold"
           aria-label="Close"
         >
           ×
         </button>
         <h2 className="text-xl font-bold mb-4">Post News Event</h2>
-        
+
         {submitError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <p>{submitError}</p>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-            <input 
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Title *
+            </label>
+            <input
               id="title"
-              name="title" 
-              ref={titleRef} 
-              value={form.title} 
-              onChange={handleChange} 
-              placeholder="Enter news title" 
-              required 
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              name="title"
+              ref={titleRef}
+              value={form.title}
+              onChange={handleChange}
+              placeholder="Enter news title"
+              required
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          
+
           <div>
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Content *</label>
-            <textarea 
+            <label
+              htmlFor="content"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Content *
+            </label>
+            <textarea
               id="content"
-              name="content" 
-              ref={contentRef} 
-              value={form.content} 
-              onChange={handleChange} 
-              placeholder="Enter news content" 
-              rows={5} 
-              required 
+              name="content"
+              ref={contentRef}
+              value={form.content}
+              onChange={handleChange}
+              placeholder="Enter news content"
+              rows={5}
+              required
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             ></textarea>
           </div>
-          
+
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <select 
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Category
+            </label>
+            <select
               id="category"
-              name="category" 
-              value={form.category} 
-              onChange={handleChange} 
+              name="category"
+              value={form.category}
+              onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
-          
+
           <div>
-            <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
-            <input 
+            <label
+              htmlFor="thumbnail"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Thumbnail
+            </label>
+            <input
               id="thumbnail"
-              type="file" 
-              name="thumbnail" 
-              onChange={handleChange} 
-              accept="image/*" 
-              className="w-full p-2 border rounded" 
+              type="file"
+              name="thumbnail"
+              onChange={handleChange}
+              accept="image/*"
+              className="w-full p-2 border rounded"
             />
-            
+
             {previewUrl && (
               <div className="mt-2 relative inline-block">
-                <img 
-                  src={previewUrl} 
-                  alt="Thumbnail preview" 
-                  className="h-24 w-auto rounded border" 
+                <img
+                  src={previewUrl}
+                  alt="Thumbnail preview"
+                  className="h-24 w-auto rounded border"
                 />
-                <button 
-                  type="button" 
-                  onClick={handleRemoveThumbnail} 
+                <button
+                  type="button"
+                  onClick={handleRemoveThumbnail}
                   className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center"
                   aria-label="Remove thumbnail"
                 >
@@ -231,33 +261,38 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
               </div>
             )}
           </div>
-          
+
           <div>
-            <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">Additional Images</label>
-            <input 
+            <label
+              htmlFor="images"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Additional Images
+            </label>
+            <input
               id="images"
-              type="file" 
-              name="images" 
-              onChange={handleChange} 
-              accept="image/*" 
-              multiple 
-              className="w-full p-2 border rounded" 
+              type="file"
+              name="images"
+              onChange={handleChange}
+              accept="image/*"
+              multiple
+              className="w-full p-2 border rounded"
             />
-            
+
             {form.images.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 mt-2">
+              <div className="grid grid-cols-6 gap-2 mt-2">
                 {form.images.map((img, i) => (
                   <div key={i} className="relative">
-                    <img 
-                      src={URL.createObjectURL(img)} 
-                      alt={`Upload preview ${i+1}`} 
-                      className="h-16 w-16 object-cover rounded border" 
+                    <img
+                      src={URL.createObjectURL(img)}
+                      alt={`Upload preview ${i + 1}`}
+                      className="h-16 w-16 object-cover rounded border"
                     />
-                    <button 
-                      type="button" 
-                      onClick={() => handleRemoveImage(i)} 
-                      className="absolute -top-2 -right-[1px] bg-red-500 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center text-xs"
-                      aria-label={`Remove image ${i+1}`}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(i)}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 shadow-sm"
+                      aria-label={`Remove image ${i + 1}`}
                     >
                       ×
                     </button>
@@ -266,33 +301,40 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center">
-            <input 
+            <input
               id="featured"
-              type="checkbox" 
-              name="featured" 
-              checked={form.featured} 
-              onChange={handleChange} 
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" 
+              type="checkbox"
+              name="featured"
+              checked={form.featured}
+              onChange={handleChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="featured" className="ml-2 block text-sm text-gray-900">Featured post</label>
+            <label
+              htmlFor="featured"
+              className="ml-2 block text-sm text-gray-900"
+            >
+              Featured post
+            </label>
           </div>
-          
+
           <div className="flex justify-end space-x-2 pt-2">
-            <button 
-              type="button" 
-              onClick={handleClose} 
+            <button
+              type="button"
+              onClick={handleClose}
               className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100 transition-colors"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${
+                isSubmitting ? "opacity-75 cursor-not-allowed" : ""
+              }`}
             >
-              {isSubmitting ? 'Submitting...' : 'Post News'}
+              {isSubmitting ? "Submitting..." : "Post News"}
             </button>
           </div>
         </form>

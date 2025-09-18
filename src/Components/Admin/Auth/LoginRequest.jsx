@@ -383,9 +383,15 @@ export default function RegisterRequest() {
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">Status:</span>{" "}
-                  <span className="text-red-600 font-semibold">
-                    Pending Approval
-                  </span>
+                  {req.is_active ? (
+                    <span className="text-red-600 font-semibold">
+                      Deactivated User
+                    </span>
+                  ) : (
+                    <span className="text-red-600 font-semibold">
+                      Pending Approval
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -408,8 +414,12 @@ export default function RegisterRequest() {
           />
         </div>
       </div>
-      <p className="mt-6 text-lg font-medium text-green-600">Loading requests...</p>
-      <p className="text-gray-500 text-sm mt-2">Please wait while we fetch the data</p>
+      <p className="mt-6 text-lg font-medium text-green-600">
+        Loading requests...
+      </p>
+      <p className="text-gray-500 text-sm mt-2">
+        Please wait while we fetch the data
+      </p>
     </div>
   );
 
@@ -527,7 +537,8 @@ export default function RegisterRequest() {
                       </p>
                     </div>
                   ) : (
-                    Array.isArray(requests) && requests.map((req) => <MobileCard key={req.id} req={req} />)
+                    Array.isArray(requests) &&
+                    requests.map((req) => <MobileCard key={req.id} req={req} />)
                   )}
                 </div>
               </div>
@@ -540,27 +551,43 @@ export default function RegisterRequest() {
                       <tr>
                         <th className="px-4 xl:px-6 py-4 xl:py-5 text-left text-xs xl:text-sm font-bold text-green-700 uppercase tracking-wider whitespace-nowrap">
                           <span className="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faUser} className="text-green-500" />
-                            <span className="hidden sm:inline">User Details</span>
+                            <FontAwesomeIcon
+                              icon={faUser}
+                              className="text-green-500"
+                            />
+                            <span className="hidden sm:inline">
+                              User Details
+                            </span>
                             <span className="sm:hidden">User</span>
                           </span>
                         </th>
                         <th className="px-4 xl:px-6 py-4 xl:py-5 text-left text-xs xl:text-sm font-bold text-green-700 uppercase tracking-wider whitespace-nowrap">
                           <span className="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faEnvelope} className="text-green-500" />
-                            <span className="hidden sm:inline">Contact Info</span>
+                            <FontAwesomeIcon
+                              icon={faEnvelope}
+                              className="text-green-500"
+                            />
+                            <span className="hidden sm:inline">
+                              Contact Info
+                            </span>
                             <span className="sm:hidden">Contact</span>
                           </span>
                         </th>
                         <th className="px-4 xl:px-6 py-4 xl:py-5 text-left text-xs xl:text-sm font-bold text-green-700 uppercase tracking-wider whitespace-nowrap">
                           <span className="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faUserTag} className="text-green-500" />
+                            <FontAwesomeIcon
+                              icon={faUserTag}
+                              className="text-green-500"
+                            />
                             Role
                           </span>
                         </th>
                         <th className="px-4 xl:px-6 py-4 xl:py-5 text-left text-xs xl:text-sm font-bold text-green-700 uppercase tracking-wider whitespace-nowrap">
                           <span className="flex items-center gap-2">
-                            <FontAwesomeIcon icon={faUniversity} className="text-green-500" />
+                            <FontAwesomeIcon
+                              icon={faUniversity}
+                              className="text-green-500"
+                            />
                             Institution
                           </span>
                         </th>
@@ -627,7 +654,10 @@ export default function RegisterRequest() {
                               </td>
                               <td className="px-6 py-6">
                                 <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
-                                  <FontAwesomeIcon icon={faUserTag} className="mr-2" />
+                                  <FontAwesomeIcon
+                                    icon={faUserTag}
+                                    className="mr-2"
+                                  />
                                   {req.role}
                                 </span>
                               </td>
@@ -640,7 +670,9 @@ export default function RegisterRequest() {
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <button
-                                    onClick={() => handleAccept(req.id, req.email)}
+                                    onClick={() =>
+                                      handleAccept(req.id, req.email)
+                                    }
                                     disabled={processing}
                                     className="btn-animate px-5 py-2 bg-green-600 text-white rounded-xl hover:from-green-500 hover:to-emerald-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                                   >
@@ -653,7 +685,9 @@ export default function RegisterRequest() {
                                     Accept
                                   </button>
                                   <button
-                                    onClick={() => handleDecline(req.id, req.email)}
+                                    onClick={() =>
+                                      handleDecline(req.id, req.email)
+                                    }
                                     disabled={processing}
                                     className="btn-animate px-5 py-2 bg-pink-700 text-white rounded-xl hover:from-pink-500 hover:to-red-500 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                                   >
@@ -915,9 +949,15 @@ export default function RegisterRequest() {
                                               <span className="font-semibold text-gray-600">
                                                 Status:
                                               </span>{" "}
-                                              <span className="text-red-600 font-semibold">
-                                                Pending Approval
-                                              </span>
+                                              {req.is_approved ? (
+                                                <span className="text-red-600 font-semibold">
+                                                  Deactivated User
+                                                </span>
+                                              ) : (
+                                                <span className="text-red-600 font-semibold">
+                                                  Pending Approval
+                                                </span>
+                                              )}
                                             </p>
                                           </div>
                                         </div>
@@ -943,7 +983,8 @@ export default function RegisterRequest() {
                                 No registration requests available
                               </p>
                               <p className="text-sm mt-2 text-gray-500">
-                                New requests will appear here when submitted by users
+                                New requests will appear here when submitted by
+                                users
                               </p>
                             </div>
                           </td>
