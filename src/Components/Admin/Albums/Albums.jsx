@@ -11,12 +11,16 @@ import {
   faCheck,
   faExclamationCircle,
   faSpinner,
+  faEllipsisV,
+  faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumsPage = () => {
   const navigate = useNavigate();
   const [albums, setAlbums] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState(null);
   const [formData, setFormData] = useState({ title: "", description: "" });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [notification, setNotification] = useState({ message: "", type: "" });
@@ -24,6 +28,8 @@ const AlbumsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("grid"); // grid or list view
   const [isCreating, setIsCreating] = useState(false); // Loading state for create button
+  const [isEditing, setIsEditing] = useState(false); // Loading state for edit button
+  const [openMenuId, setOpenMenuId] = useState(null); // Track which menu is open
 
   useEffect(() => {
     const fetchAlbums = async () => {
@@ -47,6 +53,13 @@ const AlbumsPage = () => {
     fetchAlbums();
   }, []);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: "", type: "" }), 4000);
@@ -62,10 +75,72 @@ const AlbumsPage = () => {
       });
       setAlbums((prev) => prev.filter((a) => a.id !== id));
       showNotification("Album deleted successfully!");
+      setOpenMenuId(null);
     } catch (error) {
       console.error("Error deleting album:", error);
       showNotification("Could not delete album.", "error");
     }
+  };
+
+  const handleEditAlbum = (album, e) => {
+    e.stopPropagation();
+    setEditingAlbum(album);
+    setFormData({ title: album.title, description: album.description || "" });
+    setUploadedFile(null);
+    setIsEditModalOpen(true);
+    setOpenMenuId(null);
+  };
+
+  const handleUpdateAlbum = async (e) => {
+    e.preventDefault();
+    if (!formData.title.trim()) {
+      showNotification("Please enter an album title.", "error");
+      return;
+    }
+
+    setIsEditing(true);
+
+    try {
+      const token = localStorage.getItem("Token");
+      const payload = new FormData();
+      payload.append("title", formData.title);
+      payload.append("description", formData.description);
+      if (uploadedFile) {
+        payload.append("cover_image", uploadedFile.file, uploadedFile.name);
+      }
+
+      const response = await axios.put(
+        `https://xyndrix.me/api/albums/${editingAlbum.id}/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setAlbums((prev) =>
+        prev.map((album) =>
+          album.id === editingAlbum.id ? response.data : album
+        )
+      );
+      setIsEditModalOpen(false);
+      setEditingAlbum(null);
+      setFormData({ title: "", description: "" });
+      setUploadedFile(null);
+      showNotification("Album updated successfully!");
+    } catch (error) {
+      console.error("Error updating album:", error);
+      showNotification("Could not update album.", "error");
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const toggleMenu = (albumId, e) => {
+    e.stopPropagation();
+    setOpenMenuId(openMenuId === albumId ? null : albumId);
   };
 
   const handleInputChange = (e) =>
@@ -131,7 +206,7 @@ const AlbumsPage = () => {
 
   // Handle drag and drop box click
   const handleDragBoxClick = () => {
-    document.getElementById("file-upload").click();
+    document.getElementById(isEditModalOpen ? "edit-file-upload" : "file-upload").click();
   };
 
   const filteredAlbums = searchTerm
@@ -141,6 +216,38 @@ const AlbumsPage = () => {
           album.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : albums;
+
+  // Menu Component
+  const AlbumMenu = ({ album }) => (
+    <div className="relative">
+      <button
+        onClick={(e) => toggleMenu(album.id, e)}
+        className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+        title="More options"
+      >
+        <FontAwesomeIcon icon={faEllipsisV} className="text-gray-600" />
+      </button>
+
+      {openMenuId === album.id && (
+        <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-36 overflow-hidden">
+          <button
+            onClick={(e) => handleEditAlbum(album, e)}
+            className="flex items-center w-full px-4 py-3 text-left hover:bg-gray-50 text-gray-700 transition-colors duration-200"
+          >
+            <FontAwesomeIcon icon={faEdit} className="mr-3 text-blue-500" />
+            Edit
+          </button>
+          <button
+            onClick={(e) => handleDeleteAlbum(album.id, e)}
+            className="flex items-center w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors duration-200"
+          >
+            <FontAwesomeIcon icon={faTrash} className="mr-3" />
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -328,17 +435,13 @@ const AlbumsPage = () => {
                   <div
                     key={album.id}
                     onClick={() => navigate(`/admin/albums/${album.id}`)}
-                    className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer"
+                    className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer relative"
                   >
                     <div className="relative h-48 overflow-hidden">
-                      {/* Delete button positioned at top right */}
-                      <button
-                        onClick={(e) => handleDeleteAlbum(album.id, e)}
-                        className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
-                        title="Delete Album"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="text-sm" />
-                      </button>
+                      {/* 3-dots menu positioned at top right */}
+                      <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        <AlbumMenu album={album} />
+                      </div>
 
                       {album.cover_image ? (
                         <img
@@ -373,7 +476,7 @@ const AlbumsPage = () => {
                     <li
                       key={album.id}
                       onClick={() => navigate(`/admin/albums/${album.id}`)}
-                      className="hover:bg-gray-50 cursor-pointer transition"
+                      className="hover:bg-gray-50 cursor-pointer transition group"
                     >
                       <div className="flex items-center p-4">
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
@@ -400,13 +503,9 @@ const AlbumsPage = () => {
                             {album.description || "No description"}
                           </p>
                         </div>
-                        <button
-                          onClick={(e) => handleDeleteAlbum(album.id, e)}
-                          className="ml-4 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
-                          title="Delete Album"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                        <div className="ml-4">
+                          <AlbumMenu album={album} />
+                        </div>
                       </div>
                     </li>
                   ))}
@@ -564,6 +663,175 @@ const AlbumsPage = () => {
                     <>
                       <FontAwesomeIcon icon={faCheck} className="mr-2" />
                       Create Album
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Album Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-white text-xl font-semibold flex items-center">
+                  <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                  Edit Album
+                </h3>
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="text-white hover:text-blue-100 transition"
+                  disabled={isEditing}
+                >
+                  <FontAwesomeIcon icon={faTimes} size="lg" />
+                </button>
+              </div>
+            </div>
+            <form onSubmit={handleUpdateAlbum} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Album Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  placeholder="Enter album title"
+                  disabled={isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  placeholder="Describe what this album is about"
+                  disabled={isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Cover Image
+                </label>
+                
+                {/* Show current image if no new file selected */}
+                {!uploadedFile && editingAlbum?.cover_image && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">Current image:</p>
+                    <img
+                      src={`https://xyndrix.me/api${editingAlbum.cover_image}`}
+                      alt="Current cover"
+                      className="w-full max-w-xs h-auto max-h-48 object-contain rounded-lg border"
+                    />
+                  </div>
+                )}
+
+                {uploadedFile ? (
+                  <div className="relative bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+                    <button
+                      onClick={removeFile}
+                      type="button"
+                      className="absolute top-2 right-2 bg-white text-red-500 rounded-full p-1 shadow-md hover:bg-red-50 transition"
+                      disabled={isEditing}
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </button>
+                    <div className="flex flex-col items-center">
+                      <img
+                        src={uploadedFile.preview}
+                        alt="Preview"
+                        className="w-full max-w-xs h-auto max-h-48 object-contain rounded-lg"
+                      />
+                      <p className="mt-2 text-sm text-gray-500 truncate max-w-full">
+                        {uploadedFile.name}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
+                    onClick={handleDragBoxClick}
+                  >
+                    <div className="space-y-1 text-center">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <div className="flex text-sm text-gray-600">
+                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                          Upload a new file
+                        </span>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 10MB
+                      </p>
+                    </div>
+                    <input
+                      id="edit-file-upload"
+                      name="edit-file-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="sr-only"
+                      disabled={isEditing}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-4 space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                  disabled={isEditing}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition flex items-center disabled:bg-blue-400 disabled:cursor-not-allowed"
+                  disabled={isEditing}
+                >
+                  {isEditing ? (
+                    <>
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        className="mr-2 animate-spin"
+                      />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                      Update Album
                     </>
                   )}
                 </button>

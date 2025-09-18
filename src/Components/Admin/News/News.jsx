@@ -16,6 +16,7 @@ export default function NewsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
 
@@ -45,7 +46,7 @@ export default function NewsList() {
   // Delete a post
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this news item?')) return;
-    setIsDeleting(true);
+    setDeletingId(id);
     try {
       const res = await fetch(`${API_URL}${id}/`, {
         method: 'DELETE',
@@ -56,7 +57,7 @@ export default function NewsList() {
     } catch (err) {
       alert(`Failed to delete: ${err.message}`);
     } finally {
-      setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
@@ -112,7 +113,20 @@ export default function NewsList() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">Featured</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {featuredPosts.slice(0, 2).map(post => (
-                <div key={`featured-${post.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg transition transform hover:scale-[1.02]">
+                <div key={`featured-${post.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg transition transform hover:scale-[1.02] relative group">
+                  {/* Delete Button for Featured Posts */}
+                  <button
+                    onClick={() => handleDelete(post.id)}
+                    disabled={deletingId === post.id}
+                    className="absolute top-4 right-4 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-lg"
+                  >
+                    {deletingId === post.id ? (
+                      <Loader size={16} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={16} />
+                    )}
+                  </button>
+                  
                   <div className="relative h-60">
                     <img
                       src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/600x400'}
@@ -146,7 +160,6 @@ export default function NewsList() {
                         Read Full Story
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                     
                     </div>
                   </div>
                 </div>
@@ -193,7 +206,20 @@ export default function NewsList() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {filteredPosts.map(post => (
-              <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition">
+              <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition relative group">
+                {/* Delete Button for Regular Posts */}
+                <button
+                  onClick={() => handleDelete(post.id)}
+                  disabled={deletingId === post.id}
+                  className="absolute top-4 right-4 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-lg"
+                >
+                  {deletingId === post.id ? (
+                    <Loader size={16} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                </button>
+
                 <div className="sm:flex">
                   <div className="sm:w-1/3 relative">
                     <img
@@ -217,13 +243,12 @@ export default function NewsList() {
                     <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
                     <div className="flex justify-between items-center">
                       <a
-                        href={`/staff/news/${post.id}/`}
+                        href={`/admin/news/${post.id}/`}
                         className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
                       >
                         Read More
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                      
                     </div>
                   </div>
                 </div>

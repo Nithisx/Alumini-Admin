@@ -68,10 +68,20 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
       data.append('featured', form.featured);
       if (form.thumbnail) data.append('thumbnail', form.thumbnail);
       
-      // Handle multiple images with their captions
+      // Fix: Change the way images are appended to FormData
+      // The current format with [${i}] may not be what the backend expects
       form.images.forEach((img, i) => { 
-        data.append(`images[${i}]image`, img); 
-        data.append(`images[${i}]caption`, ''); 
+        // Try one of these formats based on your backend API:
+        
+        // Option 1: Simple array format (most common)
+        data.append('images', img);
+        
+        // Option 2: If backend expects indexed format
+        // data.append(`images[${i}]`, img);
+        
+        // Option 3: If backend expects separate image and caption fields
+        // data.append(`images`, img);
+        // data.append(`captions`, ''); // or whatever caption value
       });
 
       const res = await fetch(API_URL, { 
@@ -80,10 +90,17 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
         body: data 
       });
       
+      // Debug: Log the FormData contents
+      console.log('FormData contents:');
+      for (let [key, value] of data.entries()) {
+        console.log(key, value);
+      }
+      
       const json = await res.json();
       
       if (!res.ok) {
-        throw new Error(json.detail || 'Failed to create post');
+        console.error('Server response:', json);
+        throw new Error(json.detail || json.message || 'Failed to create post');
       }
       
       // Reset form and notify parent of success with the response data
@@ -98,6 +115,7 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
       setPreviewUrl(null);
       onSuccess(json);
     } catch (err) {
+      console.error('Submit error:', err);
       setSubmitError(err.message || 'An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
