@@ -227,7 +227,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.upcoming_events}
+                    {data.upcoming_event}
                   </h3>
                   <p className="text-gray-600 font-medium"> Events</p>
                 </div>
