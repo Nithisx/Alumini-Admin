@@ -247,7 +247,8 @@ const BusinessDetail = () => {
         }
         
         alert("Business created successfully!");
-        navigate(`/admin/business/${response.data.id}`);
+        // Redirect to business directory main page
+        navigate('/admin/business');
       } else {
         // Update existing business
         response = await axios.put(
@@ -285,6 +286,8 @@ const BusinessDetail = () => {
         }
         
         alert("Business updated successfully!");
+        // Redirect to business directory main page
+        navigate('/admin/business');
       }
     } catch (error) {
       console.error("Error saving business:", error);

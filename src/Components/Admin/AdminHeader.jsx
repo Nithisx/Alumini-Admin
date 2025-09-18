@@ -20,6 +20,7 @@ import {
   faMailBulk,
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../images/logo.png"; // Adjust the path as necessary
+
 export default function AdminHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -53,9 +54,91 @@ export default function AdminHeader() {
     };
   }, []);
 
+  // Authentication check useEffect
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('Token');
+      const role = localStorage.getItem('Role');
+      
+      // Check if token exists
+      if (!token) {
+        console.log('No token found, redirecting to login');
+        window.location.href = '/login';
+        return;
+      }
+
+      // Optional: Check if user has admin role
+      if (role && role !== 'admin' && role !== 'superuser') {
+        console.log('Insufficient permissions, redirecting to login');
+        localStorage.removeItem('Token');
+        localStorage.removeItem('Role');
+        window.location.href = '/login';
+        return;
+      }
+    };
+
+    // Check auth on component mount
+    checkAuthStatus();
+
+    // Optional: Set up periodic token validation
+    const validateToken = async () => {
+      const token = localStorage.getItem('Token');
+      if (!token) return;
+
+      try {
+        // Replace with your actual API endpoint for token validation
+        const response = await fetch('https://xyndrix.me/api/validate-token/', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          console.log('Token expired or invalid, redirecting to login');
+          localStorage.removeItem('Token');
+          localStorage.removeItem('Role');
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Token validation error:', error);
+        // Optionally handle network errors
+      }
+    };
+
+    // Validate token every 5 minutes (optional)
+    const tokenCheckInterval = setInterval(validateToken, 5 * 60 * 1000);
+
+    // Global error handler for 401 responses
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        
+        if (response.status === 401) {
+          console.log('401 Unauthorized received, redirecting to login');
+          localStorage.removeItem('Token');
+          localStorage.removeItem('Role');
+          window.location.href = '/login';
+          return response;
+        }
+        
+        return response;
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    // Cleanup
+    return () => {
+      clearInterval(tokenCheckInterval);
+      window.fetch = originalFetch; // Restore original fetch
+    };
+  }, []);
+
   const handleLogout = () => {
     console.log("Logout clicked");
-    // Note: localStorage not available in artifacts
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
     window.location.href = "/login";

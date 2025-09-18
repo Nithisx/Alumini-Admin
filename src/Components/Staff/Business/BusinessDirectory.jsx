@@ -183,26 +183,6 @@ const BusinessDirectory = () => {
       count: businesses.filter(b => b.services?.includes(service)).length
     }));
 
-  // Handle business deletion
-  const handleDelete = async (id) => {
-    if (
-      !window.confirm("Are you sure you want to delete this business listing?")
-    )
-      return;
-
-    try {
-      await axios.delete(`${BASE_URL}/businesses/${id}/`, {
-        headers: { Authorization: `Token ${token}` },
-      });
-      
-      setBusinesses(businesses.filter(business => business.id !== id));
-      setFilteredBusinesses(filteredBusinesses.filter(business => business.id !== id));
-      alert("Business deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting business:", error);
-      alert("Failed to delete business.");
-    }
-  };
 
   // Handle navigation
   const handleNavigation = (path) => {
@@ -251,7 +231,7 @@ const BusinessDirectory = () => {
                 className="mr-2 text-blue-600"
               />
               <span className="text-sm text-gray-600 flex-1">
-                {item.name} {item.count && `(${item.count})`}
+                {item.name} {item.count && `(${item.category})`}
               </span>
             </label>
           ))}
@@ -284,9 +264,7 @@ const BusinessDirectory = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
-                Pending Requests
-              </button>
+             
               <Link
                 to="/staff/business/add"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
@@ -401,20 +379,7 @@ const BusinessDirectory = () => {
                               >
                                 {business.business_name}
                               </Link>
-                              <div className="flex space-x-2">
-                                <Link
-                                  to={`/admin/business/${business.id}`}
-                                  className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Link>
-                                <button
-                                  onClick={() => handleDelete(business.id)}
-                                  className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
+                           
                             </div>
 
                             <p className="text-blue-600 font-medium mb-1">

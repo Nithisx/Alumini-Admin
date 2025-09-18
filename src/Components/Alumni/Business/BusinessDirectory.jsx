@@ -4,8 +4,6 @@ import axios from "axios";
 import {
   Search,
   Plus,
-  Edit,
-  Trash2,
   Globe,
   Phone,
   Mail,
@@ -251,7 +249,7 @@ const BusinessDirectory = () => {
                 className="mr-2 text-blue-600"
               />
               <span className="text-sm text-gray-600 flex-1">
-                {item.name} {item.count && `(${item.count})`}
+                {item.name} {item.count && `(${item.category})`}
               </span>
             </label>
           ))}
@@ -284,9 +282,7 @@ const BusinessDirectory = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
-                Pending Requests
-              </button>
+       
               <Link
                 to="/alumni/business/add"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
@@ -401,20 +397,7 @@ const BusinessDirectory = () => {
                               >
                                 {business.business_name}
                               </Link>
-                              <div className="flex space-x-2">
-                                <Link
-                                  to={`/alumni/business/${business.id}`}
-                                  className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Link>
-                                <button
-                                  onClick={() => handleDelete(business.id)}
-                                  className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
+                              
                             </div>
 
                             <p className="text-blue-600 font-medium mb-1">
