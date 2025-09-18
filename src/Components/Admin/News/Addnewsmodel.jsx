@@ -256,7 +256,7 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
                     <button 
                       type="button" 
                       onClick={() => handleRemoveImage(i)} 
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center text-xs"
+                      className="absolute -top-2 -right-[1px] bg-red-500 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center text-xs"
                       aria-label={`Remove image ${i+1}`}
                     >
                       ×

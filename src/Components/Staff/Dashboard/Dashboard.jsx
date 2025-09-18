@@ -141,7 +141,7 @@ const HomePage = () => {
                 </svg>
               </div>
               <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-700 mb-1 sm:mb-2">
-                {data.upcoming_events}
+                {data.upcoming_event}
               </p>
               <p className="text-green-600 font-medium text-sm sm:text-base">
                 Upcoming Events
