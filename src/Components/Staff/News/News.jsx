@@ -42,23 +42,6 @@ export default function NewsList() {
 
   useEffect(() => { fetchNews(); }, []);
 
-  // Delete a post
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this news item?')) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`${API_URL}${id}/`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Token ${TOKEN}` }
-      });
-      if (!res.ok) throw new Error(`Error: ${res.status}`);
-      setPosts(posts.filter(post => post.id !== id));
-    } catch (err) {
-      alert(`Failed to delete: ${err.message}`);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const getFullImageUrl = (path) => {
     if (!path) return null;
@@ -146,13 +129,6 @@ export default function NewsList() {
                         Read Full Story
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                      <button
-                        onClick={() => handleDelete(post.id)}
-                        disabled={isDeleting}
-                        className="p-2 text-gray-400 hover:text-red-500 transition"
-                      >
-                        <Trash2 size={18} />
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -229,13 +205,7 @@ export default function NewsList() {
                         Read More
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                      <button
-                        onClick={() => handleDelete(post.id)}
-                        disabled={isDeleting}
-                        className="p-2 text-gray-400 hover:text-red-500 transition"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                     
                     </div>
                   </div>
                 </div>

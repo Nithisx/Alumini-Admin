@@ -698,35 +698,35 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
 // Enhanced Main Events Component with Grid Layout
 const Events = () => {
   const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
-  const fetchEvents = async () => {
-    setLoading(true)
-    try {
-      const token = localStorage.getItem("Token")
-      if (!token) throw new Error("Token not found")
+  // const fetchEvents = async () => {
+  //   setLoading(true)
+  //   try {
+  //     const token = localStorage.getItem("Token")
+  //     if (!token) throw new Error("Token not found")
 
-      const response = await fetch(`${BASE_URL}/myposts/`, {
-        headers: { Authorization: `Token ${token}` },
-      })
+  //     const response = await fetch(`${BASE_URL}/myposts/`, {
+  //       headers: { Authorization: `Token ${token}` },
+  //     })
 
-      if (!response.ok) throw new Error("Failed to fetch")
+  //     if (!response.ok) throw new Error("Failed to fetch")
 
-      const data = await response.json()
-      const eventsData = data.events || data.posts || []
-      setEvents(eventsData)
-    } catch (error) {
-      console.error("Error fetching events", error)
-      alert("Failed to fetch events. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  //     const data = await response.json()
+  //     const eventsData = data.events || data.posts || []
+  //     setEvents(eventsData)
+  //   } catch (error) {
+  //     console.error("Error fetching events", error)
+  //     alert("Failed to fetch events. Please try again.")
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
-  useEffect(() => {
-    fetchEvents()
-  }, [])
+  // useEffect(() => {
+  //   fetchEvents()
+  // }, [])
 
   const onRefresh = async () => {
     setRefreshing(true)

@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Heart,
   RefreshCw,
+  Image, // Add Image icon for placeholder
 } from "lucide-react";
 
 const COLORS = {
@@ -81,6 +82,18 @@ const ImageSlider = ({ images, baseUrl }) => {
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+// Add PlaceholderImage component
+const PlaceholderImage = () => {
+  return (
+    <div className="relative w-full h-80 bg-gray-100 rounded-xl overflow-hidden mb-6 flex items-center justify-center">
+      <div className="text-center">
+        <Image size={48} className="text-gray-300 mx-auto mb-2" />
+        <p className="text-gray-400 text-sm font-medium">No Image Available</p>
+      </div>
     </div>
   );
 };
@@ -213,10 +226,9 @@ const JobItem = ({ item, onDelete }) => {
           </div>
         </div>
 
-        {/* Job Images */}
-        {item.images &&
-          item.images.length > 0 &&
-          (item.images.length === 1 ? (
+        {/* Job Images - Always show either images or placeholder */}
+        {item.images && item.images.length > 0 ? (
+          item.images.length === 1 ? (
             <div className="mb-6">
               <img
                 src={`${BASE_URL}${item.images[0].image}`}
@@ -226,7 +238,10 @@ const JobItem = ({ item, onDelete }) => {
             </div>
           ) : (
             <ImageSlider images={item.images} baseUrl={BASE_URL} />
-          ))}
+          )
+        ) : (
+          <PlaceholderImage />
+        )}
 
         {/* Description */}
         <div className="mb-6">
@@ -252,69 +267,6 @@ const JobItem = ({ item, onDelete }) => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Comments Section */}
-      <div className="border-t border-gray-100">
-        <button
-          className="w-full text-center text-green-700 font-semibold py-4 hover:bg-green-50 transition-colors duration-200 flex items-center justify-center"
-          onClick={() => setShowComments(!showComments)}
-        >
-          <MessageCircle size={18} className="mr-2" />
-          {showComments ? "Hide Comments" : "Show Comments"}
-        </button>
-
-        {showComments && item.comments && item.comments.length > 0 && (
-          <div className="bg-gray-50 p-6 space-y-4">
-            <h4 className="font-semibold text-gray-900 mb-4">
-              Comments ({item.comments.length})
-            </h4>
-            {item.comments.map((comment) => (
-              <div
-                key={comment.id}
-                className="bg-white p-4 rounded-xl shadow-sm"
-              >
-                <div className="flex items-start space-x-3">
-                  {comment.user.profile_photo && (
-                    <img
-                      src={
-                        comment.user.profile_photo.startsWith("http")
-                          ? comment.user.profile_photo
-                          : `${BASE_URL}${comment.user.profile_photo}`
-                      }
-                      alt="Commenter"
-                      className="w-10 h-10 rounded-full bg-gray-200 ring-2 ring-gray-100"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <p className="font-semibold text-gray-900">
-                        {comment.user.first_name} {comment.user.last_name}
-                      </p>
-                      <span className="text-green-600 text-sm">
-                        @{comment.user.username}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-2">
-                      {new Date(comment.created_at).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}
-                    </p>
-                    <p className="text-gray-700 leading-relaxed">
-                      {comment.comment}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
