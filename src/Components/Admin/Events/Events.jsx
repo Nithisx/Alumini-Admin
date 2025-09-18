@@ -60,7 +60,7 @@ export default function Events() {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
     setDeletingId(eventId);
     try {
-      const res = await fetch(`https://xyndrix.me/api/events/${eventId}/`, {
+      const res = await fetch(`https://xyndrix.me/api/events/${eventId}`, {
         method: "DELETE",
         headers: { Authorization: token ? `Token ${token}` : "" },
       });

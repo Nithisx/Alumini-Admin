@@ -51,7 +51,13 @@ const getProfilePhotoUrl = (photoPath) => {
 const ImageGallery = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!images || images.length === 0) return null;
+  if (!images || images.length === 0)
+    return (
+      <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden my-3 flex items-center justify-center">
+        {/* Placeholder image or icon */}
+        <FontAwesomeIcon icon={faImage} className="text-5xl text-gray-300" />
+      </div>
+    );
 
   const nextImage = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -140,7 +146,10 @@ const JobCard = ({ post, onDelete }) => {
           } text-white shadow-lg`}
         >
           {isDeleting ? (
-            <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />
+            <FontAwesomeIcon
+              icon={faSpinner}
+              className="animate-spin text-xs"
+            />
           ) : (
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
           )}
@@ -169,10 +178,7 @@ const JobCard = ({ post, onDelete }) => {
               {post.user?.first_name} {post.user?.last_name}
             </div>
             <div className="flex items-center text-xs text-gray-500">
-              <FontAwesomeIcon
-                icon={faCalendarAlt}
-                className="mr-1"
-              />
+              <FontAwesomeIcon icon={faCalendarAlt} className="mr-1" />
               <span>{formatDate(post.posted_on)}</span>
             </div>
           </div>
@@ -204,7 +210,7 @@ const JobCard = ({ post, onDelete }) => {
             />
             <span className="truncate">{post.location}</span>
           </div>
-          
+
           {post.salary_range && (
             <div className="flex items-center text-sm text-gray-600">
               <FontAwesomeIcon
@@ -214,7 +220,7 @@ const JobCard = ({ post, onDelete }) => {
               <span className="truncate">{post.salary_range}</span>
             </div>
           )}
-          
+
           {post.job_type && (
             <div className="flex items-center text-sm text-gray-600">
               <FontAwesomeIcon
@@ -233,10 +239,8 @@ const JobCard = ({ post, onDelete }) => {
           </p>
         )}
 
-        {/* Images */}
-        {post.images && post.images.length > 0 && (
-          <ImageGallery images={post.images} />
-        )}
+        {/* Images - Always render ImageGallery to show placeholder when no images */}
+        <ImageGallery images={post.images || []} />
       </div>
 
       {/* Bottom border accent */}
@@ -412,9 +416,7 @@ const JobFeed = () => {
       closeModal();
     } catch (error) {
       console.error("Error creating post:", error);
-      setError(
-        error.message || "Failed to create post. Please try again."
-      );
+      setError(error.message || "Failed to create post. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -426,7 +428,9 @@ const JobFeed = () => {
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Job Feed</h1>
-          <p className="text-gray-600 mb-4">Discover amazing career opportunities</p>
+          <p className="text-gray-600 mb-4">
+            Discover amazing career opportunities
+          </p>
           <div className="h-1 w-24 bg-gradient-to-r from-green-500 to-green-600 mx-auto rounded-full"></div>
         </div>
 
@@ -441,10 +445,17 @@ const JobFeed = () => {
         ) : posts.length === 0 ? (
           <div className="bg-white p-16 rounded-2xl shadow-lg text-center max-w-md mx-auto">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FontAwesomeIcon icon={faBriefcase} className="text-2xl text-green-600" />
+              <FontAwesomeIcon
+                icon={faBriefcase}
+                className="text-2xl text-green-600"
+              />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Jobs Yet</h3>
-            <p className="text-gray-600 mb-6">Be the first to post a job opportunity!</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No Jobs Yet
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Be the first to post a job opportunity!
+            </p>
             <button
               onClick={() => setIsModalOpen(true)}
               className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
@@ -455,11 +466,7 @@ const JobFeed = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {posts.map((post) => (
-              <JobCard
-                key={post.id}
-                post={post}
-                onDelete={deletePost}
-              />
+              <JobCard key={post.id} post={post} onDelete={deletePost} />
             ))}
           </div>
         )}
@@ -472,7 +479,10 @@ const JobFeed = () => {
                  hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-4 focus:ring-green-300
                  flex items-center justify-center transition-all duration-300 hover:scale-110 group"
       >
-        <FontAwesomeIcon icon={faPlus} className="text-xl group-hover:rotate-90 transition-transform duration-300" />
+        <FontAwesomeIcon
+          icon={faPlus}
+          className="text-xl group-hover:rotate-90 transition-transform duration-300"
+        />
       </button>
 
       {/* Modal */}

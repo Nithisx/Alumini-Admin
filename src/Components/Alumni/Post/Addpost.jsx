@@ -51,7 +51,13 @@ const getProfilePhotoUrl = (photoPath) => {
 const ImageGallery = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!images || images.length === 0) return null;
+  if (!images || images.length === 0)
+    return (
+      <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden my-3 flex items-center justify-center">
+        {/* Placeholder image or icon */}
+        <FontAwesomeIcon icon={faImage} className="text-5xl text-gray-300" />
+      </div>
+    );
 
   const nextImage = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -110,10 +116,42 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component
-const JobCard = ({ post }) => {
+const JobCard = ({ post, onDelete }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this job post?")) {
+      setIsDeleting(true);
+      await onDelete(post.id);
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group relative"
+    <div
+      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Delete Button - Shows on Hover */}
+      {isHovered && (
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+            isDeleting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-red-500 hover:bg-red-600 transform hover:scale-110"
+          } text-white shadow-lg`}
+        >
+          {isDeleting ? (
+            <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />
+          ) : (
+            <FontAwesomeIcon icon={faTrash} className="text-xs" />
+          )}
+        </button>
+      )}
 
       {/* Header with user info */}
       <div className="p-4 pb-2 border-b border-gray-100">
@@ -201,10 +239,8 @@ const JobCard = ({ post }) => {
           </p>
         )}
 
-        {/* Images */}
-        {post.images && post.images.length > 0 && (
-          <ImageGallery images={post.images} />
-        )}
+        {/* Images - Always render ImageGallery to show placeholder when no images */}
+        <ImageGallery images={post.images || []} />
       </div>
 
       {/* Bottom border accent */}
