@@ -248,10 +248,10 @@ export default function MembersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // Sorting states
-  const [sortField, setSortField] = useState('id');
-  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [sortField, setSortField] = useState("id");
+  const [sortDirection, setSortDirection] = useState("asc"); // 'asc' or 'desc'
 
   // Fetch dropdown filter options
   const fetchDropdownFilters = async () => {
@@ -280,7 +280,7 @@ export default function MembersPage() {
     });
 
     // Add sorting parameter
-    const orderingValue = sortDirection === 'asc' ? `-${sortField}` : sortField;
+    const orderingValue = sortDirection === "asc" ? `-${sortField}` : sortField;
     params.append("ordering", orderingValue);
 
     if (roleFilter) params.append("role", roleFilter);
@@ -326,11 +326,11 @@ export default function MembersPage() {
               .filter((location) => location && location.trim() !== "")
           ),
         ].sort();
-        
+
         // Update dropdown filters with current_location options only
         setDropdownFilters((prev) => ({
           ...prev,
-          current_location: currentLocations
+          current_location: currentLocations,
         }));
       }
 
@@ -362,11 +362,11 @@ export default function MembersPage() {
               .filter((location) => location && location.trim() !== "")
           ),
         ].sort();
-        
+
         // Update dropdown filters with comprehensive current_location options only
         setDropdownFilters((prev) => ({
           ...prev,
-          current_location: currentLocations
+          current_location: currentLocations,
         }));
       }
     } catch (error) {
@@ -689,18 +689,18 @@ export default function MembersPage() {
     setPageSize(size);
     setCurrentPage(1);
   };
-  
+
   // Handle sorting changes
   const handleSortChange = (field) => {
     // If clicking the same field, toggle direction
     if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       // New field, default to ascending
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
-    
+
     // Reset to first page when sorting changes
     setCurrentPage(1);
   };
@@ -804,7 +804,6 @@ export default function MembersPage() {
             </div>
           </div>
 
-         
           {/* Filters Loading State or Grid */}
           {filtersLoading ? (
             <div className="flex justify-center items-center py-8">
@@ -1227,40 +1226,30 @@ export default function MembersPage() {
                   "No members found"
                 )}
               </h2>
-              
+
               {/* Sorting Controls */}
               <div className="flex items-center gap-2">
-                {/* <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">
-                  Sort by:
-                </label>
-                <select
-                  id="sort-select"
-                  value={sortField}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="first_name">First Name</option>
-                  <option value="last_name">Last Name</option>
-                  <option value="passed_out_year">Passed Out Year</option>
-                  <option value="college_name">College</option>
-                  <option value="course">Course</option>
-                  <option value="branch">Branch</option>
-                  <option value="role">Role</option>
-                  <option value="city">City</option>
-                </select> */}
-                
-                <button 
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                <button
+                  onClick={() =>
+                    setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  }
                   className="flex items-center gap-1 text-sm border border-gray-300 rounded-md px-2 py-1 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
-                  <svg 
-                    className={`w-4 h-4 ${sortDirection === 'asc' ? 'rotate-0' : 'rotate-180'} transition-transform`}
-                    fill="none" 
-                    stroke="currentColor" 
+                  {sortDirection === "asc" ? "Ascending" : "Descending"}
+                  <svg
+                    className={`w-4 h-4 ${
+                      sortDirection === "asc" ? "rotate-0" : "rotate-180"
+                    } transition-transform`}
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1295,8 +1284,6 @@ export default function MembersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
                 {members.map((member) => (
                   <div key={member.id} className="relative">
-                   
-
                     <div
                       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group cursor-pointer"
                       onClick={() => {
