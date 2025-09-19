@@ -233,9 +233,9 @@ const BusinessDirectory = () => {
       </button>
       {!collapsed && (
         <div className="mt-2 space-y-1">
-          {items.map((item) => (
+          {items.map((item,idx) => (
             <label
-              key={item.name}
+              key={idx}
               className="flex items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
             >
               <input

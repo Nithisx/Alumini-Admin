@@ -490,13 +490,7 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
             {/* Menu Popup */}
             {showMenu && (
               <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-xl shadow-xl z-20 w-36 py-2 animate-in slide-in-from-top-2 duration-200">
-                <button
-                  className="flex items-center w-full px-3 py-2 text-left hover:bg-green-50 text-green-600 transition-colors duration-200 text-sm"
-                  onClick={handleEdit}
-                >
-                  <Edit size={14} className="mr-2" />
-                  Edit Event
-                </button>
+               
                 <button
                   className="flex items-center w-full px-3 py-2 text-left hover:bg-red-50 text-red-600 transition-colors duration-200 text-sm"
                   onClick={handleDelete}
