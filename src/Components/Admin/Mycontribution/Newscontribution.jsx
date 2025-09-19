@@ -255,37 +255,37 @@ const NewsContribution = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // const fetchNews = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const token = localStorage.getItem("Token");
-  //     if (!token) throw new Error("Token not found");
+  const fetchNews = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("Token");
+      if (!token) throw new Error("Token not found");
 
-  //     const response = await fetch(`${BASE_URL}/myposts/`, {
-  //       headers: {
-  //         Authorization: `Token ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
+      const response = await fetch(`${BASE_URL}/myposts/`, {
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-  //     if (!response.ok) {
-  //       throw new Error(`Failed to fetch news: ${response.status}`);
-  //     }
+      if (!response.ok) {
+        throw new Error(`Failed to fetch news: ${response.status}`);
+      }
 
-  //     const data = await response.json();
-  //     const newsData = data.news || data.results || [];
-  //     setNews(newsData);
-  //   } catch (error) {
-  //     console.error("Error fetching news", error);
-  //     alert("Failed to fetch news. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+      const data = await response.json();
+      const newsData = data.news || data.results || [];
+      setNews(newsData);
+    } catch (error) {
+      console.error("Error fetching news", error);
+      alert("Failed to fetch news. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // useEffect(() => {
-  //   fetchNews();
-  // }, []);
+  useEffect(() => {
+    fetchNews();
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
