@@ -57,6 +57,7 @@ const ProfileScreen = () => {
     id: null,
     first_name: "",
     last_name: "",
+    username: "",
     email: "",
     social_links: {},
     bio: "",
@@ -239,6 +240,7 @@ const ProfileScreen = () => {
       // Add text data
       formData.append("bio", profile.bio || "")
       formData.append("email", profile.email || "")
+      formData.append("username", profile.username || "")
       formData.append("passed_out_year", profile.passed_out_year || "")
       formData.append("phone", profile.phone || "")
       formData.append("first_name", profile.first_name || "")
@@ -377,6 +379,14 @@ const ProfileScreen = () => {
                 <p className="text-sm sm:text-base text-green-900 break-words">
                   {`${profile.first_name} ${profile.last_name}`}
                 </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Username</p>
+                <p className="text-sm sm:text-base text-green-900 break-all">{profile.username || "N/A"}</p>
               </div>
             </div>
 
@@ -629,6 +639,17 @@ const ProfileScreen = () => {
                   className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Username</label>
+              <input
+                type="text"
+                placeholder="Username"
+                value={profile.username || ""}
+                onChange={(e) => setProfile((prev) => ({ ...prev, username: e.target.value }))}
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+              />
             </div>
 
             <div>
@@ -1137,7 +1158,7 @@ const ProfileScreen = () => {
           <h2 className="text-lg sm:text-xl font-bold text-green-900 mb-1">
             {`${profile.first_name} ${profile.last_name}`}
           </h2>
-          <p className="text-xs sm:text-sm text-green-700 break-all px-4">{profile.email || "No email"}</p>
+          <p className="text-xs sm:text-sm text-green-700 break-all px-4">{profile.username || "username"}</p>
           {profile.current_work && (
             <div className="mt-2 inline-flex items-center px-2 sm:px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
               <Briefcase className="w-3 h-3 mr-1" />
