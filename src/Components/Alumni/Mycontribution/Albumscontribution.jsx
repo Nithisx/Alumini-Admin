@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Calendar, Image, Eye, Edit, Trash2 } from "lucide-react";
+import { Calendar, Image, Eye, Edit, Trash2, Save, X, Upload } from "lucide-react";
 
 const AlbumsContribution = () => {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editingAlbum, setEditingAlbum] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    description: ""
+  });
+  const [editCoverImage, setEditCoverImage] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const token = localStorage.getItem("Token");
   const BASE_URL = "https://xyndrix.me/api";
@@ -54,6 +61,72 @@ const AlbumsContribution = () => {
     } catch (error) {
       console.error("Error deleting album:", error);
       alert("Failed to delete album. Please try again.");
+    }
+  };
+
+  const handleEditClick = (album) => {
+    setEditingAlbum(album.id);
+    setEditFormData({
+      title: album.title,
+      description: album.description || ""
+    });
+    setEditCoverImage(null);
+  };
+
+  const handleEditCancel = () => {
+    setEditingAlbum(null);
+    setEditFormData({ title: "", description: "" });
+    setEditCoverImage(null);
+  };
+
+  const handleEditSave = async (albumId) => {
+    if (!editFormData.title.trim()) {
+      alert("Title is required");
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", editFormData.title);
+      formData.append("description", editFormData.description);
+      
+      if (editCoverImage) {
+        formData.append("cover_image", editCoverImage);
+      }
+
+      const response = await axios.put(
+        `${BASE_URL}/albums/${albumId}/`,
+        formData,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Update the album in the state
+      setAlbums(albums.map(album => 
+        album.id === albumId ? response.data : album
+      ));
+      
+      setEditingAlbum(null);
+      setEditFormData({ title: "", description: "" });
+      setEditCoverImage(null);
+      alert("Album updated successfully!");
+    } catch (error) {
+      console.error("Error updating album:", error);
+      alert("Failed to update album. Please try again.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleCoverImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditCoverImage(file);
     }
   };
 
@@ -133,56 +206,127 @@ const AlbumsContribution = () => {
 
                 {/* Album Details */}
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate">
-                    {album.title}
-                  </h3>
-                  
-                  {album.description && (
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                      {album.description}
-                    </p>
-                  )}
+                  {editingAlbum === album.id ? (
+                    /* Edit Form */
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          value={editFormData.title}
+                          onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Album title"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Description
+                        </label>
+                        <textarea
+                          value={editFormData.description}
+                          onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                          placeholder="Album description"
+                        />
+                      </div>
 
-                  <div className="flex items-center text-sm text-gray-500 mb-3">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>Posted on {formatDate(album.posted_on)}</span>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Cover Image
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCoverImageChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {editCoverImage && (
+                          <p className="text-sm text-green-600 mt-1">
+                            New image selected: {editCoverImage.name}
+                          </p>
+                        )}
+                      </div>
 
-                  {/* Album Stats */}
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                    <span>Created by {album.user?.first_name} {album.user?.last_name}</span>
-                  </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <button
+                          onClick={() => handleEditSave(album.id)}
+                          disabled={editLoading}
+                          className="flex items-center space-x-1 bg-green-500 text-white px-3 py-1.5 rounded text-sm hover:bg-green-600 transition disabled:opacity-50"
+                        >
+                          <Save className="h-3 w-3" />
+                          <span>{editLoading ? "Saving..." : "Save"}</span>
+                        </button>
 
-                  {/* Action Buttons */}
-                  <div className="flex justify-between items-center">
-                    <button
-                      onClick={() => window.location.href = `/alumni/albums/${album.id}`}
-                      className="flex items-center space-x-1 bg-blue-500 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-600 transition"
-                    >
-                      <Eye className="h-3 w-3" />
-                      <span>View</span>
-                    </button>
-
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => window.location.href = `/alumni/albums/edit/${album.id}`}
-                        className="flex items-center space-x-1 bg-green-500 text-white px-3 py-1.5 rounded text-sm hover:bg-green-600 transition"
-                        title="Edit Album"
-                      >
-                        <Edit className="h-3 w-3" />
-                        <span>Edit</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(album.id)}
-                        className="flex items-center space-x-1 bg-red-500 text-white px-3 py-1.5 rounded text-sm hover:bg-red-600 transition"
-                        title="Delete Album"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        <span>Delete</span>
-                      </button>
+                        <button
+                          onClick={handleEditCancel}
+                          disabled={editLoading}
+                          className="flex items-center space-x-1 bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600 transition disabled:opacity-50"
+                        >
+                          <X className="h-3 w-3" />
+                          <span>Cancel</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    /* Normal View */
+                    <>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate">
+                        {album.title}
+                      </h3>
+                      
+                      {album.description && (
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          {album.description}
+                        </p>
+                      )}
+
+                      <div className="flex items-center text-sm text-gray-500 mb-3">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        <span>Posted on {formatDate(album.posted_on)}</span>
+                      </div>
+
+                      {/* Album Stats */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                        <span>Created by {album.user?.first_name} {album.user?.last_name}</span>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex justify-between items-center">
+                        <button
+                          onClick={() => window.location.href = `/alumni/albums/${album.id}`}
+                          className="flex items-center space-x-1 bg-blue-500 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-600 transition"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>View</span>
+                        </button>
+
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditClick(album)}
+                            className="flex items-center space-x-1 bg-green-500 text-white px-3 py-1.5 rounded text-sm hover:bg-green-600 transition"
+                            title="Edit Album"
+                          >
+                            <Edit className="h-3 w-3" />
+                            <span>Edit</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleDelete(album.id)}
+                            className="flex items-center space-x-1 bg-red-500 text-white px-3 py-1.5 rounded text-sm hover:bg-red-600 transition"
+                            title="Delete Album"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
