@@ -351,13 +351,7 @@ export default function BusinessContribution() {
             >
               <FontAwesomeIcon icon={faEye} />
             </button>
-            <button
-              onClick={() => openEditModal(business)}
-              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-              title="Edit Business"
-            >
-              <FontAwesomeIcon icon={faEdit} />
-            </button>
+          
             <button
               onClick={() => setDeleteConfirm(business.id)}
               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -500,18 +494,7 @@ export default function BusinessContribution() {
                 ? "Try adjusting your search or filter criteria"
                 : "Start contributing by adding your first business to the directory"}
             </p>
-            {!searchTerm && categoryFilter === "all" && (
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowAddModal(true);
-                }}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center mx-auto"
-              >
-                <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                Add Your First Business
-              </button>
-            )}
+           
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -522,57 +505,9 @@ export default function BusinessContribution() {
         )}
       </div>
 
-      {/* Add Business Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-full overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Add New Business
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    resetForm();
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <FontAwesomeIcon icon={faTimes} className="text-xl" />
-                </button>
-              </div>
-              <BusinessForm />
-            </div>
-          </div>
-        </div>
-      )}
+      
 
-      {/* Edit Business Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-full overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Edit Business
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setSelectedBusiness(null);
-                    resetForm();
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <FontAwesomeIcon icon={faTimes} className="text-xl" />
-                </button>
-              </div>
-              <BusinessForm isEdit={true} />
-            </div>
-          </div>
-        </div>
-      )}
-
+     
       {/* View Business Modal */}
       {showViewModal && selectedBusiness && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
