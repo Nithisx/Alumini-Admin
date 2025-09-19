@@ -6,6 +6,7 @@ import Jobs from "./Jobcontribution";
 import Events from "./Eventcontributation";
 import News from "./Newscontribution";
 import Bussiness from "./Businesscontribution";
+import Albums from "./Albumscontribution";
 
 // Mock COLORS object since we don't have the theme file
 const COLORS = {
@@ -72,6 +73,16 @@ const MyContributions = () => {
         >
           Bussiness
         </button>
+        <button
+          className={`flex-1 py-3 text-center ${
+            activeTab === "albums"
+              ? "border-b-2 border-blue-500 text-blue-500 font-bold"
+              : "text-gray-500"
+          }`}
+          onClick={() => setActiveTab("albums")}
+        >
+          Albums
+        </button>
       </div>
 
       {/* Content */}
@@ -80,6 +91,7 @@ const MyContributions = () => {
         {activeTab === "events" && <Events />}
         {activeTab === "news" && <News />}
         {activeTab === "bussiness" && <Bussiness />}
+        {activeTab === "albums" && <Albums />}
       </div>
     </div>
   );
