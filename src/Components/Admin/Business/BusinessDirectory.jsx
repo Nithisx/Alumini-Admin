@@ -37,7 +37,32 @@ const BusinessDirectory = () => {
   const [servicesCollapsed, setServicesCollapsed] = useState(false);
 
   const token = localStorage.getItem("Token");
+  const userType = localStorage.getItem("Role"); // Get user type from localStorage
+  const currentUserId = localStorage.getItem("userId"); // Get current user ID
   const BASE_URL = "https://xyndrix.me/api";
+
+  // Check if current user can edit/delete a business
+  const canEditBusiness = (business) => {
+    // Admin can edit/delete all businesses
+    if (userType === "admin") {
+      return true;
+    }
+    
+    // Students and staff can only edit/delete their own businesses
+    // and not businesses created by admin
+    if (userType === "student" || userType === "staff") {
+      // Check if the business owner is admin
+      if (business.owner_details && business.owner_details.user_type === "admin") {
+        return false;
+      }
+      
+      // Check if current user is the owner
+      return business.owner_details && 
+             business.owner_details.id === parseInt(currentUserId);
+    }
+    
+    return false;
+  };
 
   // Fetch all businesses and categories when component mounts
   useEffect(() => {
@@ -285,7 +310,6 @@ const BusinessDirectory = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-         
               <Link
                 to="/admin/business/add"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
@@ -367,9 +391,10 @@ const BusinessDirectory = () => {
                 {filteredBusinesses.length > 0 ? (
                   <div className="space-y-4">
                     {filteredBusinesses.map((business) => (
-                      <div
+                      <Link
                         key={business.id}
-                        className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                        to={`/admin/business/view/${business.id}`} // This should work with the updated route
+                        className="block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
                       >
                         <div className="flex flex-col md:flex-row gap-4">
                           {/* Business Logo */}
@@ -394,26 +419,34 @@ const BusinessDirectory = () => {
                           {/* Business Details */}
                           <div className="flex-1">
                             <div className="flex justify-between items-start mb-2">
-                              <Link
-                                to={`/admin/business/${business.id}`}
-                                className="text-xl font-bold text-blue-600 hover:text-blue-800 transition"
-                              >
+                              <h3 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition">
                                 {business.business_name}
-                              </Link>
-                              <div className="flex space-x-2">
-                                <Link
-                                  to={`/admin/business/${business.id}`}
-                                  className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Link>
-                                <button
-                                  onClick={() => handleDelete(business.id)}
-                                  className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
+                              </h3>
+                              
+                              {/* Only show edit/delete buttons if user has permission */}
+                              {canEditBusiness(business) && (
+                                <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                                  <Link
+                                    to={`/admin/business/edit/${business.id}`}
+                                    className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="Edit Business"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Link>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleDelete(business.id);
+                                    }}
+                                    className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
+                                    title="Delete Business"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
 
                             <p className="text-blue-600 font-medium mb-1">
@@ -422,6 +455,15 @@ const BusinessDirectory = () => {
                             <p className="text-gray-600 mb-3">
                               {business.description}
                             </p>
+
+                            {/* Show business owner info if it's an admin post */}
+                            {business.owner_details && business.owner_details.user_type === "admin" && (
+                              <div className="mb-3">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                  Official Business Listing
+                                </span>
+                              </div>
+                            )}
 
                             {/* Contact Information */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
@@ -441,6 +483,7 @@ const BusinessDirectory = () => {
                                   <a
                                     href={`tel:${business.phone}`}
                                     className="text-gray-600 hover:text-blue-600"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     {business.phone}
                                   </a>
@@ -453,6 +496,7 @@ const BusinessDirectory = () => {
                                   <a
                                     href={`mailto:${business.email}`}
                                     className="text-gray-600 hover:text-blue-600 truncate"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     {business.email}
                                   </a>
@@ -471,6 +515,7 @@ const BusinessDirectory = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:text-blue-800 truncate"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     {business.website.replace(
                                       /(^\w+:|^)\/\//,
@@ -491,7 +536,7 @@ const BusinessDirectory = () => {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 ) : (

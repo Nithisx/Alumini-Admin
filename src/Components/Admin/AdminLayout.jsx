@@ -19,6 +19,7 @@ import Birthday from "./Birthday/Birthday";
 import Singleevents from './Events/Singleevents';
 import BusinessDirectory from './Business/BusinessDirectory';
 import BusinessDetail from './Business/BusinessDetail';
+import BusinessView from './Business/BusinessView';
 import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
 import SendMail from "./mail/sendmail";
@@ -47,6 +48,7 @@ const AdminLayout = () => {
           <Route path="event/:id" element={<Singleevents />} />
           <Route path="business" element={<BusinessDirectory />} />
           <Route path="business/:id" element={<BusinessDetail />} />
+          <Route path="business/view/:id" element={<BusinessView />} />
           <Route path="my-profile" element={<Myprofile />} />
           <Route path="my-contribution" element={<Mycontribution />} />
           <Route path="sendmail" element={<SendMail />} />

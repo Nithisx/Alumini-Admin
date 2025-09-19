@@ -183,6 +183,26 @@ const BusinessDirectory = () => {
       count: businesses.filter(b => b.services?.includes(service)).length
     }));
 
+  // Handle business deletion
+  const handleDelete = async (id) => {
+    if (
+      !window.confirm("Are you sure you want to delete this business listing?")
+    )
+      return;
+
+    try {
+      await axios.delete(`${BASE_URL}/businesses/${id}/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      
+      setBusinesses(businesses.filter(business => business.id !== id));
+      setFilteredBusinesses(filteredBusinesses.filter(business => business.id !== id));
+      alert("Business deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting business:", error);
+      alert("Failed to delete business.");
+    }
+  };
 
   // Handle navigation
   const handleNavigation = (path) => {
@@ -198,6 +218,7 @@ const BusinessDirectory = () => {
     onSelect,
     icon,
   }) => (
+    console.log("Rendering SidebarSection:", title, items),
     <div className="mb-6">
       <button
         onClick={() => setCollapsed(!collapsed)}
@@ -231,7 +252,7 @@ const BusinessDirectory = () => {
                 className="mr-2 text-blue-600"
               />
               <span className="text-sm text-gray-600 flex-1">
-                {item.name} {item.count && `(${item.category})`}
+                {item.category || item.name} {item.count && `(${item.count})`}
               </span>
             </label>
           ))}
@@ -264,7 +285,7 @@ const BusinessDirectory = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-             
+         
               <Link
                 to="/staff/business/add"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
@@ -346,9 +367,10 @@ const BusinessDirectory = () => {
                 {filteredBusinesses.length > 0 ? (
                   <div className="space-y-4">
                     {filteredBusinesses.map((business) => (
-                      <div
+                      <Link
                         key={business.id}
-                        className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                        to={`/staff/business/${business.id}`}
+                        className="block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
                       >
                         <div className="flex flex-col md:flex-row gap-4">
                           {/* Business Logo */}
@@ -373,13 +395,28 @@ const BusinessDirectory = () => {
                           {/* Business Details */}
                           <div className="flex-1">
                             <div className="flex justify-between items-start mb-2">
-                              <Link
-                                to={`/staff/business/${business.id}`}
-                                className="text-xl font-bold text-blue-600 hover:text-blue-800 transition"
-                              >
+                              <h3 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition">
                                 {business.business_name}
-                              </Link>
-                           
+                              </h3>
+                              <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                                <Link
+                                  to={`/staff/business/${business.id}`}
+                                  className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Link>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDelete(business.id);
+                                  }}
+                                  className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
 
                             <p className="text-blue-600 font-medium mb-1">
@@ -407,6 +444,7 @@ const BusinessDirectory = () => {
                                   <a
                                     href={`tel:${business.phone}`}
                                     className="text-gray-600 hover:text-blue-600"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     {business.phone}
                                   </a>
@@ -419,6 +457,7 @@ const BusinessDirectory = () => {
                                   <a
                                     href={`mailto:${business.email}`}
                                     className="text-gray-600 hover:text-blue-600 truncate"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     {business.email}
                                   </a>
@@ -437,6 +476,7 @@ const BusinessDirectory = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:text-blue-800 truncate"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     {business.website.replace(
                                       /(^\w+:|^)\/\//,
@@ -457,7 +497,7 @@ const BusinessDirectory = () => {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 ) : (

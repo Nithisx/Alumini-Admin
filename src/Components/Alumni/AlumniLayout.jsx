@@ -20,6 +20,8 @@ import BusinessDetail from "./Business/BusinessDetail";
 import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
 import StudentImageUpload from "./Albums/Albums";
+import BusinessView from "./Business/BusinessView";
+
 const AlumniLayout = () => {
   return (
     <div>
@@ -45,6 +47,7 @@ const AlumniLayout = () => {
           <Route path="birthday" element={<Birthday />} />
           <Route path="business" element={<BusinessDirectory />} />
           <Route path="business/:id" element={<BusinessDetail />} />
+          <Route path="business/view/:id" element={<BusinessView />} />
           <Route path="my-profile" element={<Myprofile />} />
           <Route path="my-contribution" element={<Mycontribution />} />
           {/* Add more routes as needed */}
