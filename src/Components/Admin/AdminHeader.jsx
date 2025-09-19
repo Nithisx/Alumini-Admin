@@ -60,14 +60,27 @@ export default function AdminHeader() {
       const token = localStorage.getItem('Token');
       const role = localStorage.getItem('Role');
       
-      // Check if token exists
+      // For register-request page, only check role if token exists
+      if (pathname.includes('/register-request') || pathname.includes('/admin/register-request')) {
+        if (token && role && role !== 'admin' && role !== 'superuser') {
+          console.log('Insufficient permissions for register-request page, redirecting to login');
+          localStorage.removeItem('Token');
+          localStorage.removeItem('Role');
+          window.location.href = '/login';
+          return;
+        }
+        // If no token for register-request page, allow access but API calls will handle authentication
+        return;
+      }
+
+      // For all other pages, require authentication
       if (!token) {
         console.log('No token found, redirecting to login');
         window.location.href = '/login';
         return;
       }
 
-      // Optional: Check if user has admin role
+      // Check if user has admin role for other pages
       if (role && role !== 'admin' && role !== 'superuser') {
         console.log('Insufficient permissions, redirecting to login');
         localStorage.removeItem('Token');
@@ -82,6 +95,11 @@ export default function AdminHeader() {
 
     // Optional: Set up periodic token validation
     const validateToken = async () => {
+      // Skip token validation for register-request page
+      if (pathname.includes('/register-request') || pathname.includes('/admin/register-request')) {
+        return;
+      }
+
       const token = localStorage.getItem('Token');
       if (!token) return;
 
@@ -107,8 +125,11 @@ export default function AdminHeader() {
       }
     };
 
-    // Validate token every 5 minutes (optional)
-    const tokenCheckInterval = setInterval(validateToken, 5 * 60 * 1000);
+    // Validate token every 5 minutes (optional) - only if not on register-request page
+    let tokenCheckInterval;
+    if (!pathname.includes('/register-request') && !pathname.includes('/admin/register-request')) {
+      tokenCheckInterval = setInterval(validateToken, 5 * 60 * 1000);
+    }
 
     // Global error handler for 401 responses
     const originalFetch = window.fetch;
@@ -116,7 +137,10 @@ export default function AdminHeader() {
       try {
         const response = await originalFetch(...args);
         
-        if (response.status === 401) {
+        // Skip 401 handling for register-request page
+        if (response.status === 401 && 
+            !pathname.includes('/register-request') && 
+            !pathname.includes('/admin/register-request')) {
           console.log('401 Unauthorized received, redirecting to login');
           localStorage.removeItem('Token');
           localStorage.removeItem('Role');
@@ -132,10 +156,12 @@ export default function AdminHeader() {
 
     // Cleanup
     return () => {
-      clearInterval(tokenCheckInterval);
+      if (tokenCheckInterval) {
+        clearInterval(tokenCheckInterval);
+      }
       window.fetch = originalFetch; // Restore original fetch
     };
-  }, []);
+  }, [pathname]); // Add pathname dependency to re-run when route changes
 
   const handleLogout = () => {
     console.log("Logout clicked");

@@ -26,6 +26,7 @@ export default function RegisterRequest() {
   const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState(null); // Add error state
   const API_URL = "https://xyndrix.me/api/Approve-signup/";
 
   // Helper function to show message and auto-clear after 3 seconds
@@ -36,7 +37,20 @@ export default function RegisterRequest() {
 
   useEffect(() => {
     setLoading(true); // Set loading to true when starting to fetch
-    fetch(API_URL)
+    const token = localStorage.getItem('Token');
+    
+    if (!token) {
+      setError("Authentication required. Please log in to view registration requests.");
+      setLoading(false);
+      return;
+    }
+    
+    fetch(API_URL, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
       .then((response) => response.json())
       .then((data) => {
         // Handle paginated response format
@@ -56,6 +70,11 @@ export default function RegisterRequest() {
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
+        if (error.message.includes('401') || error.message.includes('Authentication')) {
+          setError("Authentication failed. Please log in with admin credentials.");
+        } else {
+          setError("Failed to load requests. Please try again.");
+        }
         showMessage({
           text: "Failed to load requests. Please try again.",
           type: "error",
@@ -75,14 +94,35 @@ export default function RegisterRequest() {
 
   const handleAccept = async (id, email) => {
     setProcessing(true);
+    const token = localStorage.getItem('Token');
+    
+    if (!token) {
+      showMessage({
+        text: "Authentication required. Please log in.",
+        type: "error",
+      });
+      setProcessing(false);
+      return;
+    }
+    
     try {
-      await fetch(API_URL, {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Token ${token}`
         },
         body: JSON.stringify({ email }),
       });
+      
+      if (response.status === 401) {
+        showMessage({
+          text: "Authentication failed. Please log in again.",
+          type: "error",
+        });
+        return;
+      }
+      
       showMessage({ text: "Request accepted successfully!", type: "success" });
       // Filter out the accepted request
       setRequests((prev) => prev.filter((req) => req.id !== id));
@@ -99,14 +139,35 @@ export default function RegisterRequest() {
 
   const handleDecline = async (id, email) => {
     setProcessing(true);
+    const token = localStorage.getItem('Token');
+    
+    if (!token) {
+      showMessage({
+        text: "Authentication required. Please log in.",
+        type: "error",
+      });
+      setProcessing(false);
+      return;
+    }
+    
     try {
-      await fetch(API_URL, {
+      const response = await fetch(API_URL, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Token ${token}`
         },
         body: JSON.stringify({ email }),
       });
+      
+      if (response.status === 401) {
+        showMessage({
+          text: "Authentication failed. Please log in again.",
+          type: "error",
+        });
+        return;
+      }
+      
       showMessage({ text: "Request rejected successfully!", type: "error" });
       // Filter out the declined request
       setRequests((prev) => prev.filter((req) => req.id !== id));
