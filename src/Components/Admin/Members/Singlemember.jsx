@@ -406,9 +406,7 @@ export default function SingleMember() {
   const handleDeactivateUser = async () => {
     const action = member.is_active ? 'deactivate' : 'activate';
     const confirmMessage = member.is_active 
-      ? `Are you sure you want to deactivate ${member.first_name} ${member.last_name}? They will no longer be able to access their account.`
-      : `Are you sure you want to activate ${member.first_name} ${member.last_name}? They will regain access to their account.`;
-    
+      ?? `Are you sure you want to deactivate ${member.first_name} ${member.last_name}? They will no longer be able to access their account.`
     if (!window.confirm(confirmMessage)) return;
     
     setDeactivating(true);
