@@ -134,24 +134,7 @@ const JobCard = ({ post, onDelete }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Delete Button - Shows on Hover */}
-      {isHovered && (
-        <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-            isDeleting
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-red-500 hover:bg-red-600 transform hover:scale-110"
-          } text-white shadow-lg`}
-        >
-          {isDeleting ? (
-            <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />
-          ) : (
-            <FontAwesomeIcon icon={faTrash} className="text-xs" />
-          )}
-        </button>
-      )}
+      
 
       {/* Header with user info */}
       <div className="p-4 pb-2 border-b border-gray-100">
