@@ -627,9 +627,7 @@ const Chat = () => {
                 {/* Message Input */}
                 <div className="p-4 border-t border-gray-200 bg-white">
                   <div className="flex items-center gap-2">
-                    <button className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100">
-                      <Smile className="w-4 h-4" />
-                    </button>
+                  
                     <div className="flex-1 flex items-center bg-gray-100 rounded-lg">
                       <input
                         type="text"
