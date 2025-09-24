@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-
+import { useNavigate } from 'react-router-dom';
 const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'https://xyndrix.me/api/profile/';
 
@@ -8,6 +8,7 @@ export default function SingleMember() {
   const { name } = useParams();
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('Fetching specfing member data...');
@@ -22,6 +23,32 @@ export default function SingleMember() {
       .catch(err => console.error('Error fetching member:', err))
       .finally(() => setLoading(false));
   }, [name]);
+
+  const handlechat = async () => {
+    const token = localStorage.getItem("Token");
+    
+
+    try {
+      const response = await fetch('https://xyndrix.me/chat/rooms/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ target_user_id: member.id })
+      });
+
+      if (response.ok) {
+        
+        
+        navigate(`/alumni/chat`);
+      }
+    } catch (error) {
+      console.error('Room creation error:', error);
+    }
+
+   console.log("Room ")
+  };
 
   if (loading) {
     return (
@@ -109,6 +136,27 @@ export default function SingleMember() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="text-sm sm:text-base">Back to Members</span>
+
+             <button
+      onClick={handlechat}
+      className="ml-170 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+    >
+      <svg
+        className="w-4 h-4 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
+        />
+      </svg>
+      Chat Now
+    </button>
+
           </Link>
         </div>
 
@@ -150,6 +198,7 @@ export default function SingleMember() {
                 </div>
               </div>
             </div>
+           
           </div>
 
           {/* Content Grid */}
@@ -307,7 +356,7 @@ export default function SingleMember() {
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium text-green-700 text-sm sm:text-base">Work Experience:</span>
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {work_experience} {work_experience === 1 ? 'year' : 'years'}
+                        {work_experience} {work_experience === 2 ? 'year' : 'years'}
                       </span>
                     </div>
                   )}
@@ -414,6 +463,8 @@ export default function SingleMember() {
                 </div>
               </div>
             )}
+
+
           </div>
         </div>
       </div>
