@@ -551,7 +551,6 @@ const Chat = () => {
                 <Search className="w-4 h-4" />
                 <span>Find Users</span>
               </button>
-             
             </div>
           </div>
         </div>
@@ -696,16 +695,13 @@ const Chat = () => {
                             <div className="flex items-center gap-2">
                               <h3
                                 className={`font-medium truncate ${
-                                  chat.is_community ? "text-blue-800" : "text-gray-800"
+                                  chat.is_community
+                                    ? "text-blue-800"
+                                    : "text-gray-800"
                                 }`}
                               >
                                 {chat.name}
                               </h3>
-                              {chat.is_community && (
-                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                  Community
-                                </span>
-                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-gray-500 text-xs">
@@ -748,7 +744,8 @@ const Chat = () => {
                     No conversations yet
                   </p>
                   <p className="text-gray-400 text-sm mt-2 text-center">
-                    Click "Find Users" to start a new conversation or join the Community
+                    Click "Find Users" to start a new conversation or join the
+                    Community
                   </p>
                 </div>
               )}
@@ -766,7 +763,9 @@ const Chat = () => {
                 {/* Chat Header */}
                 <div
                   className={`p-4 border-b border-gray-200 flex items-center justify-between ${
-                    selectedChat.is_community ? "bg-gradient-to-r from-blue-50 to-indigo-50" : ""
+                    selectedChat.is_community
+                      ? "bg-gradient-to-r from-blue-50 to-indigo-50"
+                      : ""
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -778,7 +777,9 @@ const Chat = () => {
                     </button>
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${
-                        selectedChat.is_community ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-green-600"
+                        selectedChat.is_community
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600"
+                          : "bg-green-600"
                       }`}
                     >
                       {selectedChat.is_community ? (
@@ -803,7 +804,9 @@ const Chat = () => {
                       <div className="flex items-center gap-2">
                         <h2
                           className={`font-semibold ${
-                            selectedChat.is_community ? "text-blue-800" : "text-gray-800"
+                            selectedChat.is_community
+                              ? "text-blue-800"
+                              : "text-gray-800"
                           }`}
                         >
                           {selectedChat.name}
@@ -818,7 +821,9 @@ const Chat = () => {
                         {isConnected ? (
                           <span className="flex items-center gap-1">
                             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                            {selectedChat.is_community ? "Community Online" : "Online"}
+                            {selectedChat.is_community
+                              ? "Community Online"
+                              : "Online"}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1">
