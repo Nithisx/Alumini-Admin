@@ -18,6 +18,7 @@ import {
   faHandHoldingHeart,
   faChevronDown,
   faMailBulk,
+  faComments
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../images/logo.png"; // Adjust the path as necessary
 export default function alumniHeader() {
@@ -122,6 +123,12 @@ export default function alumniHeader() {
       label: "Contribution",
       color: "text-green-600",
     },
+    {
+      path: "/alumni/chat",
+      icon: faComments,
+      label: "Chat",
+      color: "text-indigo-600",
+    }
 ]
 
   return (

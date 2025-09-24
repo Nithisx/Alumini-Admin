@@ -21,6 +21,8 @@ import BusinessDetail from "./Business/BusinessDetail";
 import BusinessView from "./Business/BusinessView";
 import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
+import Chat from "./Chat/Chat";
+
 const AdminLayout = () => {
   return (
     <div className="">
@@ -48,6 +50,7 @@ const AdminLayout = () => {
           <Route path="business/view/:id" element={<BusinessView />} />
           <Route path="my-profile" element={<Myprofile />} />
           <Route path="my-contribution" element={<Mycontribution />} />
+          <Route path="chat" element={<Chat />} />
           {/* Add more routes as needed */}
         </Routes>
       </main>

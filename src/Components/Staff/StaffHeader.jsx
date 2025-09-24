@@ -18,6 +18,7 @@ import {
   faHandHoldingHeart,
   faChevronDown,
   faMailBulk,
+  faComment,
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../images/logo.png"; // Adjust the path as necessary
 export default function staffHeader() {
@@ -122,6 +123,12 @@ export default function staffHeader() {
       label: "Contribution",
       color: "text-green-600",
     },
+    {
+      path: "/staff/chat",
+      icon: faComment,
+      label: "Chat",
+      color: "text-indigo-600",
+    }
  
   ];
 
