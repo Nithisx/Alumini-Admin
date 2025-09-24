@@ -18,6 +18,7 @@ import {
   faHandHoldingHeart,
   faChevronDown,
   faMailBulk,
+  faComment
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../images/logo.png"; // Adjust the path as necessary
 
@@ -243,6 +244,12 @@ export default function AdminHeader() {
     //   label: "Send a Mail",
     //   color: "text-emerald-600",
     // },
+    {
+      path: "/admin/chat",
+      icon: faComment,
+      label: "Chats",
+      color: "text-blue-600",
+    },
   ];
 
   return (
