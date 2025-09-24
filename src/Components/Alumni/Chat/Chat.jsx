@@ -655,7 +655,7 @@ const Chat = () => {
                   <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MessageSquare className="w-12 h-12 text-green-600" />
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">Xyndrix Chat</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">Alumni Connect</h2>
                   <p className="text-gray-600 mb-2">Send and receive messages in real-time.</p>
                   <p className="text-gray-500 text-sm">Select a conversation to start messaging</p>
                 </div>
