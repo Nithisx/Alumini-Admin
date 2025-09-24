@@ -601,6 +601,40 @@ export default function SingleMember() {
     roles_played = [],
   } = member;
 
+//  const handlechat = () => {
+  
+
+//   navigate(`/admin/chat/${member.id}`);
+
+//   }
+
+  const handlechat = async () => {
+    const token = localStorage.getItem("Token");
+    
+
+    try {
+      const response = await fetch('https://xyndrix.me/chat/rooms/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ target_user_id: member.id })
+      });
+
+      if (response.ok) {
+        
+        
+        navigate(`/admin/chat`);
+      }
+    } catch (error) {
+      console.error('Room creation error:', error);
+    }
+
+   console.log("Room ")
+  };
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-4 sm:py-6 lg:py-8">
       <div className="max-w-full lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -647,6 +681,27 @@ export default function SingleMember() {
                   {is_active ? "Active User" : "Inactive User"}
                 </span>
               </div>
+
+      <button
+      onClick={handlechat}
+      className="ml-60 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+    >
+      <svg
+        className="w-4 h-4 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
+        />
+      </svg>
+      Chat
+    </button>
+
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -798,6 +853,7 @@ export default function SingleMember() {
                   </>
                 )}
               </div>
+              
             </div>
           </div>
 
