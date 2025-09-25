@@ -150,7 +150,7 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
         formDataToSend.append('delete_images', imageId)
       })
 
-      const response = await fetch(`${BASE_URL}/events/${event.id}/`, {
+      const response = await fetch(`${BASE_URL}/events/${event.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Token ${token}`,
