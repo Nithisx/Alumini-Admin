@@ -426,14 +426,14 @@ const BusinessDirectory = () => {
                               {/* Only show edit/delete buttons if user has permission */}
                               {canEditBusiness(business) && (
                                 <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
-                                  <Link
+                                  {/* <Link
                                     to={`/admin/business/edit/${business.id}`}
                                     className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
                                     onClick={(e) => e.stopPropagation()}
                                     title="Edit Business"
                                   >
                                     <Edit className="w-4 h-4" />
-                                  </Link>
+                                  </Link> */}
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
