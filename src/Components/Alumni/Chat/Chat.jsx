@@ -817,7 +817,7 @@ const Chat = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">
+                      {/* <p className="text-sm text-gray-500">
                         {isConnected ? (
                           <span className="flex items-center gap-1">
                             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
@@ -831,7 +831,7 @@ const Chat = () => {
                             Connecting...
                           </span>
                         )}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
