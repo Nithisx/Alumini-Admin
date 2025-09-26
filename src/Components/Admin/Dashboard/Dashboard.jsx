@@ -120,6 +120,40 @@ const HomePage = () => {
         {/* Quick Stats - Now with Navigation */}
         <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 border border-green-100">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+
+
+            {/* Total Members Card */}
+            <div
+              className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              onClick={() => navigate("/admin/members/")}
+            >
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                  ></path>
+                </svg>
+              </div>
+              <p className="text-2xl sm:text-2xl lg:text-3xl font-bold text-cyan-700 mb-1 sm:mb-2">
+                {data.total_users}
+              </p>
+              <p className="text-cyan-600 font-medium text-sm sm:text-base">
+                Total Members
+              </p>
+              {/* <div className="mt-2 text-xs text-cyan-500 opacity-75">
+                Click to view all members
+              </div> */}
+            </div>
+
+            
             {/* Upcoming Events Card */}
             <div
               className="text-center p-4 sm:p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
@@ -146,9 +180,9 @@ const HomePage = () => {
               <p className="text-green-600 font-medium text-sm sm:text-base">
                 Upcoming Events
               </p>
-              <div className="mt-2 text-xs text-green-500 opacity-75">
+              {/* <div className="mt-2 text-xs text-green-500 opacity-75">
                 Click to view all events
-              </div>
+              </div> */}
             </div>
 
             {/* Photo Albums Card */}
@@ -183,12 +217,12 @@ const HomePage = () => {
               <p className="text-emerald-600 font-medium text-sm sm:text-base">
                 Photo Albums
               </p>
-              <div className="mt-2 text-xs text-emerald-500 opacity-75">
+              {/* <div className="mt-2 text-xs text-emerald-500 opacity-75">
                 Click to view gallery
-              </div>
+              </div> */}
             </div>
 
-            {/* New Members Card */}
+            {/* News room Card */}
             <div
               className="text-center p-4 sm:p-6 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
               onClick={() => navigate("/admin/members/")}
@@ -212,43 +246,14 @@ const HomePage = () => {
                 {data.new_users}
               </p>
               <p className="text-teal-600 font-medium text-sm sm:text-base">
-                New Members
+                Total News Rooms
               </p>
-              <div className="mt-2 text-xs text-teal-500 opacity-75">
-                Click to view new members
-              </div>
+              
             </div>
 
-            {/* Total Members Card */}
-            <div
-              className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
-              onClick={() => navigate("/admin/members/")}
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                  ></path>
-                </svg>
-              </div>
-              <p className="text-2xl sm:text-2xl lg:text-3xl font-bold text-cyan-700 mb-1 sm:mb-2">
-                {data.total_users}
-              </p>
-              <p className="text-cyan-600 font-medium text-sm sm:text-base">
-                Total Members
-              </p>
-              <div className="mt-2 text-xs text-cyan-500 opacity-75">
-                Click to view all members
-              </div>
-            </div>
+            
+
+
           </div>
         </div>
 
