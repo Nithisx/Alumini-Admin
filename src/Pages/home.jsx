@@ -181,7 +181,7 @@ export default function Home() {
                   <h3 className="text-4xl font-bold text-gray-900 mb-2">
                     {data.new_users.toLocaleString()}
                   </h3>
-                  <p className="text-gray-600 font-medium">New Members</p>
+                  <p className="text-gray-600 font-medium">Total News Rooms</p>
                 </div>
               </div>
 
