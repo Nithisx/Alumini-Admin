@@ -55,7 +55,8 @@ const COURSES = [
   "Master of Planning",
   "Master of Science",
   "Master of Pharmacy",
-  "Master of Philosophy"
+  "Master of Philosophy",
+  "Ph.D"
 ];
 
 const COURSE_BRANCH_MAPPING = {
@@ -152,6 +153,45 @@ const COURSE_BRANCH_MAPPING = {
     "Physics",
     "General",
   ],
+  "Ph.D": [
+    "General",
+    "English Literature",
+    "Business Process Services",
+    "Professional Accounting",
+    "Computer Application",
+    "Interior Design",
+    "Aeronautical Engineering",
+    "Aerospace Engineering",
+    "Automobile Engineering",
+    "Bio Medical Engineering",
+    "Chemical Engineering",
+    "Civil Engineering",
+    "Computer Science Engineering",
+    "Electrical & Electronics Engineering",
+    "Electronics & Communication Engineering",
+    "Food Technology",
+    "Information Technology",
+    "Mechanical Engineering",
+    "Computer Science Engineering(Cyber)",
+    "Pharmacy",
+    "BioTechnology",
+    "Biochemistry",
+    "Bioinformatics",
+    "Chemistry",
+    "Cognitive Science",
+    "Computer Science",
+    "Computer Technology",
+    "Mathematics",
+    "Microbiology",
+    "Physics",
+    "Artificial Intelligence/Data Science",
+    "Power Electronics and Drives",
+    "Power System Engineering",
+    "Structural Engineering",
+    "Structural Engineering (Part Time)",
+    "VLSI",
+    "Water Resources And Environmental Engineering"
+  ]
 };
 
 const InputField = React.memo(
