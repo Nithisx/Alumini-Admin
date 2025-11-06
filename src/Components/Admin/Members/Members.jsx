@@ -87,8 +87,8 @@ const AutocompleteInput = ({
   const handleChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
-    onChange(value); // Update parent state
-
+    // Remove automatic onChange call - only update suggestions
+    
     if (value.trim() === "") {
       setShowSuggestions(false);
       setFilteredSuggestions([]);
@@ -101,20 +101,34 @@ const AutocompleteInput = ({
     }
   };
 
+  // Handle Enter key press for manual filtering
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onChange(inputValue); // Only update parent state on Enter
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle manual trigger on blur - only if value changed
+  const handleBlur = () => {
+    setTimeout(() => {
+      setShowSuggestions(false);
+      // Update parent state if value is different and not empty
+      if (inputValue !== value) {
+        onChange(inputValue);
+      }
+    }, 200);
+  };
+
   const handleFocus = () => {
     setFilteredSuggestions(options);
     setShowSuggestions(true);
   };
 
-  const handleBlur = () => {
-    setTimeout(() => {
-      setShowSuggestions(false);
-    }, 200);
-  };
-
   const handleSuggestionClick = (suggestion) => {
     setInputValue(suggestion);
-    onChange(suggestion);
+    onChange(suggestion); // This is okay since it's a manual selection
     setShowSuggestions(false);
   };
 
@@ -141,21 +155,25 @@ const AutocompleteInput = ({
     <div className="space-y-2 relative">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
         {label}
+        <span className="text-xs text-gray-500 ml-1">(Press Enter or click away to apply)</span>
       </label>
       <div className="relative">
         <input
           ref={inputRef}
           id={id}
           type="text"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
           placeholder={placeholder}
           value={inputValue}
           onChange={handleChange}
+          onKeyPress={handleKeyPress}
           onFocus={handleFocus}
           onBlur={handleBlur}
           autoComplete="off"
         />
         {icon}
+        
+    
 
         {/* Dropdown Suggestions */}
         {showSuggestions && filteredSuggestions.length > 0 && (
@@ -222,6 +240,7 @@ export default function MembersPage() {
   const [emailFilter, setEmailFilter] = useState(""); // Declare emailFilter state
   const [rollNoFilter, setRollNoFilter] = useState(""); // Declare rollNoFilter state
   const [showFilters, setShowFilters] = useState(false);
+  const [manualSearchTrigger, setManualSearchTrigger] = useState(0); // Trigger for manual search
 
   // Store dropdown options
   const [dropdownFilters, setDropdownFilters] = useState({
@@ -609,7 +628,6 @@ export default function MembersPage() {
     roleFilter,
     cityFilter,
     workedInFilter,
-    searchQuery,
     rolesPlayedFilter,
     genderFilter,
     courseEndYearFilter,
@@ -620,10 +638,12 @@ export default function MembersPage() {
     courseFilter,
     collegeNameFilter,
     currentWorkFilter,
-    chapterFilter, // Add chapter filter to dependencies
-    emailFilter, // Make sure this is here
-    branchFilter, // Add branch filter to dependencies
-    rollNoFilter, // Add roll_no filter to dependencies
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    // Remove searchQuery from automatic dependencies
+    manualSearchTrigger, // Add manual search trigger to dependencies
   ]);
 
   useEffect(() => {
@@ -633,7 +653,6 @@ export default function MembersPage() {
     roleFilter,
     cityFilter,
     workedInFilter,
-    searchQuery,
     rolesPlayedFilter,
     genderFilter,
     courseEndYearFilter,
@@ -649,6 +668,7 @@ export default function MembersPage() {
     branchFilter,
     rollNoFilter,
     currentPage,
+    manualSearchTrigger, // Add manual search trigger to dependencies
   ]);
 
   // Whenever page, filters, or sorting change, fetch data
@@ -660,7 +680,6 @@ export default function MembersPage() {
     roleFilter,
     cityFilter,
     workedInFilter,
-    searchQuery,
     rolesPlayedFilter,
     genderFilter,
     courseEndYearFilter,
@@ -671,12 +690,13 @@ export default function MembersPage() {
     courseFilter,
     collegeNameFilter,
     currentWorkFilter,
-    chapterFilter, // Add chapter filter to dependencies
-    emailFilter, // Make sure this is here
-    branchFilter, // Add branch filter to dependencies
-    rollNoFilter, // Add roll_no filter to dependencies
-    sortField, // Add sorting field to dependencies
-    sortDirection, // Add sorting direction to dependencies
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    sortField,
+    sortDirection,
+    manualSearchTrigger, // Add manual search trigger to dependencies
   ]);
 
   // Handle page change
@@ -717,14 +737,16 @@ export default function MembersPage() {
     setCountryFilter("");
     setStateFilter("");
     setPassedOutYearFilter("");
-    setEmailFilter(""); // Add emailFilter to reset
+    setEmailFilter("");
     setCourseFilter("");
     setCollegeNameFilter("");
     setCurrentWorkFilter("");
-    setChapterFilter(""); // Add chapter filter to reset
-    setBranchFilter(""); // Add branch filter to reset
-    setRollNoFilter(""); // Add roll_no filter to reset
+    setChapterFilter("");
+    setBranchFilter("");
+    setRollNoFilter("");
     setCurrentPage(1);
+    // Reset manual search trigger to ensure search is cleared
+    setManualSearchTrigger(prev => prev + 1);
   };
 
   // Get role badge color
@@ -739,6 +761,20 @@ export default function MembersPage() {
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
+  };
+
+  // Handle Enter key press for search
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Trigger a manual search by incrementing the trigger counter
+      setManualSearchTrigger(prev => prev + 1);
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   return (
@@ -1217,15 +1253,17 @@ export default function MembersPage() {
                     className="block text-sm font-medium text-gray-700"
                   >
                     Search
+                    <span className="text-xs text-gray-500 ml-1">(Press Enter to search instantly)</span>
                   </label>
                   <div className="relative">
                     <input
                       id="search-box"
                       type="text"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
-                      placeholder="Search by name..."
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
+                      placeholder="Search by name, email, or roll no..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearchChange}
+                      onKeyPress={handleSearchKeyPress}
                     />
                     <svg
                       className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
@@ -1240,6 +1278,12 @@ export default function MembersPage() {
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                       />
                     </svg>
+                    {/* Enter key indicator */}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded-md">
+                        ↵
+                      </kbd>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1263,7 +1307,7 @@ export default function MembersPage() {
               courseFilter ||
               collegeNameFilter ||
               currentWorkFilter ||
-              chapterFilter || // Add chapter filter to filtered indicator
+              chapterFilter ||
               genderFilter ||
               courseEndYearFilter ||
               companyFilter ||

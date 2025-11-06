@@ -9,7 +9,7 @@ const TOKEN =
   typeof window !== "undefined" ? localStorage.getItem("Token") : null;
 const BASE_URL = "https://xyndrix.me/api";
 const API_URL = `${BASE_URL}/admin-members/`;
-const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
+const DROPDOWN_FILTERS_URL = `${BASE_URL}/dynamic-dropdown-filters/`;
 
 const placeholder =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
@@ -87,7 +87,7 @@ const AutocompleteInput = ({
   const handleChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
-    onChange(value); // Update parent state
+    // Remove automatic onChange call - only update suggestions
 
     if (value.trim() === "") {
       setShowSuggestions(false);
@@ -101,20 +101,34 @@ const AutocompleteInput = ({
     }
   };
 
+  // Handle Enter key press for manual filtering
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onChange(inputValue); // Only update parent state on Enter
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle manual trigger on blur - only if value changed
+  const handleBlur = () => {
+    setTimeout(() => {
+      setShowSuggestions(false);
+      // Update parent state if value is different and not empty
+      if (inputValue !== value) {
+        onChange(inputValue);
+      }
+    }, 200);
+  };
+
   const handleFocus = () => {
     setFilteredSuggestions(options);
     setShowSuggestions(true);
   };
 
-  const handleBlur = () => {
-    setTimeout(() => {
-      setShowSuggestions(false);
-    }, 200);
-  };
-
   const handleSuggestionClick = (suggestion) => {
     setInputValue(suggestion);
-    onChange(suggestion);
+    onChange(suggestion); // This is okay since it's a manual selection
     setShowSuggestions(false);
   };
 
@@ -141,21 +155,27 @@ const AutocompleteInput = ({
     <div className="space-y-2 relative">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
         {label}
+        <span className="text-xs text-gray-500 ml-1">
+          (Press Enter or click away to apply)
+        </span>
       </label>
       <div className="relative">
         <input
           ref={inputRef}
           id={id}
           type="text"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
           placeholder={placeholder}
           value={inputValue}
           onChange={handleChange}
+          onKeyPress={handleKeyPress}
           onFocus={handleFocus}
           onBlur={handleBlur}
           autoComplete="off"
         />
         {icon}
+
+
 
         {/* Dropdown Suggestions */}
         {showSuggestions && filteredSuggestions.length > 0 && (
@@ -202,7 +222,6 @@ export default function MembersPage() {
   const [filteredTotal, setFilteredTotal] = useState(0);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
-
   const [roleFilter, setRoleFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [workedInFilter, setWorkedInFilter] = useState("");
@@ -222,6 +241,8 @@ export default function MembersPage() {
   const [emailFilter, setEmailFilter] = useState(""); // Declare emailFilter state
   const [rollNoFilter, setRollNoFilter] = useState(""); // Declare rollNoFilter state
   const [showFilters, setShowFilters] = useState(false);
+  // Add a new state to track manual search triggers
+  const [manualSearchTrigger, setManualSearchTrigger] = useState(0);
 
   // Store dropdown options
   const [dropdownFilters, setDropdownFilters] = useState({
@@ -257,14 +278,47 @@ export default function MembersPage() {
   const fetchDropdownFilters = async () => {
     setFiltersLoading(true);
     try {
-      const response = await axios.get(DROPDOWN_FILTERS_URL, {
+      const params = new URLSearchParams();
+
+      // Add ALL current filters to the request
+      if (roleFilter) params.append("role", roleFilter);
+      if (cityFilter) params.append("city", cityFilter);
+      if (workedInFilter) params.append("worked_in", workedInFilter);
+      if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
+      if (searchQuery) params.append("search", searchQuery);
+      if (genderFilter) params.append("gender", genderFilter);
+      if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
+      if (companyFilter) params.append("company", companyFilter);
+      if (countryFilter) params.append("country", countryFilter);
+      if (stateFilter) params.append("state", stateFilter);
+      if (passedOutYearFilter) params.append("passed_out_year", passedOutYearFilter);
+      if (courseFilter) params.append("course", courseFilter);
+      if (collegeNameFilter) params.append("college_name", collegeNameFilter);
+      if (currentWorkFilter) params.append("current_work", currentWorkFilter);
+      if (chapterFilter) params.append("current_location", chapterFilter);
+      if (emailFilter) params.append("email", emailFilter);
+      if (branchFilter) params.append("branch", branchFilter);
+      if (rollNoFilter) params.append("roll_no", rollNoFilter);
+
+      // Build URL with or without parameters
+      const url = params.toString()
+        ? `${DROPDOWN_FILTERS_URL}?${params.toString()}`
+        : DROPDOWN_FILTERS_URL;
+
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Token ${TOKEN}`,
           "Content-Type": "application/json",
         },
       });
 
-      setDropdownFilters(response.data);
+      // Update to handle the new response structure with filters_data wrapper
+      setDropdownFilters(response.data.filters_data);
+
+      // Optional: You can also store metadata for display
+      // setFilteredCount(response.data.filtered_count);
+      // setTotalCount(response.data.total_count);
+
       setFiltersLoading(false);
     } catch (error) {
       console.error("Error fetching dropdown filters:", error);
@@ -317,23 +371,6 @@ export default function MembersPage() {
       setFilteredTotal(count);
       setTotalPages(Math.ceil(count / pageSize));
 
-      // Extract unique current_location values for chapter filter
-      if (results && results.length > 0) {
-        const currentLocations = [
-          ...new Set(
-            results
-              .map((member) => member.current_location)
-              .filter((location) => location && location.trim() !== "")
-          ),
-        ].sort();
-
-        // Update dropdown filters with current_location options only
-        setDropdownFilters((prev) => ({
-          ...prev,
-          current_location: currentLocations,
-        }));
-      }
-
       setLoading(false);
     } catch (error) {
       console.error("Error fetching members:", error);
@@ -341,44 +378,29 @@ export default function MembersPage() {
     }
   };
 
-  // Fetch all members for chapter filter options (without pagination)
-  const fetchChapterOptions = async () => {
-    try {
-      // Fetch a larger sample to get more chapter options
-      const response = await axios.get(`${API_URL}?page_size=1000`, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const { results } = response.data;
-
-      if (results && results.length > 0) {
-        const currentLocations = [
-          ...new Set(
-            results
-              .map((member) => member.current_location)
-              .filter((location) => location && location.trim() !== "")
-          ),
-        ].sort();
-
-        // Update dropdown filters with comprehensive current_location options only
-        setDropdownFilters((prev) => ({
-          ...prev,
-          current_location: currentLocations,
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching chapter options:", error);
-    }
-  };
-
-  // Fetch dropdown options on component mount
+  // Fetch dropdown options when filters change
   useEffect(() => {
     fetchDropdownFilters();
-    fetchChapterOptions(); // Fetch chapter options separately
-  }, []);
+  }, [
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    manualSearchTrigger, // Keep manual search trigger
+  ]);
 
   const handleMemberSelect = (memberId) => {
     const newSelected = new Set(selectedMembers);
@@ -609,7 +631,6 @@ export default function MembersPage() {
     roleFilter,
     cityFilter,
     workedInFilter,
-    searchQuery,
     rolesPlayedFilter,
     genderFilter,
     courseEndYearFilter,
@@ -620,12 +641,103 @@ export default function MembersPage() {
     courseFilter,
     collegeNameFilter,
     currentWorkFilter,
-    chapterFilter, // Add chapter filter to dependencies
-    emailFilter, // Make sure this is here
-    branchFilter, // Add branch filter to dependencies
-    rollNoFilter, // Add roll_no filter to dependencies
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
   ]);
 
+  // Handle Enter key press for search
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Trigger a manual search by incrementing the trigger counter
+      setManualSearchTrigger(prev => prev + 1);
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Update the useEffect for fetching members
+  useEffect(() => {
+    fetchMembers();
+  }, [
+    currentPage,
+    pageSize,
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    sortField,
+    sortDirection,
+    manualSearchTrigger, // Only trigger on manual search
+  ]);
+
+  // Update the useEffect for dropdown filters to include manual search trigger
+  useEffect(() => {
+    fetchDropdownFilters();
+  }, [
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    manualSearchTrigger, // Add manual search trigger to dependencies
+  ]);
+
+  // Update the useEffect for resetting page to include manual search trigger
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    manualSearchTrigger, // Add manual search trigger to dependencies
+  ]);
+
+  // Update the useEffect for clearing selected members to include manual search trigger
   useEffect(() => {
     setSelectedMembers(new Set());
     setSelectAll(false);
@@ -633,7 +745,6 @@ export default function MembersPage() {
     roleFilter,
     cityFilter,
     workedInFilter,
-    searchQuery,
     rolesPlayedFilter,
     genderFilter,
     courseEndYearFilter,
@@ -649,34 +760,7 @@ export default function MembersPage() {
     branchFilter,
     rollNoFilter,
     currentPage,
-  ]);
-
-  // Whenever page, filters, or sorting change, fetch data
-  useEffect(() => {
-    fetchMembers();
-  }, [
-    currentPage,
-    pageSize,
-    roleFilter,
-    cityFilter,
-    workedInFilter,
-    searchQuery,
-    rolesPlayedFilter,
-    genderFilter,
-    courseEndYearFilter,
-    companyFilter,
-    countryFilter,
-    stateFilter,
-    passedOutYearFilter,
-    courseFilter,
-    collegeNameFilter,
-    currentWorkFilter,
-    chapterFilter, // Add chapter filter to dependencies
-    emailFilter, // Make sure this is here
-    branchFilter, // Add branch filter to dependencies
-    rollNoFilter, // Add roll_no filter to dependencies
-    sortField, // Add sorting field to dependencies
-    sortDirection, // Add sorting direction to dependencies
+    manualSearchTrigger, // Add manual search trigger to dependencies
   ]);
 
   // Handle page change
@@ -717,14 +801,16 @@ export default function MembersPage() {
     setCountryFilter("");
     setStateFilter("");
     setPassedOutYearFilter("");
-    setEmailFilter(""); // Add emailFilter to reset
+    setEmailFilter("");
     setCourseFilter("");
     setCollegeNameFilter("");
     setCurrentWorkFilter("");
-    setChapterFilter(""); // Add chapter filter to reset
-    setBranchFilter(""); // Add branch filter to reset
-    setRollNoFilter(""); // Add roll_no filter to reset
+    setChapterFilter("");
+    setBranchFilter("");
+    setRollNoFilter("");
     setCurrentPage(1);
+    // Reset manual search trigger to ensure search is cleared
+    setManualSearchTrigger(prev => prev + 1);
   };
 
   // Get role badge color
@@ -946,7 +1032,6 @@ export default function MembersPage() {
                   }
                 />
 
-
                 {/* City Filter */}
                 <AutocompleteInput
                   id="city-filter"
@@ -1108,22 +1193,26 @@ export default function MembersPage() {
                   }
                 />
 
-                {/* Search - spans full width on mobile */}
+                {/* Updated Search Input with Enter key functionality */}
                 <div className="sm:col-span-2 lg:col-span-1 space-y-2">
                   <label
                     htmlFor="search-box"
                     className="block text-sm font-medium text-gray-700"
                   >
                     Search
+                    <span className="text-xs text-gray-500 ml-1">
+                      (Press Enter to search instantly)
+                    </span>
                   </label>
                   <div className="relative">
                     <input
                       id="search-box"
                       type="text"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
-                      placeholder="Search by name..."
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
+                      placeholder="Search by name, email, or roll no..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearchChange}
+                      onKeyPress={handleSearchKeyPress}
                     />
                     <svg
                       className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
@@ -1138,6 +1227,12 @@ export default function MembersPage() {
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                       />
                     </svg>
+                    {/* Enter key indicator */}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded-md">
+                        ↵
+                      </kbd>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1161,7 +1256,7 @@ export default function MembersPage() {
               courseFilter ||
               collegeNameFilter ||
               currentWorkFilter ||
-              chapterFilter || // Add chapter filter to filtered indicator
+              chapterFilter ||
               genderFilter ||
               courseEndYearFilter ||
               companyFilter ||
