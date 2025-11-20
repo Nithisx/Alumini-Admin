@@ -276,14 +276,43 @@ export default function MembersPage() {
   const fetchDropdownFilters = async () => {
     setFiltersLoading(true);
     try {
-      const response = await axios.get(DROPDOWN_FILTERS_URL, {
+      const params = new URLSearchParams();
+
+      if (roleFilter) params.append("role", roleFilter);
+      if (cityFilter) params.append("city", cityFilter);
+      if (workedInFilter) params.append("worked_in", workedInFilter);
+      if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
+      if (searchQuery) params.append("search", searchQuery);
+      if (genderFilter) params.append("gender", genderFilter);
+      if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
+      if (companyFilter) params.append("company", companyFilter);
+      if (countryFilter) params.append("country", countryFilter);
+      if (stateFilter) params.append("state", stateFilter);
+      if (passedOutYearFilter) params.append("passed_out_year", passedOutYearFilter);
+      if (courseFilter) params.append("course", courseFilter);
+      if (collegeNameFilter) params.append("college_name", collegeNameFilter);
+      if (currentWorkFilter) params.append("current_work", currentWorkFilter);
+      if (chapterFilter) params.append("current_location", chapterFilter);
+      if (emailFilter) params.append("email", emailFilter);
+      if (branchFilter) params.append("branch", branchFilter);
+      if (rollNoFilter) params.append("roll_no", rollNoFilter);
+
+      const url = params.toString()
+        ? `${DROPDOWN_FILTERS_URL}?${params.toString()}`
+        : DROPDOWN_FILTERS_URL;
+
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Token ${TOKEN}`,
           "Content-Type": "application/json",
         },
       });
 
-      setDropdownFilters(response.data);
+      const filtersData = response.data?.filters_data ?? response.data ?? {};
+      setDropdownFilters((prev) => ({
+        ...prev,
+        ...filtersData,
+      }));
       setFiltersLoading(false);
     } catch (error) {
       console.error("Error fetching dropdown filters:", error);
@@ -336,23 +365,6 @@ export default function MembersPage() {
       setFilteredTotal(count);
       setTotalPages(Math.ceil(count / pageSize));
 
-      // Extract unique current_location values for chapter filter
-      if (results && results.length > 0) {
-        const currentLocations = [
-          ...new Set(
-            results
-              .map((member) => member.current_location)
-              .filter((location) => location && location.trim() !== "")
-          ),
-        ].sort();
-        
-        // Update dropdown filters with current_location options only
-        setDropdownFilters((prev) => ({
-          ...prev,
-          current_location: currentLocations
-        }));
-      }
-
       setLoading(false);
     } catch (error) {
       console.error("Error fetching members:", error);
@@ -360,44 +372,28 @@ export default function MembersPage() {
     }
   };
 
-  // Fetch all members for chapter filter options (without pagination)
-  const fetchChapterOptions = async () => {
-    try {
-      // Fetch a larger sample to get more chapter options
-      const response = await axios.get(`${API_URL}?page_size=1000`, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const { results } = response.data;
-
-      if (results && results.length > 0) {
-        const currentLocations = [
-          ...new Set(
-            results
-              .map((member) => member.current_location)
-              .filter((location) => location && location.trim() !== "")
-          ),
-        ].sort();
-        
-        // Update dropdown filters with comprehensive current_location options only
-        setDropdownFilters((prev) => ({
-          ...prev,
-          current_location: currentLocations
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching chapter options:", error);
-    }
-  };
-
-  // Fetch dropdown options on component mount
   useEffect(() => {
     fetchDropdownFilters();
-    fetchChapterOptions(); // Fetch chapter options separately
-  }, []);
+  }, [
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    manualSearchTrigger,
+  ]);
 
   const handleMemberSelect = (memberId) => {
     const newSelected = new Set(selectedMembers);
