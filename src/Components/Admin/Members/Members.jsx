@@ -9,7 +9,7 @@ const TOKEN =
   typeof window !== "undefined" ? localStorage.getItem("Token") : null;
 const BASE_URL = "https://xyndrix.me/api";
 const API_URL = `${BASE_URL}/admin-members/`;
-const DROPDOWN_FILTERS_URL = `${BASE_URL}/dropdown-filters/`;
+const DROPDOWN_FILTERS_URL = `${BASE_URL}/dynamic-dropdown-filters/`;
 
 const placeholder =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
