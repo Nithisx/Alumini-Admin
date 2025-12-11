@@ -88,7 +88,7 @@ const AutocompleteInput = ({
     const value = e.target.value;
     setInputValue(value);
     // Remove automatic onChange call - only update suggestions
-    
+
     if (value.trim() === "") {
       setShowSuggestions(false);
       setFilteredSuggestions([]);
@@ -103,7 +103,7 @@ const AutocompleteInput = ({
 
   // Handle Enter key press for manual filtering
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       onChange(inputValue); // Only update parent state on Enter
       setShowSuggestions(false);
@@ -155,7 +155,9 @@ const AutocompleteInput = ({
     <div className="space-y-2 relative">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
         {label}
-        <span className="text-xs text-gray-500 ml-1">(Press Enter or click away to apply)</span>
+        <span className="text-xs text-gray-500 ml-1">
+          (Press Enter or click away to apply)
+        </span>
       </label>
       <div className="relative">
         <input
@@ -172,8 +174,6 @@ const AutocompleteInput = ({
           autoComplete="off"
         />
         {icon}
-        
-    
 
         {/* Dropdown Suggestions */}
         {showSuggestions && filteredSuggestions.length > 0 && (
@@ -267,10 +267,10 @@ export default function MembersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // Sorting states
-  const [sortField, setSortField] = useState('id');
-  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [sortField, setSortField] = useState("id");
+  const [sortDirection, setSortDirection] = useState("asc"); // 'asc' or 'desc'
 
   // Fetch dropdown filter options
   const fetchDropdownFilters = async () => {
@@ -284,11 +284,13 @@ export default function MembersPage() {
       if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
       if (searchQuery) params.append("search", searchQuery);
       if (genderFilter) params.append("gender", genderFilter);
-      if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
+      if (courseEndYearFilter)
+        params.append("course_end_year", courseEndYearFilter);
       if (companyFilter) params.append("company", companyFilter);
       if (countryFilter) params.append("country", countryFilter);
       if (stateFilter) params.append("state", stateFilter);
-      if (passedOutYearFilter) params.append("passed_out_year", passedOutYearFilter);
+      if (passedOutYearFilter)
+        params.append("passed_out_year", passedOutYearFilter);
       if (courseFilter) params.append("course", courseFilter);
       if (collegeNameFilter) params.append("college_name", collegeNameFilter);
       if (currentWorkFilter) params.append("current_work", currentWorkFilter);
@@ -328,7 +330,7 @@ export default function MembersPage() {
     });
 
     // Add sorting parameter
-    const orderingValue = sortDirection === 'asc' ? `-${sortField}` : sortField;
+    const orderingValue = sortDirection === "asc" ? `-${sortField}` : sortField;
     params.append("ordering", orderingValue);
 
     if (roleFilter) params.append("role", roleFilter);
@@ -705,18 +707,18 @@ export default function MembersPage() {
     setPageSize(size);
     setCurrentPage(1);
   };
-  
+
   // Handle sorting changes
   const handleSortChange = (field) => {
     // If clicking the same field, toggle direction
     if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       // New field, default to ascending
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
-    
+
     // Reset to first page when sorting changes
     setCurrentPage(1);
   };
@@ -742,7 +744,7 @@ export default function MembersPage() {
     setRollNoFilter("");
     setCurrentPage(1);
     // Reset manual search trigger to ensure search is cleared
-    setManualSearchTrigger(prev => prev + 1);
+    setManualSearchTrigger((prev) => prev + 1);
   };
 
   // Get role badge color
@@ -761,10 +763,10 @@ export default function MembersPage() {
 
   // Handle Enter key press for search
   const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       // Trigger a manual search by incrementing the trigger counter
-      setManualSearchTrigger(prev => prev + 1);
+      setManualSearchTrigger((prev) => prev + 1);
     }
   };
 
@@ -1080,7 +1082,6 @@ export default function MembersPage() {
                   }
                 />
 
-               
                 {/* City Filter */}
                 <AutocompleteInput
                   id="city-filter"
@@ -1249,7 +1250,9 @@ export default function MembersPage() {
                     className="block text-sm font-medium text-gray-700"
                   >
                     Search
-                    <span className="text-xs text-gray-500 ml-1">(Press Enter to search instantly)</span>
+                    <span className="text-xs text-gray-500 ml-1">
+                      (Press Enter to search instantly)
+                    </span>
                   </label>
                   <div className="relative">
                     <input
@@ -1343,7 +1346,7 @@ export default function MembersPage() {
                   "No members found"
                 )}
               </h2>
-              
+
               {/* Sorting Controls */}
               <div className="flex items-center gap-2">
                 {/* <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">
@@ -1364,19 +1367,28 @@ export default function MembersPage() {
                   <option value="role">Role</option>
                   <option value="city">City</option>
                 </select> */}
-                
-                <button 
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+
+                <button
+                  onClick={() =>
+                    setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  }
                   className="flex items-center gap-1 text-sm border border-gray-300 rounded-md px-2 py-1 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
-                  <svg 
-                    className={`w-4 h-4 ${sortDirection === 'asc' ? 'rotate-0' : 'rotate-180'} transition-transform`}
-                    fill="none" 
-                    stroke="currentColor" 
+                  {sortDirection === "asc" ? "Ascending" : "Descending"}
+                  <svg
+                    className={`w-4 h-4 ${
+                      sortDirection === "asc" ? "rotate-0" : "rotate-180"
+                    } transition-transform`}
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1467,56 +1479,6 @@ export default function MembersPage() {
                         </h3>
 
                         <div className="space-y-1.5 sm:space-y-2">
-                          {/* Add Chapter/Current Location display */}
-                          {member.current_location && (
-                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                              <svg
-                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                />
-                              </svg>
-                              <span
-                                className="truncate"
-                                title={member.current_location}
-                              >
-                                {member.current_location}
-                              </span>
-                            </div>
-                          )}
-
-                          {member.city && (
-                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                              <svg
-                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                              </svg>
-                              <span className="truncate">{member.city}</span>
-                            </div>
-                          )}
-
                           {member.worked_in && (
                             <div className="flex items-center text-xs sm:text-sm text-gray-600">
                               <svg
