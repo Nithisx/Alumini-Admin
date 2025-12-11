@@ -33,6 +33,7 @@ const COLLEGE_NAMES = [
   "FOP-Faculty of Pharmacy",
   "KAHE",
 ];
+const STAFF_ONLY_COLLEGE = "KAHE";
 
 const COURSES = [
   "Bachelor of Architecture",
@@ -284,11 +285,20 @@ const Signup = () => {
     return COURSE_BRANCH_MAPPING[formData.course] || [];
   }, [formData.course]);
 
+  const availableColleges = useMemo(() => {
+    return formData.role === "Staff"
+      ? COLLEGE_NAMES
+      : COLLEGE_NAMES.filter((college) => college !== STAFF_ONLY_COLLEGE);
+  }, [formData.role]);
+
   const updateField = useCallback((field, value) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
       if (field === "course") {
         newData.branch = "";
+      }
+      if (field === "role" && value !== "Staff" && prev.college_name === STAFF_ONLY_COLLEGE) {
+        newData.college_name = "";
       }
       return newData;
     });
@@ -313,6 +323,10 @@ const Signup = () => {
         errors[field] = "This field is required";
       }
     });
+
+    if (formData.role !== "Staff" && formData.college_name === STAFF_ONLY_COLLEGE) {
+      errors.college_name = "Only staff can select this college";
+    }
 
     if (formData.role !== "Staff" && !formData.course?.trim()) {
       errors.course = "This field is required";
@@ -743,7 +757,7 @@ const Signup = () => {
                   />
                   <SelectField
                     label="Faculty"
-                    options={COLLEGE_NAMES}
+                    options={availableColleges}
                     value={formData.college_name}
                     onChange={(v) => updateField("college_name", v)}
                     error={fieldErrors.college_name}
