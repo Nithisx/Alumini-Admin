@@ -25,6 +25,7 @@ export default function RegisterRequest() {
   const [message, setMessage] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
+  const [selectedIds, setSelectedIds] = useState({});
   const [loading, setLoading] = useState(true); // Add loading state
   const [error, setError] = useState(null); // Add error state
   const API_URL = "https://xyndrix.me/api/Approve-signup/";
@@ -85,11 +86,64 @@ export default function RegisterRequest() {
       });
   }, []);
 
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (!requests || requests.length === 0) {
+        return {};
+      }
+
+      const next = {};
+      requests.forEach((req) => {
+        if (prev[req.id]) {
+          next[req.id] = true;
+        }
+      });
+      return next;
+    });
+  }, [requests]);
+
   const toggleRowExpansion = (userId) => {
     setExpandedRows((prev) => ({
       ...prev,
       [userId]: !prev[userId],
     }));
+  };
+
+  const toggleSelectUser = (userId) => {
+    setSelectedIds((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds({});
+  };
+
+  const selectedUserIds = Array.isArray(requests)
+    ? requests.filter((req) => selectedIds[req.id]).map((req) => req.id)
+    : [];
+
+  const allSelected =
+    Array.isArray(requests) &&
+    requests.length > 0 &&
+    requests.every((req) => selectedIds[req.id]);
+
+  const toggleSelectAll = () => {
+    if (!Array.isArray(requests) || requests.length === 0) {
+      return;
+    }
+
+    if (allSelected) {
+      clearSelection();
+      return;
+    }
+
+    const next = {};
+    requests.forEach((req) => {
+      next[req.id] = true;
+    });
+    setSelectedIds(next);
   };
 
   const handleAccept = async (id, email) => {
@@ -130,6 +184,87 @@ export default function RegisterRequest() {
       console.error("Error accepting request:", error);
       showMessage({
         text: "Failed to accept request. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleBulkAccept = async () => {
+    if (!Array.isArray(requests) || selectedUserIds.length === 0) {
+      showMessage({
+        text: "Select at least one user to approve.",
+        type: "error",
+      });
+      return;
+    }
+
+    setProcessing(true);
+    const token = localStorage.getItem('Token');
+
+    if (!token) {
+      showMessage({
+        text: "Authentication required. Please log in.",
+        type: "error",
+      });
+      setProcessing(false);
+      return;
+    }
+
+    const selectedRequests = requests.filter((req) => selectedIds[req.id]);
+
+    try {
+      let approvedCount = 0;
+      let failedCount = 0;
+
+      for (const req of selectedRequests) {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Token ${token}`,
+          },
+          body: JSON.stringify({ email: req.email }),
+        });
+
+        if (response.status === 401) {
+          showMessage({
+            text: "Authentication failed. Please log in again.",
+            type: "error",
+          });
+          return;
+        }
+
+        if (response.ok) {
+          approvedCount += 1;
+        } else {
+          failedCount += 1;
+        }
+      }
+
+      if (approvedCount > 0) {
+        showMessage({
+          text: `${approvedCount} request${approvedCount > 1 ? "s" : ""} approved successfully!`,
+          type: "success",
+        });
+      }
+
+      if (failedCount > 0) {
+        showMessage({
+          text: `${failedCount} request${failedCount > 1 ? "s" : ""} failed to approve. Please try again.`,
+          type: "error",
+        });
+      }
+
+      setRequests((prev) =>
+        prev.filter((req) => !selectedIds[req.id])
+      );
+      clearSelection();
+    } catch (error) {
+      console.error("Error approving requests:", error);
+      showMessage({
+        text: "Failed to approve selected requests. Please try again.",
         type: "error",
       });
     } finally {
@@ -188,6 +323,17 @@ export default function RegisterRequest() {
       <div className="p-4 ">
         <div className="flex  items-center justify-between mb-3">
           <div className="flex items-center">
+            <label
+              className="mr-3 flex items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                checked={!!selectedIds[req.id]}
+                onChange={() => toggleSelectUser(req.id)}
+                className="h-4 w-4 rounded border-green-300 text-green-600 focus:ring-green-500"
+              />
+            </label>
             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 flex items-center justify-center mr-3">
               <FontAwesomeIcon icon={faUser} className="text-white text-sm" />
             </div>
@@ -582,6 +728,22 @@ export default function RegisterRequest() {
               {/* Mobile View */}
               <div className="block lg:hidden">
                 <div className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <button
+                      onClick={toggleSelectAll}
+                      disabled={processing || !requests || requests.length === 0}
+                      className="px-4 py-2 rounded-lg border border-green-200 text-green-700 bg-green-50 hover:bg-green-100 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {allSelected ? "Clear selection" : "Select all"}
+                    </button>
+                    <button
+                      onClick={handleBulkAccept}
+                      disabled={processing || selectedUserIds.length === 0}
+                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Approve selected ({selectedUserIds.length})
+                    </button>
+                  </div>
                   {!requests || requests.length === 0 ? (
                     <div className="flex flex-col items-center justify-center text-gray-500 py-12">
                       <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-full p-4 mb-3">
@@ -607,9 +769,42 @@ export default function RegisterRequest() {
               {/* Desktop View */}
               <div className="hidden lg:block overflow-x-auto">
                 <div className="min-w-[1000px]">
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-green-100 bg-white">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={toggleSelectAll}
+                        disabled={processing || !requests || requests.length === 0}
+                        className="px-4 py-2 rounded-lg border border-green-200 text-green-700 bg-green-50 hover:bg-green-100 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {allSelected ? "Clear selection" : "Select all"}
+                      </button>
+                      <span className="text-sm text-gray-600">
+                        Selected: <span className="font-semibold text-green-700">{selectedUserIds.length}</span>
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleBulkAccept}
+                      disabled={processing || selectedUserIds.length === 0}
+                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Approve selected ({selectedUserIds.length})
+                    </button>
+                  </div>
                   <table className="w-full table-auto divide-y divide-green-100">
                     <thead className="bg-gradient-to-r from-green-50 to-emerald-50">
                       <tr>
+                        <th className="px-4 xl:px-6 py-4 xl:py-5 text-left text-xs xl:text-sm font-bold text-green-700 uppercase tracking-wider whitespace-nowrap">
+                          <label className="flex items-center gap-2 text-green-700">
+                            <input
+                              type="checkbox"
+                              checked={allSelected}
+                              onChange={toggleSelectAll}
+                              disabled={processing || !requests || requests.length === 0}
+                              className="h-4 w-4 rounded border-green-300 text-green-600 focus:ring-green-500"
+                            />
+                            Select
+                          </label>
+                        </th>
                         <th className="px-4 xl:px-6 py-4 xl:py-5 text-left text-xs xl:text-sm font-bold text-green-700 uppercase tracking-wider whitespace-nowrap">
                           <span className="flex items-center gap-2">
                             <FontAwesomeIcon
@@ -665,6 +860,14 @@ export default function RegisterRequest() {
                               className="table-row-animate card-hover border-l-4 border-l-transparent hover:border-l-green-400"
                               onClick={() => toggleRowExpansion(req.id)}
                             >
+                              <td className="px-6 py-6" onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!selectedIds[req.id]}
+                                  onChange={() => toggleSelectUser(req.id)}
+                                  className="h-4 w-4 rounded border-green-300 text-green-600 focus:ring-green-500"
+                                />
+                              </td>
                               <td className="px-6 py-6">
                                 <div className="flex items-center">
                                   <div className="flex-shrink-0 h-12 w-12">
@@ -767,7 +970,7 @@ export default function RegisterRequest() {
                             {/* Dropdown Content */}
                             {expandedRows[req.id] && (
                               <tr>
-                                <td colSpan="5" className="px-0 py-0">
+                                <td colSpan="6" className="px-0 py-0">
                                   <div className="dropdown-content bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-100">
                                     <div className="px-8 py-6">
                                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1032,7 +1235,7 @@ export default function RegisterRequest() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="5" className="px-6 py-16 text-center">
+                          <td colSpan="6" className="px-6 py-16 text-center">
                             <div className="flex flex-col items-center justify-center text-gray-500">
                               <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-full p-6 mb-4">
                                 <FontAwesomeIcon
