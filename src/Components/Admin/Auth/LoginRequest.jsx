@@ -28,7 +28,7 @@ export default function RegisterRequest() {
   const [selectedIds, setSelectedIds] = useState({});
   const [loading, setLoading] = useState(true); // Add loading state
   const [error, setError] = useState(null); // Add error state
-  const API_URL = "https://xyndrix.me/api/Approve-signup/";
+  const API_URL = "http://127.0.0.1:8000/api/Approve-signup/";
 
   // Helper function to show message and auto-clear after 3 seconds
   const showMessage = (msg) => {
@@ -39,13 +39,13 @@ export default function RegisterRequest() {
   useEffect(() => {
     setLoading(true); // Set loading to true when starting to fetch
     const token = localStorage.getItem('Token');
-    
+
     if (!token) {
       setError("Authentication required. Please log in to view registration requests.");
       setLoading(false);
       return;
     }
-    
+
     fetch(API_URL, {
       headers: {
         'Authorization': `Token ${token}`,
@@ -149,7 +149,7 @@ export default function RegisterRequest() {
   const handleAccept = async (id, email) => {
     setProcessing(true);
     const token = localStorage.getItem('Token');
-    
+
     if (!token) {
       showMessage({
         text: "Authentication required. Please log in.",
@@ -158,7 +158,7 @@ export default function RegisterRequest() {
       setProcessing(false);
       return;
     }
-    
+
     try {
       const response = await fetch(API_URL, {
         method: "POST",
@@ -168,7 +168,7 @@ export default function RegisterRequest() {
         },
         body: JSON.stringify({ email }),
       });
-      
+
       if (response.status === 401) {
         showMessage({
           text: "Authentication failed. Please log in again.",
@@ -176,7 +176,7 @@ export default function RegisterRequest() {
         });
         return;
       }
-      
+
       showMessage({ text: "Request accepted successfully!", type: "success" });
       // Filter out the accepted request
       setRequests((prev) => prev.filter((req) => req.id !== id));
@@ -275,7 +275,7 @@ export default function RegisterRequest() {
   const handleDecline = async (id, email) => {
     setProcessing(true);
     const token = localStorage.getItem('Token');
-    
+
     if (!token) {
       showMessage({
         text: "Authentication required. Please log in.",
@@ -284,7 +284,7 @@ export default function RegisterRequest() {
       setProcessing(false);
       return;
     }
-    
+
     try {
       const response = await fetch(API_URL, {
         method: "DELETE",
@@ -294,7 +294,7 @@ export default function RegisterRequest() {
         },
         body: JSON.stringify({ email }),
       });
-      
+
       if (response.status === 401) {
         showMessage({
           text: "Authentication failed. Please log in again.",
@@ -302,7 +302,7 @@ export default function RegisterRequest() {
         });
         return;
       }
-      
+
       showMessage({ text: "Request rejected successfully!", type: "error" });
       // Filter out the declined request
       setRequests((prev) => prev.filter((req) => req.id !== id));
@@ -942,9 +942,8 @@ export default function RegisterRequest() {
                                   >
                                     <FontAwesomeIcon
                                       icon={processing ? faSpinner : faCheck}
-                                      className={`mr-2 ${
-                                        processing ? "animate-spin" : ""
-                                      }`}
+                                      className={`mr-2 ${processing ? "animate-spin" : ""
+                                        }`}
                                     />
                                     Accept
                                   </button>
@@ -957,9 +956,8 @@ export default function RegisterRequest() {
                                   >
                                     <FontAwesomeIcon
                                       icon={processing ? faSpinner : faTimes}
-                                      className={`mr-2 ${
-                                        processing ? "animate-spin" : ""
-                                      }`}
+                                      className={`mr-2 ${processing ? "animate-spin" : ""
+                                        }`}
                                     />
                                     Decline
                                   </button>
@@ -1267,11 +1265,10 @@ export default function RegisterRequest() {
       {message && (
         <div
           style={{ animation: "slideIn 0.5s ease-out" }}
-          className={`fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 sm:max-w-md px-4 sm:px-8 py-3 sm:py-4 text-white rounded-xl shadow-2xl flex items-center font-semibold text-sm sm:text-lg ${
-            message.type === "success"
-              ? "bg-gradient-to-r from-green-400 to-emerald-400"
-              : "bg-gradient-to-r from-pink-400 to-red-400"
-          }`}
+          className={`fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 sm:max-w-md px-4 sm:px-8 py-3 sm:py-4 text-white rounded-xl shadow-2xl flex items-center font-semibold text-sm sm:text-lg ${message.type === "success"
+            ? "bg-gradient-to-r from-green-400 to-emerald-400"
+            : "bg-gradient-to-r from-pink-400 to-red-400"
+            }`}
         >
           <FontAwesomeIcon
             icon={message.type === "success" ? faCheck : faExclamationTriangle}

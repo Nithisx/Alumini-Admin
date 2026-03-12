@@ -11,7 +11,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newsSlide, setNewsSlide] = useState(0);
-  const BASE_URL = "https://xyndrix.me/api";
+  const BASE_URL = "http://127.0.0.1:8000/api";
 
   // Retrieve token directly from localStorage
   const token = localStorage.getItem("Token");
@@ -122,7 +122,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
 
 
-             {/* Total Members Card */}
+            {/* Total Members Card */}
             <div
               className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
               onClick={() => navigate("/alumni/members/")}
@@ -148,7 +148,7 @@ const HomePage = () => {
               <p className="text-cyan-600 font-medium text-sm sm:text-base">
                 Total Members
               </p>
-             
+
             </div>
 
 
@@ -179,7 +179,7 @@ const HomePage = () => {
               <p className="text-green-600 font-medium text-sm sm:text-base">
                 Upcoming Events
               </p>
-   
+
             </div>
 
             {/* Photo Albums Card */}
@@ -214,7 +214,7 @@ const HomePage = () => {
               <p className="text-emerald-600 font-medium text-sm sm:text-base">
                 Photo Albums
               </p>
-    
+
             </div>
 
             {/* News room Card */}
@@ -243,11 +243,11 @@ const HomePage = () => {
               <p className="text-teal-600 font-medium text-sm sm:text-base">
                 Total News Rooms
               </p>
-            
-              
+
+
             </div>
 
-           
+
 
           </div>
         </div>
@@ -292,13 +292,12 @@ const HomePage = () => {
                     {data.featured_news.map((news, index) => (
                       <div
                         key={news.id}
-                        className={`transition-transform duration-700 ease-in-out ${
-                          index === newsSlide
-                            ? "translate-x-0"
-                            : index < newsSlide
+                        className={`transition-transform duration-700 ease-in-out ${index === newsSlide
+                          ? "translate-x-0"
+                          : index < newsSlide
                             ? "-translate-x-full"
                             : "translate-x-full"
-                        }`}
+                          }`}
                         style={{
                           display: index === newsSlide ? "block" : "none",
                         }}
@@ -306,7 +305,7 @@ const HomePage = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px] sm:min-h-[500px]">
                           <div className="relative order-1 lg:order-1">
                             <img
-                              src={`https://xyndrix.me/api${news.thumbnail}`}
+                              src={`http://127.0.0.1:8000/api${news.thumbnail}`}
                               alt={news.title}
                               className="w-full h-64 sm:h-full object-cover"
                             />
@@ -333,7 +332,7 @@ const HomePage = () => {
                             </p>
                             <div className="flex items-center">
                               <img
-                                src={`https://xyndrix.me/api${news.user.profile_photo}`}
+                                src={`http://127.0.0.1:8000/api${news.user.profile_photo}`}
                                 alt={`${news.user.first_name} ${news.user.last_name}`}
                                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4 object-cover border-2 border-blue-200"
                               />
@@ -404,9 +403,8 @@ const HomePage = () => {
                       <button
                         key={index}
                         onClick={() => setNewsSlide(index)}
-                        className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
-                          index === newsSlide ? "bg-blue-600" : "bg-gray-300"
-                        }`}
+                        className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${index === newsSlide ? "bg-blue-600" : "bg-gray-300"
+                          }`}
                       />
                     ))}
                   </div>
@@ -784,11 +782,10 @@ const HomePage = () => {
               {data.latest_members.map((member, index) => (
                 <div
                   key={member.id}
-                  className={`flex items-center py-3 sm:py-4 cursor-pointer hover:bg-green-50/80 px-3 sm:px-4 rounded-xl sm:rounded-2xl transition-all duration-200 group ${
-                    index !== data.latest_members.length - 1
-                      ? "border-b border-green-100"
-                      : ""
-                  }`}
+                  className={`flex items-center py-3 sm:py-4 cursor-pointer hover:bg-green-50/80 px-3 sm:px-4 rounded-xl sm:rounded-2xl transition-all duration-200 group ${index !== data.latest_members.length - 1
+                    ? "border-b border-green-100"
+                    : ""
+                    }`}
                   onClick={() =>
                     navigate(`/alumni/members/${member.username}/`)
                   }

@@ -29,7 +29,7 @@ const AlbumsPage = () => {
     const fetchAlbums = async () => {
       try {
         const token = localStorage.getItem("Token");
-        const response = await axios.get("https://xyndrix.me/api/albums/", {
+        const response = await axios.get("http://127.0.0.1:8000/api/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
         setAlbums(Array.isArray(response.data) ? response.data : []);
@@ -57,7 +57,7 @@ const AlbumsPage = () => {
     if (!window.confirm("Are you sure you want to delete this album?")) return;
     try {
       const token = localStorage.getItem("Token");
-      await axios.delete(`https://xyndrix.me/api/albums/${id}/`, {
+      await axios.delete(`http://127.0.0.1:8000/api/albums/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setAlbums(prev => prev.filter(a => a.id !== id));
@@ -89,7 +89,7 @@ const AlbumsPage = () => {
         payload.append("cover_image", uploadedFile.file, uploadedFile.name);
 
       const response = await axios.post(
-        "https://xyndrix.me/api/albums/",
+        "http://127.0.0.1:8000/api/albums/",
         payload,
         {
           headers: {
@@ -136,10 +136,10 @@ const AlbumsPage = () => {
 
   const filteredAlbums = searchTerm
     ? albums.filter(
-        (album) =>
-          album.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          album.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      (album) =>
+        album.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        album.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : albums;
 
   return (
@@ -181,11 +181,10 @@ const AlbumsPage = () => {
                 </div>
                 <div className="flex space-x-2 bg-gray-100 p-1 rounded-md">
                   <button
-                    className={`p-2 rounded ${
-                      view === "grid"
-                        ? "bg-white shadow text-green-600"
-                        : "text-gray-500"
-                    }`}
+                    className={`p-2 rounded ${view === "grid"
+                      ? "bg-white shadow text-green-600"
+                      : "text-gray-500"
+                      }`}
                     onClick={() => setView("grid")}
                   >
                     <svg
@@ -204,11 +203,10 @@ const AlbumsPage = () => {
                     </svg>
                   </button>
                   <button
-                    className={`p-2 rounded ${
-                      view === "list"
-                        ? "bg-white shadow text-green-600"
-                        : "text-gray-500"
-                    }`}
+                    className={`p-2 rounded ${view === "list"
+                      ? "bg-white shadow text-green-600"
+                      : "text-gray-500"
+                      }`}
                     onClick={() => setView("list")}
                   >
                     <svg
@@ -242,11 +240,10 @@ const AlbumsPage = () => {
         {/* Notification */}
         {notification.message && (
           <div
-            className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition transform translate-y-0 ${
-              notification.type === "error"
-                ? "bg-red-100 text-red-800"
-                : "bg-green-100 text-green-800"
-            }`}
+            className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition transform translate-y-0 ${notification.type === "error"
+              ? "bg-red-100 text-red-800"
+              : "bg-green-100 text-green-800"
+              }`}
           >
             <div className="flex items-center">
               <FontAwesomeIcon
@@ -332,11 +329,11 @@ const AlbumsPage = () => {
                   >
                     <div className="relative h-48 overflow-hidden">
                       {/* Delete button in top right corner */}
-                      
+
 
                       {album.cover_image ? (
                         <img
-                          src={`https://xyndrix.me/api${album.cover_image}`}
+                          src={`http://127.0.0.1:8000/api${album.cover_image}`}
                           alt={album.title}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                         />
@@ -375,7 +372,7 @@ const AlbumsPage = () => {
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
-                              src={`https://xyndrix.me/api${album.cover_image}`}
+                              src={`http://127.0.0.1:8000/api${album.cover_image}`}
                               alt={album.title}
                               className="h-full w-full object-cover"
                             />

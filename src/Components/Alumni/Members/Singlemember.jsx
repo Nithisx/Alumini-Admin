@@ -2,7 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 const TOKEN = localStorage.getItem('Token');
-const API_BASE = 'https://xyndrix.me/api/profile/';
+const API_BASE = 'http://127.0.0.1:8000/api/profile/';
+
+const PROFILE_PLACEHOLDER =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
+
+const getProfileAvatar = (firstName, lastName) => {
+  if (!firstName && !lastName) return PROFILE_PLACEHOLDER;
+  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
+  const colors = ["#4299E1", "#48BB78", "#ED8936", "#9F7AEA", "#F56565", "#38B2AC", "#ECC94B", "#667EEA", "#ED64A6"];
+  const hashCode = (str) => { let h = 0; for (let i = 0; i < str.length; i++) { h = (h << 5) - h + str.charCodeAt(i); h = h & h; } return h; };
+  const bg = colors[Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="${bg}" /><text x="50%" y="50%" dy=".3em" font-family="Arial, sans-serif" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+};
 
 export default function SingleMember() {
   const { name } = useParams();
@@ -26,10 +39,10 @@ export default function SingleMember() {
 
   const handlechat = async () => {
     const token = localStorage.getItem("Token");
-    
+
 
     try {
-      const response = await fetch('https://xyndrix.me/chat/rooms/', {
+      const response = await fetch('http://127.0.0.1:8000/chat/rooms/', {
         method: 'POST',
         headers: {
           Authorization: `Token ${token}`,
@@ -39,15 +52,15 @@ export default function SingleMember() {
       });
 
       if (response.ok) {
-        
-        
+
+
         navigate(`/alumni/chat`);
       }
     } catch (error) {
       console.error('Room creation error:', error);
     }
 
-   console.log("Room ")
+    console.log("Room ")
   };
 
   if (loading) {
@@ -127,49 +140,53 @@ export default function SingleMember() {
             to="/alumni/members"
             className="inline-flex items-center text-green-600 hover:text-green-800 font-medium transition-colors group"
           >
-            <svg 
+            <svg
               className="w-4 h-4 sm:w-5 sm:h-5 mr-2 transform group-hover:-translate-x-1 transition-transform"
-              fill="none" 
-              stroke="currentColor" 
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="text-sm sm:text-base">Back to Members</span>
 
-             <button
-      onClick={handlechat}
-      className="ml-170 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-    >
-      <svg
-        className="w-4 h-4 mr-2"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
-        />
-      </svg>
-      Chat Now
-    </button>
+            <button
+              onClick={handlechat}
+              className="ml-170 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
+                />
+              </svg>
+              Chat Now
+            </button>
 
           </Link>
         </div>
 
         {/* Main Profile Card */}
         <div className="bg-white shadow-lg sm:shadow-2xl rounded-xl sm:rounded-2xl overflow-hidden border border-green-100">
-          
+
           {/* Header Section with Gradient */}
           <div className="relative bg-gradient-to-r from-green-600 to-emerald-600 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="relative flex flex-col items-center gap-4 sm:gap-6">
               <div className="relative">
                 <img
-                  src={`https://xyndrix.me/api${member.profile_photo}`}
+                  src={
+                    member.profile_photo
+                      ? `http://127.0.0.1:8000/api${member.profile_photo}`
+                      : getProfileAvatar(first_name, last_name)
+                  }
                   alt={username}
                   className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white shadow-xl"
                 />
@@ -198,13 +215,13 @@ export default function SingleMember() {
                 </div>
               </div>
             </div>
-           
+
           </div>
 
           {/* Content Grid */}
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-              
+
               {/* Personal Information */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
                 <div className="flex items-center mb-3 sm:mb-4">
@@ -342,7 +359,7 @@ export default function SingleMember() {
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{company}</span>
                     </div>
                   )}
-                  
+
                   {/* Position */}
                   {position && (
                     <div className="flex flex-col space-y-1">
@@ -350,7 +367,7 @@ export default function SingleMember() {
                       <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">{position}</span>
                     </div>
                   )}
-                  
+
                   {/* Work Experience */}
                   {work_experience && (
                     <div className="flex flex-col space-y-1">
@@ -360,7 +377,7 @@ export default function SingleMember() {
                       </span>
                     </div>
                   )}
-                  
+
                   {/* Professional Skills */}
                   {professional_skills && professional_skills.length > 0 && (
                     <div className="flex flex-col space-y-1">
@@ -374,7 +391,7 @@ export default function SingleMember() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Industries Worked In */}
                   {industries_worked_in && industries_worked_in.length > 0 && (
                     <div className="flex flex-col space-y-1">
@@ -388,7 +405,7 @@ export default function SingleMember() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Roles Played */}
                   {roles_played && roles_played.length > 0 && (
                     <div className="flex flex-col space-y-1">
@@ -402,7 +419,7 @@ export default function SingleMember() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Legacy fields - show if new fields are not available */}
                   {worked_in && !company && (
                     <div className="flex flex-col space-y-1">

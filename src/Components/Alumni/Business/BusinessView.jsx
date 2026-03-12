@@ -20,9 +20,9 @@ const BusinessView = () => {
   const [business, setBusiness] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://xyndrix.me/api";
+  const BASE_URL = "http://127.0.0.1:8000/api";
 
   useEffect(() => {
     const fetchBusinessDetails = async () => {
@@ -34,7 +34,7 @@ const BusinessView = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        
+
         // Fetch business images
         const imagesResponse = await axios.get(
           `${BASE_URL}/businesses/${id}/images/`,
@@ -42,7 +42,7 @@ const BusinessView = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        
+
         setBusiness(businessResponse.data);
         setImages(imagesResponse.data);
       } catch (error) {
@@ -158,7 +158,7 @@ const BusinessView = () => {
               <h4 className="font-semibold text-gray-900 mb-2">Website</h4>
               <div className="flex items-center">
                 <FontAwesomeIcon icon={faGlobe} className="text-gray-500 mr-2" />
-                <a 
+                <a
                   href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
                   target="_blank"
                   rel="noopener noreferrer"

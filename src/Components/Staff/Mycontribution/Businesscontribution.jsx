@@ -26,7 +26,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const TOKEN = localStorage.getItem("Token");
-const BASE_URL = "https://xyndrix.me/api";
+const BASE_URL = "http://127.0.0.1:8000/api";
 
 export default function BusinessContribution() {
   const [businesses, setBusinesses] = useState([]);
@@ -351,7 +351,7 @@ export default function BusinessContribution() {
             >
               <FontAwesomeIcon icon={faEye} />
             </button>
-          
+
             <button
               onClick={() => setDeleteConfirm(business.id)}
               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -370,9 +370,8 @@ export default function BusinessContribution() {
           {(business.address || business.city) && (
             <div className="flex items-center text-sm text-gray-500">
               <FontAwesomeIcon icon={faMapMarkerAlt} className="w-4 mr-2" />
-              {`${business.address || ""} ${business.city || ""} ${
-                business.state || ""
-              }`.trim()}
+              {`${business.address || ""} ${business.city || ""} ${business.state || ""
+                }`.trim()}
             </div>
           )}
           {business.phone && (
@@ -494,7 +493,7 @@ export default function BusinessContribution() {
                 ? "Try adjusting your search or filter criteria"
                 : "Start contributing by adding your first business to the directory"}
             </p>
-           
+
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -505,9 +504,9 @@ export default function BusinessContribution() {
         )}
       </div>
 
-      
 
-     
+
+
       {/* View Business Modal */}
       {showViewModal && selectedBusiness && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -574,11 +573,9 @@ export default function BusinessContribution() {
                           icon={faMapMarkerAlt}
                           className="mr-2 text-green-600"
                         />
-                        {`${selectedBusiness.address || ""} ${
-                          selectedBusiness.city || ""
-                        } ${selectedBusiness.state || ""} ${
-                          selectedBusiness.country || ""
-                        }`.trim()}
+                        {`${selectedBusiness.address || ""} ${selectedBusiness.city || ""
+                          } ${selectedBusiness.state || ""} ${selectedBusiness.country || ""
+                          }`.trim()}
                       </p>
                     </div>
                   )}

@@ -6,7 +6,7 @@ import { Search, Map, Layers, Users, RefreshCw, AlertCircle } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 
 // Base URL for media files
-const MEDIA_BASE_URL = 'https://xyndrix.me/api';
+const MEDIA_BASE_URL = 'http://127.0.0.1:8000/api';
 
 // Fallback icon if user has no profile photo
 const defaultIconUrl = 'https://img.icons8.com/fluency/48/000000/user-location.png';
@@ -21,9 +21,9 @@ const MapComponent = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const mapRef = useRef(null);
   const navigate = useNavigate();
-  
+
   // Filter locations based on search query
-  const filteredLocations = locations.filter(user => 
+  const filteredLocations = locations.filter(user =>
     user.user_details.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -31,7 +31,7 @@ const MapComponent = () => {
   useEffect(() => {
     fetchLocations();
   }, []);
-  
+
   const fetchLocations = async () => {
     setLoading(true);
     try {
@@ -89,9 +89,9 @@ const MapComponent = () => {
   const defaultPosition =
     locations.length > 0
       ? [
-          parseFloat(locations[0].latitude),
-          parseFloat(locations[0].longitude),
-        ]
+        parseFloat(locations[0].latitude),
+        parseFloat(locations[0].longitude),
+      ]
       : [10.921, 76.978];
 
   // Loading state with better UI
@@ -110,7 +110,7 @@ const MapComponent = () => {
       <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
         <AlertCircle size={48} className="text-red-500 mb-4" />
         <p className="text-xl text-red-600 mb-4">Error: {error}</p>
-        <button 
+        <button
           onClick={fetchLocations}
           className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center hover:bg-blue-600 transition-colors"
         >
@@ -129,7 +129,7 @@ const MapComponent = () => {
             <Map size={24} className="text-blue-500 mr-2" />
             <h1 className="text-xl font-bold text-gray-800">User Locations Map</h1>
           </div>
-          
+
           <div className="relative w-full md:w-1/3">
             <input
               type="text"
@@ -157,21 +157,20 @@ const MapComponent = () => {
             {filteredLocations.map((user) => {
               const iconUrl =
                 user.user_details.profile_photo &&
-                user.user_details.profile_photo.startsWith('/media')
+                  user.user_details.profile_photo.startsWith('/media')
                   ? `${MEDIA_BASE_URL}${user.user_details.profile_photo}`
                   : defaultIconUrl;
-              
+
               return (
-                <div 
+                <div
                   key={user.id}
-                  className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedUser?.id === user.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                  }`}
+                  className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                    }`}
                   onClick={() => handleUserSelect(user)}
                 >
                   <div className="flex items-center">
-                    <img 
-                      src={iconUrl} 
+                    <img
+                      src={iconUrl}
                       alt={user.user_details.username}
                       className="w-10 h-10 rounded-full object-cover border border-gray-200"
                     />
@@ -190,7 +189,7 @@ const MapComponent = () => {
             )}
           </div>
         </div>
-        
+
         {/* Map container */}
         <div className="flex-1 relative">
           <MapContainer
@@ -212,7 +211,7 @@ const MapComponent = () => {
             {filteredLocations.map((user) => {
               const iconUrl =
                 user.user_details.profile_photo &&
-                user.user_details.profile_photo.startsWith('/media')
+                  user.user_details.profile_photo.startsWith('/media')
                   ? `${MEDIA_BASE_URL}${user.user_details.profile_photo}`
                   : defaultIconUrl;
 
@@ -238,25 +237,25 @@ const MapComponent = () => {
               );
             })}
           </MapContainer>
-          
+
           {/* Map controls overlay */}
           <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-2 z-400">
             <div className="flex flex-col">
-              <button 
+              <button
                 className={`p-2 rounded-lg mb-1 flex items-center ${mapView === 'streets' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
                 onClick={() => setMapView('streets')}
                 title="Streets View"
               >
                 <Map size={20} />
               </button>
-              <button 
+              <button
                 className={`p-2 rounded-lg mb-1 flex items-center ${mapView === 'satellite' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
                 onClick={() => setMapView('satellite')}
                 title="Satellite View"
               >
                 <Layers size={20} />
               </button>
-              <button 
+              <button
                 className={`p-2 rounded-lg flex items-center ${mapView === 'dark' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
                 onClick={() => setMapView('dark')}
                 title="Dark Mode"
@@ -265,21 +264,21 @@ const MapComponent = () => {
               </button>
             </div>
           </div>
-          
+
           {/* Mobile user list toggle */}
           <div className="md:hidden absolute bottom-4 left-4 right-4">
-            <button 
+            <button
               className="w-full bg-white rounded-lg shadow-lg p-3 flex items-center justify-center"
-              onClick={() => {/* Toggle mobile user list */}}
+              onClick={() => {/* Toggle mobile user list */ }}
             >
               <Users size={18} className="mr-2" />
               <span>Show Users ({filteredLocations.length})</span>
             </button>
           </div>
-          
+
           {/* Refresh button */}
           <div className="absolute bottom-4 right-4 md:bottom-20">
-            <button 
+            <button
               className="bg-white rounded-full shadow-lg p-3 hover:bg-gray-50"
               onClick={fetchLocations}
               title="Refresh Data"

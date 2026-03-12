@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
-const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
-const SIGNUP_URL = "https://xyndrix.me/api/signup/";
+const SIGNUP_OTP_URL = "http://127.0.0.1:8000/api/signup-otp/";
+const SIGNUP_URL = "http://127.0.0.1:8000/api/signup/";
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -208,11 +208,10 @@ const InputField = React.memo(
       )}
       <input
         type={type || "text"}
-        className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-          error 
-            ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
-            : "border-gray-300"
-        }`}
+        className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${error
+          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+          : "border-gray-300"
+          }`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -229,11 +228,10 @@ const SelectField = React.memo(
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <select
-        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-          error 
-            ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
-            : "border-gray-300"
-        }`}
+        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${error
+          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+          : "border-gray-300"
+          }`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -485,7 +483,7 @@ const Signup = () => {
         const blob = await response.blob();
         payload.append("profile_photo", blob, "profile_photo.jpg");
       }
-      
+
       if (formData.role) {
         payload.set("role", formData.role);
       }
@@ -516,11 +514,11 @@ const Signup = () => {
     if (usernameDebounceTimer) {
       clearTimeout(usernameDebounceTimer);
     }
-    
+
     if (!username.trim()) {
       return;
     }
-    
+
     if (username.includes('@')) {
       setFieldErrors((prev) => ({
         ...prev,
@@ -528,13 +526,13 @@ const Signup = () => {
       }));
       return;
     }
-    
+
     const timer = setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const response = await fetch(`https://xyndrix.me/api/check-username/?username=${encodeURIComponent(username)}`);
+        const response = await fetch(`http://127.0.0.1:8000/api/check-username/?username=${encodeURIComponent(username)}`);
         const data = await response.json();
-        
+
         if (!response.ok) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -560,7 +558,7 @@ const Signup = () => {
         setIsCheckingUsername(false);
       }
     }, 500);
-    
+
     setUsernameDebounceTimer(timer);
   }, [usernameDebounceTimer]);
 
@@ -732,11 +730,10 @@ const Signup = () => {
                     </label>
                     <input
                       type="date"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                        fieldErrors.date_of_birth 
-                          ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
-                          : "border-gray-300"
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.date_of_birth
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300"
+                        }`}
                       value={formData.date_of_birth}
                       onChange={(e) => updateField("date_of_birth", e.target.value)}
                       max={new Date().toISOString().split("T")[0]}
@@ -749,7 +746,7 @@ const Signup = () => {
               {/* Academic Information */}
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Academic Information</h3>
-                
+
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <SelectField
                     label="Role"
@@ -831,7 +828,7 @@ const Signup = () => {
               {/* Email Verification */}
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Email Verification</h3>
-                
+
                 <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
                   <div className="flex justify-between items-center">
                     <div>
@@ -842,11 +839,10 @@ const Signup = () => {
                       type="button"
                       onClick={handleSendOtp}
                       disabled={resendTimer > 0 || loading}
-                      className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
-                        resendTimer > 0 || loading
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      }`}
+                      className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${resendTimer > 0 || loading
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        }`}
                     >
                       {loading ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : "Send OTP"}
                     </button>
@@ -906,11 +902,10 @@ const Signup = () => {
                   type="button"
                   onClick={handleSignup}
                   disabled={signLoading}
-                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                    signLoading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  }`}
+                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${signLoading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    }`}
                 >
                   {signLoading ? (
                     <div className="flex items-center">

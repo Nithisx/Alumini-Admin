@@ -7,7 +7,7 @@ import Pagination from "../../Shared/Pagination";
 
 const TOKEN =
   typeof window !== "undefined" ? localStorage.getItem("Token") : null;
-const BASE_URL = "https://xyndrix.me/api";
+const BASE_URL = "http://127.0.0.1:8000/api";
 const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dynamic-dropdown-filters/`;
 
@@ -19,9 +19,8 @@ const getInitialsAvatar = (firstName, lastName) => {
   if (!firstName && !lastName) return placeholder;
 
   // Get initials from name
-  const initials = `${firstName?.charAt(0) || ""}${
-    lastName?.charAt(0) || ""
-  }`.toUpperCase();
+  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""
+    }`.toUpperCase();
 
   // Generate a deterministic color based on name
   const colors = [
@@ -63,6 +62,23 @@ const getInitialsAvatar = (firstName, lastName) => {
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
+const MAX_DROPDOWN_ITEMS = 50;
+
+// Highlight matched text in suggestions
+const HighlightMatch = ({ text, query }) => {
+  if (!query.trim()) return <span>{text}</span>;
+  const strText = text.toString();
+  const idx = strText.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <span>{strText}</span>;
+  return (
+    <span>
+      {strText.substring(0, idx)}
+      <mark className="bg-blue-100 text-blue-800 rounded px-0.5">{strText.substring(idx, idx + query.length)}</mark>
+      {strText.substring(idx + query.length)}
+    </span>
+  );
+};
+
 const AutocompleteInput = ({
   id,
   label,
@@ -76,36 +92,64 @@ const AutocompleteInput = ({
   const [inputValue, setInputValue] = useState(value || "");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [totalMatches, setTotalMatches] = useState(0);
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
+  const containerRef = useRef(null);
+
+  // Cache the fullest set of options we've ever received.
+  const cachedOptionsRef = useRef([]);
+
+  // Update cache: always keep the larger set so we never lose options
+  useEffect(() => {
+    if (options.length > cachedOptionsRef.current.length) {
+      cachedOptionsRef.current = options;
+    }
+  }, [options]);
 
   // Sync input value with parent value
   useEffect(() => {
     setInputValue(value || "");
   }, [value]);
 
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-    // Remove automatic onChange call - only update suggestions
-
-    if (value.trim() === "") {
-      setShowSuggestions(false);
-      setFilteredSuggestions([]);
-    } else {
-      const filtered = options.filter((item) =>
-        item.toString().toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredSuggestions(filtered);
-      setShowSuggestions(true);
+  // Re-filter suggestions when options change (e.g. after API refetch)
+  useEffect(() => {
+    if (showSuggestions) {
+      filterOptions(inputValue);
     }
+  }, [options]);
+
+  // Filter suggestions helper — always uses cached (full) options
+  const filterOptions = (query) => {
+    const source = cachedOptionsRef.current.length > 0
+      ? cachedOptionsRef.current
+      : options;
+
+    if (query.trim() === "") {
+      const limited = source.slice(0, MAX_DROPDOWN_ITEMS);
+      setFilteredSuggestions(limited);
+      setTotalMatches(source.length);
+    } else {
+      const filtered = source.filter((item) =>
+        item.toString().toLowerCase().includes(query.toLowerCase())
+      );
+      setTotalMatches(filtered.length);
+      setFilteredSuggestions(filtered.slice(0, MAX_DROPDOWN_ITEMS));
+    }
+  };
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+    filterOptions(val);
+    setShowSuggestions(true);
   };
 
   // Handle Enter key press for manual filtering
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      onChange(inputValue); // Only update parent state on Enter
+      onChange(inputValue);
       setShowSuggestions(false);
     }
   };
@@ -114,7 +158,6 @@ const AutocompleteInput = ({
   const handleBlur = () => {
     setTimeout(() => {
       setShowSuggestions(false);
-      // Update parent state if value is different and not empty
       if (inputValue !== value) {
         onChange(inputValue);
       }
@@ -122,60 +165,79 @@ const AutocompleteInput = ({
   };
 
   const handleFocus = () => {
-    setFilteredSuggestions(options);
+    filterOptions(inputValue);
     setShowSuggestions(true);
   };
 
   const handleSuggestionClick = (suggestion) => {
     setInputValue(suggestion);
-    onChange(suggestion); // This is okay since it's a manual selection
+    onChange(suggestion);
     setShowSuggestions(false);
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    setInputValue("");
+    onChange("");
+    setShowSuggestions(false);
+    inputRef.current?.focus();
   };
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target)
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
       ) {
         setShowSuggestions(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
+  const isActive = value && value.trim() !== "";
+
   return (
-    <div className="space-y-2 relative">
+    <div className="space-y-1.5 relative" ref={containerRef}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
         {label}
-        <span className="text-xs text-gray-500 ml-1">
-          (Press Enter or click away to apply)
-        </span>
       </label>
       <div className="relative">
         <input
           ref={inputRef}
           id={id}
           type="text"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+          className={`w-full border rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-sm ${isActive
+            ? "border-blue-400 bg-blue-50/30 shadow-sm shadow-blue-100"
+            : "border-gray-300"
+            }`}
           placeholder={placeholder}
           value={inputValue}
           onChange={handleChange}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           onFocus={handleFocus}
           onBlur={handleBlur}
           autoComplete="off"
         />
         {icon}
 
-
+        {/* Clear button when value exists */}
+        {(inputValue || isActive) && (
+          <button
+            type="button"
+            onMouseDown={handleClear}
+            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors"
+            title="Clear"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
 
         {/* Dropdown Suggestions */}
         {showSuggestions && filteredSuggestions.length > 0 && (
@@ -187,14 +249,19 @@ const AutocompleteInput = ({
             {filteredSuggestions.map((suggestion, index) => (
               <div
                 key={`${filterType}-${index}-${suggestion}`}
-                className="px-3 py-2.5 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0 transition-colors group"
+                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-50 last:border-b-0 transition-colors group"
                 onMouseDown={() => handleSuggestionClick(suggestion)}
               >
-                <span className="text-gray-700 group-hover:text-blue-700 transition-colors truncate">
-                  {suggestion}
+                <span className="text-gray-700 group-hover:text-blue-700 transition-colors truncate block">
+                  <HighlightMatch text={suggestion} query={inputValue} />
                 </span>
               </div>
             ))}
+            {totalMatches > MAX_DROPDOWN_ITEMS && (
+              <div className="px-3 py-2 text-center text-xs text-gray-400 bg-gray-50 border-t border-gray-100 sticky bottom-0">
+                Showing {MAX_DROPDOWN_ITEMS} of {totalMatches} results — type to narrow down
+              </div>
+            )}
           </div>
         )}
 
@@ -207,8 +274,11 @@ const AutocompleteInput = ({
               className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl"
               onMouseDown={(e) => e.preventDefault()}
             >
-              <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                No options found for "{inputValue}"
+              <div className="px-3 py-3 text-center text-gray-500 text-sm">
+                <svg className="w-5 h-5 mx-auto mb-1 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                No matches for "<strong>{inputValue}</strong>"
               </div>
             </div>
           )}
@@ -651,14 +721,18 @@ export default function MembersPage() {
   const handleSearchKeyPress = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Trigger a manual search by incrementing the trigger counter
       setManualSearchTrigger(prev => prev + 1);
     }
   };
 
-  // Handle search input change
+  // Handle search input change (typing only, no auto-search)
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  // Handle search button click
+  const handleSearchClick = () => {
+    setManualSearchTrigger(prev => prev + 1);
   };
 
   // Update the useEffect for fetching members
@@ -872,9 +946,8 @@ export default function MembersPage() {
                 className="lg:hidden text-blue-600 hover:text-blue-800 p-2 rounded-md hover:bg-blue-50 transition-colors"
               >
                 <svg
-                  className={`w-5 h-5 transform transition-transform ${
-                    showFilters ? "rotate-180" : ""
-                  }`}
+                  className={`w-5 h-5 transform transition-transform ${showFilters ? "rotate-180" : ""
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -988,7 +1061,7 @@ export default function MembersPage() {
                   value={rollNoFilter}
                   onChange={setRollNoFilter}
                   filterType="roll_no"
-                  options={[]}
+                  options={dropdownFilters.roll_no || []}
                   icon={
                     <svg
                       className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
@@ -1193,46 +1266,67 @@ export default function MembersPage() {
                   }
                 />
 
-                {/* Updated Search Input with Enter key functionality */}
-                <div className="sm:col-span-2 lg:col-span-1 space-y-2">
+                {/* Search Input - triggers on Enter or Search button click */}
+                <div className="sm:col-span-2 lg:col-span-1 space-y-1.5">
                   <label
                     htmlFor="search-box"
                     className="block text-sm font-medium text-gray-700"
                   >
                     Search
-                    <span className="text-xs text-gray-500 ml-1">
-                      (Press Enter to search instantly)
-                    </span>
                   </label>
-                  <div className="relative">
-                    <input
-                      id="search-box"
-                      type="text"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
-                      placeholder="Search by name, email, or roll no..."
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      onKeyPress={handleSearchKeyPress}
-                    />
-                    <svg
-                      className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  <div className="relative flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        id="search-box"
+                        type="text"
+                        className={`w-full border rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm ${searchQuery
+                          ? "border-blue-400 bg-blue-50/30 shadow-sm shadow-blue-100"
+                          : "border-gray-300"
+                          }`}
+                        placeholder="Search by name, email, or roll no..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onKeyDown={handleSearchKeyPress}
                       />
-                    </svg>
-                    {/* Enter key indicator */}
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded-md">
-                        ↵
-                      </kbd>
+                      <svg
+                        className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      {searchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchQuery("");
+                            setManualSearchTrigger(prev => prev + 1);
+                          }}
+                          className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors"
+                          title="Clear search"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleSearchClick}
+                      className="px-3 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors flex items-center justify-center shrink-0"
+                      title="Search"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1261,10 +1355,10 @@ export default function MembersPage() {
               courseEndYearFilter ||
               companyFilter ||
               emailFilter) && (
-              <span className="text-xs sm:text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full w-fit">
-                Filtered
-              </span>
-            )}
+                <span className="text-xs sm:text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full w-fit">
+                  Filtered
+                </span>
+              )}
           </div>
         </div>
 
@@ -1307,9 +1401,8 @@ export default function MembersPage() {
                 >
                   {sortDirection === "asc" ? "Ascending" : "Descending"}
                   <svg
-                    className={`w-4 h-4 ${
-                      sortDirection === "asc" ? "rotate-0" : "rotate-180"
-                    } transition-transform`}
+                    className={`w-4 h-4 ${sortDirection === "asc" ? "rotate-0" : "rotate-180"
+                      } transition-transform`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1365,12 +1458,11 @@ export default function MembersPage() {
                         <img
                           src={
                             member.profile_photo
-                              ? `https://xyndrix.me/api${member.profile_photo}`
+                              ? `http://127.0.0.1:8000/api${member.profile_photo}`
                               : placeholder
                           }
-                          alt={`${member.first_name || "staff"} ${
-                            member.last_name || ""
-                          }`}
+                          alt={`${member.first_name || "staff"} ${member.last_name || ""
+                            }`}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           onError={(e) => {
                             e.target.onerror = null; // Prevent infinite loop

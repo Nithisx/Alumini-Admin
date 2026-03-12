@@ -9,6 +9,6 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
     strictPort: true,
-    allowedHosts: ['www.karpagamalumni.in', 'karpagamalumni.in', "www.xyndrix.me" , "xyndrix.me"]
+    allowedHosts: ['www.karpagamalumni.in', 'karpagamalumni.in', "www.xyndrix.me" , "xyndrix.me", "http://127.0.0.1:8000"]
   },
 })

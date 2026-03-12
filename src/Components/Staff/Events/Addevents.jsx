@@ -117,7 +117,7 @@ const AddEvent = () => {
       }
 
       const token = localStorage.getItem("Token");
-      const response = await fetch("https://xyndrix.me/api/events/", {
+      const response = await fetch("http://127.0.0.1:8000/api/events/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,

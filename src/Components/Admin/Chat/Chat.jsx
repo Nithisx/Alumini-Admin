@@ -57,7 +57,7 @@ const Chat = () => {
             socket.onmessage =
             socket.onerror =
             socket.onclose =
-              null;
+            null;
           socket.close();
         } catch (e) {
           // ignore
@@ -73,10 +73,10 @@ const Chat = () => {
 
     try {
       const endpoints = [
-        "https://xyndrix.me/chat/user/me/",
-        "https://xyndrix.me/auth/user/",
-        "https://xyndrix.me/api/user/me/",
-        "https://xyndrix.me/user/profile/",
+        "http://127.0.0.1:8000/chat/user/me/",
+        "http://127.0.0.1:8000/auth/user/",
+        "http://127.0.0.1:8000/api/user/me/",
+        "http://127.0.0.1:8000/user/profile/",
       ];
 
       for (const endpoint of endpoints) {
@@ -113,7 +113,7 @@ const Chat = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("https://xyndrix.me/chat/rooms/", {
+      const response = await fetch("http://127.0.0.1:8000/chat/rooms/", {
         method: "GET",
         headers: {
           Authorization: `Token ${token}`,
@@ -148,7 +148,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `https://xyndrix.me/chat/search/?q=${encodeURIComponent(query)}`,
+        `http://127.0.0.1:8000/chat/search/?q=${encodeURIComponent(query)}`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -174,7 +174,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch("https://xyndrix.me/chat/rooms/", {
+      const response = await fetch("http://127.0.0.1:8000/chat/rooms/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,
@@ -208,9 +208,9 @@ const Chat = () => {
           socket.onmessage =
           socket.onerror =
           socket.onclose =
-            null;
+          null;
         socket.close();
-      } catch (e) {}
+      } catch (e) { }
       setSocket(null);
     }
 
@@ -259,10 +259,10 @@ const Chat = () => {
               : null,
             time: data.timestamp
               ? new Date(data.timestamp).toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })
               : new Date().toLocaleTimeString(),
             timestamp: data.timestamp || new Date().toISOString(),
           };
@@ -297,7 +297,7 @@ const Chat = () => {
 
     setLoadingCommunity(true);
     try {
-      const response = await fetch("https://xyndrix.me/chat/community/", {
+      const response = await fetch("http://127.0.0.1:8000/chat/community/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,
@@ -340,7 +340,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch("https://xyndrix.me/chat/community/", {
+      const response = await fetch("http://127.0.0.1:8000/chat/community/", {
         method: "GET",
         headers: {
           Authorization: `Token ${token}`,
@@ -392,7 +392,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `https://xyndrix.me/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
+        `http://127.0.0.1:8000/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
         {
           method: "DELETE",
           headers: {
@@ -415,9 +415,9 @@ const Chat = () => {
                 socket.onmessage =
                 socket.onerror =
                 socket.onclose =
-                  null;
+                null;
               socket.close();
-            } catch (e) {}
+            } catch (e) { }
             setSocket(null);
           }
           setMessages([]);
@@ -449,7 +449,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `https://xyndrix.me/chat/rooms/${encodeURIComponent(roomId)}/messages/`,
+        `http://127.0.0.1:8000/chat/rooms/${encodeURIComponent(roomId)}/messages/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -561,9 +561,8 @@ const Chat = () => {
         <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
           {/* Sidebar - Chat List */}
           <div
-            className={`${
-              selectedChat ? "hidden lg:block" : "block"
-            } lg:w-80 bg-white rounded-lg shadow-sm h-full flex flex-col`}
+            className={`${selectedChat ? "hidden lg:block" : "block"
+              } lg:w-80 bg-white rounded-lg shadow-sm h-full flex flex-col`}
           >
             {/* Sidebar Header */}
             <div className="p-4 border-b border-gray-200">
@@ -604,7 +603,7 @@ const Chat = () => {
                                   src={
                                     user.profile_photo.startsWith("http")
                                       ? user.profile_photo
-                                      : `https://xyndrix.me${user.profile_photo}`
+                                      : `http://127.0.0.1:8000${user.profile_photo}`
                                   }
                                   alt={user.username}
                                   className="w-8 h-8 rounded-full object-cover"
@@ -654,23 +653,20 @@ const Chat = () => {
                         setSelectedChat(chat);
                         connectWebSocket(chat.id);
                       }}
-                      className={`p-4 hover:bg-gray-50 cursor-pointer transition relative group ${
-                        selectedChat?.id === chat.id
-                          ? "bg-green-50 border-r-2 border-green-500"
-                          : ""
-                      } ${
-                        chat.is_community
+                      className={`p-4 hover:bg-gray-50 cursor-pointer transition relative group ${selectedChat?.id === chat.id
+                        ? "bg-green-50 border-r-2 border-green-500"
+                        : ""
+                        } ${chat.is_community
                           ? "bg-gradient-to-r from-blue-50 to-indigo-50"
                           : ""
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ${
-                            chat.is_community
-                              ? "bg-gradient-to-r from-blue-600 to-indigo-600"
-                              : "bg-green-600"
-                          }`}
+                          className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ${chat.is_community
+                            ? "bg-gradient-to-r from-blue-600 to-indigo-600"
+                            : "bg-green-600"
+                            }`}
                         >
                           {chat.is_community ? (
                             <Globe className="w-6 h-6 text-white" />
@@ -679,7 +675,7 @@ const Chat = () => {
                               src={
                                 chat.avatar.startsWith("http")
                                   ? chat.avatar
-                                  : `https://xyndrix.me${chat.avatar}`
+                                  : `http://127.0.0.1:8000${chat.avatar}`
                               }
                               alt={chat.name}
                               className="w-12 h-12 rounded-full object-cover"
@@ -694,11 +690,10 @@ const Chat = () => {
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
                               <h3
-                                className={`font-medium truncate ${
-                                  chat.is_community
-                                    ? "text-blue-800"
-                                    : "text-gray-800"
-                                }`}
+                                className={`font-medium truncate ${chat.is_community
+                                  ? "text-blue-800"
+                                  : "text-gray-800"
+                                  }`}
                               >
                                 {chat.name}
                               </h3>
@@ -726,9 +721,8 @@ const Chat = () => {
                         </div>
                         {chat.unreadCount > 0 && (
                           <div
-                            className={`text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ${
-                              chat.is_community ? "bg-blue-500" : "bg-green-500"
-                            }`}
+                            className={`text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ${chat.is_community ? "bg-blue-500" : "bg-green-500"
+                              }`}
                           >
                             {chat.unreadCount}
                           </div>
@@ -754,19 +748,17 @@ const Chat = () => {
 
           {/* Chat Area */}
           <div
-            className={`${
-              selectedChat ? "block" : "hidden lg:block"
-            } flex-1 bg-white rounded-lg shadow-sm flex flex-col h-full`}
+            className={`${selectedChat ? "block" : "hidden lg:block"
+              } flex-1 bg-white rounded-lg shadow-sm flex flex-col h-full`}
           >
             {selectedChat ? (
               <>
                 {/* Chat Header */}
                 <div
-                  className={`p-4 border-b border-gray-200 flex items-center justify-between ${
-                    selectedChat.is_community
-                      ? "bg-gradient-to-r from-blue-50 to-indigo-50"
-                      : ""
-                  }`}
+                  className={`p-4 border-b border-gray-200 flex items-center justify-between ${selectedChat.is_community
+                    ? "bg-gradient-to-r from-blue-50 to-indigo-50"
+                    : ""
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <button
@@ -776,11 +768,10 @@ const Chat = () => {
                       <ArrowLeft className="w-4 h-4" />
                     </button>
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${
-                        selectedChat.is_community
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600"
-                          : "bg-green-600"
-                      }`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${selectedChat.is_community
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600"
+                        : "bg-green-600"
+                        }`}
                     >
                       {selectedChat.is_community ? (
                         <Globe className="w-5 h-5 text-white" />
@@ -789,7 +780,7 @@ const Chat = () => {
                           src={
                             selectedChat.avatar.startsWith("http")
                               ? selectedChat.avatar
-                              : `https://xyndrix.me${selectedChat.avatar}`
+                              : `http://127.0.0.1:8000${selectedChat.avatar}`
                           }
                           alt={selectedChat.name}
                           className="w-10 h-10 rounded-full object-cover"
@@ -803,11 +794,10 @@ const Chat = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h2
-                          className={`font-semibold ${
-                            selectedChat.is_community
-                              ? "text-blue-800"
-                              : "text-gray-800"
-                          }`}
+                          className={`font-semibold ${selectedChat.is_community
+                            ? "text-blue-800"
+                            : "text-gray-800"
+                            }`}
                         >
                           {selectedChat.name}
                         </h2>
@@ -886,9 +876,8 @@ const Chat = () => {
                         return (
                           <div
                             key={msg.id}
-                            className={`flex ${
-                              isOwnMessage ? "justify-end" : "justify-start"
-                            }`}
+                            className={`flex ${isOwnMessage ? "justify-end" : "justify-start"
+                              }`}
                           >
                             <div className="max-w-xs lg:max-w-md">
                               {!isOwnMessage && msg.sender && (
@@ -902,23 +891,21 @@ const Chat = () => {
                                 </p>
                               )}
                               <div
-                                className={`px-4 py-2 rounded-lg shadow-sm ${
-                                  isOwnMessage
-                                    ? selectedChat.is_community
-                                      ? "bg-blue-600 text-white"
-                                      : "bg-green-600 text-white"
-                                    : "bg-white text-gray-800 border border-gray-200"
-                                }`}
+                                className={`px-4 py-2 rounded-lg shadow-sm ${isOwnMessage
+                                  ? selectedChat.is_community
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-green-600 text-white"
+                                  : "bg-white text-gray-800 border border-gray-200"
+                                  }`}
                               >
                                 <p>{msg.text}</p>
                                 <p
-                                  className={`text-xs mt-1 ${
-                                    isOwnMessage
-                                      ? selectedChat.is_community
-                                        ? "text-blue-100"
-                                        : "text-green-100"
-                                      : "text-gray-500"
-                                  }`}
+                                  className={`text-xs mt-1 ${isOwnMessage
+                                    ? selectedChat.is_community
+                                      ? "text-blue-100"
+                                      : "text-green-100"
+                                    : "text-gray-500"
+                                    }`}
                                 >
                                   {msg.time}
                                 </p>
@@ -952,11 +939,10 @@ const Chat = () => {
                       <button
                         onClick={sendMessage}
                         disabled={!message.trim() || !isConnected}
-                        className={`p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed mr-1 ${
-                          selectedChat.is_community
-                            ? "text-blue-600 hover:text-blue-700"
-                            : "text-green-600 hover:text-green-700"
-                        }`}
+                        className={`p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed mr-1 ${selectedChat.is_community
+                          ? "text-blue-600 hover:text-blue-700"
+                          : "text-green-600 hover:text-green-700"
+                          }`}
                       >
                         <Send className="w-4 h-4" />
                       </button>

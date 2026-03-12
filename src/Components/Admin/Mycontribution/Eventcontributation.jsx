@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { MoreVertical, MapPin, Clock, User, Share2, Trash2, X, Heart, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus } from "lucide-react"
 
-const BASE_URL = "https://xyndrix.me/api"
+const BASE_URL = "http://127.0.0.1:8000/api"
 
 // Modern Image Slider Component
 const ImageSlider = ({ images, baseUrl }) => {
@@ -20,13 +20,13 @@ const ImageSlider = ({ images, baseUrl }) => {
   return (
     <div className="relative mb-4 group">
       <div className="relative overflow-hidden rounded-xl shadow-md">
-        <img 
-          src={`${baseUrl}${images[activeIndex].image}`} 
-          alt="Event" 
-          className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" 
+        <img
+          src={`${baseUrl}${images[activeIndex].image}`}
+          alt="Event"
+          className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        
+
         {images.length > 1 && (
           <>
             <button
@@ -43,7 +43,7 @@ const ImageSlider = ({ images, baseUrl }) => {
             </button>
           </>
         )}
-        
+
         {/* Image counter */}
         {images.length > 1 && (
           <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -51,18 +51,17 @@ const ImageSlider = ({ images, baseUrl }) => {
           </div>
         )}
       </div>
-      
+
       {images.length > 1 && (
         <div className="flex justify-center mt-3 space-x-1">
           {images.map((_, index) => (
             <button
               key={index}
               onClick={() => setActiveIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                activeIndex === index 
-                  ? "bg-green-500 scale-125" 
-                  : "bg-gray-300 hover:bg-gray-400"
-              }`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${activeIndex === index
+                ? "bg-green-500 scale-125"
+                : "bg-gray-300 hover:bg-gray-400"
+                }`}
             />
           ))}
         </div>
@@ -134,7 +133,7 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
 
       // Create FormData for the request
       const formDataToSend = new FormData()
-      
+
       // Add text fields
       Object.keys(formData).forEach(key => {
         formDataToSend.append(key, formData[key])
@@ -317,7 +316,7 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
             <label className="block text-sm font-semibold text-gray-700 mb-4">
               Add New Images
             </label>
-            
+
             {/* New Images Preview */}
             {newImages.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
@@ -441,7 +440,7 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
     const date = new Date(dateString)
     const now = new Date()
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) return "Just now"
     if (diffInHours < 24) return `${diffInHours}h ago`
     const diffInDays = Math.floor(diffInHours / 24)
@@ -478,15 +477,15 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
               </p>
             </div>
           </div>
-          
+
           <div className="relative">
-            <button 
-              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200" 
+            <button
+              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200"
               onClick={() => setShowMenu(!showMenu)}
             >
               <MoreVertical size={16} className="text-gray-600" />
             </button>
-            
+
             {/* Menu Popup */}
             {showMenu && (
               <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-xl shadow-xl z-20 w-36 py-2 animate-in slide-in-from-top-2 duration-200">
@@ -584,7 +583,7 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
                 <p className="text-gray-900 font-semibold text-sm truncate">{item.venue}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center p-3 bg-gray-50 rounded-lg">
               <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
                 <Clock size={14} className="text-emerald-600" />
@@ -612,18 +611,17 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
             <div className="flex items-center space-x-4">
               {item.total_reactions !== undefined && (
                 <div className="flex items-center space-x-1">
-                  <button 
+                  <button
                     onClick={() => setIsLiked(!isLiked)}
-                    className={`p-1.5 rounded-full transition-all duration-200 ${
-                      isLiked ? 'bg-red-100 text-red-600' : 'hover:bg-gray-100 text-gray-600'
-                    }`}
+                    className={`p-1.5 rounded-full transition-all duration-200 ${isLiked ? 'bg-red-100 text-red-600' : 'hover:bg-gray-100 text-gray-600'
+                      }`}
                   >
                     <Heart size={16} className={isLiked ? 'fill-current' : ''} />
                   </button>
                   <span className="text-xs font-medium text-gray-600">{item.total_reactions}</span>
                 </div>
               )}
-              
+
               {item.total_comments !== undefined && (
                 <div className="flex items-center space-x-1">
                   <button className="p-1.5 rounded-full hover:bg-gray-100 text-gray-600 transition-colors duration-200">
@@ -633,7 +631,7 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
                 </div>
               )}
             </div>
-            
+
             {/* <button className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg">
               <Share2 size={14} />
               <span className="text-xs font-medium">Share</span>
@@ -779,7 +777,7 @@ const Events = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-10">
-        
+
       </div>
 
       {/* Content with Grid Layout */}
@@ -797,10 +795,10 @@ const Events = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
-              <EventItem 
-                key={event.id} 
-                item={event} 
-                onDelete={deleteEvent} 
+              <EventItem
+                key={event.id}
+                item={event}
+                onDelete={deleteEvent}
                 onUpdate={updateEvent}
               />
             ))}

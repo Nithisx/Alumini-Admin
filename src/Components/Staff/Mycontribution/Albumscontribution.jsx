@@ -15,7 +15,7 @@ const AlbumsContribution = () => {
   const [editLoading, setEditLoading] = useState(false);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://xyndrix.me/api";
+  const BASE_URL = "http://127.0.0.1:8000/api";
 
   useEffect(() => {
     fetchUserContributions();
@@ -29,7 +29,7 @@ const AlbumsContribution = () => {
           Authorization: `Token ${token}`,
         },
       });
-      
+
       // Extract albums from the API response
       if (response.data && response.data.albums) {
         setAlbums(response.data.albums);
@@ -54,7 +54,7 @@ const AlbumsContribution = () => {
           Authorization: `Token ${token}`,
         },
       });
-      
+
       // Remove the deleted album from the state
       setAlbums(albums.filter(album => album.id !== albumId));
       alert("Album deleted successfully!");
@@ -90,7 +90,7 @@ const AlbumsContribution = () => {
       const formData = new FormData();
       formData.append("title", editFormData.title);
       formData.append("description", editFormData.description);
-      
+
       if (editCoverImage) {
         formData.append("cover_image", editCoverImage);
       }
@@ -107,10 +107,10 @@ const AlbumsContribution = () => {
       );
 
       // Update the album in the state
-      setAlbums(albums.map(album => 
+      setAlbums(albums.map(album =>
         album.id === albumId ? response.data : album
       ));
-      
+
       setEditingAlbum(null);
       setEditFormData({ title: "", description: "" });
       setEditCoverImage(null);
@@ -216,19 +216,19 @@ const AlbumsContribution = () => {
                         <input
                           type="text"
                           value={editFormData.title}
-                          onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                          onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Album title"
                         />
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Description
                         </label>
                         <textarea
                           value={editFormData.description}
-                          onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                          onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           rows="3"
                           placeholder="Album description"
@@ -278,7 +278,7 @@ const AlbumsContribution = () => {
                       <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate">
                         {album.title}
                       </h3>
-                      
+
                       {album.description && (
                         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                           {album.description}

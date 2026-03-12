@@ -9,9 +9,9 @@ const StudentImageUpload = () => {
     // Fetch students when component mounts
     const fetchStudents = async () => {
       try {
-        
+
         const token = localStorage.getItem("Token")
-        const response = await axios.get("https://xyndrix.me/api/students/", {
+        const response = await axios.get("http://127.0.0.1:8000/api/students/", {
           headers: { Authorization: `Token ${token}` },
         });
         setStudents(response.data);  // Set students in state
@@ -47,7 +47,7 @@ const StudentImageUpload = () => {
       formDataToSend.append("image", formData.image);
 
       const response = await axios.post(
-        "https://xyndrix.me/api/students/",
+        "http://127.0.0.1:8000/api/students/",
         formDataToSend,
         {
           headers: {
@@ -109,7 +109,7 @@ const StudentImageUpload = () => {
           <div key={student.id} className="bg-white rounded-lg shadow p-4">
             {student.image ? (
               <img
-                src={`https://xyndrix.me/api${student.image}`}
+                src={`http://127.0.0.1:8000/api${student.image}`}
                 alt={student.name}
                 className="w-full h-40 object-cover rounded-md"
               />

@@ -15,7 +15,7 @@ const Birthday = () => {
     const fetchBirthdays = async () => {
       try {
         setLoading(true);
-        const response = await fetch("https://xyndrix.me/api/birthdays/", {
+        const response = await fetch("http://127.0.0.1:8000/api/birthdays/", {
           headers: { Authorization: `Token ${token}` },
         });
         if (!response.ok) throw new Error("Failed to fetch birthdays");
@@ -111,7 +111,7 @@ const Birthday = () => {
       <div className="flex-shrink-0">
         {user.profile_photo ? (
           <img
-            src={`https://xyndrix.me/api${user.profile_photo}`}
+            src={`http://127.0.0.1:8000/api${user.profile_photo}`}
             alt={user.username}
             className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-green-300 hover:border-green-600 transition-colors"
           />
@@ -148,9 +148,8 @@ const Birthday = () => {
           <p className="text-xs sm:text-sm text-green-600 font-medium">
             {user.days_until_birthday === 0
               ? "Today!"
-              : `in ${user.days_until_birthday} day${
-                  user.days_until_birthday !== 1 ? "s" : ""
-                }`}
+              : `in ${user.days_until_birthday} day${user.days_until_birthday !== 1 ? "s" : ""
+              }`}
           </p>
         )}
       </div>

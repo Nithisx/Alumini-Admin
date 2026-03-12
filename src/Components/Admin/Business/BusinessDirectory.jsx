@@ -39,7 +39,7 @@ const BusinessDirectory = () => {
   const token = localStorage.getItem("Token");
   const userType = localStorage.getItem("Role"); // Get user type from localStorage
   const currentUserId = localStorage.getItem("userId"); // Get current user ID
-  const BASE_URL = "https://xyndrix.me/api";
+  const BASE_URL = "http://127.0.0.1:8000/api";
 
   // Check if current user can edit/delete a business
   const canEditBusiness = (business) => {
@@ -47,7 +47,7 @@ const BusinessDirectory = () => {
     if (userType === "admin") {
       return true;
     }
-    
+
     // Students and staff can only edit/delete their own businesses
     // and not businesses created by admin
     if (userType === "student" || userType === "staff") {
@@ -55,12 +55,12 @@ const BusinessDirectory = () => {
       if (business.owner_details && business.owner_details.user_type === "admin") {
         return false;
       }
-      
+
       // Check if current user is the owner
-      return business.owner_details && 
-             business.owner_details.id === parseInt(currentUserId);
+      return business.owner_details &&
+        business.owner_details.id === parseInt(currentUserId);
     }
-    
+
     return false;
   };
 
@@ -76,7 +76,7 @@ const BusinessDirectory = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        
+
         // Fetch categories
         const categoriesResponse = await axios.get(
           `${BASE_URL}/businesses/categories/`,
@@ -84,7 +84,7 @@ const BusinessDirectory = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        
+
         setBusinesses(businessesResponse.data);
         setFilteredBusinesses(businessesResponse.data);
         setCategories(categoriesResponse.data);
@@ -94,7 +94,7 @@ const BusinessDirectory = () => {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [token]);
 
@@ -186,7 +186,7 @@ const BusinessDirectory = () => {
     .sort();
 
   // Create dynamic industries, products, and services from fetched data
-  const industries = categories.length > 0 ? categories : 
+  const industries = categories.length > 0 ? categories :
     [...new Set(businesses.map(b => b.category))]
       .filter(Boolean)
       .map(category => ({
@@ -219,7 +219,7 @@ const BusinessDirectory = () => {
       await axios.delete(`${BASE_URL}/businesses/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
-      
+
       setBusinesses(businesses.filter(business => business.id !== id));
       setFilteredBusinesses(filteredBusinesses.filter(business => business.id !== id));
       alert("Business deleted successfully!");
@@ -422,7 +422,7 @@ const BusinessDirectory = () => {
                               <h3 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition">
                                 {business.business_name}
                               </h3>
-                              
+
                               {/* Only show edit/delete buttons if user has permission */}
                               {canEditBusiness(business) && (
                                 <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>

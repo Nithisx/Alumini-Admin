@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 
 const TOKEN = localStorage.getItem("Token");
-const API_BASE = "https://xyndrix.me/api/news/";
-const SERVER_BASE = "https://xyndrix.me/api";
+const API_BASE = "http://127.0.0.1:8000/api/news/";
+const SERVER_BASE = "http://127.0.0.1:8000/api";
 
 export default function SingleNews() {
   const { id } = useParams();
@@ -221,11 +221,10 @@ export default function SingleNews() {
             <button
               onClick={handlePrevious}
               disabled={Number(id) <= 1}
-              className={`px-4 py-2 ${
-                Number(id) <= 1
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white"
-              }`}
+              className={`px-4 py-2 ${Number(id) <= 1
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-blue-600 text-white"
+                }`}
             >
               Previous
             </button>

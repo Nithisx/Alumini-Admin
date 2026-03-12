@@ -8,8 +8,8 @@ import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
 
 const TOKEN = localStorage.getItem('Token');
-const API_URL = 'https://xyndrix.me/api/news/';
-const BASE_URL = 'https://xyndrix.me/api';
+const API_URL = 'http://127.0.0.1:8000/api/news/';
+const BASE_URL = 'http://127.0.0.1:8000/api';
 
 export default function NewsList() {
   const [posts, setPosts] = useState([]);
@@ -62,12 +62,12 @@ export default function NewsList() {
 
   // Get unique categories
   const categories = ['All', ...new Set(posts.map(post => post.category))];
-  
+
   // Filter posts by category
-  const filteredPosts = activeCategory === 'All' 
-    ? posts 
+  const filteredPosts = activeCategory === 'All'
+    ? posts
     : posts.filter(post => post.category === activeCategory);
-  
+
   // Get featured posts
   const featuredPosts = posts.filter(post => post.featured);
 
@@ -129,7 +129,7 @@ export default function NewsList() {
                         Read Full Story
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                     
+
                     </div>
                   </div>
                 </div>
@@ -145,11 +145,10 @@ export default function NewsList() {
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap ${
-                  activeCategory === category
-                    ? 'bg-green-600 text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-2 rounded-full whitespace-nowrap ${activeCategory === category
+                  ? 'bg-green-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                  }`}
               >
                 {category}
               </button>
@@ -206,7 +205,7 @@ export default function NewsList() {
                         Read More
                         <ChevronRight size={16} className="ml-1" />
                       </a>
-                      
+
                     </div>
                   </div>
                 </div>

@@ -5,7 +5,7 @@ This component handles adding new news posts via a modal form.
 import React, { useState, useRef } from "react";
 
 const TOKEN = localStorage.getItem("Token");
-const API_URL = "https://xyndrix.me/api/news/";
+const API_URL = "http://127.0.0.1:8000/api/news/";
 const categories = [
   "Success Stories",
   "Events",
@@ -330,9 +330,8 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${
-                isSubmitting ? "opacity-75 cursor-not-allowed" : ""
-              }`}
+              className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""
+                }`}
             >
               {isSubmitting ? "Submitting..." : "Post News"}
             </button>

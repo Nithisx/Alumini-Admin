@@ -25,17 +25,17 @@ const SendMail = () => {
     recipients: [],
     attachments: [],
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [previewAttachments, setPreviewAttachments] = useState([]);
-  
+
   // Email suggestions state
   const [emailInput, setEmailInput] = useState("");
   const [emailSuggestions, setEmailSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  
+
   // Refs for dropdown
   const emailInputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -59,7 +59,7 @@ const SendMail = () => {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData({ ...formData, attachments: e.target.files });
-    
+
     // Create preview list
     const fileList = files.map(file => ({
       name: file.name,
@@ -72,15 +72,15 @@ const SendMail = () => {
   // Fetch email suggestions
   const fetchEmailSuggestions = async (query) => {
     if (!query.trim() || formData.send_to_all) return;
-    
+
     setLoadingSuggestions(true);
     try {
-      const response = await axios.get(`https://xyndrix.me/api/email-suggestions/?query=${query}`, {
+      const response = await axios.get(`http://127.0.0.1:8000/api/email-suggestions/?query=${query}`, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
         },
       });
-      
+
       if (response.data && response.data.suggestions) {
         setEmailSuggestions(response.data.suggestions);
       }
@@ -106,7 +106,7 @@ const SendMail = () => {
   const handleEmailInputChange = (e) => {
     const value = e.target.value;
     setEmailInput(value);
-    
+
     if (value.trim() === "") {
       setShowSuggestions(false);
     } else {
@@ -135,9 +135,9 @@ const SendMail = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        dropdownRef.current && 
+        dropdownRef.current &&
         !dropdownRef.current.contains(event.target) &&
-        emailInputRef.current && 
+        emailInputRef.current &&
         !emailInputRef.current.contains(event.target)
       ) {
         setShowSuggestions(false);
@@ -153,14 +153,14 @@ const SendMail = () => {
   const handleEmailInputKeyDown = (e) => {
     if (e.key === 'Enter' && emailInput.trim()) {
       e.preventDefault();
-      
+
       const email = emailInput.trim();
       // Basic email validation
       if (email.match(/^\S+@\S+\.\S+$/)) {
         if (!formData.recipients.includes(email)) {
-          setFormData({ 
-            ...formData, 
-            recipients: [...formData.recipients, email] 
+          setFormData({
+            ...formData,
+            recipients: [...formData.recipients, email]
           });
         }
         setEmailInput("");
@@ -187,7 +187,7 @@ const SendMail = () => {
     }
 
     try {
-      const response = await axios.post("https://xyndrix.me/api/send-email/", data, {
+      const response = await axios.post("http://127.0.0.1:8000/api/send-email/", data, {
         headers: {
           Authorization: `Token ${localStorage.getItem("Token")}`,
           "Content-Type": "multipart/form-data",
@@ -206,16 +206,16 @@ const SendMail = () => {
       setPreviewAttachments([]);
     } catch (error) {
       console.error(error.response?.data || error);
-      showMessage({ 
-        text: error.response?.data?.error || "An error occurred while sending the email.", 
-        type: "error" 
+      showMessage({
+        text: error.response?.data?.error || "An error occurred while sending the email.",
+        type: "error"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const roleOptions = ["Alumni", "Staff" , "Student"];
+  const roleOptions = ["Alumni", "Staff", "Student"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 py-4 sm:py-10">
@@ -247,14 +247,14 @@ const SendMail = () => {
           100% { opacity: 1; transform: scale(1); }
         }
       `}</style>
-      
+
       <div className="w-full lg:w-4/5 xl:w-3/4 mx-auto px-4">
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-green-100 mb-8">
           {/* Header */}
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 sm:px-8 py-4 sm:py-6">
             <h2 className="text-xl sm:text-3xl font-bold text-white flex items-center">
-              <FontAwesomeIcon 
-                icon={faEnvelope} 
+              <FontAwesomeIcon
+                icon={faEnvelope}
                 className="mr-3 sm:mr-4 text-green-100"
               />
               <span>Email Broadcast System</span>
@@ -263,7 +263,7 @@ const SendMail = () => {
               Send emails to alumni, staff, and administrators
             </p>
           </div>
-          
+
           {/* Form Content */}
           <form onSubmit={handleSubmit} className="p-6 sm:p-8">
             <div className="grid grid-cols-1 gap-6">
@@ -284,7 +284,7 @@ const SendMail = () => {
                   placeholder="Enter email subject"
                 />
               </div>
-              
+
               {/* Body */}
               <div className="form-group">
                 <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
@@ -302,14 +302,14 @@ const SendMail = () => {
                   placeholder="Write your email message here..."
                 ></textarea>
               </div>
-              
+
               {/* Recipients Options */}
               <div className="bg-green-50 p-6 rounded-lg border border-green-100">
                 <h3 className="text-lg font-semibold text-green-700 mb-4 flex items-center">
                   <FontAwesomeIcon icon={faUsers} className="text-green-500 mr-3" />
                   Select Recipients
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Send to All */}
                   <div className="flex items-start">
@@ -328,7 +328,7 @@ const SendMail = () => {
                       <p className="text-gray-500">Email will be sent to all registered users</p>
                     </div>
                   </div>
-                  
+
                   {/* Role Selection */}
                   <div className="form-group">
                     <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
@@ -340,9 +340,8 @@ const SendMail = () => {
                       value={formData.role}
                       onChange={handleInputChange}
                       disabled={formData.send_to_all}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                        formData.send_to_all ? "bg-gray-100 cursor-not-allowed" : ""
-                      }`}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formData.send_to_all ? "bg-gray-100 cursor-not-allowed" : ""
+                        }`}
                     >
                       <option value="">Select Role (optional)</option>
                       {roleOptions.map((role) => (
@@ -356,14 +355,14 @@ const SendMail = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Specific Recipients with Autocomplete */}
                 <div className="mt-6">
                   <label className="flex text-sm font-semibold text-gray-700 mb-2 items-center">
                     <FontAwesomeIcon icon={faLayerGroup} className="text-green-500 mr-2" />
                     Specific Recipients
                   </label>
-                  
+
                   {/* Email input with autocomplete */}
                   <div className="relative">
                     <div className="flex items-center relative">
@@ -378,12 +377,11 @@ const SendMail = () => {
                         onKeyDown={handleEmailInputKeyDown}
                         disabled={formData.send_to_all}
                         placeholder="Type email address..."
-                        className={`w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                          formData.send_to_all ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${formData.send_to_all ? "bg-gray-100 cursor-not-allowed" : ""
+                          }`}
                       />
                     </div>
-                    
+
                     {/* Email suggestions dropdown */}
                     {showSuggestions && emailSuggestions.length > 0 && (
                       <div
@@ -412,13 +410,13 @@ const SendMail = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Selected recipients display */}
                   {formData.recipients.length > 0 && (
                     <div className="mt-4">
                       <div className="flex flex-wrap gap-2">
                         {formData.recipients.map((email, index) => (
-                          <div 
+                          <div
                             key={index}
                             className="email-tag bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm flex items-center"
                           >
@@ -435,14 +433,14 @@ const SendMail = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <p className="text-xs text-gray-500 mt-3">
                     Type an email address and press Enter to add it, or select from suggestions.
                     {formData.recipients.length > 0 && ` ${formData.recipients.length} recipient(s) selected.`}
                   </p>
                 </div>
               </div>
-              
+
               {/* Attachments */}
               <div className="form-group">
                 <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
@@ -461,7 +459,7 @@ const SendMail = () => {
                   <p className="text-gray-700">Drag files here or click to browse</p>
                   <p className="text-xs text-gray-500 mt-1">Maximum 5 files (5MB each)</p>
                 </div>
-                
+
                 {/* Display attached files preview */}
                 {previewAttachments.length > 0 && (
                   <div className="mt-4 border border-gray-200 rounded-lg p-4">
@@ -478,7 +476,7 @@ const SendMail = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Submit Button */}
               <div className="mt-6">
                 <button
@@ -497,16 +495,15 @@ const SendMail = () => {
           </form>
         </div>
       </div>
-      
+
       {/* Message Banner */}
       {message && (
         <div
           style={{ animation: "slideIn 0.5s ease-out" }}
-          className={`fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 sm:max-w-md px-4 sm:px-8 py-3 sm:py-4 text-white rounded-xl shadow-2xl flex items-center font-semibold text-sm sm:text-lg ${
-            message.type === "success"
-              ? "bg-gradient-to-r from-green-400 to-emerald-400"
-              : "bg-gradient-to-r from-pink-400 to-red-400"
-          }`}
+          className={`fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 sm:max-w-md px-4 sm:px-8 py-3 sm:py-4 text-white rounded-xl shadow-2xl flex items-center font-semibold text-sm sm:text-lg ${message.type === "success"
+            ? "bg-gradient-to-r from-green-400 to-emerald-400"
+            : "bg-gradient-to-r from-pink-400 to-red-400"
+            }`}
         >
           <FontAwesomeIcon
             icon={message.type === "success" ? faCheck : faExclamationTriangle}

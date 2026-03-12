@@ -37,7 +37,7 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("https://xyndrix.me/api/home/");
+        const response = await fetch("http://127.0.0.1:8000/api/home/");
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -255,13 +255,12 @@ export default function Home() {
                   {data.featured_news.map((news, index) => (
                     <div
                       key={news.id}
-                      className={`transition-transform duration-700 ease-in-out ${
-                        index === newsSlide
-                          ? "translate-x-0"
-                          : index < newsSlide
+                      className={`transition-transform duration-700 ease-in-out ${index === newsSlide
+                        ? "translate-x-0"
+                        : index < newsSlide
                           ? "-translate-x-full"
                           : "translate-x-full"
-                      }`}
+                        }`}
                       style={{
                         display: index === newsSlide ? "block" : "none",
                       }}
@@ -269,7 +268,7 @@ export default function Home() {
                       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
                         <div className="relative">
                           <img
-                            src={`https://xyndrix.me/api${news.thumbnail}`}
+                            src={`http://127.0.0.1:8000/api${news.thumbnail}`}
                             alt={news.title}
                             className="w-full h-full object-cover"
                           />
@@ -296,7 +295,7 @@ export default function Home() {
                           </p>
                           <div className="flex items-center">
                             <img
-                              src={`https://xyndrix.me/api${news.user.profile_photo}`}
+                              src={`http://127.0.0.1:8000/api${news.user.profile_photo}`}
                               alt={`${news.user.first_name} ${news.user.last_name}`}
                               className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-blue-200"
                             />
@@ -367,9 +366,8 @@ export default function Home() {
                     <button
                       key={index}
                       onClick={() => setNewsSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === newsSlide ? "bg-blue-600" : "bg-gray-300"
-                      }`}
+                      className={`w-3 h-3 rounded-full transition-all duration-300 ${index === newsSlide ? "bg-blue-600" : "bg-gray-300"
+                        }`}
                     />
                   ))}
                 </div>
@@ -400,7 +398,7 @@ export default function Home() {
                     <div className="relative h-64 overflow-hidden">
                       {event.images && event.images.length > 0 ? (
                         <img
-                          src={`https://xyndrix.me/api${event.images[0].image}`}
+                          src={`http://127.0.0.1:8000/api${event.images[0].image}`}
                           alt={event.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
@@ -516,7 +514,7 @@ export default function Home() {
                         <div className="w-full h-full rounded-full overflow-hidden">
                           {member.profile_photo ? (
                             <img
-                              src={`https://xyndrix.me/api${member.profile_photo}`}
+                              src={`http://127.0.0.1:8000/api${member.profile_photo}`}
                               alt={`${member.first_name} ${member.last_name}`}
                               className="w-full h-full object-cover"
                             />

@@ -21,7 +21,7 @@ const BusinessDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNewBusiness = id === 'add';
-  
+
   const [business, setBusiness] = useState({
     business_name: '',
     description: '',
@@ -40,7 +40,7 @@ const BusinessDetail = () => {
     social_media: { facebook: '', linkedin: '', twitter: '', instagram: '' },
     is_active: true
   });
-  
+
   const [logo, setLogo] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [images, setImages] = useState([]);
@@ -49,9 +49,9 @@ const BusinessDetail = () => {
   const [saving, setSaving] = useState(false);
   const [keywordInput, setKeywordInput] = useState('');
   const [categories, setCategories] = useState([]);
-  
+
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://xyndrix.me/api";
+  const BASE_URL = "http://127.0.0.1:8000/api";
 
   // Fetch business details if editing an existing business
   useEffect(() => {
@@ -60,7 +60,7 @@ const BusinessDetail = () => {
         setLoading(false);
         return;
       }
-      
+
       try {
         // Fetch business details
         const businessResponse = await axios.get(
@@ -69,7 +69,7 @@ const BusinessDetail = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        
+
         // Fetch business images
         const imagesResponse = await axios.get(
           `${BASE_URL}/businesses/${id}/images/`,
@@ -77,10 +77,10 @@ const BusinessDetail = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        
+
         setBusiness(businessResponse.data);
         setImages(imagesResponse.data);
-        
+
         if (businessResponse.data.logo) {
           setLogoPreview(`${BASE_URL}${businessResponse.data.logo}`);
         }
@@ -91,7 +91,7 @@ const BusinessDetail = () => {
         setLoading(false);
       }
     };
-    
+
     // Fetch categories for dropdown
     const fetchCategories = async () => {
       try {
@@ -101,13 +101,13 @@ const BusinessDetail = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        
+
         setCategories(response.data.map(cat => cat.category));
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
     };
-    
+
     fetchCategories();
     fetchData();
   }, [id, isNewBusiness]);
@@ -115,7 +115,7 @@ const BusinessDetail = () => {
   // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name.includes('.')) {
       // Handle nested objects like social_media.facebook
       const [parent, child] = name.split('.');
@@ -157,12 +157,12 @@ const BusinessDetail = () => {
   // Delete an existing image
   const deleteImage = async (imageId) => {
     if (!window.confirm("Are you sure you want to delete this image?")) return;
-    
+
     try {
       await axios.delete(`${BASE_URL}/businesses/${imageId}/images/`, {
         headers: { Authorization: `Token ${token}` },
       });
-      
+
       setImages(images.filter(image => image.id !== imageId));
       alert("Image deleted successfully!");
     } catch (error) {
@@ -194,10 +194,10 @@ const BusinessDetail = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const formData = new FormData();
-      
+
       // Append all business details
       Object.keys(business).forEach(key => {
         if (key === 'keywords' || key === 'social_media') {
@@ -206,14 +206,14 @@ const BusinessDetail = () => {
           formData.append(key, business[key]);
         }
       });
-      
+
       // Append logo if selected
       if (logo) {
         formData.append('logo', logo);
       }
-      
+
       let response;
-      
+
       if (isNewBusiness) {
         // Create new business
         response = await axios.post(
@@ -226,14 +226,14 @@ const BusinessDetail = () => {
             },
           }
         );
-        
+
         // Upload images if any
         if (imageFiles.length > 0 && response.data.id) {
           const imagesFormData = new FormData();
           imageFiles.forEach(image => {
             imagesFormData.append('images', image);
           });
-          
+
           await axios.post(
             `${BASE_URL}/businesses/${response.data.id}/images/`,
             imagesFormData,
@@ -245,7 +245,7 @@ const BusinessDetail = () => {
             }
           );
         }
-        
+
         alert("Business created successfully!");
         navigate(`/staff/business/${response.data.id}`);
       } else {
@@ -260,14 +260,14 @@ const BusinessDetail = () => {
             },
           }
         );
-        
+
         // Upload images if any
         if (imageFiles.length > 0) {
           const imagesFormData = new FormData();
           imageFiles.forEach(image => {
             imagesFormData.append('images', image);
           });
-          
+
           const imagesResponse = await axios.post(
             `${BASE_URL}/businesses/${id}/images/`,
             imagesFormData,
@@ -278,12 +278,12 @@ const BusinessDetail = () => {
               },
             }
           );
-          
+
           // Update images state with newly uploaded images
           setImages([...imagesResponse.data, ...images]);
           setImageFiles([]);
         }
-        
+
         alert("Business updated successfully!");
       }
     } catch (error) {
@@ -323,7 +323,7 @@ const BusinessDetail = () => {
         {/* Basic Information */}
         <div className="bg-gray-50 p-6 rounded-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Basic Information</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -339,7 +339,7 @@ const BusinessDetail = () => {
                 placeholder="Business name"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Category*
@@ -360,7 +360,7 @@ const BusinessDetail = () => {
                 ))}
               </datalist>
             </div>
-            
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
@@ -374,7 +374,7 @@ const BusinessDetail = () => {
                 placeholder="Describe the business..."
               ></textarea>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Website
@@ -393,7 +393,7 @@ const BusinessDetail = () => {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -412,7 +412,7 @@ const BusinessDetail = () => {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number
@@ -431,7 +431,7 @@ const BusinessDetail = () => {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Year Founded
@@ -452,7 +452,7 @@ const BusinessDetail = () => {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Employee Count
@@ -472,14 +472,14 @@ const BusinessDetail = () => {
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center">
               <input
                 type="checkbox"
                 id="is_active"
                 name="is_active"
                 checked={business.is_active}
-                onChange={(e) => setBusiness({...business, is_active: e.target.checked})}
+                onChange={(e) => setBusiness({ ...business, is_active: e.target.checked })}
                 className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
               />
               <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
@@ -488,11 +488,11 @@ const BusinessDetail = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Address Information */}
         <div className="bg-gray-50 p-6 rounded-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Address Information</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -512,7 +512,7 @@ const BusinessDetail = () => {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 City
@@ -526,7 +526,7 @@ const BusinessDetail = () => {
                 placeholder="City"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 State / Province
@@ -540,7 +540,7 @@ const BusinessDetail = () => {
                 placeholder="State"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Postal / ZIP Code
@@ -554,7 +554,7 @@ const BusinessDetail = () => {
                 placeholder="Postal code"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Country
@@ -570,11 +570,11 @@ const BusinessDetail = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Social Media */}
         <div className="bg-gray-50 p-6 rounded-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Social Media Links</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -589,7 +589,7 @@ const BusinessDetail = () => {
                 placeholder="https://facebook.com/yourpage"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 LinkedIn
@@ -603,7 +603,7 @@ const BusinessDetail = () => {
                 placeholder="https://linkedin.com/company/yourcompany"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Twitter
@@ -617,7 +617,7 @@ const BusinessDetail = () => {
                 placeholder="https://twitter.com/yourhandle"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Instagram
@@ -633,7 +633,7 @@ const BusinessDetail = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Keywords */}
         <div className="bg-gray-50 p-6 rounded-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -642,7 +642,7 @@ const BusinessDetail = () => {
               (Help people find your business)
             </span>
           </h2>
-          
+
           <div className="flex flex-wrap gap-2 mb-4">
             {business.keywords.map((keyword, index) => (
               <div key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center">
@@ -657,7 +657,7 @@ const BusinessDetail = () => {
               </div>
             ))}
           </div>
-          
+
           <div className="flex">
             <div className="flex-1">
               <div className="flex">
@@ -684,14 +684,14 @@ const BusinessDetail = () => {
             </button>
           </div>
         </div>
-        
+
         {/* Logo and Images */}
         <div className="bg-gray-50 p-6 rounded-lg">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Logo Section */}
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Business Logo</h2>
-              
+
               <div className="mb-4">
                 {logoPreview ? (
                   <div className="mb-4 relative">
@@ -717,7 +717,7 @@ const BusinessDetail = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Upload Logo
@@ -730,11 +730,11 @@ const BusinessDetail = () => {
                 />
               </div>
             </div>
-            
+
             {/* Images Section */}
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Business Images</h2>
-              
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
                 {/* Display existing images */}
                 {images.map((image) => (
@@ -753,7 +753,7 @@ const BusinessDetail = () => {
                     </button>
                   </div>
                 ))}
-                
+
                 {/* Display new images being uploaded */}
                 {imageFiles.map((file, index) => (
                   <div key={index} className="relative group">
@@ -772,7 +772,7 @@ const BusinessDetail = () => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Upload Images
@@ -788,7 +788,7 @@ const BusinessDetail = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Submit buttons */}
         <div className="flex justify-end space-x-4">
           <button
@@ -801,9 +801,8 @@ const BusinessDetail = () => {
           <button
             type="submit"
             disabled={saving}
-            className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center ${
-              saving ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center ${saving ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
           >
             {saving && (
               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

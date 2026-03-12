@@ -5,7 +5,7 @@ import kahelogo from "../assets/kahelogo.png";
 
 // axios instance
 const api = axios.create({
-  baseURL: "https://xyndrix.me/api",
+  baseURL: "http://127.0.0.1:8000/api",
   headers: { "Content-Type": "application/json" },
 });
 
@@ -79,8 +79,8 @@ export default function LoginPage() {
       } catch (err) {
         setError(
           err.response?.data?.error ||
-            err.message ||
-            "An unexpected error occurred"
+          err.message ||
+          "An unexpected error occurred"
         );
       } finally {
         setLoading(false);
@@ -103,8 +103,8 @@ export default function LoginPage() {
     } catch (err) {
       setError(
         err.response?.data?.error ||
-          err.message ||
-          "Failed to send reset email."
+        err.message ||
+        "Failed to send reset email."
       );
     } finally {
       setForgotLoading(false);

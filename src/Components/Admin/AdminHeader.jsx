@@ -60,7 +60,7 @@ export default function AdminHeader() {
     const checkAuthStatus = () => {
       const token = localStorage.getItem('Token');
       const role = localStorage.getItem('Role');
-      
+
       // For register-request page, only check role if token exists
       if (pathname.includes('/register-request') || pathname.includes('/admin/register-request')) {
         if (token && role && role !== 'admin' && role !== 'superuser') {
@@ -106,7 +106,7 @@ export default function AdminHeader() {
 
       try {
         // Replace with your actual API endpoint for token validation
-        const response = await fetch('https://xyndrix.me/api/validate-token/', {
+        const response = await fetch('http://127.0.0.1:8000/api/validate-token/', {
           method: 'GET',
           headers: {
             'Authorization': `Token ${token}`,
@@ -137,18 +137,18 @@ export default function AdminHeader() {
     window.fetch = async (...args) => {
       try {
         const response = await originalFetch(...args);
-        
+
         // Skip 401 handling for register-request page
-        if (response.status === 401 && 
-            !pathname.includes('/register-request') && 
-            !pathname.includes('/admin/register-request')) {
+        if (response.status === 401 &&
+          !pathname.includes('/register-request') &&
+          !pathname.includes('/admin/register-request')) {
           console.log('401 Unauthorized received, redirecting to login');
           localStorage.removeItem('Token');
           localStorage.removeItem('Role');
           window.location.href = '/login';
           return response;
         }
-        
+
         return response;
       } catch (error) {
         throw error;
@@ -256,11 +256,10 @@ export default function AdminHeader() {
     <>
       {/* Main Navigation Bar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300  ${
-          isScrolled
-            ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
-            : "bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-b border-emerald-100"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300  ${isScrolled
+          ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
+          : "bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-b border-emerald-100"
+          }`}
       >
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 w-full">
@@ -298,19 +297,17 @@ export default function AdminHeader() {
                       <a
                         key={item.path}
                         href={item.path}
-                        className={`group relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${
-                          pathname === item.path
-                            ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
-                            : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                        }`}
+                        className={`group relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${pathname === item.path
+                          ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                          }`}
                       >
                         <FontAwesomeIcon
                           icon={item.icon}
-                          className={`h-3.5 w-3.5 transition-all duration-300 ${
-                            pathname === item.path
-                              ? "text-emerald-600"
-                              : `${item.color} group-hover:text-emerald-600`
-                          }`}
+                          className={`h-3.5 w-3.5 transition-all duration-300 ${pathname === item.path
+                            ? "text-emerald-600"
+                            : `${item.color} group-hover:text-emerald-600`
+                            }`}
                         />
                         <span className="text-xs font-medium whitespace-nowrap">
                           {item.label}
@@ -350,19 +347,17 @@ export default function AdminHeader() {
                     <a
                       key={item.path}
                       href={item.path}
-                      className={`group relative flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${
-                        pathname === item.path
-                          ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
-                          : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                      }`}
+                      className={`group relative flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${pathname === item.path
+                        ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                        }`}
                     >
                       <FontAwesomeIcon
                         icon={item.icon}
-                        className={`h-3.5 w-3.5 transition-all duration-300 ${
-                          pathname === item.path
-                            ? "text-emerald-600"
-                            : `${item.color} group-hover:text-emerald-600`
-                        }`}
+                        className={`h-3.5 w-3.5 transition-all duration-300 ${pathname === item.path
+                          ? "text-emerald-600"
+                          : `${item.color} group-hover:text-emerald-600`
+                          }`}
                       />
                       <span className="text-xs font-medium">
                         {item.label}
@@ -387,19 +382,17 @@ export default function AdminHeader() {
                           <a
                             key={item.path}
                             href={item.path}
-                            className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${
-                              pathname === item.path
-                                ? "text-emerald-700 bg-emerald-50"
-                                : "text-gray-700"
-                            }`}
+                            className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${pathname === item.path
+                              ? "text-emerald-700 bg-emerald-50"
+                              : "text-gray-700"
+                              }`}
                           >
                             <FontAwesomeIcon
                               icon={item.icon}
-                              className={`h-4 w-4 ${
-                                pathname === item.path
-                                  ? "text-emerald-600"
-                                  : item.color
-                              }`}
+                              className={`h-4 w-4 ${pathname === item.path
+                                ? "text-emerald-600"
+                                : item.color
+                                }`}
                             />
                             {item.label}
                           </a>
@@ -434,9 +427,8 @@ export default function AdminHeader() {
             >
               <FontAwesomeIcon
                 icon={isMobileOpen ? faTimes : faBars}
-                className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${
-                  isMobileOpen ? "rotate-180" : "rotate-0"
-                }`}
+                className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${isMobileOpen ? "rotate-180" : "rotate-0"
+                  }`}
               />
             </button>
           </div>
@@ -444,11 +436,10 @@ export default function AdminHeader() {
 
         {/* Mobile Navigation Dropdown */}
         <div
-          className={`md:hidden transition-all duration-300 ease-in-out ${
-            isMobileOpen
-              ? "max-h-screen overflow-y-auto opacity-100 bg-white/95 backdrop-blur-md"
-              : "max-h-0 opacity-0 overflow-hidden"
-          }`}
+          className={`md:hidden transition-all duration-300 ease-in-out ${isMobileOpen
+            ? "max-h-screen overflow-y-auto opacity-100 bg-white/95 backdrop-blur-md"
+            : "max-h-0 opacity-0 overflow-hidden"
+            }`}
         >
           <div className="px-4 py-6 space-y-2 border-t border-gray-200">
             {navItems.map((item, index) => (
@@ -456,27 +447,24 @@ export default function AdminHeader() {
                 key={item.path}
                 href={item.path}
                 onClick={() => setIsMobileOpen(false)}
-                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 transform hover:scale-102 ${
-                  pathname === item.path
-                    ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                }`}
+                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 transform hover:scale-102 ${pathname === item.path
+                  ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
+                  : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                  }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div
-                  className={`p-2 rounded-lg ${
-                    pathname === item.path
-                      ? "bg-emerald-200"
-                      : "bg-gray-100 group-hover:bg-emerald-100"
-                  }`}
+                  className={`p-2 rounded-lg ${pathname === item.path
+                    ? "bg-emerald-200"
+                    : "bg-gray-100 group-hover:bg-emerald-100"
+                    }`}
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
-                    className={`h-5 w-5 transition-all duration-300 ${
-                      pathname === item.path
-                        ? "text-emerald-600"
-                        : `${item.color} group-hover:text-emerald-600`
-                    }`}
+                    className={`h-5 w-5 transition-all duration-300 ${pathname === item.path
+                      ? "text-emerald-600"
+                      : `${item.color} group-hover:text-emerald-600`
+                      }`}
                   />
                 </div>
                 <span className="font-medium">{item.label}</span>

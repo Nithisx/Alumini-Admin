@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faTrash, faSearch, faCalendarAlt, faMapMarkerAlt, faList, faThLarge 
+import {
+  faTrash, faSearch, faCalendarAlt, faMapMarkerAlt, faList, faThLarge
 } from "@fortawesome/free-solid-svg-icons";
 
 // AuthorizedImage component fetches image with token
@@ -41,7 +41,7 @@ export default function Events() {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch("https://xyndrix.me/api/events/", {
+    fetch("http://127.0.0.1:8000/api/events/", {
       headers: { Authorization: token ? `Token ${token}` : "" },
     })
       .then((res) => res.json())
@@ -62,11 +62,11 @@ export default function Events() {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this event?")) {
-      fetch(`https://xyndrix.me/api/events/${id}`, {
+      fetch(`http://127.0.0.1:8000/api/events/${id}`, {
         method: "DELETE",
-        headers: { 
+        headers: {
           Authorization: token ? `Token ${token}` : "",
-          "Content-Type": "application/json" 
+          "Content-Type": "application/json"
         },
       })
         .then((res) => {
@@ -111,17 +111,15 @@ export default function Events() {
               </div>
               <div className="flex space-x-2 bg-gray-100 p-1 rounded-md">
                 <button
-                  className={`p-2 rounded ${
-                    viewMode === "grid" ? "bg-white shadow text-green-600" : "text-gray-500"
-                  }`}
+                  className={`p-2 rounded ${viewMode === "grid" ? "bg-white shadow text-green-600" : "text-gray-500"
+                    }`}
                   onClick={() => setViewMode("grid")}
                 >
                   <FontAwesomeIcon icon={faThLarge} />
                 </button>
                 <button
-                  className={`p-2 rounded ${
-                    viewMode === "list" ? "bg-white shadow text-green-600" : "text-gray-500"
-                  }`}
+                  className={`p-2 rounded ${viewMode === "list" ? "bg-white shadow text-green-600" : "text-gray-500"
+                    }`}
                   onClick={() => setViewMode("list")}
                 >
                   <FontAwesomeIcon icon={faList} />
@@ -147,7 +145,7 @@ export default function Events() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event) => {
               const imgPath = event.images?.[0]?.image;
-              const imgUrl = imgPath ? `https://xyndrix.me/api${imgPath}` : null;
+              const imgUrl = imgPath ? `http://127.0.0.1:8000/api${imgPath}` : null;
               return (
                 <div
                   key={event.id}

@@ -26,10 +26,10 @@ import {
 } from "lucide-react"
 
 // API Configuration
-const API_URL = "https://xyndrix.me/api/profile/"
-const FORGOT_PASSWORD_URL = "https://xyndrix.me/api/forgot-password/"
-const CHANGE_PASSWORD_URL = "https://xyndrix.me/api/change-password/"
-const BASE_URL = "https://xyndrix.me/api"
+const API_URL = "http://127.0.0.1:8000/api/profile/"
+const FORGOT_PASSWORD_URL = "http://127.0.0.1:8000/api/forgot-password/"
+const CHANGE_PASSWORD_URL = "http://127.0.0.1:8000/api/change-password/"
+const BASE_URL = "http://127.0.0.1:8000/api"
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 
@@ -123,7 +123,7 @@ const ProfileScreen = () => {
       })
       if (!response.ok) throw new Error("Failed to fetch profile.")
       const data = await response.json()
-      
+
       // Safe JSON parsing function
       const safeJsonParse = (value, fallback) => {
         if (typeof value === "string" && value.trim()) {
@@ -136,7 +136,7 @@ const ProfileScreen = () => {
         }
         return value || fallback
       }
-      
+
       setProfile((prev) => ({
         ...prev,
         ...data,
@@ -381,7 +381,7 @@ const ProfileScreen = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
               <User className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1 min-w-0">
@@ -865,7 +865,7 @@ const ProfileScreen = () => {
             {/* Social Links Section */}
             <div className="border-t border-green-200 pt-4 mt-6">
               <h3 className="text-sm font-bold text-green-900 mb-3">Social Links</h3>
-              
+
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">LinkedIn</label>
                 <input
@@ -1078,11 +1078,10 @@ const ProfileScreen = () => {
             {/* Error/Success Message */}
             {changePasswordMessage.text && (
               <div
-                className={`p-3 rounded-lg ${
-                  changePasswordMessage.type === "success"
-                    ? "bg-green-100 text-green-800 border border-green-300"
-                    : "bg-red-100 text-red-800 border border-red-300"
-                }`}
+                className={`p-3 rounded-lg ${changePasswordMessage.type === "success"
+                  ? "bg-green-100 text-green-800 border border-green-300"
+                  : "bg-red-100 text-red-800 border border-red-300"
+                  }`}
               >
                 <p className="text-sm font-medium">{changePasswordMessage.text}</p>
               </div>
@@ -1173,11 +1172,10 @@ const ProfileScreen = () => {
             <button
               key={index}
               onClick={() => setActiveTab(index)}
-              className={`flex-1 min-w-0 py-2.5 sm:py-3 text-center rounded text-xs sm:text-sm font-medium whitespace-nowrap px-2 ${
-                activeTab === index
-                  ? "bg-green-600 text-white font-bold shadow-sm"
-                  : "text-green-700 hover:bg-green-50 transition-colors"
-              }`}
+              className={`flex-1 min-w-0 py-2.5 sm:py-3 text-center rounded text-xs sm:text-sm font-medium whitespace-nowrap px-2 ${activeTab === index
+                ? "bg-green-600 text-white font-bold shadow-sm"
+                : "text-green-700 hover:bg-green-50 transition-colors"
+                }`}
             >
               {tab}
             </button>
@@ -1224,11 +1222,10 @@ const ProfileScreen = () => {
                   <button
                     key={index}
                     onClick={() => setEditPage(index)}
-                    className={`flex-1 min-w-0 py-2 sm:py-3 text-center rounded text-xs font-medium whitespace-nowrap px-1 ${
-                      editPage === index
-                        ? "bg-green-600 text-white font-bold"
-                        : "text-green-700 hover:bg-green-50 transition-colors"
-                    }`}
+                    className={`flex-1 min-w-0 py-2 sm:py-3 text-center rounded text-xs font-medium whitespace-nowrap px-1 ${editPage === index
+                      ? "bg-green-600 text-white font-bold"
+                      : "text-green-700 hover:bg-green-50 transition-colors"
+                      }`}
                   >
                     {tab}
                   </button>

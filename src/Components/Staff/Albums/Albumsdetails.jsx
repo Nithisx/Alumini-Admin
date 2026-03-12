@@ -15,82 +15,82 @@ const AlbumDetailPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // New state for fullscreen image loading
   const [imageLoading, setImageLoading] = useState(false);
-  
+
   const token = localStorage.getItem("Token"); // Get token from local storage
-  const BASE_URL = "https://xyndrix.me/api";
+  const BASE_URL = "http://127.0.0.1:8000/api";
 
   // Image compression function
-const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
-  console.log(`Original file size: ${(file.size / (1024 * 1024)).toFixed(2)} MB`);
+  const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
+    console.log(`Original file size: ${(file.size / (1024 * 1024)).toFixed(2)} MB`);
 
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    img.onload = () => {
-      let { width, height } = img;
-      const maxDimension = 1920;
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
 
-      if (width > height && width > maxDimension) {
-        height = (height * maxDimension) / width;
-        width = maxDimension;
-      } else if (height > maxDimension) {
-        width = (width * maxDimension) / height;
-        height = maxDimension;
-      }
+      img.onload = () => {
+        let { width, height } = img;
+        const maxDimension = 1920;
 
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(img, 0, 0, width, height);
+        if (width > height && width > maxDimension) {
+          height = (height * maxDimension) / width;
+          width = maxDimension;
+        } else if (height > maxDimension) {
+          width = (width * maxDimension) / height;
+          height = maxDimension;
+        }
 
-      canvas.toBlob(
-        (blob) => {
-          const printCompressedSize = (b) => {
-            console.log(`Compressed file size: ${(b.size / (1024 * 1024)).toFixed(2)} MB`);
-          };
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
 
-          if (blob.size > maxSizeMB * 1024 * 1024 && quality > 0.1) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const newImg = new Image();
-              newImg.onload = () => {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(newImg, 0, 0, width, height);
-                canvas.toBlob(
-                  (finalBlob) => {
-                    printCompressedSize(finalBlob);
-                    const compressedFile = new File([finalBlob], file.name, {
-                      type: file.type,
-                      lastModified: Date.now()
-                    });
-                    resolve(compressedFile);
-                  },
-                  file.type,
-                  Math.max(0.1, quality - 0.2)
-                );
-              };
-              newImg.src = e.target.result;
+        canvas.toBlob(
+          (blob) => {
+            const printCompressedSize = (b) => {
+              console.log(`Compressed file size: ${(b.size / (1024 * 1024)).toFixed(2)} MB`);
             };
-            reader.readAsDataURL(blob);
-          } else {
-            printCompressedSize(blob);
-            const compressedFile = new File([blob], file.name, {
-              type: file.type,
-              lastModified: Date.now()
-            });
-            resolve(compressedFile);
-          }
-        },
-        file.type,
-        quality
-      );
-    };
 
-    img.src = URL.createObjectURL(file);
-  });
-};
+            if (blob.size > maxSizeMB * 1024 * 1024 && quality > 0.1) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const newImg = new Image();
+                newImg.onload = () => {
+                  const ctx = canvas.getContext('2d');
+                  ctx.clearRect(0, 0, canvas.width, canvas.height);
+                  ctx.drawImage(newImg, 0, 0, width, height);
+                  canvas.toBlob(
+                    (finalBlob) => {
+                      printCompressedSize(finalBlob);
+                      const compressedFile = new File([finalBlob], file.name, {
+                        type: file.type,
+                        lastModified: Date.now()
+                      });
+                      resolve(compressedFile);
+                    },
+                    file.type,
+                    Math.max(0.1, quality - 0.2)
+                  );
+                };
+                newImg.src = e.target.result;
+              };
+              reader.readAsDataURL(blob);
+            } else {
+              printCompressedSize(blob);
+              const compressedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now()
+              });
+              resolve(compressedFile);
+            }
+          },
+          file.type,
+          quality
+        );
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
 
   useEffect(() => {
@@ -121,7 +121,7 @@ const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (fullscreenImage === null) return;
-      
+
       if (e.key === "Escape") {
         closeFullscreen();
       } else if (e.key === "ArrowRight") {
@@ -142,7 +142,7 @@ const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
     } else {
       document.body.style.overflow = "auto";
     }
-    
+
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -152,17 +152,17 @@ const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
       console.log("Selected Files:", selectedFiles);
-      
+
       // Show loading state while compressing
       setUploading(true);
-      
+
       try {
         // Compress each image if it's larger than 5MB
         const compressedFiles = await Promise.all(
           selectedFiles.map(async (file) => {
             const fileSizeMB = file.size / (1024 * 1024);
             console.log(`File ${file.name} size: ${fileSizeMB.toFixed(2)}MB`);
-            
+
             if (fileSizeMB > 5) {
               console.log(`Compressing ${file.name}...`);
               const compressedFile = await compressImage(file);
@@ -173,7 +173,7 @@ const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
             return file;
           })
         );
-        
+
         setFormData({ ...formData, images: compressedFiles });
       } catch (error) {
         console.error("Error compressing images:", error);
@@ -344,13 +344,12 @@ const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
                     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
                   </div>
                 )}
-                
+
                 <img
                   src={`${BASE_URL}${fullscreenImage.image}`}
                   alt={fullscreenImage.title}
-                  className={`max-h-screen max-w-full object-contain transition-opacity duration-300 ${
-                    imageLoading ? "opacity-0" : "opacity-100"
-                  }`}
+                  className={`max-h-screen max-w-full object-contain transition-opacity duration-300 ${imageLoading ? "opacity-0" : "opacity-100"
+                    }`}
                   onLoad={handleImageLoaded}
                 />
                 <h3 className="text-white text-center mt-4 text-xl">

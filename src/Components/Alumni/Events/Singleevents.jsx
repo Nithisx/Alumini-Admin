@@ -14,7 +14,7 @@ const SingleEvents = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const res = await fetch(`https://xyndrix.me/api/events/${id}`, {
+        const res = await fetch(`http://127.0.0.1:8000/api/events/${id}`, {
           headers: {
             Authorization: `Token ${token}`,
           },
@@ -45,7 +45,7 @@ const SingleEvents = () => {
   const goToNextImage = (e) => {
     e.stopPropagation();
     if (event?.images?.length) {
-      setCurrentImageIndex((prevIndex) => 
+      setCurrentImageIndex((prevIndex) =>
         prevIndex === event.images.length - 1 ? 0 : prevIndex + 1
       );
     }
@@ -54,7 +54,7 @@ const SingleEvents = () => {
   const goToPrevImage = (e) => {
     e.stopPropagation();
     if (event?.images?.length) {
-      setCurrentImageIndex((prevIndex) => 
+      setCurrentImageIndex((prevIndex) =>
         prevIndex === 0 ? event.images.length - 1 : prevIndex - 1
       );
     }
@@ -63,7 +63,7 @@ const SingleEvents = () => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (!showFullScreen) return;
-      
+
       if (event.keyCode === 27) { // ESC key
         closeFullScreen();
       } else if (event.keyCode === 37) { // Left arrow
@@ -72,7 +72,7 @@ const SingleEvents = () => {
         goToNextImage(event);
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showFullScreen, event]);
@@ -82,7 +82,7 @@ const SingleEvents = () => {
       <div className="text-green-600 text-xl animate-pulse">Loading event details...</div>
     </div>
   );
-  
+
   if (error) return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="p-6 bg-red-100 text-red-700 rounded-lg shadow-lg max-w-md">
@@ -91,7 +91,7 @@ const SingleEvents = () => {
       </div>
     </div>
   );
-  
+
   if (!event) return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="p-6 bg-gray-100 text-gray-700 rounded-lg shadow-lg max-w-md">
@@ -103,14 +103,14 @@ const SingleEvents = () => {
 
   // Get image URLs
   const hasImages = event.images && event.images.length > 0;
-  const getImageUrl = (image) => `https://xyndrix.me/api${image.image}`;
+  const getImageUrl = (image) => `http://127.0.0.1:8000/api${image.image}`;
   const currentImageUrl = hasImages ? getImageUrl(event.images[currentImageIndex]) : 'https://via.placeholder.com/600x400?text=No+Image';
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
-      month: 'short', 
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
@@ -152,11 +152,11 @@ const SingleEvents = () => {
                       className="object-contain w-full h-full cursor-pointer"
                       onClick={() => openFullScreen(currentImageIndex)}
                     />
-                    
+
                     {/* Image Navigation Controls */}
                     {event.images.length > 1 && (
                       <>
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             goToPrevImage(e);
@@ -166,7 +166,7 @@ const SingleEvents = () => {
                         >
                           <ChevronLeft size={24} />
                         </button>
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             goToNextImage(e);
@@ -178,7 +178,7 @@ const SingleEvents = () => {
                         </button>
                       </>
                     )}
-                    
+
                     {/* Image Counter Badge */}
                     {event.images.length > 1 && (
                       <div className="absolute px-3 py-1 text-sm text-white rounded-md top-4 right-4 bg-black bg-opacity-40">
@@ -194,22 +194,21 @@ const SingleEvents = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Thumbnail Strip */}
               {hasImages && event.images.length > 1 && (
                 <div className="p-3 bg-gray-200">
                   <div className="flex pb-1 space-x-2 overflow-x-auto">
                     {event.images.map((img, index) => (
-                      <div 
+                      <div
                         key={img.id}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`flex-shrink-0 cursor-pointer transition-all duration-200 ${
-                          index === currentImageIndex 
-                            ? 'ring-2 ring-green-600 opacity-100 transform scale-105' 
-                            : 'opacity-70 hover:opacity-100'
-                        }`}
+                        className={`flex-shrink-0 cursor-pointer transition-all duration-200 ${index === currentImageIndex
+                          ? 'ring-2 ring-green-600 opacity-100 transform scale-105'
+                          : 'opacity-70 hover:opacity-100'
+                          }`}
                       >
-                        <img 
+                        <img
                           src={getImageUrl(img)}
                           alt={`Thumbnail ${index + 1}`}
                           className="object-cover w-24 h-16 rounded"
@@ -229,7 +228,7 @@ const SingleEvents = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Event Details Sidebar */}
           <div className="lg:col-span-4">
             <div className="p-6 bg-white rounded-lg shadow-lg">
@@ -253,7 +252,7 @@ const SingleEvents = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Location */}
               <div className="p-4 mb-4 border-b border-gray-200">
                 <h3 className="mb-3 text-lg font-bold text-gray-800">Location</h3>
@@ -262,7 +261,7 @@ const SingleEvents = () => {
                   <div className="text-gray-600">{event.venue}</div>
                 </div>
               </div>
-              
+
               {/* Category */}
               <div className="p-4 mb-4 border-b border-gray-200">
                 <h3 className="mb-3 text-lg font-bold text-gray-800">Category</h3>
@@ -273,7 +272,7 @@ const SingleEvents = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Event Creator */}
               <div className="p-4">
                 <h3 className="mb-3 text-lg font-bold text-gray-800">Posted by</h3>
@@ -294,66 +293,65 @@ const SingleEvents = () => {
 
       {/* Fullscreen Modal */}
       {showFullScreen && hasImages && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black"
           onClick={closeFullScreen}
         >
-          <button 
-            onClick={closeFullScreen} 
+          <button
+            onClick={closeFullScreen}
             className="absolute z-10 p-2 text-white transition-colors duration-200 rounded-full top-4 right-4 bg-black bg-opacity-40 hover:bg-opacity-60"
             aria-label="Close fullscreen view"
           >
             <X size={24} />
           </button>
-          
+
           <div className="absolute px-3 py-1 text-sm text-white rounded-lg top-4 left-4 bg-black bg-opacity-40">
             {currentImageIndex + 1} / {event.images.length}
           </div>
-          
+
           {event.images.length > 1 && (
             <>
-              <button 
-                onClick={goToPrevImage} 
+              <button
+                onClick={goToPrevImage}
                 className="absolute p-3 text-white transition-colors duration-200 transform -translate-y-1/2 rounded-full left-4 top-1/2 bg-black bg-opacity-40 hover:bg-opacity-60"
               >
                 <ChevronLeft size={28} />
               </button>
-              
-              <button 
-                onClick={goToNextImage} 
+
+              <button
+                onClick={goToNextImage}
                 className="absolute p-3 text-white transition-colors duration-200 transform -translate-y-1/2 rounded-full right-4 top-1/2 bg-black bg-opacity-40 hover:bg-opacity-60"
               >
                 <ChevronRight size={28} />
               </button>
             </>
           )}
-          
+
           <div className="flex items-center justify-center w-full h-full p-4">
-            <img 
+            <img
               src={currentImageUrl}
               alt={`${event.title} - Fullscreen`}
               className="object-contain max-h-full max-w-full"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
-          
+
           {event.images.length > 1 && (
             <div className="absolute bottom-6 left-0 right-0">
               <div className="flex items-center justify-center gap-2 px-4 py-2 overflow-x-auto">
                 {event.images.map((img, index) => (
-                  <div 
+                  <div
                     key={img.id}
-                    className={`cursor-pointer transition-all duration-300 ${
-                      index === currentImageIndex 
-                        ? 'ring-2 ring-white transform scale-110 z-10' 
-                        : 'opacity-60 hover:opacity-90'
-                    }`}
+                    className={`cursor-pointer transition-all duration-300 ${index === currentImageIndex
+                      ? 'ring-2 ring-white transform scale-110 z-10'
+                      : 'opacity-60 hover:opacity-90'
+                      }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setCurrentImageIndex(index);
                     }}
                   >
-                    <img 
+                    <img
                       src={getImageUrl(img)}
                       alt={`Thumbnail ${index + 1}`}
                       className="object-cover w-20 h-14 rounded"

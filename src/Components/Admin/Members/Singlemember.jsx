@@ -1,9 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, href } from "react-router-dom";
 
+const PROFILE_PLACEHOLDER =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
+
+// Generate initials-based avatar for profile photos
+const getProfileAvatar = (firstName, lastName) => {
+  if (!firstName && !lastName) return PROFILE_PLACEHOLDER;
+  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
+  const colors = ["#4299E1", "#48BB78", "#ED8936", "#9F7AEA", "#F56565", "#38B2AC", "#ECC94B", "#667EEA", "#ED64A6"];
+  const hashCode = (str) => { let h = 0; for (let i = 0; i < str.length; i++) { h = (h << 5) - h + str.charCodeAt(i); h = h & h; } return h; };
+  const bg = colors[Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="${bg}" /><text x="50%" y="50%" dy=".3em" font-family="Arial, sans-serif" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+};
+
 const TOKEN = localStorage.getItem("Token");
-const API_BASE = "https://xyndrix.me/api/profile/";
-const API_USER_ACTIONS = "https://xyndrix.me/api/";
+const API_BASE = "http://127.0.0.1:8000/api/profile/";
+const API_USER_ACTIONS = "http://127.0.0.1:8000/api/admin-actions/";
 
 // Dropdown data from Signup page
 const ROLES = ["Student", "Alumni", "Staff"];
@@ -288,8 +302,8 @@ export default function SingleMember() {
             const arrayValue = Array.isArray(value)
               ? value
               : value
-              ? [value]
-              : [];
+                ? [value]
+                : [];
             formData.append(key, JSON.stringify(arrayValue));
           }
           // Handle social_links object - convert to JSON string
@@ -642,19 +656,19 @@ export default function SingleMember() {
     roles_played = [],
   } = member;
 
-//  const handlechat = () => {
-  
+  //  const handlechat = () => {
 
-//   navigate(`/admin/chat/${member.id}`);
 
-//   }
+  //   navigate(`/admin/chat/${member.id}`);
+
+  //   }
 
   const handlechat = async () => {
     const token = localStorage.getItem("Token");
-    
+
 
     try {
-      const response = await fetch('https://xyndrix.me/chat/rooms/', {
+      const response = await fetch('http://127.0.0.1:8000/chat/rooms/', {
         method: 'POST',
         headers: {
           Authorization: `Token ${token}`,
@@ -664,15 +678,15 @@ export default function SingleMember() {
       });
 
       if (response.ok) {
-        
-        
+
+
         navigate(`/admin/chat`);
       }
     } catch (error) {
       console.error('Room creation error:', error);
     }
 
-   console.log("Room ")
+    console.log("Room ")
   };
 
 
@@ -710,38 +724,36 @@ export default function SingleMember() {
               {/* User Status Indicator */}
               <div className="flex items-center">
                 <div
-                  className={`w-3 h-3 rounded-full mr-2 ${
-                    is_active ? "bg-green-500" : "bg-red-500"
-                  }`}
+                  className={`w-3 h-3 rounded-full mr-2 ${is_active ? "bg-green-500" : "bg-red-500"
+                    }`}
                 ></div>
                 <span
-                  className={`text-sm font-medium ${
-                    is_active ? "text-green-700" : "text-red-700"
-                  }`}
+                  className={`text-sm font-medium ${is_active ? "text-green-700" : "text-red-700"
+                    }`}
                 >
                   {is_active ? "Active User" : "Inactive User"}
                 </span>
               </div>
 
-      <button
-      onClick={handlechat}
-      className="ml-60 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-    >
-      <svg
-        className="w-4 h-4 mr-2"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
-        />
-      </svg>
-      Chat
-    </button>
+              <button
+                onClick={handlechat}
+                className="ml-60 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+              >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
+                  />
+                </svg>
+                Chat
+              </button>
 
 
               {/* Action Buttons */}
@@ -771,11 +783,10 @@ export default function SingleMember() {
                     <button
                       onClick={handleDeactivateUser}
                       disabled={deactivating}
-                      className={`inline-flex items-center px-3 sm:px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed ${
-                        is_active
-                          ? "bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400"
-                          : "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400"
-                      }`}
+                      className={`inline-flex items-center px-3 sm:px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed ${is_active
+                        ? "bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400"
+                        : "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400"
+                        }`}
                     >
                       {deactivating ? (
                         <>
@@ -894,7 +905,7 @@ export default function SingleMember() {
                   </>
                 )}
               </div>
-              
+
             </div>
           </div>
 
@@ -906,15 +917,16 @@ export default function SingleMember() {
                 <img
                   src={
                     imagePreview ||
-                    `https://xyndrix.me/api${member.profile_photo}`
+                    (member.profile_photo
+                      ? `http://127.0.0.1:8000/api${member.profile_photo}`
+                      : getProfileAvatar(first_name, last_name))
                   }
                   alt={username}
                   className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white shadow-xl"
                 />
                 <div
-                  className={`absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 ${
-                    is_active ? "bg-green-500" : "bg-red-500"
-                  } text-white rounded-full p-1.5 sm:p-2 shadow-lg`}
+                  className={`absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 ${is_active ? "bg-green-500" : "bg-red-500"
+                    } text-white rounded-full p-1.5 sm:p-2 shadow-lg`}
                 >
                   <svg
                     className="w-3 h-3 sm:w-4 sm:h-4"
@@ -1005,9 +1017,8 @@ export default function SingleMember() {
                         onChange={(e) =>
                           handleInputChange("username", e.target.value)
                         }
-                        className={`bg-green-700 text-green-100 text-base sm:text-lg lg:text-xl border ${
-                          usernameError ? "border-red-400" : "border-green-300"
-                        } rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-300`}
+                        className={`bg-green-700 text-green-100 text-base sm:text-lg lg:text-xl border ${usernameError ? "border-red-400" : "border-green-300"
+                          } rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-300`}
                         placeholder="username"
                       />
                     </div>
@@ -1034,11 +1045,10 @@ export default function SingleMember() {
                     </span>
                   )}
                   <span
-                    className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg ${
-                      is_active
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
-                    }`}
+                    className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg ${is_active
+                      ? "bg-green-500 text-white"
+                      : "bg-red-500 text-white"
+                      }`}
                   >
                     {is_active ? "Active" : "Inactive"}
                   </span>
@@ -1848,7 +1858,7 @@ export default function SingleMember() {
                         type="text"
                         value={
                           typeof editedMember.current_work === "string" &&
-                          editedMember.current_work.startsWith('"')
+                            editedMember.current_work.startsWith('"')
                             ? JSON.parse(editedMember.current_work)
                             : editedMember.current_work || ""
                         }

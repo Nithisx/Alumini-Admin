@@ -21,7 +21,7 @@ const COLORS = {
   text: "#1f2937",
 };
 
-const BASE_URL = "https://xyndrix.me/api";
+const BASE_URL = "http://127.0.0.1:8000/api";
 
 // ImageSlider component
 const ImageSlider = ({ images, baseUrl }) => {
@@ -73,11 +73,10 @@ const ImageSlider = ({ images, baseUrl }) => {
             <button
               key={index}
               onClick={() => setActiveIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                activeIndex === index
-                  ? "bg-green-600 scale-110"
-                  : "bg-gray-300 hover:bg-gray-400"
-              }`}
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${activeIndex === index
+                ? "bg-green-600 scale-110"
+                : "bg-gray-300 hover:bg-gray-400"
+                }`}
             />
           ))}
         </div>

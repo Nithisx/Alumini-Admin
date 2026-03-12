@@ -20,7 +20,7 @@ import {
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "https://xyndrix.me/api/jobs/";
+const API_URL = "http://127.0.0.1:8000/api/jobs/";
 
 // Helper to get the token
 const getAuthToken = async () => {
@@ -44,7 +44,7 @@ const formatDate = (dateString) => {
 const getProfilePhotoUrl = (photoPath) => {
   if (!photoPath) return "";
   if (photoPath.startsWith("http")) return photoPath;
-  return `https://xyndrix.me${photoPath}`;
+  return `http://127.0.0.1:8000${photoPath}`;
 };
 
 // Image Gallery Component
@@ -73,7 +73,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `https://xyndrix.me/api${imagePath}`;
+    return `http://127.0.0.1:8000/api${imagePath}`;
   };
 
   return (
@@ -102,9 +102,8 @@ const ImageGallery = ({ images }) => {
             {images.map((_, idx) => (
               <div
                 key={idx}
-                className={`h-2 w-2 mx-1 rounded-full cursor-pointer ${
-                  idx === currentIndex ? "bg-white" : "bg-gray-400"
-                }`}
+                className={`h-2 w-2 mx-1 rounded-full cursor-pointer ${idx === currentIndex ? "bg-white" : "bg-gray-400"
+                  }`}
                 onClick={() => setCurrentIndex(idx)}
               ></div>
             ))}
@@ -134,7 +133,7 @@ const JobCard = ({ post, onDelete }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      
+
 
       {/* Header with user info */}
       <div className="p-4 pb-2 border-b border-gray-100">
@@ -193,7 +192,7 @@ const JobCard = ({ post, onDelete }) => {
             />
             <span className="truncate">{post.location}</span>
           </div>
-          
+
           {post.salary_range && (
             <div className="flex items-center text-sm text-gray-600">
               <FontAwesomeIcon
@@ -203,7 +202,7 @@ const JobCard = ({ post, onDelete }) => {
               <span className="truncate">{post.salary_range}</span>
             </div>
           )}
-          
+
           {post.job_type && (
             <div className="flex items-center text-sm text-gray-600">
               <FontAwesomeIcon
@@ -604,11 +603,10 @@ const JobFeed = () => {
                     {!uploadedFile ? (
                       <div
                         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
-                                  ${
-                                    isDragging
-                                      ? "border-green-500 bg-green-50"
-                                      : "border-gray-300 hover:border-green-400 hover:bg-gray-50"
-                                  }`}
+                                  ${isDragging
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-300 hover:border-green-400 hover:bg-gray-50"
+                          }`}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
@@ -698,11 +696,10 @@ const JobFeed = () => {
                   className={`px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 rounded-lg
                             hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500
                             flex items-center justify-center min-w-[120px] transition-all duration-200
-                            ${
-                              isSubmitting
-                                ? "opacity-75 cursor-not-allowed"
-                                : ""
-                            }`}
+                            ${isSubmitting
+                      ? "opacity-75 cursor-not-allowed"
+                      : ""
+                    }`}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
