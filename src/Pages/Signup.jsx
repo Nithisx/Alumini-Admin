@@ -67,7 +67,7 @@ const COURSE_BRANCH_MAPPING = {
     "General",
     "Business Process Services",
   ],
-  "Bachelor of Commerce": ["General", "Professional Accounting"],
+  "Bachelor of Commerce": ["General", "Professional Accounting", "Information Technology", "FA", "IAF"],
   "Bachelor of Computer Applications": ["Computer Application", "General"],
   "Bachelor of Design": ["Interior Design", "General"],
   "Bachelor of Engineering": [
