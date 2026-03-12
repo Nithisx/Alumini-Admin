@@ -21,7 +21,7 @@ const COLORS = {
   text: "#1f2937",
 };
 
-const BASE_URL = "http://127.0.0.1:8000/api";
+const BASE_URL = "https://xyndrix.me/api";
 
 // ImageSlider component
 const ImageSlider = ({ images, baseUrl }) => {

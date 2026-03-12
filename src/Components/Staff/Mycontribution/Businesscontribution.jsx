@@ -26,7 +26,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const TOKEN = localStorage.getItem("Token");
-const BASE_URL = "http://127.0.0.1:8000/api";
+const BASE_URL = "https://xyndrix.me/api";
 
 export default function BusinessContribution() {
   const [businesses, setBusinesses] = useState([]);

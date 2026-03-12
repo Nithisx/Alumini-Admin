@@ -16,8 +16,8 @@ const getProfileAvatar = (firstName, lastName) => {
 };
 
 const TOKEN = localStorage.getItem("Token");
-const API_BASE = "http://127.0.0.1:8000/api/profile/";
-const API_USER_ACTIONS = "http://127.0.0.1:8000/api/admin-actions/";
+const API_BASE = "https://xyndrix.me/api/profile/";
+const API_USER_ACTIONS = "https://xyndrix.me/api/admin-actions/";
 
 // Dropdown data from Signup page
 const ROLES = ["Student", "Alumni", "Staff"];
@@ -668,7 +668,7 @@ export default function SingleMember() {
 
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/chat/rooms/', {
+      const response = await fetch('https://xyndrix.me/chat/rooms/', {
         method: 'POST',
         headers: {
           Authorization: `Token ${token}`,
@@ -918,7 +918,7 @@ export default function SingleMember() {
                   src={
                     imagePreview ||
                     (member.profile_photo
-                      ? `http://127.0.0.1:8000/api${member.profile_photo}`
+                      ? `https://xyndrix.me/api${member.profile_photo}`
                       : getProfileAvatar(first_name, last_name))
                   }
                   alt={username}

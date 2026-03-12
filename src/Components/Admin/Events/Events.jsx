@@ -42,7 +42,7 @@ export default function Events() {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch("http://127.0.0.1:8000/api/events/", {
+    fetch("https://xyndrix.me/api/events/", {
       headers: { Authorization: token ? `Token ${token}` : "" },
     })
       .then((res) => res.json())
@@ -60,7 +60,7 @@ export default function Events() {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
     setDeletingId(eventId);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/events/${eventId}`, {
+      const res = await fetch(`https://xyndrix.me/api/events/${eventId}`, {
         method: "DELETE",
         headers: { Authorization: token ? `Token ${token}` : "" },
       });
@@ -143,7 +143,7 @@ export default function Events() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event) => {
               const imgPath = event.images?.[0]?.image;
-              const imgUrl = imgPath ? `http://127.0.0.1:8000/api${imgPath}` : null;
+              const imgUrl = imgPath ? `https://xyndrix.me/api${imgPath}` : null;
               return (
                 <div
                   key={event.id}

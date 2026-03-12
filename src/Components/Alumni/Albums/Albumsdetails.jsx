@@ -19,7 +19,7 @@ const AlbumDetailPage = () => {
   const [imageLoading, setImageLoading] = useState(false);
 
   const token = localStorage.getItem("Token"); // Get token from local storage
-  const BASE_URL = "http://127.0.0.1:8000/api";
+  const BASE_URL = "https://xyndrix.me/api";
 
   // Image compression function
   const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {

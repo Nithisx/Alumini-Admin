@@ -20,7 +20,7 @@ import {
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "http://127.0.0.1:8000/api/jobs/";
+const API_URL = "https://xyndrix.me/api/jobs/";
 
 // Helper to get the token
 const getAuthToken = async () => {
@@ -44,7 +44,7 @@ const formatDate = (dateString) => {
 const getProfilePhotoUrl = (photoPath) => {
   if (!photoPath) return "";
   if (photoPath.startsWith("http")) return photoPath;
-  return `http://127.0.0.1:8000${photoPath}`;
+  return `https://xyndrix.me${photoPath}`;
 };
 
 // Image Gallery Component
@@ -73,7 +73,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://127.0.0.1:8000/api${imagePath}`;
+    return `https://xyndrix.me/api${imagePath}`;
   };
 
   return (

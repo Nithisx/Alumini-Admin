@@ -7,7 +7,7 @@ import Pagination from "../../Shared/Pagination";
 
 const TOKEN =
   typeof window !== "undefined" ? localStorage.getItem("Token") : null;
-const BASE_URL = "http://127.0.0.1:8000/api";
+const BASE_URL = "https://xyndrix.me/api";
 const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dynamic-dropdown-filters/`;
 
@@ -1458,7 +1458,7 @@ export default function MembersPage() {
                         <img
                           src={
                             member.profile_photo
-                              ? `http://127.0.0.1:8000/api${member.profile_photo}`
+                              ? `https://xyndrix.me/api${member.profile_photo}`
                               : placeholder
                           }
                           alt={`${member.first_name || "Alumni"} ${member.last_name || ""

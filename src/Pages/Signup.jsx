@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
-const SIGNUP_OTP_URL = "http://127.0.0.1:8000/api/signup-otp/";
-const SIGNUP_URL = "http://127.0.0.1:8000/api/signup/";
+const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
+const SIGNUP_URL = "https://xyndrix.me/api/signup/";
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -88,9 +88,9 @@ const COURSE_BRANCH_MAPPING = {
   "Bachelor of Pharmacy": ["Pharmacy"],
   "Master of Pharmacy": ["Pharmacy"],
   "Bachelor of Science": [
-    "BioTechnology",
-    "Biochemistry",
-    "Bioinformatics",
+    "Bio Technology",
+    "Bio Chemistry",
+    "Bio Informatics",
     "Catering Science and Hotel Management",
     "Chemistry",
     "Cognitive Science",
@@ -144,9 +144,9 @@ const COURSE_BRANCH_MAPPING = {
   ],
   "Master of Planning": ["General"],
   "Master of Science": [
-    "BioTechnology",
-    "Biochemistry",
-    "Bioinformatics",
+    "Bio Technology",
+    "Bio Chemistry",
+    "Bio Informatics",
     "Catering Science and Hotel Management",
     "Chemistry",
     "Cognitive Science",
@@ -178,9 +178,9 @@ const COURSE_BRANCH_MAPPING = {
     "Mechanical Engineering",
     "Computer Science Engineering(Cyber)",
     "Pharmacy",
-    "BioTechnology",
-    "Biochemistry",
-    "Bioinformatics",
+    "Bio Technology",
+    "Bio Chemistry",
+    "Bio Informatics",
     "Chemistry",
     "Cognitive Science",
     "Computer Science",
@@ -530,7 +530,7 @@ const Signup = () => {
     const timer = setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/check-username/?username=${encodeURIComponent(username)}`);
+        const response = await fetch(`https://xyndrix.me/api/check-username/?username=${encodeURIComponent(username)}`);
         const data = await response.json();
 
         if (!response.ok) {

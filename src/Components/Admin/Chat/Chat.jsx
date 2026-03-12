@@ -11,7 +11,10 @@ import {
   Users,
   MessageSquare,
   Trash2,
-  Globe, // Add Globe icon for community
+  Globe,
+  Shield,
+  Eye,
+  AlertTriangle,
 } from "lucide-react";
 
 const Chat = () => {
@@ -30,7 +33,19 @@ const Chat = () => {
   const [roomToDelete, setRoomToDelete] = useState(null);
   const [communityRoom, setCommunityRoom] = useState(null);
   const [loadingCommunity, setLoadingCommunity] = useState(false);
+  const [showAgreement, setShowAgreement] = useState(() => {
+    return !localStorage.getItem("chat_agreement_accepted");
+  });
   const messagesEndRef = useRef(null);
+
+  const handleAcceptAgreement = () => {
+    localStorage.setItem("chat_agreement_accepted", "true");
+    setShowAgreement(false);
+  };
+
+  const handleDeclineAgreement = () => {
+    window.history.back();
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,10 +88,10 @@ const Chat = () => {
 
     try {
       const endpoints = [
-        "http://127.0.0.1:8000/chat/user/me/",
-        "http://127.0.0.1:8000/auth/user/",
-        "http://127.0.0.1:8000/api/user/me/",
-        "http://127.0.0.1:8000/user/profile/",
+        "https://xyndrix.me/chat/user/me/",
+        "https://xyndrix.me/auth/user/",
+        "https://xyndrix.me/api/user/me/",
+        "https://xyndrix.me/user/profile/",
       ];
 
       for (const endpoint of endpoints) {
@@ -113,7 +128,7 @@ const Chat = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/chat/rooms/", {
+      const response = await fetch("https://xyndrix.me/chat/rooms/", {
         method: "GET",
         headers: {
           Authorization: `Token ${token}`,
@@ -148,7 +163,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/chat/search/?q=${encodeURIComponent(query)}`,
+        `https://xyndrix.me/chat/search/?q=${encodeURIComponent(query)}`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -174,7 +189,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat/rooms/", {
+      const response = await fetch("https://xyndrix.me/chat/rooms/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,
@@ -297,7 +312,7 @@ const Chat = () => {
 
     setLoadingCommunity(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat/community/", {
+      const response = await fetch("https://xyndrix.me/chat/community/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,
@@ -340,7 +355,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat/community/", {
+      const response = await fetch("https://xyndrix.me/chat/community/", {
         method: "GET",
         headers: {
           Authorization: `Token ${token}`,
@@ -392,7 +407,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
+        `https://xyndrix.me/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
         {
           method: "DELETE",
           headers: {
@@ -449,7 +464,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/chat/rooms/${encodeURIComponent(roomId)}/messages/`,
+        `https://xyndrix.me/chat/rooms/${encodeURIComponent(roomId)}/messages/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -531,6 +546,87 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Chat Monitoring Agreement Modal */}
+      {showAgreement && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in">
+            {/* Modal Header */}
+            <div className="bg-green-600 px-6 py-5">
+              <div className="flex flex-col">
+                <h2 className="text-xl font-bold text-white">Chat Usage Agreement</h2>
+                <p className="text-green-100 text-sm mt-1">Please read before proceeding</p>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-5 space-y-4">
+              {/* Monitoring Notice */}
+              <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                <Eye className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-green-800 text-sm">Messages Are Monitored</h3>
+                  <p className="text-green-700 text-sm mt-1">
+                    All messages sent through this chat feature are monitored by the Administrators of this panel for safety and compliance purposes.
+                  </p>
+                </div>
+              </div>
+
+              {/* Disclaimer */}
+              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-red-800 text-sm">Data Disclaimer</h3>
+                  <p className="text-red-700 text-sm mt-1">
+                    In case any issues arise on behalf of this panel's chat feature, this organisation shall not be held responsible for your data,
+                    content shared, or any consequences arising from the use of this chat service.
+                  </p>
+                </div>
+              </div>
+
+              {/* Terms */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  By clicking <strong>"I Agree & Continue"</strong>, you acknowledge that:
+                </p>
+                <ul className="mt-2 space-y-1.5 text-sm text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    Your messages may be reviewed by panel administrators
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    You are responsible for the content you share
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    The organisation is not liable for any data-related issues
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    You agree to use the chat responsibly and respectfully
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-3 sm:justify-end">
+              <button
+                onClick={handleDeclineAgreement}
+                className="px-5 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition font-medium text-sm"
+              >
+                Decline & Go Back
+              </button>
+              <button
+                onClick={handleAcceptAgreement}
+                className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium text-sm shadow-sm"
+              >
+                I Agree & Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -603,7 +699,7 @@ const Chat = () => {
                                   src={
                                     user.profile_photo.startsWith("http")
                                       ? user.profile_photo
-                                      : `http://127.0.0.1:8000${user.profile_photo}`
+                                      : `https://xyndrix.me${user.profile_photo}`
                                   }
                                   alt={user.username}
                                   className="w-8 h-8 rounded-full object-cover"
@@ -675,7 +771,7 @@ const Chat = () => {
                               src={
                                 chat.avatar.startsWith("http")
                                   ? chat.avatar
-                                  : `http://127.0.0.1:8000${chat.avatar}`
+                                  : `https://xyndrix.me${chat.avatar}`
                               }
                               alt={chat.name}
                               className="w-12 h-12 rounded-full object-cover"
@@ -780,7 +876,7 @@ const Chat = () => {
                           src={
                             selectedChat.avatar.startsWith("http")
                               ? selectedChat.avatar
-                              : `http://127.0.0.1:8000${selectedChat.avatar}`
+                              : `https://xyndrix.me${selectedChat.avatar}`
                           }
                           alt={selectedChat.name}
                           className="w-10 h-10 rounded-full object-cover"

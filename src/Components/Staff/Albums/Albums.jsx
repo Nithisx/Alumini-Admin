@@ -29,7 +29,7 @@ const AlbumsPage = () => {
     const fetchAlbums = async () => {
       try {
         const token = localStorage.getItem("Token");
-        const response = await axios.get("http://127.0.0.1:8000/api/albums/", {
+        const response = await axios.get("https://xyndrix.me/api/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
         setAlbums(Array.isArray(response.data) ? response.data : []);
@@ -57,7 +57,7 @@ const AlbumsPage = () => {
     if (!window.confirm("Are you sure you want to delete this album?")) return;
     try {
       const token = localStorage.getItem("Token");
-      await axios.delete(`http://127.0.0.1:8000/api/albums/${id}/`, {
+      await axios.delete(`https://xyndrix.me/api/albums/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setAlbums(prev => prev.filter(a => a.id !== id));
@@ -89,7 +89,7 @@ const AlbumsPage = () => {
         payload.append("cover_image", uploadedFile.file, uploadedFile.name);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/albums/",
+        "https://xyndrix.me/api/albums/",
         payload,
         {
           headers: {
@@ -339,7 +339,7 @@ const AlbumsPage = () => {
 
                       {album.cover_image ? (
                         <img
-                          src={`http://127.0.0.1:8000/api${album.cover_image}`}
+                          src={`https://xyndrix.me/api${album.cover_image}`}
                           alt={album.title}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                         />
@@ -378,7 +378,7 @@ const AlbumsPage = () => {
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
-                              src={`http://127.0.0.1:8000/api${album.cover_image}`}
+                              src={`https://xyndrix.me/api${album.cover_image}`}
                               alt={album.title}
                               className="h-full w-full object-cover"
                             />
