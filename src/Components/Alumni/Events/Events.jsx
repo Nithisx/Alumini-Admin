@@ -41,7 +41,7 @@ export default function Events() {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch("https://xyndrix.me/api/events/", {
+    fetch("https://api.karpagamalumni.in/api/events/", {
       headers: { Authorization: token ? `Token ${token}` : "" },
     })
       .then((res) => res.json())
@@ -123,7 +123,7 @@ export default function Events() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event) => {
               const imgPath = event.images?.[0]?.image;
-              const imgUrl = imgPath ? `https://xyndrix.me/api${imgPath}` : null;
+              const imgUrl = imgPath ? `https://api.karpagamalumni.in/api${imgPath}` : null;
               return (
                 <div
                   key={event.id}

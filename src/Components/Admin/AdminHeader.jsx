@@ -106,7 +106,7 @@ export default function AdminHeader() {
 
       try {
         // Replace with your actual API endpoint for token validation
-        const response = await fetch('https://xyndrix.me/api/validate-token/', {
+        const response = await fetch('https://api.karpagamalumni.in/api/validate-token/', {
           method: 'GET',
           headers: {
             'Authorization': `Token ${token}`,

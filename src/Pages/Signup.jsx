@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 
-const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
-const SIGNUP_URL = "https://xyndrix.me/api/signup/";
+const SIGNUP_OTP_URL = "https://api.karpagamalumni.in/api/signup-otp/";
+const SIGNUP_URL = "https://api.karpagamalumni.in/api/signup/";
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -530,7 +530,7 @@ const Signup = () => {
     const timer = setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const response = await fetch(`https://xyndrix.me/api/check-username/?username=${encodeURIComponent(username)}`);
+        const response = await fetch(`https://api.karpagamalumni.in/api/check-username/?username=${encodeURIComponent(username)}`);
         const data = await response.json();
 
         if (!response.ok) {

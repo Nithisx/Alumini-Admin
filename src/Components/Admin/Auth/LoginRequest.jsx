@@ -28,7 +28,7 @@ export default function RegisterRequest() {
   const [selectedIds, setSelectedIds] = useState({});
   const [loading, setLoading] = useState(true); // Add loading state
   const [error, setError] = useState(null); // Add error state
-  const API_URL = "https://xyndrix.me/api/Approve-signup/";
+  const API_URL = "https://api.karpagamalumni.in/api/Approve-signup/";
 
   // Helper function to show message and auto-clear after 3 seconds
   const showMessage = (msg) => {

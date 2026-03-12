@@ -39,7 +39,7 @@ const BusinessDirectory = () => {
   const token = localStorage.getItem("Token");
   const userType = localStorage.getItem("userType"); // Get user type from localStorage
   const currentUserId = localStorage.getItem("userId"); // Get current user ID
-  const BASE_URL = "https://xyndrix.me/api";
+  const BASE_URL = "https://api.karpagamalumni.in/api";
 
   // Check if current user can edit/delete a business
   const canEditBusiness = (business) => {

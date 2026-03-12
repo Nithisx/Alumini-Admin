@@ -26,10 +26,10 @@ import {
 } from "lucide-react"
 
 // API Configuration
-const API_URL = "https://xyndrix.me/api/profile/"
-const FORGOT_PASSWORD_URL = "https://xyndrix.me/api/forgot-password/"
-const CHANGE_PASSWORD_URL = "https://xyndrix.me/api/change-password/"
-const BASE_URL = "https://xyndrix.me/api"
+const API_URL = "https://api.karpagamalumni.in/api/profile/"
+const FORGOT_PASSWORD_URL = "https://api.karpagamalumni.in/api/forgot-password/"
+const CHANGE_PASSWORD_URL = "https://api.karpagamalumni.in/api/change-password/"
+const BASE_URL = "https://api.karpagamalumni.in/api"
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 

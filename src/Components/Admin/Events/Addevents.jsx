@@ -117,7 +117,7 @@ const AddEvent = () => {
       }
 
       const token = localStorage.getItem("Token");
-      const response = await fetch("https://xyndrix.me/api/events/", {
+      const response = await fetch("https://api.karpagamalumni.in/api/events/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,

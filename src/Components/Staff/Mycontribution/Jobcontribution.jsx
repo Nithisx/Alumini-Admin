@@ -21,7 +21,7 @@ const COLORS = {
   text: "#1f2937",
 };
 
-const BASE_URL = "https://xyndrix.me/api";
+const BASE_URL = "https://api.karpagamalumni.in/api";
 
 // ImageSlider component
 const ImageSlider = ({ images, baseUrl }) => {

@@ -20,7 +20,7 @@ import {
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "https://xyndrix.me/api/jobs/";
+const API_URL = "https://api.karpagamalumni.in/api/jobs/";
 
 // Helper to get the token
 const getAuthToken = async () => {
@@ -44,7 +44,7 @@ const formatDate = (dateString) => {
 const getProfilePhotoUrl = (photoPath) => {
   if (!photoPath) return "";
   if (photoPath.startsWith("http")) return photoPath;
-  return `https://xyndrix.me${photoPath}`;
+  return `https://api.karpagamalumni.in${photoPath}`;
 };
 
 // Image Gallery Component
@@ -73,7 +73,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `https://xyndrix.me/api${imagePath}`;
+    return `https://api.karpagamalumni.in/api${imagePath}`;
   };
 
   return (

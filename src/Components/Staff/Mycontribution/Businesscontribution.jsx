@@ -26,7 +26,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const TOKEN = localStorage.getItem("Token");
-const BASE_URL = "https://xyndrix.me/api";
+const BASE_URL = "https://api.karpagamalumni.in/api";
 
 export default function BusinessContribution() {
   const [businesses, setBusinesses] = useState([]);

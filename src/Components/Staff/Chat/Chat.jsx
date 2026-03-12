@@ -88,10 +88,10 @@ const Chat = () => {
 
     try {
       const endpoints = [
-        "https://xyndrix.me/chat/user/me/",
-        "https://xyndrix.me/auth/user/",
-        "https://xyndrix.me/api/user/me/",
-        "https://xyndrix.me/user/profile/",
+        "https://api.karpagamalumni.in/chat/user/me/",
+        "https://api.karpagamalumni.in/auth/user/",
+        "https://api.karpagamalumni.in/api/user/me/",
+        "https://api.karpagamalumni.in/user/profile/",
       ];
 
       for (const endpoint of endpoints) {
@@ -128,7 +128,7 @@ const Chat = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("https://xyndrix.me/chat/rooms/", {
+      const response = await fetch("https://api.karpagamalumni.in/chat/rooms/", {
         method: "GET",
         headers: {
           Authorization: `Token ${token}`,
@@ -163,7 +163,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `https://xyndrix.me/chat/search/?q=${encodeURIComponent(query)}`,
+        `https://api.karpagamalumni.in/chat/search/?q=${encodeURIComponent(query)}`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -189,7 +189,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch("https://xyndrix.me/chat/rooms/", {
+      const response = await fetch("https://api.karpagamalumni.in/chat/rooms/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,
@@ -233,7 +233,7 @@ const Chat = () => {
     setMessages([]);
 
     const wsProtocol = "wss:";
-    const wsHost = "xyndrix.me";
+    const wsHost = "api.karpagamalumni.in";
     const wsUrl = `${wsProtocol}//${wsHost}/ws/chat/${encodeURIComponent(
       roomId
     )}/?token=${encodeURIComponent(token)}`;
@@ -312,7 +312,7 @@ const Chat = () => {
 
     setLoadingCommunity(true);
     try {
-      const response = await fetch("https://xyndrix.me/chat/community/", {
+      const response = await fetch("https://api.karpagamalumni.in/chat/community/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,
@@ -355,7 +355,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch("https://xyndrix.me/chat/community/", {
+      const response = await fetch("https://api.karpagamalumni.in/chat/community/", {
         method: "GET",
         headers: {
           Authorization: `Token ${token}`,
@@ -407,7 +407,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `https://xyndrix.me/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
+        `https://api.karpagamalumni.in/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
         {
           method: "DELETE",
           headers: {
@@ -464,7 +464,7 @@ const Chat = () => {
 
     try {
       const response = await fetch(
-        `https://xyndrix.me/chat/rooms/${encodeURIComponent(roomId)}/messages/`,
+        `https://api.karpagamalumni.in/chat/rooms/${encodeURIComponent(roomId)}/messages/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -699,7 +699,7 @@ const Chat = () => {
                                   src={
                                     user.profile_photo.startsWith("http")
                                       ? user.profile_photo
-                                      : `https://xyndrix.me${user.profile_photo}`
+                                      : `https://api.karpagamalumni.in${user.profile_photo}`
                                   }
                                   alt={user.username}
                                   className="w-8 h-8 rounded-full object-cover"
@@ -771,7 +771,7 @@ const Chat = () => {
                               src={
                                 chat.avatar.startsWith("http")
                                   ? chat.avatar
-                                  : `https://xyndrix.me${chat.avatar}`
+                                  : `https://api.karpagamalumni.in${chat.avatar}`
                               }
                               alt={chat.name}
                               className="w-12 h-12 rounded-full object-cover"
@@ -876,7 +876,7 @@ const Chat = () => {
                           src={
                             selectedChat.avatar.startsWith("http")
                               ? selectedChat.avatar
-                              : `https://xyndrix.me${selectedChat.avatar}`
+                              : `https://api.karpagamalumni.in${selectedChat.avatar}`
                           }
                           alt={selectedChat.name}
                           className="w-10 h-10 rounded-full object-cover"
