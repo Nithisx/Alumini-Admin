@@ -30,7 +30,7 @@ import {
 const API_URL = "https://api.karpagamalumni.in/api/v1/profile/"
 const FORGOT_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/forgot-password/"
 const CHANGE_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/change-password/"
-const BASE_URL = "https://api.karpagamalumni.in/api"
+const BASE_URL = "https://api.karpagamalumni.in/api/v1"
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";

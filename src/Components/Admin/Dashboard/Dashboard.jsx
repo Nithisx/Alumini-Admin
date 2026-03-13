@@ -702,7 +702,7 @@ const HomePage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                  {countryDistribution.slice(0, 6).map((item, index) => (
+                  {countryDistribution.map((item, index) => (
                     <div
                       key={index}
                       className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100"
