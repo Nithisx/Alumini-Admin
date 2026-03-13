@@ -83,7 +83,7 @@ const COURSE_BRANCH_MAPPING = {
     "Bio Medical Engineering",
     "Chemical Engineering",
     "Civil Engineering",
-    "Computer Science and Design"
+    "Computer Science and Design",
     "Computer Science Engineering",
     "Computer Science Engineering(Cyber)",
     "Electrical & Electronics Engineering",
