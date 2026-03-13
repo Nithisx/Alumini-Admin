@@ -5,7 +5,7 @@ This component handles adding new news posts via a modal form.
 import React, { useState, useRef } from "react";
 
 const TOKEN = localStorage.getItem("Token");
-const API_URL = "https://api.karpagamalumni.in/api/news/";
+const API_URL = "https://api.karpagamalumni.in/api/v1/news/";
 const categories = [
   "Success Stories",
   "Events",

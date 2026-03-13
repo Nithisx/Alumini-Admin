@@ -51,7 +51,7 @@ const BusinessDetail = () => {
   const [categories, setCategories] = useState([]);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://api.karpagamalumni.in/api";
+  const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 
   // Fetch business details if editing an existing business
   useEffect(() => {

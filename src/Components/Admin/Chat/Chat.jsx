@@ -90,7 +90,7 @@ const Chat = () => {
       const endpoints = [
         "https://api.karpagamalumni.in/chat/user/me/",
         "https://api.karpagamalumni.in/auth/user/",
-        "https://api.karpagamalumni.in/api/user/me/",
+        "https://api.karpagamalumni.in/api/v1/user/me/",
         "https://api.karpagamalumni.in/user/profile/",
       ];
 

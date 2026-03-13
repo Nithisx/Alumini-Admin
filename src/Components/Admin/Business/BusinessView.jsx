@@ -22,7 +22,7 @@ const BusinessView = () => {
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://api.karpagamalumni.in/api";
+  const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 
   useEffect(() => {
     const fetchBusinessDetails = async () => {

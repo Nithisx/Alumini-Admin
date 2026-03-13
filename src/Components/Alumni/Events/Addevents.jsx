@@ -117,7 +117,7 @@ const AddEvent = () => {
       }
 
       const token = localStorage.getItem("Token");
-      const response = await fetch("https://api.karpagamalumni.in/api/events/", {
+      const response = await fetch("https://api.karpagamalumni.in/api/v1/events/", {
         method: "POST",
         headers: {
           Authorization: `Token ${token}`,

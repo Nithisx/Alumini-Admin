@@ -15,7 +15,7 @@ const AlbumsContribution = () => {
   const [editLoading, setEditLoading] = useState(false);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://api.karpagamalumni.in/api";
+  const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 
   useEffect(() => {
     fetchUserContributions();

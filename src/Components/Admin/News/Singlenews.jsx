@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 
 const TOKEN = localStorage.getItem("Token");
-const API_BASE = "https://api.karpagamalumni.in/api/news/";
-const SERVER_BASE = "https://api.karpagamalumni.in/api";
+const API_BASE = "https://api.karpagamalumni.in/api/v1/news/";
+const SERVER_BASE = "https://api.karpagamalumni.in/api/v1";
 
 export default function SingleNews() {
   const { id } = useParams();

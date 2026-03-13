@@ -16,8 +16,8 @@ const getProfileAvatar = (firstName, lastName) => {
 };
 
 const TOKEN = localStorage.getItem("Token");
-const API_BASE = "https://api.karpagamalumni.in/api/profile/";
-const API_USER_ACTIONS = "https://api.karpagamalumni.in/api/admin-actions/";
+const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
+const API_USER_ACTIONS = "https://api.karpagamalumni.in/api/v1/admin-actions/";
 
 // Dropdown data from Signup page
 const ROLES = ["Student", "Alumni", "Staff"];
@@ -927,7 +927,7 @@ export default function SingleMember() {
                   src={
                     imagePreview ||
                     (member.profile_photo
-                      ? `https://api.karpagamalumni.in/api${member.profile_photo}`
+                      ? `https://api.karpagamalumni.in/api/v1${member.profile_photo}`
                       : getProfileAvatar(first_name, last_name))
                   }
                   alt={username}

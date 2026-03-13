@@ -8,10 +8,11 @@ import Footer from "../../../Pages/about_components/Footer";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
+  const [countryDistribution, setCountryDistribution] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newsSlide, setNewsSlide] = useState(0);
-  const BASE_URL = "https://api.karpagamalumni.in/api";
+  const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 
   // Retrieve token directly from localStorage
   const token = localStorage.getItem("Token");
@@ -30,18 +31,28 @@ const HomePage = () => {
 
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/home/`, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
+        const [homeResponse, countryResponse] = await Promise.all([
+          fetch(`${BASE_URL}/home/`, {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          }),
+          fetch(`${BASE_URL}/country-distribution/`, {
+            headers: {
+              Authorization: `Token ${token}`,
+            },
+          })
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!homeResponse.ok || !countryResponse.ok) {
+          throw new Error(`HTTP error! status: ${!homeResponse.ok ? homeResponse.status : countryResponse.status}`);
         }
 
-        const jsonData = await response.json();
+        const jsonData = await homeResponse.json();
+        const countryData = await countryResponse.json();
+
         setData(jsonData);
+        setCountryDistribution(countryData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -252,6 +263,94 @@ const HomePage = () => {
           </div>
         </div>
 
+        {/* Latest Photo Albums */}
+        <section className="mb-8 sm:mb-12 lg:mb-16">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
+            <div className="mb-4 sm:mb-0">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-800 mb-2">
+                Photo Gallery
+              </h2>
+              <p className="text-green-600 text-sm sm:text-base">
+                Memories captured in time
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/alumni/albums/")}
+              className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-2xl hover:from-teal-600 hover:to-cyan-700 transition-all duration-200 font-semibold shadow-lg flex items-center text-sm sm:text-base w-fit"
+            >
+              View Gallery
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5 ml-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                ></path>
+              </svg>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {data.latest_album_images && data.latest_album_images.slice(0, 4).map((album) => (
+              <div
+                key={album.id}
+                className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-green-100"
+                onClick={() => navigate(`/alumni/albums/${album.id}/`)}
+              >
+                <div className="relative h-40 sm:h-48 overflow-hidden">
+                  {album.cover_image ? (
+                    <img
+                      src={`${BASE_URL}${album.cover_image}`}
+                      alt={album.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-green-200 to-emerald-300 flex items-center justify-center">
+                      <svg
+                        className="w-12 h-12 sm:w-16 sm:h-16 text-green-600 opacity-60"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        ></path>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 bg-green-600/80 backdrop-blur-sm rounded-lg sm:rounded-xl text-xs sm:text-sm">
+                      View Album
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4 sm:p-6">
+                  <h3 className="font-bold text-green-800 mb-1 sm:mb-2 truncate text-base sm:text-lg">
+                    {album.title}
+                  </h3>
+                  <p className="text-green-600 text-xs sm:text-sm truncate">
+                    {album.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Featured News */}
         <section className="mb-8 sm:mb-12 lg:mb-16">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
@@ -305,7 +404,7 @@ const HomePage = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px] sm:min-h-[500px]">
                           <div className="relative order-1 lg:order-1">
                             <img
-                              src={`https://api.karpagamalumni.in/api${news.thumbnail}`}
+                              src={`https://api.karpagamalumni.in/api/v1${news.thumbnail}`}
                               alt={news.title}
                               className="w-full h-64 sm:h-full object-cover"
                             />
@@ -332,7 +431,7 @@ const HomePage = () => {
                             </p>
                             <div className="flex items-center">
                               <img
-                                src={`https://api.karpagamalumni.in/api${news.user.profile_photo}`}
+                                src={`https://api.karpagamalumni.in/api/v1${news.user.profile_photo}`}
                                 alt={`${news.user.first_name} ${news.user.last_name}`}
                                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4 object-cover border-2 border-blue-200"
                               />
@@ -582,93 +681,9 @@ const HomePage = () => {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-          {/* Latest Photo Albums */}
+
+
           <section className="lg:col-span-2">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
-              <div className="mb-4 sm:mb-0">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-800 mb-2">
-                  Photo Gallery
-                </h2>
-                <p className="text-green-600 text-sm sm:text-base">
-                  Memories captured in time
-                </p>
-              </div>
-              <button
-                onClick={() => navigate("/alumni/albums/")}
-                className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-2xl hover:from-teal-600 hover:to-cyan-700 transition-all duration-200 font-semibold shadow-lg flex items-center text-sm sm:text-base w-fit"
-              >
-                View Gallery
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 ml-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {data.latest_album_images.map((album) => (
-                <div
-                  key={album.id}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-green-100"
-                  onClick={() => navigate(`/alumni/albums/${album.id}/`)}
-                >
-                  <div className="relative h-40 sm:h-48 overflow-hidden">
-                    {album.cover_image ? (
-                      <img
-                        src={`${BASE_URL}${album.cover_image}`}
-                        alt={album.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-green-200 to-emerald-300 flex items-center justify-center">
-                        <svg
-                          className="w-12 h-12 sm:w-16 sm:h-16 text-green-600 opacity-60"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                          ></path>
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                          ></path>
-                        </svg>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <span className="text-white font-semibold px-3 sm:px-4 py-1 sm:py-2 bg-green-600/80 backdrop-blur-sm rounded-lg sm:rounded-xl text-xs sm:text-sm">
-                        View Album
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-4 sm:p-6">
-                    <h3 className="font-bold text-green-800 mb-1 sm:mb-2 truncate text-base sm:text-lg">
-                      {album.title}
-                    </h3>
-                    <p className="text-green-600 text-xs sm:text-sm truncate">
-                      {album.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
             {/* Chapters Section */}
             <section className="py-12 sm:py-16 lg:py-20" id="chapters-section">
               <div className="container mx-auto px-4">
@@ -682,7 +697,7 @@ const HomePage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                  {data.chapters.slice(0, 6).map((chapter, index) => (
+                  {countryDistribution.slice(0, 6).map((item, index) => (
                     <div
                       key={index}
                       className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100"
@@ -711,7 +726,7 @@ const HomePage = () => {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-base sm:text-lg font-bold text-green-800 leading-tight line-clamp-2">
-                            {chapter.chapter.replace("&#039;", "'")}
+                            {item.country}
                           </h3>
                         </div>
                       </div>
@@ -732,7 +747,7 @@ const HomePage = () => {
                             />
                           </svg>
                           <span className="text-green-700 font-semibold text-sm sm:text-base">
-                            {chapter.member_count} Members
+                            {item.count} Members
                           </span>
                         </div>
                         <span className="text-green-700 text-xs sm:text-sm font-medium bg-green-100 px-2 py-1 rounded-full">

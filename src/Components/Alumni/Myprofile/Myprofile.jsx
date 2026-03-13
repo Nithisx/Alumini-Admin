@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 import axios from "axios"
+import SuggestionInput from "../../Shared/SuggestionInput"
 import {
   ArrowLeft,
   Edit,
@@ -25,13 +26,14 @@ import {
   EyeOff,
 } from "lucide-react"
 
-// API Configuration
-const API_URL = "https://api.karpagamalumni.in/api/profile/"
-const FORGOT_PASSWORD_URL = "https://api.karpagamalumni.in/api/forgot-password/"
-const CHANGE_PASSWORD_URL = "https://api.karpagamalumni.in/api/change-password/"
+// API Configuration.in/api/v1
+const API_URL = "https://api.karpagamalumni.in/api/v1/profile/"
+const FORGOT_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/forgot-password/"
+const CHANGE_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/change-password/"
 const BASE_URL = "https://api.karpagamalumni.in/api"
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
+const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";
 
 // Utility functions
 const getMediaUrl = (uri) => {
@@ -100,6 +102,50 @@ const ProfileScreen = () => {
     new: false,
     confirm: false,
   })
+
+  // Suggestions state
+  const [apiSuggestions, setApiSuggestions] = useState({
+    usernames: [],
+    countries: [],
+    states: [],
+    cities: [],
+    zipcodes: []
+  });
+  const [loadingSuggestions, setLoadingSuggestions] = useState({});
+  const suggestionTimers = useRef({});
+
+  const fetchSuggestions = useCallback(async (type, params) => {
+    try {
+      setLoadingSuggestions(prev => ({ ...prev, [type]: true }));
+      const query = new URLSearchParams(params).toString();
+      const res = await fetch(`${SUGGESTIONS_API}/profile?${query}`);
+      if (res.ok) {
+        const json = await res.json();
+
+        setApiSuggestions(prev => ({
+          ...prev,
+          usernames: json.data?.usernameSuggestions || prev.usernames,
+          countries: json.data?.locationSuggestions?.countries || prev.countries,
+          states: json.data?.locationSuggestions?.states || prev.states,
+          cities: json.data?.locationSuggestions?.cities || prev.cities,
+          zipcodes: json.data?.locationSuggestions?.zipcodes || json.data?.locationSuggestions?.pincodes || prev.zipcodes,
+        }));
+      }
+    } catch (err) {
+      console.error("Suggestion fetch err:", err);
+    } finally {
+      setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
+    }
+  }, []);
+
+  const debouncedFetch = useCallback((type, params, delay = 300) => {
+    if (suggestionTimers.current[type]) {
+      clearTimeout(suggestionTimers.current[type]);
+    }
+    suggestionTimers.current[type] = setTimeout(() => {
+      fetchSuggestions(type, params);
+    }, delay);
+  }, [fetchSuggestions]);
 
   const tabs = ["Personal", "Work", "Contact", "Social"]
   const editTabs = ["Basic Info", "Contact & Address", "Work & Social"]
@@ -643,12 +689,20 @@ const ProfileScreen = () => {
 
             <div>
               <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Username</label>
-              <input
+              <SuggestionInput
                 type="text"
                 placeholder="Username"
                 value={profile.username || ""}
-                onChange={(e) => setProfile((prev) => ({ ...prev, username: e.target.value }))}
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                onChange={(v) => {
+                  setProfile((prev) => ({ ...prev, username: v }));
+                  debouncedFetch("usernames", { username: v });
+                }}
+                onFocus={() => {
+                  fetchSuggestions("usernames", { username: profile.username });
+                }}
+                inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                suggestions={apiSuggestions.usernames}
+                loading={loadingSuggestions.usernames}
               />
             </div>
 
@@ -720,22 +774,38 @@ const ProfileScreen = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">City</label>
-                <input
+                <SuggestionInput
                   type="text"
                   placeholder="City"
                   value={profile.city || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, city: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  onChange={(v) => {
+                    setProfile((prev) => ({ ...prev, city: v }));
+                    debouncedFetch("cities", { country: profile.country, state: profile.state, city: v });
+                  }}
+                  onFocus={() => {
+                    fetchSuggestions("cities", { country: profile.country, state: profile.state, city: profile.city });
+                  }}
+                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  suggestions={apiSuggestions.cities}
+                  loading={loadingSuggestions.cities}
                 />
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">State</label>
-                <input
+                <SuggestionInput
                   type="text"
                   placeholder="State"
                   value={profile.state || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, state: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  onChange={(v) => {
+                    setProfile((prev) => ({ ...prev, state: v }));
+                    debouncedFetch("states", { country: profile.country, state: v });
+                  }}
+                  onFocus={() => {
+                    fetchSuggestions("states", { country: profile.country, state: profile.state });
+                  }}
+                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  suggestions={apiSuggestions.states}
+                  loading={loadingSuggestions.states}
                 />
               </div>
             </div>
@@ -743,27 +813,38 @@ const ProfileScreen = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Country</label>
-                <input
+                <SuggestionInput
                   type="text"
                   placeholder="Country"
                   value={profile.country || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, country: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  onChange={(v) => {
+                    setProfile((prev) => ({ ...prev, country: v }));
+                    debouncedFetch("countries", { country: v });
+                  }}
+                  onFocus={() => {
+                    fetchSuggestions("countries", { country: profile.country });
+                  }}
+                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  suggestions={apiSuggestions.countries}
+                  loading={loadingSuggestions.countries}
                 />
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">ZIP Code</label>
-                <input
+                <SuggestionInput
                   type="text"
                   placeholder="ZIP"
                   value={profile.zip_code || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      zip_code: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  onChange={(v) => {
+                    setProfile((prev) => ({ ...prev, zip_code: v }));
+                    debouncedFetch("zipcodes", { country: profile.country, state: profile.state, city: profile.city, zipcode: v });
+                  }}
+                  onFocus={() => {
+                    fetchSuggestions("zipcodes", { country: profile.country, state: profile.state, city: profile.city, zipcode: profile.zip_code });
+                  }}
+                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  suggestions={apiSuggestions.zipcodes}
+                  loading={loadingSuggestions.zipcodes}
                 />
               </div>
             </div>

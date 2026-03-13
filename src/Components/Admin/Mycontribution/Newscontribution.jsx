@@ -19,7 +19,7 @@ const COLORS = {
   text: "#1f2937",
 };
 
-const BASE_URL = "https://api.karpagamalumni.in/api";
+const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 
 // Add PlaceholderImage component
 const PlaceholderImage = () => {

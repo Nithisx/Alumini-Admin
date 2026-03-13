@@ -20,7 +20,7 @@ import {
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = "https://api.karpagamalumni.in/api/jobs/";
+const API_URL = "https://api.karpagamalumni.in/api/v1/jobs/";
 
 // Helper to get the token
 const getAuthToken = async () => {
@@ -73,7 +73,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `https://api.karpagamalumni.in/api${imagePath}`;
+    return `https://api.karpagamalumni.in/api/v1${imagePath}`;
   };
 
   return (

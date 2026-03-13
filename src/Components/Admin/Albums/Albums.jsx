@@ -35,7 +35,7 @@ const AlbumsPage = () => {
     const fetchAlbums = async () => {
       try {
         const token = localStorage.getItem("Token");
-        const response = await axios.get("https://api.karpagamalumni.in/api/albums/", {
+        const response = await axios.get("https://api.karpagamalumni.in/api/v1/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
         setAlbums(Array.isArray(response.data) ? response.data : []);
@@ -70,7 +70,7 @@ const AlbumsPage = () => {
     if (!window.confirm("Are you sure you want to delete this album?")) return;
     try {
       const token = localStorage.getItem("Token");
-      await axios.delete(`https://api.karpagamalumni.in/api/albums/${id}/`, {
+      await axios.delete(`https://api.karpagamalumni.in/api/v1/albums/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setAlbums((prev) => prev.filter((a) => a.id !== id));
@@ -110,7 +110,7 @@ const AlbumsPage = () => {
       }
 
       const response = await axios.put(
-        `https://api.karpagamalumni.in/api/albums/${editingAlbum.id}/`,
+        `https://api.karpagamalumni.in/api/v1/albums/${editingAlbum.id}/`,
         payload,
         {
           headers: {
@@ -164,7 +164,7 @@ const AlbumsPage = () => {
         payload.append("cover_image", uploadedFile.file, uploadedFile.name);
 
       const response = await axios.post(
-        "https://api.karpagamalumni.in/api/albums/",
+        "https://api.karpagamalumni.in/api/v1/albums/",
         payload,
         {
           headers: {
@@ -442,7 +442,7 @@ const AlbumsPage = () => {
 
                       {album.cover_image ? (
                         <img
-                          src={`https://api.karpagamalumni.in/api${album.cover_image}`}
+                          src={`https://api.karpagamalumni.in/api/v1${album.cover_image}`}
                           alt={album.title}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                         />
@@ -479,7 +479,7 @@ const AlbumsPage = () => {
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
-                              src={`https://api.karpagamalumni.in/api${album.cover_image}`}
+                              src={`https://api.karpagamalumni.in/api/v1${album.cover_image}`}
                               alt={album.title}
                               className="h-full w-full object-cover"
                             />
@@ -732,7 +732,7 @@ const AlbumsPage = () => {
                   <div className="mb-4">
                     <p className="text-sm text-gray-600 mb-2">Current image:</p>
                     <img
-                      src={`https://api.karpagamalumni.in/api${editingAlbum.cover_image}`}
+                      src={`https://api.karpagamalumni.in/api/v1${editingAlbum.cover_image}`}
                       alt="Current cover"
                       className="w-full max-w-xs h-auto max-h-48 object-contain rounded-lg border"
                     />

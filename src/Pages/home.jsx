@@ -19,6 +19,7 @@ export default function Home() {
     total_users: 0,
     new_users: 0,
   });
+  const [countryDistribution, setCountryDistribution] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -37,12 +38,20 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("https://api.karpagamalumni.in/api/home/");
-        if (!response.ok) {
+        const [homeResponse, countryResponse] = await Promise.all([
+          fetch("https://api.karpagamalumni.in/api/v1/home/"),
+          fetch("https://api.karpagamalumni.in/api/v1/country-distribution/")
+        ]);
+
+        if (!homeResponse.ok || !countryResponse.ok) {
           throw new Error("Network response was not ok");
         }
-        const result = await response.json();
+
+        const result = await homeResponse.json();
+        const countryResult = await countryResponse.json();
+
         setData(result);
+        setCountryDistribution(countryResult);
         setLoading(false);
       } catch (error) {
         setError("Failed to fetch data. Please try again later.");
@@ -136,105 +145,124 @@ export default function Home() {
         {/* Statistics Section */}
         <section className="py-20 ">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
+            <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-4 sm:p-6 lg:p-8 border border-green-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {/* Total Members Card */}
+                <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-cyan-100 to-green-100 rounded-2xl transform hover:scale-105 transition-all duration-300 hover:shadow-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.total_users.toLocaleString()}
+                  <h3 className="text-2xl sm:text-2xl lg:text-3xl font-bold text-cyan-700 mb-1 sm:mb-2 flex items-center justify-center">
+                    {data.total_users || 0}
                   </h3>
-                  <p className="text-gray-600 font-medium">Total Alumni</p>
+                  <p className="text-cyan-600 font-medium text-sm sm:text-base">Total Members</p>
                 </div>
-              </div>
 
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                      />
+                {/* Upcoming Events Card */}
+                <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl transform hover:scale-105 transition-all duration-300 hover:shadow-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.new_users.toLocaleString()}
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-700 mb-1 sm:mb-2 flex items-center justify-center">
+                    {data.upcoming_event || 0}
                   </h3>
-                  <p className="text-gray-600 font-medium">Total News Rooms</p>
+                  <p className="text-green-600 font-medium text-sm sm:text-base">Upcoming Events</p>
                 </div>
-              </div>
 
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
+                {/* Photo Albums Card */}
+                <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl transform hover:scale-105 transition-all duration-300 hover:shadow-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.chapters.length}
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-700 mb-1 sm:mb-2 flex items-center justify-center">
+                    {data.albums_count || 0}
                   </h3>
-                  <p className="text-gray-600 font-medium">Active Chapters</p>
+                  <p className="text-emerald-600 font-medium text-sm sm:text-base">Photo Albums</p>
                 </div>
-              </div>
 
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
+                {/* News room Card */}
+                <div className="text-center p-4 sm:p-6 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl transform hover:scale-105 transition-all duration-300 hover:shadow-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.upcoming_event}
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-teal-700 mb-1 sm:mb-2 flex items-center justify-center">
+                    {data.new_users || 0}
                   </h3>
-                  <p className="text-gray-600 font-medium"> Events</p>
+                  <p className="text-teal-600 font-medium text-sm sm:text-base">Total News Rooms</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
+
+        {/* Latest Photo Albums */}
+        {data.latest_album_images && data.latest_album_images.length > 0 && (
+          <section className="py-20" id="photo-gallery-section">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                  Photo Gallery
+                </h2>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                  Memories captured in time
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {data.latest_album_images.slice(0, 4).map((album) => (
+                  <div
+                    key={album.id}
+                    className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100"
+                  >
+                    <div className="relative h-48 sm:h-56 overflow-hidden">
+                      {album.cover_image ? (
+                        <img
+                          src={`https://api.karpagamalumni.in/api/v1${album.cover_image}`}
+                          alt={album.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-green-200 to-emerald-300 flex items-center justify-center">
+                          <svg
+                            className="w-16 h-16 text-green-600 opacity-60"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          </svg>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span className="text-white font-semibold px-4 py-2 bg-green-600/80 backdrop-blur-sm rounded-xl text-sm">
+                          View Album
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="font-bold text-gray-900 mb-2 truncate text-lg">
+                        {album.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm truncate">
+                        {album.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Featured News Slider */}
         {data.featured_news.length > 0 && (
@@ -268,7 +296,7 @@ export default function Home() {
                       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
                         <div className="relative">
                           <img
-                            src={`https://api.karpagamalumni.in/api${news.thumbnail}`}
+                            src={`https://api.karpagamalumni.in/api/v1${news.thumbnail}`}
                             alt={news.title}
                             className="w-full h-full object-cover"
                           />
@@ -295,7 +323,7 @@ export default function Home() {
                           </p>
                           <div className="flex items-center">
                             <img
-                              src={`https://api.karpagamalumni.in/api${news.user.profile_photo}`}
+                              src={`https://api.karpagamalumni.in/api/v1${news.user.profile_photo}`}
                               alt={`${news.user.first_name} ${news.user.last_name}`}
                               className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-blue-200"
                             />
@@ -398,7 +426,7 @@ export default function Home() {
                     <div className="relative h-64 overflow-hidden">
                       {event.images && event.images.length > 0 ? (
                         <img
-                          src={`https://api.karpagamalumni.in/api${event.images[0].image}`}
+                          src={`https://api.karpagamalumni.in/api/v1${event.images[0].image}`}
                           alt={event.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
@@ -514,7 +542,7 @@ export default function Home() {
                         <div className="w-full h-full rounded-full overflow-hidden">
                           {member.profile_photo ? (
                             <img
-                              src={`https://api.karpagamalumni.in/api${member.profile_photo}`}
+                              src={`https://api.karpagamalumni.in/api/v1${member.profile_photo}`}
                               alt={`${member.first_name} ${member.last_name}`}
                               className="w-full h-full object-cover"
                             />
@@ -632,7 +660,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {data.chapters.slice(0, 6).map((chapter, index) => (
+              {countryDistribution.slice(0, 6).map((item, index) => (
                 <div
                   key={index}
                   className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100"
@@ -661,7 +689,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-green-00 leading-tight">
-                        {chapter.chapter.replace("&#039;", "'")}
+                        {item.country}
                       </h3>
                     </div>
                   </div>
@@ -682,7 +710,7 @@ export default function Home() {
                         />
                       </svg>
                       <span className="text-green-700 font-semibold">
-                        {chapter.member_count} Members
+                        {item.count} Members
                       </span>
                     </div>
                     <span className="text-green-700 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">

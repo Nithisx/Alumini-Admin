@@ -1,7 +1,9 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import SuggestionInput from "../Components/Shared/SuggestionInput";
 
-const SIGNUP_OTP_URL = "https://api.karpagamalumni.in/api/signup-otp/";
-const SIGNUP_URL = "https://api.karpagamalumni.in/api/signup/";
+const SIGNUP_OTP_URL = "https://api.karpagamalumni.in/api/v1/signup-otp/";
+const SIGNUP_URL = "https://api.karpagamalumni.in/api/v1/signup/";
+const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/v1/suggestions";
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -21,6 +23,9 @@ const REQUIRED_FIELDS = [
   "password",
   "confirm_password",
   "otp",
+  "country",
+  "state",
+  "city"
 ];
 
 const ROLES = ["Student", "Alumni", "Staff"];
@@ -270,6 +275,10 @@ const Signup = () => {
     confirm_password: "",
     otp: "",
     profile_photo: "",
+    country: "",
+    state: "",
+    city: "",
+    pincode: ""
   });
 
   const [signLoading, setSignLoading] = useState(false);
@@ -281,6 +290,54 @@ const Signup = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameDebounceTimer, setUsernameDebounceTimer] = useState(null);
+
+  // Suggestions state
+  const [apiSuggestions, setApiSuggestions] = useState({
+    usernames: [],
+    emails: [],
+    countryCodes: [],
+    countries: [],
+    states: [],
+    cities: [],
+    pincodes: []
+  });
+  const [loadingSuggestions, setLoadingSuggestions] = useState({});
+  const suggestionTimers = useRef({});
+
+  const fetchSuggestions = useCallback(async (type, params) => {
+    try {
+      setLoadingSuggestions(prev => ({ ...prev, [type]: true }));
+      const query = new URLSearchParams(params).toString();
+      const res = await fetch(`${SUGGESTIONS_API}/signup?${query}`);
+      if (res.ok) {
+        const json = await res.json();
+
+        setApiSuggestions(prev => ({
+          ...prev,
+          usernames: json.data?.usernameSuggestions || prev.usernames,
+          emails: json.data?.emailSuggestions || prev.emails,
+          countryCodes: json.data?.countryCodeSuggestions || prev.countryCodes,
+          countries: json.data?.locationSuggestions?.countries || prev.countries,
+          states: json.data?.locationSuggestions?.states || prev.states,
+          cities: json.data?.locationSuggestions?.cities || prev.cities,
+          pincodes: json.data?.locationSuggestions?.pincodes || prev.pincodes,
+        }));
+      }
+    } catch (err) {
+      console.error("Suggestion fetch err:", err);
+    } finally {
+      setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
+    }
+  }, []);
+
+  const debouncedFetch = useCallback((type, params, delay = 300) => {
+    if (suggestionTimers.current[type]) {
+      clearTimeout(suggestionTimers.current[type]);
+    }
+    suggestionTimers.current[type] = setTimeout(() => {
+      fetchSuggestions(type, params);
+    }, delay);
+  }, [fetchSuggestions]);
 
   const availableBranches = useMemo(() => {
     if (!formData.course) return [];
@@ -531,7 +588,7 @@ const Signup = () => {
     const timer = setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const response = await fetch(`https://api.karpagamalumni.in/api/check-username/?username=${encodeURIComponent(username)}`);
+        const response = await fetch(`https://api.karpagamalumni.in/api/v1/check-username/?username=${encodeURIComponent(username)}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -660,24 +717,46 @@ const Signup = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
-                  <InputField
+                  <SuggestionInput
                     label="Email"
                     type="email"
                     value={formData.email}
-                    onChange={(v) => updateField("email", v)}
+                    onChange={(v) => {
+                      updateField("email", v);
+                      if (v.includes("@")) {
+                        debouncedFetch("emails", { email: v });
+                      }
+                    }}
                     placeholder="Enter your email"
                     error={fieldErrors.email}
+                    suggestions={apiSuggestions.emails}
+                    loading={loadingSuggestions.emails}
                   />
                   <div className="relative">
-                    <InputField
+                    <SuggestionInput
                       label="Username"
                       value={formData.username}
                       onChange={(v) => {
                         updateField("username", v);
+                        debouncedFetch("usernames", {
+                          firstName: formData.first_name,
+                          lastName: formData.last_name
+                        });
                         checkUsernameAvailability(v);
+                      }}
+                      onFocus={() => {
+                        if (!apiSuggestions.usernames.length) {
+                          fetchSuggestions("usernames", {
+                            firstName: formData.first_name,
+                            lastName: formData.last_name
+                          });
+                        }
                       }}
                       placeholder="Choose a username"
                       error={fieldErrors.username}
+                      suggestions={apiSuggestions.usernames}
+                      loading={loadingSuggestions.usernames}
+                      showDropdownConditions={!fieldErrors.username}
                     />
                     {formData.username && (
                       <div className="absolute right-3 top-8">
@@ -698,12 +777,18 @@ const Signup = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-6">
-                  <InputField
+                  <SuggestionInput
                     label="Country Code"
                     value={formData.country_code}
-                    onChange={(v) => updateField("country_code", v)}
+                    onChange={(v) => {
+                      updateField("country_code", v);
+                      debouncedFetch("countryCodes", { country: formData.country });
+                    }}
+                    onFocus={() => fetchSuggestions("countryCodes", { country: formData.country })}
                     placeholder="+91"
                     error={fieldErrors.country_code}
+                    suggestions={apiSuggestions.countryCodes.map(c => c.countryCode)}
+                    loading={loadingSuggestions.countryCodes}
                   />
                   <div className="sm:col-span-2">
                     <InputField
@@ -741,6 +826,65 @@ const Signup = () => {
                     />
                     {fieldErrors.date_of_birth && <p className="text-sm text-red-600">{fieldErrors.date_of_birth}</p>}
                   </div>
+                </div>
+
+                {/* Location Fields */}
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <SuggestionInput
+                    label="Country"
+                    value={formData.country}
+                    onChange={(v) => {
+                      updateField("country", v);
+                      debouncedFetch("countries", { country: v });
+                    }}
+                    onFocus={() => fetchSuggestions("countries", { country: formData.country })}
+                    placeholder="Enter country"
+                    error={fieldErrors.country}
+                    suggestions={apiSuggestions.countries}
+                    loading={loadingSuggestions.countries}
+                  />
+                  <SuggestionInput
+                    label="State"
+                    value={formData.state}
+                    onChange={(v) => {
+                      updateField("state", v);
+                      debouncedFetch("states", { country: formData.country, state: v });
+                    }}
+                    onFocus={() => fetchSuggestions("states", { country: formData.country, state: formData.state })}
+                    placeholder="Enter state"
+                    error={fieldErrors.state}
+                    suggestions={apiSuggestions.states}
+                    loading={loadingSuggestions.states}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <SuggestionInput
+                    label="City"
+                    value={formData.city}
+                    onChange={(v) => {
+                      updateField("city", v);
+                      debouncedFetch("cities", { country: formData.country, state: formData.state, city: v });
+                    }}
+                    onFocus={() => fetchSuggestions("cities", { country: formData.country, state: formData.state, city: formData.city })}
+                    placeholder="Enter city"
+                    error={fieldErrors.city}
+                    suggestions={apiSuggestions.cities}
+                    loading={loadingSuggestions.cities}
+                  />
+                  <SuggestionInput
+                    label="Pincode/Zipcode"
+                    value={formData.pincode}
+                    required={false}
+                    onChange={(v) => {
+                      updateField("pincode", v);
+                      debouncedFetch("pincodes", { country: formData.country, state: formData.state, city: formData.city, pincode: v });
+                    }}
+                    onFocus={() => fetchSuggestions("pincodes", { country: formData.country, state: formData.state, city: formData.city, pincode: formData.pincode })}
+                    placeholder="Enter pincode"
+                    error={fieldErrors.pincode}
+                    suggestions={apiSuggestions.pincodes}
+                    loading={loadingSuggestions.pincodes}
+                  />
                 </div>
               </div>
 

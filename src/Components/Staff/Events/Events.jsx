@@ -41,7 +41,7 @@ export default function Events() {
 
   useEffect(() => {
     setIsLoading(true);
-    fetch("https://api.karpagamalumni.in/api/events/", {
+    fetch("https://api.karpagamalumni.in/api/v1/events/", {
       headers: { Authorization: token ? `Token ${token}` : "" },
     })
       .then((res) => res.json())
@@ -62,7 +62,7 @@ export default function Events() {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this event?")) {
-      fetch(`https://api.karpagamalumni.in/api/events/${id}`, {
+      fetch(`https://api.karpagamalumni.in/api/v1/events/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: token ? `Token ${token}` : "",
@@ -145,7 +145,7 @@ export default function Events() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event) => {
               const imgPath = event.images?.[0]?.image;
-              const imgUrl = imgPath ? `https://api.karpagamalumni.in/api${imgPath}` : null;
+              const imgUrl = imgPath ? `https://api.karpagamalumni.in/api/v1${imgPath}` : null;
               return (
                 <div
                   key={event.id}
