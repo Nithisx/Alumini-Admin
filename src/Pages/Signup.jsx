@@ -62,6 +62,7 @@ const COURSES = [
   "Master of Philosophy",
   "Master of Planning",
   "Master of Science",
+  "Master of Social Work",
   "Ph.D"
 ];
 
