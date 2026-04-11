@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'https://api.karpagamalumni.in/api/v1/profile/';
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in/api/v1";
 
 const PROFILE_PLACEHOLDER =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
@@ -15,6 +16,12 @@ const getProfileAvatar = (firstName, lastName) => {
   const bg = colors[Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length];
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="${bg}" /><text x="50%" y="50%" dy=".3em" font-family="Arial, sans-serif" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
+};
+
+const getMediaUrl = (uri) => {
+  if (!uri) return "";
+  if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) return uri;
+  return uri.startsWith("/") ? `${MEDIA_BASE_URL}${uri}` : `${MEDIA_BASE_URL}/${uri}`;
 };
 
 export default function SingleMember() {
@@ -103,6 +110,7 @@ export default function SingleMember() {
     secondary_email,
     phone,
     profile_photo,
+    cover_photo,
     current_location,
     home_town,
     city,
@@ -177,14 +185,23 @@ export default function SingleMember() {
         <div className="bg-white shadow-lg sm:shadow-2xl rounded-xl sm:rounded-2xl overflow-hidden border border-green-100">
 
           {/* Header Section with Gradient */}
-          <div className="relative bg-gradient-to-r from-green-600 to-emerald-600 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+          <div
+            className="relative px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12"
+            style={{
+              backgroundImage: `url(${cover_photo ? getMediaUrl(cover_photo) : ""})`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              backgroundColor: "#059669",
+            }}
+          >
+            <div className="absolute inset-0 bg-black/35"></div>
             <div className="relative flex flex-col items-center gap-4 sm:gap-6">
               <div className="relative">
                 <img
                   src={
                     member.profile_photo
-                      ? `https://api.karpagamalumni.in/api/v1${member.profile_photo}`
+                      ? getMediaUrl(member.profile_photo)
                       : getProfileAvatar(first_name, last_name)
                   }
                   alt={username}

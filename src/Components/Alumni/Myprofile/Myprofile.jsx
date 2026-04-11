@@ -1227,24 +1227,37 @@ const ProfileScreen = () => {
     <div className="min-h-screen bg-green-50 py-4 sm:py-6 lg:py-8">
       <div className="max-w-full lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
-        <div className="bg-white text-center py-4 sm:py-5 mb-3 sm:mb-4 shadow-sm rounded-lg">
-          <div className="relative inline-block">
-            <img
-              src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
-              alt="Profile"
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full mx-auto mb-3 border-4 border-green-600 object-cover shadow-md"
-            />
-          </div>
-          <h2 className="text-lg sm:text-xl font-bold text-green-900 mb-1">
-            {`${profile.first_name} ${profile.last_name}`}
-          </h2>
-          <p className="text-xs sm:text-sm text-green-700 break-all px-4">{profile.username || "username"}</p>
-          {profile.current_work && (
-            <div className="mt-2 inline-flex items-center px-2 sm:px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-              <Briefcase className="w-3 h-3 mr-1" />
-              <span className="truncate max-w-xs">{profile.current_work}</span>
+        <div className="relative mb-3 sm:mb-4 overflow-hidden rounded-lg shadow-sm">
+          <div
+            className="px-4 py-6 text-center sm:px-6 sm:py-8"
+            style={{
+              backgroundImage: `url(${profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE})`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+            }}
+          >
+            <div className="absolute inset-0 bg-black/45" />
+            <div className="relative z-10">
+              <div className="relative inline-block">
+                <img
+                  src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
+                  alt="Profile"
+                  className="mx-auto mb-3 h-20 w-20 rounded-full border-4 border-white object-cover shadow-md sm:h-24 sm:w-24"
+                />
+              </div>
+              <h2 className="mb-1 text-lg font-bold text-white sm:text-xl">
+                {`${profile.first_name} ${profile.last_name}`}
+              </h2>
+              <p className="break-all px-4 text-xs text-green-50 sm:text-sm">{profile.username || "username"}</p>
+              {profile.current_work && (
+                <div className="mt-2 inline-flex items-center rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-green-800 sm:px-3">
+                  <Briefcase className="mr-1 h-3 w-3" />
+                  <span className="truncate max-w-xs">{profile.current_work}</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Tabs */}

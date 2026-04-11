@@ -18,6 +18,13 @@ const getProfileAvatar = (firstName, lastName) => {
 const TOKEN = localStorage.getItem("Token");
 const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
 const API_USER_ACTIONS = "https://api.karpagamalumni.in/api/v1/admin-actions/";
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in/api/v1";
+
+const getMediaUrl = (uri) => {
+  if (!uri) return "";
+  if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) return uri;
+  return uri.startsWith("/") ? `${MEDIA_BASE_URL}${uri}` : `${MEDIA_BASE_URL}/${uri}`;
+};
 
 // Dropdown data from Signup page
 const ROLES = ["Student", "Alumni", "Staff"];
@@ -636,6 +643,7 @@ export default function SingleMember() {
     secondary_email,
     phone,
     profile_photo,
+    cover_photo,
     current_location,
     home_town,
     city,
@@ -919,15 +927,24 @@ export default function SingleMember() {
           </div>
 
           {/* Header Section with Gradient */}
-          <div className="relative bg-gradient-to-r from-green-600 to-emerald-600 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+          <div
+            className="relative px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12"
+            style={{
+              backgroundImage: `url(${cover_photo ? getMediaUrl(cover_photo) : ""})`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              backgroundColor: "#059669",
+            }}
+          >
+            <div className="absolute inset-0 bg-black/35"></div>
             <div className="relative flex flex-col items-center gap-4 sm:gap-6">
               <div className="relative">
                 <img
                   src={
                     imagePreview ||
                     (member.profile_photo
-                      ? `https://api.karpagamalumni.in/api/v1${member.profile_photo}`
+                      ? getMediaUrl(member.profile_photo)
                       : getProfileAvatar(first_name, last_name))
                   }
                   alt={username}
