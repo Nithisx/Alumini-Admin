@@ -9,6 +9,7 @@ import Image2 from "../images/image2.jpg";
 import Image3 from "../images/image3.jpg";
 import Footer from "../Pages/about_components/Footer.jsx";
 import Loader from "./Loder.jsx";
+import ChapterDistributionSection from "../Components/Shared/ChapterDistributionSection.jsx";
 export default function Home() {
   const [data, setData] = useState({
     upcoming_events: [],
@@ -19,7 +20,11 @@ export default function Home() {
     total_users: 0,
     new_users: 0,
   });
-  const [countryDistribution, setCountryDistribution] = useState([]);
+  const [countryDistribution, setCountryDistribution] = useState({ chapters: [] });
+  const [cityStateDistribution, setCityStateDistribution] = useState({
+    city_chapters: [],
+    state_chapters: [],
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -38,20 +43,23 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [homeResponse, countryResponse] = await Promise.all([
+        const [homeResponse, countryResponse, cityStateResponse] = await Promise.all([
           fetch("https://api.karpagamalumni.in/api/v1/home/"),
-          fetch("https://api.karpagamalumni.in/api/v1/country-distribution/")
+          fetch("https://api.karpagamalumni.in/api/v1/country-distribution/"),
+          fetch("https://api.karpagamalumni.in/api/v1/city-state-chapters/"),
         ]);
 
-        if (!homeResponse.ok || !countryResponse.ok) {
+        if (!homeResponse.ok || !countryResponse.ok || !cityStateResponse.ok) {
           throw new Error("Network response was not ok");
         }
 
         const result = await homeResponse.json();
         const countryResult = await countryResponse.json();
+        const cityStateResult = await cityStateResponse.json();
 
         setData(result);
         setCountryDistribution(countryResult);
+        setCityStateDistribution(cityStateResult);
         setLoading(false);
       } catch (error) {
         setError("Failed to fetch data. Please try again later.");
@@ -647,81 +655,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Chapters Section */}
-        <section className="py-20 " id="chapters-section">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-green-900 mb-4">
-                Global Chapters
-              </h2>
-              <p className="text-xl text-green-700 max-w-2xl mx-auto">
-                Connect with alumni chapters around the world
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {countryDistribution.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100"
-                >
-                  <div className="flex items-center mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-300 to-green-300 rounded-full flex items-center justify-center mr-4">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-green-00 leading-tight">
-                        {item.country}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                      <span className="text-green-700 font-semibold">
-                        {item.count} Members
-                      </span>
-                    </div>
-                    <span className="text-green-700 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">
-                      Active
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <ChapterDistributionSection
+          countryDistribution={countryDistribution}
+          cityStateDistribution={cityStateDistribution}
+          sectionClassName="py-20"
+        />
 
         {/* Call to Action */}
         <section
