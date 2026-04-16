@@ -275,7 +275,6 @@ const NewsContribution = () => {
       const newsData = data.news || data.results || [];
       setNews(newsData);
     } catch (error) {
-      console.error("Error fetching news", error);
       alert("Failed to fetch news. Please try again.");
     } finally {
       setLoading(false);
@@ -318,7 +317,6 @@ const NewsContribution = () => {
       );
       alert("News article deleted successfully!");
     } catch (error) {
-      console.error("Error deleting news:", error);
       alert(error.message || "Failed to delete news article");
     }
   };

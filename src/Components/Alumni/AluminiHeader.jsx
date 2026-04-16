@@ -55,8 +55,6 @@ export default function alumniHeader() {
   }, []);
 
   const handleLogout = () => {
-    console.log("Logout clicked");
-    // Note: localStorage not available in artifacts
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
     window.location.href = "/login";
@@ -251,10 +249,15 @@ export default function alumniHeader() {
 
                   {/* More dropdown for remaining items */}
                   <div className="relative group">
-                    <button className="flex items-center gap-1 px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-all duration-300">
+                    <button
+                      className="flex items-center gap-1 px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-all duration-300"
+                      aria-haspopup="true"
+                      aria-label="More navigation items"
+                    >
                       <FontAwesomeIcon
                         icon={faChevronDown}
                         className="h-3.5 w-3.5"
+                        aria-hidden="true"
                       />
                       <span className="text-xs font-medium">More</span>
                     </button>
@@ -309,10 +312,14 @@ export default function alumniHeader() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
+              aria-expanded={isMobileOpen}
+              aria-controls="alumni-mobile-menu"
+              aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
               className="md:hidden relative p-2.5 rounded-lg bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               <FontAwesomeIcon
                 icon={isMobileOpen ? faTimes : faBars}
+                aria-hidden="true"
                 className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${
                   isMobileOpen ? "rotate-180" : "rotate-0"
                 }`}
@@ -323,6 +330,9 @@ export default function alumniHeader() {
 
         {/* Mobile Navigation Dropdown */}
         <div
+          id="alumni-mobile-menu"
+          role="navigation"
+          aria-label="Mobile navigation"
           className={`md:hidden transition-all duration-300 ease-in-out ${
             isMobileOpen
               ? "max-h-screen overflow-y-auto opacity-100 bg-white/95 backdrop-blur-md"
@@ -394,6 +404,7 @@ export default function alumniHeader() {
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 

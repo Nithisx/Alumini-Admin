@@ -313,8 +313,6 @@ export default function BusinessContribution() {
     return matchesSearch && matchesCategory;
   });
 
-  console.log("Businesses:", businesses);
-  console.log("Filtered businesses:", filteredBusinesses);
 
   // Business Card Component
   const BusinessCard = ({ business }) => (
@@ -510,10 +508,15 @@ export default function BusinessContribution() {
       {/* View Business Modal */}
       {showViewModal && selectedBusiness && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-full overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="biz-view-title"
+            className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-full overflow-y-auto"
+          >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 id="biz-view-title" className="text-xl font-bold text-gray-900">
                   Business Details
                 </h2>
                 <button
@@ -744,13 +747,19 @@ export default function BusinessContribution() {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-biz-title"
+            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
+          >
             <div className="text-center">
               <FontAwesomeIcon
                 icon={faExclamationTriangle}
                 className="text-4xl text-red-600 mb-4"
+                aria-hidden="true"
               />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 id="delete-biz-title" className="text-lg font-semibold text-gray-900 mb-2">
                 Delete Business
               </h3>
               <p className="text-gray-600 mb-6">

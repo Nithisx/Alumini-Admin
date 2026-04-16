@@ -55,8 +55,6 @@ export default function staffHeader() {
   }, []);
 
   const handleLogout = () => {
-    console.log("Logout clicked");
-    // Note: localStorage not available in artifacts
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
     window.location.href = "/login";
@@ -310,10 +308,14 @@ export default function staffHeader() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
+              aria-expanded={isMobileOpen}
+              aria-controls="staff-mobile-menu"
+              aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
               className="md:hidden relative p-2.5 rounded-lg bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               <FontAwesomeIcon
                 icon={isMobileOpen ? faTimes : faBars}
+                aria-hidden="true"
                 className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${
                   isMobileOpen ? "rotate-180" : "rotate-0"
                 }`}
@@ -324,6 +326,9 @@ export default function staffHeader() {
 
         {/* Mobile Navigation Dropdown */}
         <div
+          id="staff-mobile-menu"
+          role="navigation"
+          aria-label="Mobile navigation"
           className={`md:hidden transition-all duration-300 ease-in-out ${
             isMobileOpen
               ? "max-h-screen overflow-y-auto opacity-100 bg-white/95 backdrop-blur-md"

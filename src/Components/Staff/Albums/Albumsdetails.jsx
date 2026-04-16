@@ -21,7 +21,6 @@ const AlbumDetailPage = () => {
 
   // Image compression function
   const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
-    console.log(`Original file size: ${(file.size / (1024 * 1024)).toFixed(2)} MB`);
 
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
@@ -47,7 +46,6 @@ const AlbumDetailPage = () => {
         canvas.toBlob(
           (blob) => {
             const printCompressedSize = (b) => {
-              console.log(`Compressed file size: ${(b.size / (1024 * 1024)).toFixed(2)} MB`);
             };
 
             if (blob.size > maxSizeMB * 1024 * 1024 && quality > 0.1) {
@@ -97,7 +95,6 @@ const AlbumDetailPage = () => {
     if (!albumId) return;
 
     const fetchEventImages = async () => {
-      console.log(`Fetching images from ${BASE_URL}/albums/${albumId}/images/`);
       try {
         const response = await axios.get(
           `${BASE_URL}/albums/${albumId}/images/`,
@@ -105,10 +102,8 @@ const AlbumDetailPage = () => {
             headers: { Authorization: `Token ${token}` },
           }
         );
-        console.log("API Response:", response.data);
         setEventImages(response.data);
       } catch (error) {
-        console.error("Error fetching event images:", error);
       } finally {
         setLoading(false);
       }
@@ -151,7 +146,6 @@ const AlbumDetailPage = () => {
   const handleFileChange = async (e) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
-      console.log("Selected Files:", selectedFiles);
 
       // Show loading state while compressing
       setUploading(true);
@@ -161,13 +155,10 @@ const AlbumDetailPage = () => {
         const compressedFiles = await Promise.all(
           selectedFiles.map(async (file) => {
             const fileSizeMB = file.size / (1024 * 1024);
-            console.log(`File ${file.name} size: ${fileSizeMB.toFixed(2)}MB`);
 
             if (fileSizeMB > 5) {
-              console.log(`Compressing ${file.name}...`);
               const compressedFile = await compressImage(file);
               const compressedSizeMB = compressedFile.size / (1024 * 1024);
-              console.log(`Compressed ${file.name} to ${compressedSizeMB.toFixed(2)}MB`);
               return compressedFile;
             }
             return file;
@@ -176,7 +167,6 @@ const AlbumDetailPage = () => {
 
         setFormData({ ...formData, images: compressedFiles });
       } catch (error) {
-        console.error("Error compressing images:", error);
         alert("Error processing images. Please try again.");
       } finally {
         setUploading(false);
@@ -202,14 +192,10 @@ const AlbumDetailPage = () => {
       formDataToSend.append("images", image);
     });
 
-    console.log("Preparing to send request...");
-    console.log("FormData entries:");
     for (let pair of formDataToSend.entries()) {
-      console.log(pair[0], pair[1]);
     }
 
     try {
-      console.log(`Uploading to: ${BASE_URL}/albums/${albumId}/images/`);
 
       const response = await axios.post(
         `${BASE_URL}/albums/${albumId}/images/`,
@@ -228,7 +214,6 @@ const AlbumDetailPage = () => {
       setShowForm(false);
       alert("Event images uploaded successfully!");
     } catch (error) {
-      console.error("Error uploading event image:", error);
       alert("Failed to upload event images.");
     } finally {
       setUploading(false); // End upload loading state
@@ -245,7 +230,6 @@ const AlbumDetailPage = () => {
       setEventImages(eventImages.filter((img) => img.id !== imageId));
       alert("Image deleted successfully!");
     } catch (error) {
-      console.error("Error deleting image:", error);
       alert("Failed to delete image.");
     }
   };

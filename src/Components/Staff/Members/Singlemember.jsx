@@ -31,7 +31,6 @@ export default function SingleMember() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('Fetching specfing member data...');
     fetch(`${API_BASE}${name}`, {
       headers: {
         'Authorization': `Token ${TOKEN}`,
@@ -40,7 +39,6 @@ export default function SingleMember() {
     })
       .then(res => res.ok ? res.json() : Promise.reject(res.status))
       .then(data => setMember(data))
-      .catch(err => console.error('Error fetching member:', err))
       .finally(() => setLoading(false));
   }, [name]);
 
@@ -64,10 +62,8 @@ export default function SingleMember() {
         navigate(`/staff/chat`);
       }
     } catch (error) {
-      console.error('Room creation error:', error);
     }
 
-    console.log("Room ")
   };
 
   if (loading) {

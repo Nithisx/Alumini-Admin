@@ -3,7 +3,7 @@ import SuggestionInput from "../Components/Shared/SuggestionInput";
 
 const SIGNUP_OTP_URL = "https://api.karpagamalumni.in/api/v1/signup-otp/";
 const SIGNUP_URL = "https://api.karpagamalumni.in/api/v1/signup/";
-const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/v1/suggestions";
+const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -326,7 +326,6 @@ const Signup = () => {
         }));
       }
     } catch (err) {
-      console.error("Suggestion fetch err:", err);
     } finally {
       setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
     }
@@ -472,11 +471,16 @@ const Signup = () => {
       });
       const data = await response.json();
 
+      if (!response.ok) {
+        setError(data?.error || data?.message || "Failed to send OTP. Please try again.");
+        return;
+      }
+
       setIsOtpSent(true);
       setResendTimer(120);
       setError("");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to send OTP");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -509,7 +513,6 @@ const Signup = () => {
       };
       input.click();
     } catch (error) {
-      console.error("Image picker error:", error);
     }
   };
 

@@ -20,7 +20,6 @@ const AuthorizedImage = ({ url, alt, className }) => {
       .then((blob) => {
         if (isMounted) setImageUrl(URL.createObjectURL(blob));
       })
-      .catch((e) => console.error(e));
     return () => (isMounted = false);
   }, [url, token]);
 
@@ -51,7 +50,6 @@ export default function Events() {
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching events:", error);
         setIsLoading(false);
       });
   }, [token]);

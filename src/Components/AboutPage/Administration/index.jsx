@@ -28,7 +28,6 @@ const Administration = () => {
       ...prev,
       [subsection]: !prev[subsection],
     }));
-    console.log(`Toggling ${subsection}:`, !openSubSections[subsection]); // Debug log
   };
 
   return (

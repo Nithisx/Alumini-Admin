@@ -19,7 +19,6 @@ const MyContributions = () => {
 
   const handleGoBack = () => {
     // In a real app, this would use router.back() or navigate(-1)
-    console.log("Go back");
   };
 
   return (

@@ -16,7 +16,6 @@ const StudentImageUpload = () => {
         });
         setStudents(response.data);  // Set students in state
       } catch (error) {
-        console.error("Error fetching students:", error);
       }
     };
 
@@ -61,7 +60,6 @@ const StudentImageUpload = () => {
       setFormData({ name: "", image: null });  // Reset form
       alert("Student added successfully!");
     } catch (error) {
-      console.error("Error uploading student image:", error);
       alert("Could not upload student image.");
     }
   };

@@ -291,7 +291,6 @@ const Jobs = () => {
       const data = await response.json();
       setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Error fetching jobs", error);
     } finally {
       setLoading(false);
     }
@@ -321,7 +320,6 @@ const Jobs = () => {
 
       setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
     } catch (error) {
-      console.error("Error deleting job:", error);
       alert("Failed to delete job. Please try again.");
     }
   };

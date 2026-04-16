@@ -144,7 +144,6 @@ const AddEvent = () => {
       setIsModalOpen(false);
       alert("Event created successfully!");
     } catch (err) {
-      console.error(err);
       setApiError(err.message);
       alert(`Failed to create event: ${err.message}`);
     } finally {
@@ -169,11 +168,16 @@ const AddEvent = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-event-title"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+          >
             {/* Header */}
             <div className="px-8 py-6 bg-green-600 text-white flex justify-between items-center">
-              <h3 className="text-xl font-bold flex items-center">
-                <FontAwesomeIcon icon={faCalendarPlus} className="mr-3 text-white" />
+              <h3 id="add-event-title" className="text-xl font-bold flex items-center">
+                <FontAwesomeIcon icon={faCalendarPlus} className="mr-3 text-white" aria-hidden="true" />
                 New Event
               </h3>
               <button

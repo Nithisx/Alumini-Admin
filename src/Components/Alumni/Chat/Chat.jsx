@@ -105,7 +105,6 @@ const Chat = () => {
 
           if (res.ok) {
             const userData = await res.json();
-            console.log("Current user loaded:", userData);
             setCurrentUser(userData);
             return;
           }
@@ -114,7 +113,6 @@ const Chat = () => {
         }
       }
     } catch (error) {
-      console.error("Get current user error:", error);
     }
   };
 
@@ -122,7 +120,6 @@ const Chat = () => {
   const loadRooms = async () => {
     const token = getToken();
     if (!token) {
-      console.error("No auth token found in localStorage");
       return;
     }
 
@@ -138,14 +135,11 @@ const Chat = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Loaded rooms:", data);
         setRooms(data);
       } else {
         const text = await response.text().catch(() => "no-body");
-        console.error("Failed to load rooms:", response.status, text);
       }
     } catch (error) {
-      console.error("Load rooms error:", error);
     } finally {
       setLoading(false);
     }
@@ -176,10 +170,8 @@ const Chat = () => {
         const data = await response.json();
         setSearchResults(data);
       } else {
-        console.error("Search failed:", response.status);
       }
     } catch (error) {
-      console.error("Search error:", error);
     }
   };
 
@@ -208,7 +200,6 @@ const Chat = () => {
         connectWebSocket(room.id);
       }
     } catch (error) {
-      console.error("Room creation error:", error);
     }
   };
 
@@ -241,7 +232,6 @@ const Chat = () => {
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log("WebSocket connected to room:", roomId);
       setIsConnected(true);
       setTimeout(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -284,18 +274,15 @@ const Chat = () => {
           setMessages((prev) => [...prev, newMessage]);
         }
       } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
       }
     };
 
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
       setIsConnected(false);
       loadMessagesViaHTTP(roomId);
     };
 
     ws.onclose = (event) => {
-      console.log("WebSocket disconnected");
       setIsConnected(false);
       if (event.code === 1006 || !event.wasClean) {
         loadMessagesViaHTTP(roomId);
@@ -325,7 +312,6 @@ const Chat = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Community chat created:", data);
 
         // Add community identifier
         const communityRoom = {
@@ -338,11 +324,9 @@ const Chat = () => {
         return communityRoom;
       } else {
         const err = await response.json().catch(() => ({}));
-        console.error("❌ Failed to create community chat:", err);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error creating community chat:", error);
       return null;
     } finally {
       setLoadingCommunity(false);
@@ -377,11 +361,9 @@ const Chat = () => {
           await createCommunityChat();
         }
       } else {
-        console.log("No community chat found, creating one...");
         await createCommunityChat();
       }
     } catch (error) {
-      console.error("Error loading community chat:", error);
       await createCommunityChat();
     }
   };
@@ -441,13 +423,10 @@ const Chat = () => {
 
         setShowDeleteModal(false);
         setRoomToDelete(null);
-        console.log("Room deleted successfully");
       } else {
         const text = await response.text().catch(() => "no-body");
-        console.error("Failed to delete room:", response.status, text);
       }
     } catch (error) {
-      console.error("Delete room error:", error);
     }
   };
 
@@ -478,7 +457,6 @@ const Chat = () => {
         setMessages(msgs);
       }
     } catch (error) {
-      console.error("HTTP message loading error:", error);
     }
   };
 
@@ -487,7 +465,6 @@ const Chat = () => {
     if (!message.trim()) return;
 
     if (!socket || !isConnected) {
-      console.warn("Cannot send message — no socket or not connected");
       return;
     }
 
@@ -501,7 +478,6 @@ const Chat = () => {
       socket.send(JSON.stringify(payload));
       setMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
     }
   };
 
@@ -549,11 +525,16 @@ const Chat = () => {
       {/* Chat Monitoring Agreement Modal */}
       {showAgreement && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="chat-agree-title"
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in"
+          >
             {/* Modal Header */}
             <div className="bg-green-600 px-6 py-5">
               <div className="flex flex-col">
-                <h2 className="text-xl font-bold text-white">Chat Usage Agreement</h2>
+                <h2 id="chat-agree-title" className="text-xl font-bold text-white">Chat Usage Agreement</h2>
                 <p className="text-green-100 text-sm mt-1">Please read before proceeding</p>
               </div>
             </div>
@@ -1071,13 +1052,18 @@ const Chat = () => {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-chat-title"
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-red-600" />
+                <Trash2 className="w-5 h-5 text-red-600" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 id="delete-chat-title" className="text-lg font-semibold text-gray-900">
                   Delete Chat
                 </h3>
                 <p className="text-sm text-gray-500">

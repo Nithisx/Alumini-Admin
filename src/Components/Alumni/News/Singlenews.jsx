@@ -26,7 +26,6 @@ export default function SingleNews() {
       })
       .then((data) => setPost(data))
       .catch((err) => {
-        console.error("Error fetching news:", err);
         setError(err.message);
       })
       .finally(() => setLoading(false));

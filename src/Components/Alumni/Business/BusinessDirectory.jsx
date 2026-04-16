@@ -89,7 +89,6 @@ const BusinessDirectory = () => {
         setFilteredBusinesses(businessesResponse.data);
         setCategories(categoriesResponse.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -224,7 +223,6 @@ const BusinessDirectory = () => {
       setFilteredBusinesses(filteredBusinesses.filter(business => business.id !== id));
       alert("Business deleted successfully!");
     } catch (error) {
-      console.error("Error deleting business:", error);
       alert("Failed to delete business.");
     }
   };
@@ -243,7 +241,6 @@ const BusinessDirectory = () => {
     onSelect,
     icon,
   }) => (
-    console.log("Rendering SidebarSection:", title, items),
     <div className="mb-6">
       <button
         onClick={() => setCollapsed(!collapsed)}

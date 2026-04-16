@@ -75,7 +75,6 @@ const HomePage = () => {
         setCityStateDistribution(cityStateData);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
         setError(error.message);
         setLoading(false);
       }

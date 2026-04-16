@@ -85,7 +85,6 @@ const SendMail = () => {
         setEmailSuggestions(response.data.suggestions);
       }
     } catch (error) {
-      console.error("Error fetching email suggestions:", error);
     } finally {
       setLoadingSuggestions(false);
     }
@@ -205,7 +204,6 @@ const SendMail = () => {
       });
       setPreviewAttachments([]);
     } catch (error) {
-      console.error(error.response?.data || error);
       showMessage({
         text: error.response?.data?.error || "An error occurred while sending the email.",
         type: "error"

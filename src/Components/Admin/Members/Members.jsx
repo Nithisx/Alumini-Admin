@@ -391,7 +391,6 @@ export default function MembersPage() {
       }));
       setFiltersLoading(false);
     } catch (error) {
-      console.error("Error fetching dropdown filters:", error);
       setFiltersLoading(false);
     }
   };
@@ -443,7 +442,6 @@ export default function MembersPage() {
 
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching members:", error);
       setLoading(false);
     }
   };
@@ -485,7 +483,6 @@ export default function MembersPage() {
   };
 
   const fetchAllFilteredMembers = async () => {
-    console.log("[v0] Fetching all filtered members for export... ");
     let allMembers = [];
     let page = 1;
     let hasMore = true;
@@ -520,7 +517,6 @@ export default function MembersPage() {
         const params = new URLSearchParams(baseParams);
         params.append("page", page.toString());
 
-        console.log(`[v0] Fetching page ${page} for select all...`);
 
         const response = await axios.get(`${API_URL}?${params.toString()}`, {
           headers: {
@@ -533,7 +529,6 @@ export default function MembersPage() {
 
         if (results && results.length > 0) {
           allMembers = [...allMembers, ...results];
-          console.log(
             `[v0] Page ${page}: Got ${results.length} members, total so far: ${allMembers.length}`
           );
         }
@@ -544,19 +539,16 @@ export default function MembersPage() {
 
         // Safety check to prevent infinite loops
         if (page > 100) {
-          console.warn(
             "[v0] Reached maximum page limit (100), stopping pagination"
           );
           break;
         }
       }
 
-      console.log(
         `[v0] Finished fetching all filtered members: ${allMembers.length} total`
       );
       return allMembers;
     } catch (error) {
-      console.error("Error fetching all filtered members:", error);
       return [];
     }
   };
@@ -578,7 +570,6 @@ export default function MembersPage() {
           setSelectAll(true);
         }
       } catch (error) {
-        console.error("Error in select all:", error);
       } finally {
         setSelectAllLoading(false);
       }
@@ -686,7 +677,6 @@ export default function MembersPage() {
         `Successfully exported ${selectedMembers.size} members to ${filename}`
       );
     } catch (error) {
-      console.error("Error exporting to Excel:", error);
       alert("Error exporting data to Excel. Please try again.");
     } finally {
       setExportLoading(false);

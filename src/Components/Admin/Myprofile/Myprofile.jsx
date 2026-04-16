@@ -139,7 +139,6 @@ const ProfileScreen = () => {
         }));
       }
     } catch(err) {
-      console.error("Suggestion fetch err:", err);
     } finally {
       setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
     }
@@ -158,7 +157,6 @@ const ProfileScreen = () => {
   const editTabs = ["Basic Info", "Contact & Address", "Work & Social"]
 
   const handleError = (error, customMessage) => {
-    console.error(customMessage, error)
     const errorMessage =
       error?.response?.data?.message || error?.response?.data?.error || error?.message || customMessage
     alert(errorMessage)
@@ -183,7 +181,6 @@ const ProfileScreen = () => {
           try {
             return JSON.parse(value)
           } catch (e) {
-            console.warn("Failed to parse JSON:", value, e)
             return fallback
           }
         }
@@ -226,7 +223,6 @@ const ProfileScreen = () => {
         setForgotPasswordMessage("")
       }, 5000)
     } catch (error) {
-      console.error("Forgot password error:", error)
       const errorMessage =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
@@ -409,7 +405,6 @@ const ProfileScreen = () => {
         setChangePasswordMessage({ text: "", type: "" })
       }, 2000)
     } catch (error) {
-      console.error("Change password error:", error)
       const errorMessage =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
@@ -1064,11 +1059,16 @@ const ProfileScreen = () => {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="change-pwd-title"
+          className="bg-white rounded-lg shadow-xl w-full max-w-md"
+        >
           <div className="p-5 bg-green-600 rounded-t-lg">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white flex items-center">
-                <Lock className="w-5 h-5 mr-2" />
+              <h3 id="change-pwd-title" className="text-lg font-bold text-white flex items-center">
+                <Lock className="w-5 h-5 mr-2" aria-hidden="true" />
                 Change Password
               </h3>
               <button
@@ -1291,7 +1291,12 @@ const ProfileScreen = () => {
         {/* Edit Modal */}
         {modalVisible && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-            <div className="bg-green-50 rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="edit-profile-title"
+              className="bg-green-50 rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
+            >
               {/* Modal Header */}
               <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 bg-green-600 rounded-t-lg">
                 <button
@@ -1300,7 +1305,7 @@ const ProfileScreen = () => {
                 >
                   <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </button>
-                <h2 className="text-base sm:text-lg font-bold text-white">Edit Profile</h2>
+                <h2 id="edit-profile-title" className="text-base sm:text-lg font-bold text-white">Edit Profile</h2>
                 <button
                   onClick={handleSave}
                   disabled={saving}

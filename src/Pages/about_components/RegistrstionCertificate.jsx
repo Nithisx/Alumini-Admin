@@ -67,7 +67,6 @@ const RegistrationCertificate = () => {
                 className="w-full h-auto object-contain transform group-hover:scale-[1.01] transition-transform duration-300"
                 onLoad={handleImageLoaded}
                 onError={(e) => {
-                  console.error("Image failed to load");
                   e.target.onerror = null;
                   e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Cpath d='M30 50 L70 50 M50 30 L50 70' stroke='%23cccccc' stroke-width='5'/%3E%3C/svg%3E";
                 }}
@@ -117,7 +116,6 @@ const RegistrationCertificate = () => {
               }`}
               onLoad={handleImageLoaded}
               onError={(e) => {
-                console.error("Fullscreen image failed to load");
                 e.target.onerror = null;
                 e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Cpath d='M30 50 L70 50 M50 30 L50 70' stroke='%23cccccc' stroke-width='5'/%3E%3C/svg%3E";
               }}

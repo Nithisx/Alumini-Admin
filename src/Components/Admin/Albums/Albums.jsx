@@ -40,7 +40,6 @@ const AlbumsPage = () => {
         });
         setAlbums(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        console.error("Error fetching albums:", error);
         showNotification(
           "Could not load albums. Please try again later.",
           "error"
@@ -77,7 +76,6 @@ const AlbumsPage = () => {
       showNotification("Album deleted successfully!");
       setOpenMenuId(null);
     } catch (error) {
-      console.error("Error deleting album:", error);
       showNotification("Could not delete album.", "error");
     }
   };
@@ -131,7 +129,6 @@ const AlbumsPage = () => {
       setUploadedFile(null);
       showNotification("Album updated successfully!");
     } catch (error) {
-      console.error("Error updating album:", error);
       showNotification("Could not update album.", "error");
     } finally {
       setIsEditing(false);
@@ -179,7 +176,6 @@ const AlbumsPage = () => {
       setUploadedFile(null);
       showNotification("Album created successfully!");
     } catch (error) {
-      console.error("Error creating album:", error);
       showNotification("Could not create album.", "error");
     } finally {
       setIsCreating(false); // Stop loading
@@ -517,13 +513,16 @@ const AlbumsPage = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-album-title"
             className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-white text-xl font-semibold flex items-center">
-                  <FontAwesomeIcon icon={faFolderOpen} className="mr-2" />
+                <h3 id="create-album-title" className="text-white text-xl font-semibold flex items-center">
+                  <FontAwesomeIcon icon={faFolderOpen} className="mr-2" aria-hidden="true" />
                   Create New Album
                 </h3>
                 <button
@@ -673,13 +672,16 @@ const AlbumsPage = () => {
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-album-title"
             className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-white text-xl font-semibold flex items-center">
-                  <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                <h3 id="edit-album-title" className="text-white text-xl font-semibold flex items-center">
+                  <FontAwesomeIcon icon={faEdit} className="mr-2" aria-hidden="true" />
                   Edit Album
                 </h3>
                 <button

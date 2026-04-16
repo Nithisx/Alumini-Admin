@@ -27,7 +27,6 @@ const Registrar = ({ isOpen, toggleSection }) => {
                 alt="Prof. Dr. B. V. Pradeep"
                 className="w-48 h-60 object-cover rounded-lg shadow-lg border-4 border-purple-100"
                 onError={(e) => {
-                  console.log("Image failed to load:", e.target.src);
                   e.target.src = "https://via.placeholder.com/200x250/8b5cf6/ffffff?text=Prof.+Dr.+B.V.+Pradeep";
                 }}
               />

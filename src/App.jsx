@@ -1,13 +1,15 @@
 // src/App.jsx
 import React from "react";
 import AppRoutes from "./AppRoutes";
-import Loader from "./Pages/Loder";
+import ErrorBoundary from "./Components/Shared/ErrorBoundary";
 import "./App.css";
+
 export default function App() {
   return (
-    <div className="App">
-      
-      <AppRoutes />
-    </div>
+    <ErrorBoundary>
+      <div className="App">
+        <AppRoutes />
+      </div>
+    </ErrorBoundary>
   );
 }

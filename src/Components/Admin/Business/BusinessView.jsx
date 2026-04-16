@@ -46,7 +46,6 @@ const BusinessView = () => {
         setBusiness(businessResponse.data);
         setImages(imagesResponse.data);
       } catch (error) {
-        console.error("Error fetching business details:", error);
         alert("Error loading business details");
       } finally {
         setLoading(false);

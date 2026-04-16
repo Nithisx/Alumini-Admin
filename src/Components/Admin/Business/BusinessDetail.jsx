@@ -85,7 +85,6 @@ const BusinessDetail = () => {
           setLogoPreview(`${BASE_URL}${businessResponse.data.logo}`);
         }
       } catch (error) {
-        console.error("Error fetching business details:", error);
         alert("Error loading business details");
       } finally {
         setLoading(false);
@@ -104,7 +103,6 @@ const BusinessDetail = () => {
 
         setCategories(response.data.map(cat => cat.category));
       } catch (error) {
-        console.error("Error fetching categories:", error);
       }
     };
 
@@ -166,7 +164,6 @@ const BusinessDetail = () => {
       setImages(images.filter(image => image.id !== imageId));
       alert("Image deleted successfully!");
     } catch (error) {
-      console.error("Error deleting image:", error);
       alert("Failed to delete image");
     }
   };
@@ -290,7 +287,6 @@ const BusinessDetail = () => {
         navigate('/admin/business');
       }
     } catch (error) {
-      console.error("Error saving business:", error);
       alert("Error saving business. Please try again.");
     } finally {
       setSaving(false);

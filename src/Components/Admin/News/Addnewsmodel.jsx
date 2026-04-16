@@ -99,15 +99,12 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
       });
 
       // Debug: Log the FormData contents
-      console.log("FormData contents:");
       for (let [key, value] of data.entries()) {
-        console.log(key, value);
       }
 
       const json = await res.json();
 
       if (!res.ok) {
-        console.error("Server response:", json);
         throw new Error(json.detail || json.message || "Failed to create post");
       }
 
@@ -123,7 +120,6 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
       setPreviewUrl(null);
       onSuccess(json);
     } catch (err) {
-      console.error("Submit error:", err);
       setSubmitError(err.message || "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
@@ -149,7 +145,12 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-full overflow-y-auto p-6 relative">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="news-modal-title"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-full overflow-y-auto p-6 relative"
+      >
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold"
@@ -157,7 +158,7 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
         >
           ×
         </button>
-        <h2 className="text-xl font-bold mb-4">Post News Event</h2>
+        <h2 id="news-modal-title" className="text-xl font-bold mb-4">Post News Event</h2>
 
         {submitError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">

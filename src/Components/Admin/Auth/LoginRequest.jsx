@@ -61,7 +61,6 @@ export default function RegisterRequest() {
           // Fallback if API directly returns an array
           setRequests(data);
         } else {
-          console.error("API did not return an expected format:", data);
           setRequests([]); // Set to empty array as fallback
           showMessage({
             text: "Invalid data format received. Please try again.",
@@ -70,7 +69,6 @@ export default function RegisterRequest() {
         }
       })
       .catch((error) => {
-        console.error("Error fetching data:", error);
         if (error.message.includes('401') || error.message.includes('Authentication')) {
           setError("Authentication failed. Please log in with admin credentials.");
         } else {
@@ -181,7 +179,6 @@ export default function RegisterRequest() {
       // Filter out the accepted request
       setRequests((prev) => prev.filter((req) => req.id !== id));
     } catch (error) {
-      console.error("Error accepting request:", error);
       showMessage({
         text: "Failed to accept request. Please try again.",
         type: "error",
@@ -262,7 +259,6 @@ export default function RegisterRequest() {
       );
       clearSelection();
     } catch (error) {
-      console.error("Error approving requests:", error);
       showMessage({
         text: "Failed to approve selected requests. Please try again.",
         type: "error",
@@ -307,7 +303,6 @@ export default function RegisterRequest() {
       // Filter out the declined request
       setRequests((prev) => prev.filter((req) => req.id !== id));
     } catch (error) {
-      console.error("Error declining request:", error);
       showMessage({
         text: "Failed to decline request. Please try again.",
         type: "error",

@@ -17,12 +17,19 @@ const getProfileAvatar = (firstName, lastName) => {
 
 const TOKEN = localStorage.getItem("Token");
 const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
-const API_USER_ACTIONS = "https://api.karpagamalumni.in/api/v1/admin-actions/";
+const API_DEACTIVATE_USER = "https://api.karpagamalumni.in/api/v1/deactivate-user/";
+const API_DELETE_USER = "https://api.karpagamalumni.in/api/v1/delete-user/";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in/api/v1";
 
 const getMediaUrl = (uri) => {
   if (!uri) return "";
-  if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) return uri;
+  if (
+    uri.startsWith("http://") ||
+    uri.startsWith("https://") ||
+    uri.startsWith("file://") ||
+    uri.startsWith("data:") ||
+    uri.startsWith("blob:")
+  ) return uri;
   return uri.startsWith("/") ? `${MEDIA_BASE_URL}${uri}` : `${MEDIA_BASE_URL}/${uri}`;
 };
 
@@ -65,6 +72,7 @@ const COURSES = [
   "Master of Philosophy",
   "Master of Planning",
   "Master of Science",
+  "Master of Social Work",
   "Ph.D"
 ];
 
@@ -77,12 +85,15 @@ const COURSE_BRANCH_MAPPING = {
     "General"
   ],
   "Bachelor of Commerce": [
+    "Computer Application",
+    "Computer Science",
     "FA",
     "General",
     "IAF",
     "Information Technology",
     "Professional Accounting"
   ],
+  "Master of Social Work": ["General"],
   "Bachelor of Computer Applications": ["Computer Application", "General"],
   "Bachelor of Design": ["General", "Interior Design"],
   "Bachelor of Engineering": [
@@ -231,7 +242,6 @@ export default function SingleMember() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    console.log("Fetching specific member data...");
     fetch(`${API_BASE}${name}`, {
       headers: {
         Authorization: `Token ${TOKEN}`,
@@ -240,7 +250,6 @@ export default function SingleMember() {
     })
       .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
       .then((data) => {
-        console.log("Member data received:", data);
         setMember(data);
         setEditedMember(data); // Initialize edited member with original data
 
@@ -249,7 +258,6 @@ export default function SingleMember() {
           setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
         }
       })
-      .catch((err) => console.error("Error fetching member:", err))
       .finally(() => setLoading(false));
   }, [name]);
 
@@ -396,21 +404,17 @@ export default function SingleMember() {
         setChangedFields(new Set()); // Clear the changed fields set after successful save
 
         // Show success notification (you could implement a toast notification here)
-        console.log(data.message); // User updated successfully
 
         // You could add a toast notification here:
         // toast.success(data.message);
       } else {
         // Handle error case
-        console.error(
           "Failed to update member:",
           data.message || "Unknown error"
         );
-        console.error("Error details:", data);
         // toast.error(data.message || 'Failed to update profile');
       }
     } catch (error) {
-      console.error("Error updating member:", error);
       // toast.error('Network error while updating profile');
     } finally {
       setSaving(false);
@@ -509,15 +513,15 @@ export default function SingleMember() {
   // Deactivate/Activate User Function
   const handleDeactivateUser = async () => {
     const action = member.is_active ? "deactivate" : "activate";
-    const confirmMessage =
-      member.is_active ??
-      `Are you sure you want to deactivate ${member.first_name} ${member.last_name}? They will no longer be able to access their account.`;
+    const confirmMessage = member.is_active
+      ? `Are you sure you want to deactivate ${member.first_name} ${member.last_name}? They will no longer be able to access their account.`
+      : `Are you sure you want to reactivate ${member.first_name} ${member.last_name}?`;
 
     if (!window.confirm(confirmMessage)) return;
 
     setDeactivating(true);
     try {
-      const response = await fetch(`${API_USER_ACTIONS}deactivate-user/`, {
+      const response = await fetch(API_DEACTIVATE_USER, {
         method: "POST",
         headers: {
           Authorization: `Token ${TOKEN}`,
@@ -536,14 +540,12 @@ export default function SingleMember() {
         // Reload the page when response is 200
         window.location.reload();
       } else {
-        console.error(
           `Failed to ${action} user:`,
           data.message || "Unknown error"
         );
         alert(`Failed to ${action} user: ${data.message || "Unknown error"}`);
       }
     } catch (error) {
-      console.error(`Error ${action}ing user:`, error);
       alert(`Network error while ${action}ing user`);
     } finally {
       setDeactivating(false);
@@ -565,7 +567,7 @@ export default function SingleMember() {
 
     setDeleting(true);
     try {
-      const response = await fetch(`${API_USER_ACTIONS}delete-user/`, {
+      const response = await fetch(API_DELETE_USER, {
         method: "POST",
         headers: {
           Authorization: `Token ${TOKEN}`,
@@ -578,19 +580,13 @@ export default function SingleMember() {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok) {
         alert("User deleted successfully!");
-        // Redirect to members list
         navigate("/admin/members");
       } else {
-        console.error(
-          "Failed to delete user:",
-          data.message || "Unknown error"
-        );
-        alert(`Failed to delete user: ${data.message || "Unknown error"}`);
+        alert(`Failed to delete user: ${data.message || data.error || "Unknown error"}`);
       }
     } catch (error) {
-      console.error("Error deleting user:", error);
       alert("Network error while deleting user");
     } finally {
       setDeleting(false);
@@ -700,10 +696,8 @@ export default function SingleMember() {
         navigate(`/admin/chat`);
       }
     } catch (error) {
-      console.error('Room creation error:', error);
     }
 
-    console.log("Room ")
   };
 
 
@@ -1907,7 +1901,6 @@ export default function SingleMember() {
                               }
                             } catch (e) {
                               // If parsing fails, just use the original string
-                              console.log("Failed to parse current_work:", e);
                             }
                           }
                           return current_work;

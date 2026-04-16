@@ -57,115 +57,64 @@ export default function AdminHeader() {
 
   // Authentication check useEffect
   useEffect(() => {
+    const isRegisterPage = pathname.includes('/register-request') || pathname.includes('/admin/register-request');
+
     const checkAuthStatus = () => {
       const token = localStorage.getItem('Token');
       const role = localStorage.getItem('Role');
 
-      // For register-request page, only check role if token exists
-      if (pathname.includes('/register-request') || pathname.includes('/admin/register-request')) {
+      if (isRegisterPage) {
         if (token && role && role !== 'admin' && role !== 'superuser') {
-          console.log('Insufficient permissions for register-request page, redirecting to login');
           localStorage.removeItem('Token');
           localStorage.removeItem('Role');
           window.location.href = '/login';
-          return;
         }
-        // If no token for register-request page, allow access but API calls will handle authentication
         return;
       }
 
-      // For all other pages, require authentication
       if (!token) {
-        console.log('No token found, redirecting to login');
         window.location.href = '/login';
         return;
       }
 
-      // Check if user has admin role for other pages
       if (role && role !== 'admin' && role !== 'superuser') {
-        console.log('Insufficient permissions, redirecting to login');
         localStorage.removeItem('Token');
         localStorage.removeItem('Role');
         window.location.href = '/login';
-        return;
       }
     };
 
-    // Check auth on component mount
     checkAuthStatus();
 
-    // Optional: Set up periodic token validation
-    const validateToken = async () => {
-      // Skip token validation for register-request page
-      if (pathname.includes('/register-request') || pathname.includes('/admin/register-request')) {
-        return;
-      }
-
-      const token = localStorage.getItem('Token');
-      if (!token) return;
-
-      try {
-        // Replace with your actual API endpoint for token validation
-        const response = await fetch('https://api.karpagamalumni.in/api/v1/validate-token/', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Token ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.status === 401 || response.status === 403) {
-          console.log('Token expired or invalid, redirecting to login');
-          localStorage.removeItem('Token');
-          localStorage.removeItem('Role');
-          window.location.href = '/login';
-        }
-      } catch (error) {
-        console.error('Token validation error:', error);
-        // Optionally handle network errors
-      }
-    };
-
-    // Validate token every 5 minutes (optional) - only if not on register-request page
+    // Periodic token validation (every 5 minutes) via a lightweight profile ping
     let tokenCheckInterval;
-    if (!pathname.includes('/register-request') && !pathname.includes('/admin/register-request')) {
+    if (!isRegisterPage) {
+      const validateToken = async () => {
+        const token = localStorage.getItem('Token');
+        if (!token) return;
+        try {
+          const response = await fetch('https://api.karpagamalumni.in/api/v1/validate-token/', {
+            method: 'GET',
+            headers: { 'Authorization': `Token ${token}` },
+          });
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('Token');
+            localStorage.removeItem('Role');
+            window.location.href = '/login';
+          }
+        } catch {
+          // Network error — keep session alive, don't log out
+        }
+      };
       tokenCheckInterval = setInterval(validateToken, 5 * 60 * 1000);
     }
 
-    // Global error handler for 401 responses
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      try {
-        const response = await originalFetch(...args);
-
-        // Skip 401 handling for register-request page
-        if (response.status === 401 &&
-          !pathname.includes('/register-request') &&
-          !pathname.includes('/admin/register-request')) {
-          console.log('401 Unauthorized received, redirecting to login');
-          localStorage.removeItem('Token');
-          localStorage.removeItem('Role');
-          window.location.href = '/login';
-          return response;
-        }
-
-        return response;
-      } catch (error) {
-        throw error;
-      }
-    };
-
-    // Cleanup
     return () => {
-      if (tokenCheckInterval) {
-        clearInterval(tokenCheckInterval);
-      }
-      window.fetch = originalFetch; // Restore original fetch
+      if (tokenCheckInterval) clearInterval(tokenCheckInterval);
     };
-  }, [pathname]); // Add pathname dependency to re-run when route changes
+  }, [pathname]);
 
   const handleLogout = () => {
-    console.log("Logout clicked");
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
     window.location.href = "/login";
@@ -367,10 +316,15 @@ export default function AdminHeader() {
 
                   {/* More dropdown for remaining items */}
                   <div className="relative group">
-                    <button className="flex items-center gap-1 px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-all duration-300">
+                    <button
+                      className="flex items-center gap-1 px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-all duration-300"
+                      aria-haspopup="true"
+                      aria-label="More navigation items"
+                    >
                       <FontAwesomeIcon
                         icon={faChevronDown}
                         className="h-3.5 w-3.5"
+                        aria-hidden="true"
                       />
                       <span className="text-xs font-medium">More</span>
                     </button>
@@ -423,10 +377,14 @@ export default function AdminHeader() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
+              aria-expanded={isMobileOpen}
+              aria-controls="admin-mobile-menu"
+              aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
               className="md:hidden relative p-2.5 rounded-lg bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               <FontAwesomeIcon
                 icon={isMobileOpen ? faTimes : faBars}
+                aria-hidden="true"
                 className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${isMobileOpen ? "rotate-180" : "rotate-0"
                   }`}
               />
@@ -436,6 +394,9 @@ export default function AdminHeader() {
 
         {/* Mobile Navigation Dropdown */}
         <div
+          id="admin-mobile-menu"
+          role="navigation"
+          aria-label="Mobile navigation"
           className={`md:hidden transition-all duration-300 ease-in-out ${isMobileOpen
             ? "max-h-screen overflow-y-auto opacity-100 bg-white/95 backdrop-blur-md"
             : "max-h-0 opacity-0 overflow-hidden"
@@ -503,6 +464,7 @@ export default function AdminHeader() {
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 

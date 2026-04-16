@@ -36,7 +36,6 @@ const AlbumsContribution = () => {
       }
       setError(null);
     } catch (error) {
-      console.error("Error fetching albums:", error);
       setError("Failed to load albums");
     } finally {
       setLoading(false);
@@ -59,7 +58,6 @@ const AlbumsContribution = () => {
       setAlbums(albums.filter(album => album.id !== albumId));
       alert("Album deleted successfully!");
     } catch (error) {
-      console.error("Error deleting album:", error);
       alert("Failed to delete album. Please try again.");
     }
   };
@@ -116,7 +114,6 @@ const AlbumsContribution = () => {
       setEditCoverImage(null);
       alert("Album updated successfully!");
     } catch (error) {
-      console.error("Error updating album:", error);
       alert("Failed to update album. Please try again.");
     } finally {
       setEditLoading(false);

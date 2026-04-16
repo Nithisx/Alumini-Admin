@@ -283,7 +283,6 @@ const JobFeed = () => {
       const data = await response.json();
       setPosts(data);
     } catch (err) {
-      console.error("Error fetching posts", err);
     } finally {
       setLoading(false);
     }
@@ -306,11 +305,9 @@ const JobFeed = () => {
       if (response.ok) {
         setPosts(posts.filter((post) => post.id !== postId));
       } else {
-        console.error("Error deleting post");
         alert("Failed to delete post. Please try again.");
       }
     } catch (error) {
-      console.error("Error deleting post", error);
       alert("Failed to delete post. Please try again.");
     }
   };
@@ -413,7 +410,6 @@ const JobFeed = () => {
       setPosts([data, ...posts]);
       closeModal();
     } catch (error) {
-      console.error("Error creating post:", error);
       setError(error.message || "Failed to create post. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -486,10 +482,15 @@ const JobFeed = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-job-title"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] overflow-y-auto"
+          >
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-green-100">
-              <h3 className="text-2xl font-bold text-green-700">
+              <h3 id="add-job-title" className="text-2xl font-bold text-green-700">
                 Create New Job Post
               </h3>
               <button

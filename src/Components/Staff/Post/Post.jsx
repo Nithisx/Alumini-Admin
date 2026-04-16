@@ -64,7 +64,6 @@ const AdminFeed = () => {
       );
       setPosts(sortedData);
     } catch (err) {
-      console.error("Error fetching posts:", err);
       setError(err.message || "Failed to fetch posts. Please try again.");
     } finally {
       setLoading(false);
@@ -73,7 +72,6 @@ const AdminFeed = () => {
 
   useEffect(() => {
     fetchJobs();
-    console.log("Fetched posts:", sortedData);
   }, []);
 
   // Handle drop zone events (moved from Post component)
@@ -158,12 +156,9 @@ const AdminFeed = () => {
 
     if (selectedImage) {
       formData.append("images", selectedImage, selectedImage.name);
-      console.log("Appending image:", selectedImage.name);
     } else {
-      console.log("No image selected for upload");
     }
 
-    console.log("Submitting new post:", {
       description: newPostDescription,
       company_name: newPostCompany,
       role: newPostRole,
@@ -180,7 +175,6 @@ const AdminFeed = () => {
         },
       });
 
-      console.log("Post submission success:", response.data);
       setPosts([response.data, ...posts]);
       setNewPostDescription("");
       setNewPostCompany("");
@@ -198,16 +192,12 @@ const AdminFeed = () => {
       setIsModalOpen(false);
       alert("Post created successfully!");
     } catch (error) {
-      console.error("Error submitting post:", error);
       let errorMessage = "Failed to submit post. Please try again.";
       if (error.response) {
-        console.error("Server Error:", error.response.status, error.response.data);
         errorMessage = `Server Error: ${error.response.status}. ${JSON.stringify(error.response.data) || error.response.statusText}`;
       } else if (error.request) {
-        console.error("Network Error:", error.request);
         errorMessage = "Network error. Could not reach server.";
       } else {
-        console.error("Request Setup Error:", error.message);
         errorMessage = error.message;
       }
       setError(errorMessage);
@@ -232,14 +222,11 @@ const AdminFeed = () => {
 
       if (response.ok) {
         setPosts(posts.filter((post) => post.id !== postId));
-        console.log(`Post ${postId} deleted successfully.`);
       } else {
         const errorData = await response.text();
-        console.error("Error deleting post:", response.status, errorData);
         throw new Error(`Failed to delete post: ${response.statusText} (${response.status})`);
       }
     } catch (error) {
-      console.error("Error during delete operation:", error);
       setError(error.message || "Failed to delete post. Please try again.");
     }
   };
@@ -349,10 +336,15 @@ const AdminFeed = () => {
       {/* Upload Modal (moved from Post component) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upload-job-title"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all"
+          >
             {/* Modal Header */}
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-xl font-semibold text-gray-800">Create New Job Post</h3>
+              <h3 id="upload-job-title" className="text-xl font-semibold text-gray-800">Create New Job Post</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
