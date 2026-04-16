@@ -38,7 +38,14 @@ const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";
 // Utility functions
 const getMediaUrl = (uri) => {
   if (!uri) return ""
-  if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) return uri
+  if (
+    uri.startsWith("http://") ||
+    uri.startsWith("https://") ||
+    uri.startsWith("file://") ||
+    uri.startsWith("data:") ||
+    uri.startsWith("blob:")
+  )
+    return uri
   if (uri.startsWith("//")) {
     return `http:${uri}`
   }
