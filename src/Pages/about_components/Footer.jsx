@@ -18,6 +18,7 @@ const Footer = () => (
             <li><a href="/#features" className="text-gray-400 hover:text-white">Features</a></li>
             <li><a href="/#contact" className="text-gray-400 hover:text-white">Contact</a></li>
             <li><a href="/login" className="text-gray-400 hover:text-white">Alumni Login</a></li>
+            <li><a href="/privacy-policy" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
           </ul>
         </div>
         <div>
@@ -32,6 +33,9 @@ const Footer = () => (
       </div>
       <div className="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400">
         <p>© {new Date().getFullYear()} Karpagam Academy of Higher Education. All rights reserved.</p>
+        <p className="mt-2">
+          <a href="/privacy-policy" className="hover:text-white underline">Privacy Policy</a>
+        </p>
       </div>
     </div>
   </footer>
