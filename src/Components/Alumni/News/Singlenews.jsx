@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 
 const TOKEN = localStorage.getItem("Token");
 const API_BASE = "https://api.karpagamalumni.in/api/v1/news/";
-const SERVER_BASE = "https://api.karpagamalumni.in/api/v1";
+const SERVER_BASE = "https://api.karpagamalumni.in";
 
 export default function SingleNews() {
   const { id } = useParams();

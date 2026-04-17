@@ -23,14 +23,15 @@ const BusinessView = () => {
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+  const API_BASE_URL = "https://api.karpagamalumni.in/api/v1";
+  const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
   useEffect(() => {
     const fetchBusinessDetails = async () => {
       try {
         // Fetch business details
         const businessResponse = await axios.get(
-          `${BASE_URL}/businesses/${id}/`,
+          `${API_BASE_URL}/businesses/${id}/`,
           {
             headers: { Authorization: `Token ${token}` },
           }
@@ -38,7 +39,7 @@ const BusinessView = () => {
 
         // Fetch business images
         const imagesResponse = await axios.get(
-          `${BASE_URL}/businesses/${id}/images/`,
+          `${API_BASE_URL}/businesses/${id}/images/`,
           {
             headers: { Authorization: `Token ${token}` },
           }
@@ -54,7 +55,7 @@ const BusinessView = () => {
     };
 
     fetchBusinessDetails();
-  }, [id, token, BASE_URL]);
+  }, [id, token, API_BASE_URL]);
 
   if (loading) {
     return (
@@ -96,7 +97,7 @@ const BusinessView = () => {
         <div className="flex items-center space-x-4">
           {business.logo && (
             <img
-              src={`${BASE_URL}${business.logo}`}
+              src={`${MEDIA_BASE_URL}${business.logo}`}
               alt="Business Logo"
               className="w-20 h-20 rounded-lg object-cover"
             />
@@ -219,7 +220,7 @@ const BusinessView = () => {
               {images.map((image, index) => (
                 <img
                   key={index}
-                  src={`${BASE_URL}${image.image}`}
+                  src={`${MEDIA_BASE_URL}${image.image}`}
                   alt="Business"
                   className="w-full h-32 object-cover rounded-lg"
                 />

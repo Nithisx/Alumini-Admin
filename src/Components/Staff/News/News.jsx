@@ -9,7 +9,7 @@ import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'luc
 
 const TOKEN = localStorage.getItem('Token');
 const API_URL = 'https://api.karpagamalumni.in/api/v1/news/';
-const BASE_URL = 'https://api.karpagamalumni.in/api/v1';
+const BASE_URL = 'https://api.karpagamalumni.in';
 
 export default function NewsList() {
   const [posts, setPosts] = useState([]);

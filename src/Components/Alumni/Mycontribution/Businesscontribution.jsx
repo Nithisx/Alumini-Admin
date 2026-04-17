@@ -28,6 +28,7 @@ import {
 
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
 export default function BusinessContribution() {
   const [businesses, setBusinesses] = useState([]);
@@ -323,7 +324,7 @@ export default function BusinessContribution() {
           <div className="flex items-center">
             {business.logo ? (
               <img
-                src={`${BASE_URL}${business.logo}`}
+                src={`${MEDIA_BASE_URL}${business.logo}`}
                 alt={business.business_name}
                 className="w-12 h-12 rounded-lg object-cover mr-4"
               />
@@ -421,7 +422,7 @@ export default function BusinessContribution() {
               {business.images.slice(0, 3).map((image, index) => (
                 <img
                   key={index}
-                  src={`${BASE_URL}${image.image}`}
+                  src={`${MEDIA_BASE_URL}${image.image}`}
                   alt="Business"
                   className="w-full h-16 object-cover rounded-lg"
                 />
@@ -535,7 +536,7 @@ export default function BusinessContribution() {
                 <div className="flex items-center">
                   {selectedBusiness.logo ? (
                     <img
-                      src={`${BASE_URL}${selectedBusiness.logo}`}
+                      src={`${MEDIA_BASE_URL}${selectedBusiness.logo}`}
                       alt={selectedBusiness.business_name}
                       className="w-16 h-16 rounded-lg object-cover mr-4"
                     />
@@ -698,7 +699,7 @@ export default function BusinessContribution() {
                         {selectedBusiness.images.map((image, index) => (
                           <img
                             key={index}
-                            src={`${BASE_URL}${image.image}`}
+                            src={`${MEDIA_BASE_URL}${image.image}`}
                             alt="Business"
                             className="w-full h-24 object-cover rounded-lg"
                           />
@@ -716,7 +717,7 @@ export default function BusinessContribution() {
                     <div className="flex items-center">
                       {selectedBusiness.owner_details.profile_photo ? (
                         <img
-                          src={`${BASE_URL}${selectedBusiness.owner_details.profile_photo}`}
+                          src={`${MEDIA_BASE_URL}${selectedBusiness.owner_details.profile_photo}`}
                           alt="Owner"
                           className="w-10 h-10 rounded-full mr-3"
                         />

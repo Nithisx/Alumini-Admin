@@ -53,6 +53,7 @@ const BusinessDetail = () => {
 
   const token = localStorage.getItem("Token");
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+  const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
   // Fetch business details if editing an existing business
   useEffect(() => {
@@ -83,7 +84,7 @@ const BusinessDetail = () => {
         setImages(imagesResponse.data);
 
         if (businessResponse.data.logo) {
-          setLogoPreview(`${BASE_URL}${businessResponse.data.logo}`);
+          setLogoPreview(`${MEDIA_BASE_URL}${businessResponse.data.logo}`);
         }
       } catch (error) {
         toast.error("Error loading business details");
@@ -737,7 +738,7 @@ const BusinessDetail = () => {
                 {images.map((image) => (
                   <div key={image.id} className="relative group">
                     <img
-                      src={`${BASE_URL}${image.image}`}
+                      src={`${MEDIA_BASE_URL}${image.image}`}
                       alt={image.caption || "Business image"}
                       className="h-32 w-full object-cover rounded-lg"
                     />

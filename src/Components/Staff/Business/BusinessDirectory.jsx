@@ -41,6 +41,7 @@ const BusinessDirectory = () => {
   const userType = localStorage.getItem("userType"); // Get user type from localStorage
   const currentUserId = localStorage.getItem("userId"); // Get current user ID
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+  const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
   // Check if current user can edit/delete a business
   const canEditBusiness = (business) => {
@@ -400,7 +401,7 @@ const BusinessDirectory = () => {
                             <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden mx-auto md:mx-0">
                               {business.logo ? (
                                 <img
-                                  src={`${BASE_URL}${business.logo}`}
+                                  src={`${MEDIA_BASE_URL}${business.logo}`}
                                   alt={business.business_name}
                                   className="w-full h-full object-cover"
                                 />

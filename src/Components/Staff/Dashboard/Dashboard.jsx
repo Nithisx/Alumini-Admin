@@ -18,6 +18,7 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [newsSlide, setNewsSlide] = useState(0);
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+  const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
   // Retrieve token directly from localStorage
   const token = localStorage.getItem("Token");
@@ -322,7 +323,7 @@ const HomePage = () => {
                 <div className="relative h-40 sm:h-48 overflow-hidden">
                   {album.cover_image ? (
                     <img
-                      src={`${BASE_URL}${album.cover_image}`}
+                      src={`${MEDIA_BASE_URL}${album.cover_image}`}
                       alt={album.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -573,7 +574,7 @@ const HomePage = () => {
                   {event.images && event.images[0] ? (
                     <div className="relative h-48 sm:h-56 overflow-hidden">
                       <img
-                        src={`${BASE_URL}${event.images[0].image}`}
+                        src={`${MEDIA_BASE_URL}${event.images[0].image}`}
                         alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
@@ -754,7 +755,7 @@ const HomePage = () => {
                   <div className="mr-3 sm:mr-4 relative">
                     {member.profile_photo ? (
                       <img
-                        src={`${BASE_URL}${member.profile_photo}`}
+                        src={`${MEDIA_BASE_URL}${member.profile_photo}`}
                         alt={`${member.first_name} ${member.last_name}`}
                         className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl sm:rounded-2xl object-cover border-2 sm:border-3 border-green-200 shadow-lg group-hover:border-green-300 transition-colors"
                       />

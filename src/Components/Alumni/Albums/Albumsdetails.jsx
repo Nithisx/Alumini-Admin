@@ -21,6 +21,7 @@ const AlbumDetailPage = () => {
 
   const token = localStorage.getItem("Token"); // Get token from local storage
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+  const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
   // Image compression function
   const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
@@ -286,7 +287,7 @@ const AlbumDetailPage = () => {
                   className="relative group bg-white rounded-lg shadow p-3"
                 >
                   <img
-                    src={`${BASE_URL}${event.image}`}
+                    src={`${MEDIA_BASE_URL}${event.image}`}
                     alt={event.title}
                     className="w-full h-40 object-cover rounded-md cursor-pointer"
                     onClick={() => openFullscreen(event, index)}
@@ -321,7 +322,7 @@ const AlbumDetailPage = () => {
                 )}
 
                 <img
-                  src={`${BASE_URL}${fullscreenImage.image}`}
+                  src={`${MEDIA_BASE_URL}${fullscreenImage.image}`}
                   alt={fullscreenImage.title}
                   className={`max-h-screen max-w-full object-contain transition-opacity duration-300 ${imageLoading ? "opacity-0" : "opacity-100"
                     }`}

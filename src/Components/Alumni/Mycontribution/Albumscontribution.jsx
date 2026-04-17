@@ -16,7 +16,8 @@ const AlbumsContribution = () => {
   const [editLoading, setEditLoading] = useState(false);
 
   const token = localStorage.getItem("Token");
-  const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
   useEffect(() => {
     fetchUserContributions();
@@ -191,7 +192,7 @@ const AlbumsContribution = () => {
                 <div className="h-48 bg-gray-100 overflow-hidden">
                   {album.cover_image ? (
                     <img
-                      src={`${BASE_URL}${album.cover_image}`}
+                      src={`${MEDIA_BASE_URL}${album.cover_image}`}
                       alt={album.title}
                       className="w-full h-full object-cover"
                     />

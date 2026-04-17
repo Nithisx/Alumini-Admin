@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { MoreVertical, MapPin, Clock, User, Share2, Trash2, X, Heart, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus } from "lucide-react"
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1"
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in"
 
 // Modern Image Slider Component
 const ImageSlider = ({ images, baseUrl }) => {
@@ -299,7 +300,7 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
                 {existingImages.map((image) => (
                   <div key={image.id} className="relative group">
                     <img
-                      src={`${BASE_URL}${image.image}`}
+                      src={`${MEDIA_BASE_URL}${image.image}`}
                       alt="Event"
                       className="w-full h-32 object-cover rounded-xl border border-gray-200"
                     />
@@ -465,7 +466,7 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
                   src={
                     item.user_data.profile_photo.startsWith("http")
                       ? item.user_data.profile_photo
-                      : `${BASE_URL}${item.user_data.profile_photo}`
+                      : `${MEDIA_BASE_URL}${item.user_data.profile_photo}`
                   }
                   alt="Profile"
                   className="w-8 h-8 rounded-full object-cover ring-2 ring-green-100"
@@ -555,7 +556,7 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
             {item.images.length === 1 ? (
               <div className="relative overflow-hidden rounded-xl shadow-md group">
                 <img
-                  src={`${BASE_URL}${item.images[0].image}`}
+                  src={`${MEDIA_BASE_URL}${item.images[0].image}`}
                   alt="Event"
                   className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
                 />
@@ -662,7 +663,7 @@ const EventItem = ({ item, onDelete, onUpdate }) => {
                           src={
                             comment.user.profile_photo.startsWith("http")
                               ? comment.user.profile_photo
-                              : `${BASE_URL}${comment.user.profile_photo}`
+                              : `${MEDIA_BASE_URL}${comment.user.profile_photo}`
                           }
                           alt="Commenter"
                           className="w-6 h-6 rounded-full object-cover flex-shrink-0 ring-2 ring-green-100"

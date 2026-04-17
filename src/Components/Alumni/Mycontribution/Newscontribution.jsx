@@ -21,6 +21,7 @@ const COLORS = {
 };
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
 // Add PlaceholderImage component
 const PlaceholderImage = () => {
@@ -129,7 +130,7 @@ const NewsItem = ({ item, onDelete }) => {
               src={
                 item.user.profile_photo.startsWith("http")
                   ? item.user.profile_photo
-                  : `${BASE_URL}${item.user.profile_photo}`
+                  : `${MEDIA_BASE_URL}${item.user.profile_photo}`
               }
               alt="Profile"
               className="w-12 h-12 rounded-full bg-gray-200 ring-2 ring-green-100"
@@ -227,7 +228,7 @@ const NewsItem = ({ item, onDelete }) => {
           item.images.length === 1 ? (
             <div className="mb-6">
               <img
-                src={`${BASE_URL}${item.images[0].image}`}
+                src={`${MEDIA_BASE_URL}${item.images[0].image}`}
                 alt="News"
                 className="w-full h-80 object-cover rounded-xl shadow-sm"
               />

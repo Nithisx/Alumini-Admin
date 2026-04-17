@@ -32,7 +32,7 @@ import {
 const API_URL = API_PROFILE
 const FORGOT_PASSWORD_URL = API_FORGOT_PASSWORD
 const CHANGE_PASSWORD_URL = API_CHANGE_PASSWORD
-const BASE_URL = API_BASE
+const BASE_URL = API_BASE.replace(/\/api\/v1\/?$/, "")
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 const SUGGESTIONS_API = API_SUGGESTIONS;
