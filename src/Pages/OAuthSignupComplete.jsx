@@ -44,7 +44,7 @@ const COURSE_BRANCH_MAPPING = {
   "Bachelor of Design": ["General", "Interior Design"],
   "Bachelor of Engineering": ["Aeronautical Engineering", "Aerospace Engineering", "Automobile Engineering", "Bio Medical Engineering", "Chemical Engineering", "Civil Engineering", "Computer Science and Design", "Computer Science Engineering", "Computer Science Engineering(Cyber)", "Electrical & Electronics Engineering", "Electronics & Communication Engineering", "Food Technology", "Information Technology", "Mechanical Engineering"],
   "Bachelor of Pharmacy": ["Pharmacy"],
-  "Bachelor of Science": ["Artificial Intelligence / Data Science", "Bio Chemistry", "Bio Informatics", "Bio Technology", "Catering Science and Hotel Management", "Chemistry", "Cognitive systems", "Computer Science", "Computer Technology", "General", "Mathematics", "Microbiology", "Physics"],
+  "Bachelor of Science": ["Artificial Intelligence / Data Science", "Bio Chemistry", "Bio Informatics", "Bio Technology", "Catering Science and Hotel Management", "Chemistry", "Cognitive systems", "Computer Science", "Computer Technology", "Information Technology", "General", "Mathematics", "Microbiology", "Physics"],
   "Bachelor of Technology": ["Aeronautical Engineering", "Aerospace Engineering", "Artificial Intelligence / Data Science", "Automobile Engineering", "Bio Medical Engineering", "Bio Technology", "Chemical Engineering", "Civil Engineering", "Computer Science Engineering", "Electrical & Electronics Engineering", "Electronics & Communication Engineering", "Food Technology", "Mechanical Engineering"],
   "Master of Architecture": ["General"], "Master of Building and Engineering Management": ["General"],
   "Master of Business Administration": ["Business Process Services", "General", "MBA"],
