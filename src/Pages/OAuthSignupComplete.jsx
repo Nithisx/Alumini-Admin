@@ -63,7 +63,6 @@ export default function OAuthSignupComplete() {
 
   // Prefill data comes from Login.jsx via navigation state
   const prefill = location.state || {};
-  const accessToken = sessionStorage.getItem("oauth_access_token");
 
   const [form, setForm] = useState({
     first_name: prefill.first_name || "",
@@ -119,9 +118,9 @@ export default function OAuthSignupComplete() {
     locTimers.current[type] = setTimeout(() => fetchLocationSuggestions(type, params), delay);
   }, [fetchLocationSuggestions]);
 
-  // Guard: if no access_token or prefill data, redirect to login
+  // Guard: if no prefill data, redirect to login
   useEffect(() => {
-    if (!accessToken || !prefill.email) {
+    if (!prefill.email) {
       navigate("/login", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -183,12 +182,6 @@ export default function OAuthSignupComplete() {
     e.preventDefault();
     setError("");
 
-    if (!accessToken) {
-      setError("Session expired. Please sign in with Google again.");
-      navigate("/login");
-      return;
-    }
-
     if (usernameStatus === "taken") {
       setError("Username is already taken. Please choose another.");
       return;
@@ -201,8 +194,18 @@ export default function OAuthSignupComplete() {
 
     setLoading(true);
     try {
+      // Refresh the Supabase session to get a fresh access token before submitting
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) {
+        sessionStorage.removeItem("oauth_access_token");
+        navigate("/login", { replace: true });
+        return;
+      }
+      const freshToken = sessionData.session.access_token;
+      sessionStorage.setItem("oauth_access_token", freshToken);
+
       await api.post("/auth/google/signup/", {
-        access_token: accessToken,
+        access_token: freshToken,
         ...form,
       });
       setShowSuccess(true);
