@@ -111,7 +111,7 @@ const Birthday = () => {
       <div className="flex-shrink-0">
         {user.profile_photo ? (
           <img
-            src={`https://api.karpagamalumni.in/api/v1${user.profile_photo}`}
+            src={`https://api.karpagamalumni.in${user.profile_photo}`}
             alt={user.username}
             className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-green-300 hover:border-green-600 transition-colors"
           />

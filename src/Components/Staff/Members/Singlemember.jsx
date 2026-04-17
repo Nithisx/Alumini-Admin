@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'https://api.karpagamalumni.in/api/v1/profile/';
-const MEDIA_BASE_URL = "https://api.karpagamalumni.in/api/v1";
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
 const PROFILE_PLACEHOLDER =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";

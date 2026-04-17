@@ -74,7 +74,7 @@ const ImageGallery = ({ images }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
-    return `https://api.karpagamalumni.in/api/v1${imagePath}`;
+    return `https://api.karpagamalumni.in${imagePath}`;
   };
 
   return (

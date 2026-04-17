@@ -146,7 +146,7 @@ export default function Events() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event) => {
               const imgPath = event.images?.[0]?.image;
-              const imgUrl = imgPath ? `https://api.karpagamalumni.in/api/v1${imgPath}` : null;
+              const imgUrl = imgPath ? `https://api.karpagamalumni.in${imgPath}` : null;
               return (
                 <div
                   key={event.id}

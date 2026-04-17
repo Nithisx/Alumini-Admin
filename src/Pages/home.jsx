@@ -220,7 +220,7 @@ export default function Home() {
                     <div className="relative h-48 sm:h-56 overflow-hidden">
                       {album.cover_image ? (
                         <img
-                          src={`https://api.karpagamalumni.in/api/v1${album.cover_image}`}
+                          src={`https://api.karpagamalumni.in${album.cover_image}`}
                           alt={album.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
@@ -290,7 +290,7 @@ export default function Home() {
                       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
                         <div className="relative">
                           <img
-                            src={`https://api.karpagamalumni.in/api/v1${news.thumbnail}`}
+                            src={`https://api.karpagamalumni.in${news.thumbnail}`}
                             alt={news.title}
                             className="w-full h-full object-cover"
                           />
@@ -317,7 +317,7 @@ export default function Home() {
                           </p>
                           <div className="flex items-center">
                             <img
-                              src={`https://api.karpagamalumni.in/api/v1${news.user.profile_photo}`}
+                              src={`https://api.karpagamalumni.in${news.user.profile_photo}`}
                               alt={`${news.user.first_name} ${news.user.last_name}`}
                               className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-blue-200"
                             />
@@ -420,7 +420,7 @@ export default function Home() {
                     <div className="relative h-64 overflow-hidden">
                       {event.images && event.images.length > 0 ? (
                         <img
-                          src={`https://api.karpagamalumni.in/api/v1${event.images[0].image}`}
+                          src={`https://api.karpagamalumni.in${event.images[0].image}`}
                           alt={event.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
@@ -536,7 +536,7 @@ export default function Home() {
                         <div className="w-full h-full rounded-full overflow-hidden">
                           {member.profile_photo ? (
                             <img
-                              src={`https://api.karpagamalumni.in/api/v1${member.profile_photo}`}
+                              src={`https://api.karpagamalumni.in${member.profile_photo}`}
                               alt={`${member.first_name} ${member.last_name}`}
                               className="w-full h-full object-cover"
                             />

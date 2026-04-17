@@ -108,7 +108,7 @@ const StudentImageUpload = () => {
           <div key={student.id} className="bg-white rounded-lg shadow p-4">
             {student.image ? (
               <img
-                src={`https://api.karpagamalumni.in/api/v1${student.image}`}
+                src={`https://api.karpagamalumni.in${student.image}`}
                 alt={student.name}
                 className="w-full h-40 object-cover rounded-md"
               />

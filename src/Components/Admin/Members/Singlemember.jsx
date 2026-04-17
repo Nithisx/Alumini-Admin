@@ -25,7 +25,7 @@ const TOKEN = localStorage.getItem("Token");
 const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
 const API_DEACTIVATE_USER = "https://api.karpagamalumni.in/api/v1/deactivate-user/";
 const API_DELETE_USER = "https://api.karpagamalumni.in/api/v1/delete-user/";
-const MEDIA_BASE_URL = "https://api.karpagamalumni.in/api/v1";
+const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
 const getMediaUrl = (uri) => {
   if (!uri) return "";

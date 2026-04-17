@@ -1443,7 +1443,7 @@ export default function MembersPage() {
                         <img
                           src={
                             member.profile_photo
-                              ? `https://api.karpagamalumni.in/api/v1${member.profile_photo}`
+                              ? `https://api.karpagamalumni.in${member.profile_photo}`
                               : placeholder
                           }
                           alt={`${member.first_name || "staff"} ${member.last_name || ""

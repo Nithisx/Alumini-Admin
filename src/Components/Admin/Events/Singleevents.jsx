@@ -103,7 +103,7 @@ const SingleEvents = () => {
 
   // Get image URLs
   const hasImages = event.images && event.images.length > 0;
-  const getImageUrl = (image) => `https://api.karpagamalumni.in/api/v1${image.image}`;
+  const getImageUrl = (image) => `https://api.karpagamalumni.in${image.image}`;
   const currentImageUrl = hasImages ? getImageUrl(event.images[currentImageIndex]) : 'https://via.placeholder.com/600x400?text=No+Image';
 
   const formatDate = (dateString) => {

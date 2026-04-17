@@ -336,7 +336,7 @@ const AlbumsPage = () => {
 
                       {album.cover_image ? (
                         <img
-                          src={`https://api.karpagamalumni.in/api/v1${album.cover_image}`}
+                          src={`https://api.karpagamalumni.in${album.cover_image}`}
                           alt={album.title}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                         />
@@ -375,7 +375,7 @@ const AlbumsPage = () => {
                         <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                           {album.cover_image ? (
                             <img
-                              src={`https://api.karpagamalumni.in/api/v1${album.cover_image}`}
+                              src={`https://api.karpagamalumni.in${album.cover_image}`}
                               alt={album.title}
                               className="h-full w-full object-cover"
                             />

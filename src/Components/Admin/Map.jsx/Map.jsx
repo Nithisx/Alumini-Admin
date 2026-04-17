@@ -6,7 +6,8 @@ import { Search, Map, Layers, Users, RefreshCw, AlertCircle } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 
 // Base URL for media files
-const MEDIA_BASE_URL = 'https://api.karpagamalumni.in/api/v1';
+const API_BASE_URL = 'https://api.karpagamalumni.in/api/v1';
+const MEDIA_BASE_URL = 'https://api.karpagamalumni.in';
 
 // Fallback icon if user has no profile photo
 const defaultIconUrl = 'https://img.icons8.com/fluency/48/000000/user-location.png';
@@ -36,7 +37,7 @@ const MapComponent = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${MEDIA_BASE_URL}/user_locations/`,
+        `${API_BASE_URL}/user_locations/`,
         {
           method: 'GET',
           headers: {
