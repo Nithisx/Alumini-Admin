@@ -24,6 +24,7 @@ import {
   faMapMarkerAlt,
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
+import { getMediaUrl } from "../../../config/api";
   import {
     COLLEGE_NAMES,
     COURSES,
@@ -43,6 +44,7 @@ export default function RegisterRequest() {
   const [editingId, setEditingId] = useState(null);
   const [editDraft, setEditDraft] = useState({});
   const [savingEdit, setSavingEdit] = useState(false);
+  const [imageLoadErrors, setImageLoadErrors] = useState({});
   const API_URL = "https://api.karpagamalumni.in/api/v1/Approve-signup/";
   const EDIT_URL = (id) => `https://api.karpagamalumni.in/api/v1/Approve-signup/${id}/`;
 
@@ -508,6 +510,20 @@ export default function RegisterRequest() {
     }
   };
 
+  const resolveProfileImage = (req) => {
+    const imagePath = req?.profile_image || req?.profile_photo_url || req?.profile_photo || "";
+    return imagePath ? getMediaUrl(imagePath) : "";
+  };
+
+  const hasUsableProfileImage = (req) => {
+    const imageUrl = resolveProfileImage(req);
+    return Boolean(imageUrl) && !imageLoadErrors[req.id];
+  };
+
+  const handleProfileImageError = (id) => {
+    setImageLoadErrors((prev) => ({ ...prev, [id]: true }));
+  };
+
   // Render a single editable or read-only field
   const renderField = (req, [key, label, kind, options]) => {
     const isEditing = editingId === req.id;
@@ -754,7 +770,16 @@ export default function RegisterRequest() {
               />
             </label>
             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 flex items-center justify-center mr-3">
-              <FontAwesomeIcon icon={faUser} className="text-white text-sm" />
+              {hasUsableProfileImage(req) ? (
+                <img
+                  src={resolveProfileImage(req)}
+                  alt={`${req.username || req.first_name || "User"} profile`}
+                  className="h-10 w-10 rounded-full object-cover"
+                  onError={() => handleProfileImageError(req.id)}
+                />
+              ) : (
+                <FontAwesomeIcon icon={faUser} className="text-white text-sm" />
+              )}
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 text-sm">
@@ -1095,10 +1120,19 @@ export default function RegisterRequest() {
                                 <div className="flex items-center">
                                   <div className="flex-shrink-0 h-12 w-12">
                                     <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 flex items-center justify-center">
-                                      <FontAwesomeIcon
-                                        icon={faUser}
-                                        className="text-white text-lg"
-                                      />
+                                      {hasUsableProfileImage(req) ? (
+                                        <img
+                                          src={resolveProfileImage(req)}
+                                          alt={`${req.username || req.first_name || "User"} profile`}
+                                          className="h-12 w-12 rounded-full object-cover"
+                                          onError={() => handleProfileImageError(req.id)}
+                                        />
+                                      ) : (
+                                        <FontAwesomeIcon
+                                          icon={faUser}
+                                          className="text-white text-lg"
+                                        />
+                                      )}
                                     </div>
                                   </div>
                                   <div className="ml-4">
