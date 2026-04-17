@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
@@ -53,7 +54,7 @@ const AddEvent = () => {
   };
   const handleFile = (file) => {
     if (!file.type.startsWith("image/")) {
-      alert("Please upload only image files for event banners.");
+      toast.success("Please upload only image files for event banners.");
       return;
     }
     setUploadedFile({
@@ -86,7 +87,7 @@ const AddEvent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.date || !formData.location) {
-      alert("Please fill in all required fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
 
@@ -142,10 +143,10 @@ const AddEvent = () => {
       });
       removeFile();
       setIsModalOpen(false);
-      alert("Event created successfully!");
+      toast.success("Event created successfully!");
     } catch (err) {
       setApiError(err.message);
-      alert(`Failed to create event: ${err.message}`);
+      toast.error(`Failed to create event: ${err.message}`);
     } finally {
       setIsLoading(false);
     }

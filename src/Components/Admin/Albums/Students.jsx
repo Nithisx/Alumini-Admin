@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import axios from "axios";
 
 const StudentImageUpload = () => {
@@ -34,7 +35,7 @@ const StudentImageUpload = () => {
     e.preventDefault();
 
     if (!formData.name || !formData.image) {
-      alert("Please enter student name and select an image.");
+      toast.error("Please enter student name and select an image.");
       return;
     }
 
@@ -58,9 +59,9 @@ const StudentImageUpload = () => {
 
       setStudents([response.data, ...students]); // Add new student to list
       setFormData({ name: "", image: null });  // Reset form
-      alert("Student added successfully!");
+      toast.success("Student added successfully!");
     } catch (error) {
-      alert("Could not upload student image.");
+      toast.success("Could not upload student image.");
     }
   };
 

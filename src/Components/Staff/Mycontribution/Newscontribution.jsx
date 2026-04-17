@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import {
   MoreVertical,
   Share2,
@@ -275,7 +276,7 @@ const NewsContribution = () => {
       const newsData = data.news || data.results || [];
       setNews(newsData);
     } catch (error) {
-      alert("Failed to fetch news. Please try again.");
+      toast.error("Failed to fetch news. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -315,9 +316,9 @@ const NewsContribution = () => {
       setNews((prevNews) =>
         prevNews.filter((article) => article.id !== newsId)
       );
-      alert("News article deleted successfully!");
+      toast.success("News article deleted successfully!");
     } catch (error) {
-      alert(error.message || "Failed to delete news article");
+      toast.error(error.message || "Failed to delete news article");
     }
   };
 

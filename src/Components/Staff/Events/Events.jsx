@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -45,7 +46,10 @@ export default function Events() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setEvents(data);
+        const normalizedEvents = Array.isArray(data)
+          ? data
+          : data?.results || data?.events || [];
+        setEvents(normalizedEvents);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -54,8 +58,8 @@ export default function Events() {
   }, [token]);
 
   const filtered = events.filter((e) =>
-    e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (e?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (e?.description || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDelete = (id) => {
@@ -69,13 +73,13 @@ export default function Events() {
       })
         .then((res) => {
           if (res.ok) {
-            setEvents(events.filter((e) => e.id !== id));
+            setEvents((prevEvents) => prevEvents.filter((e) => e.id !== id));
           } else {
             throw new Error("Failed to delete event");
           }
         })
         .catch((error) => {
-          alert("Failed to delete event. Please try again.");
+          toast.error("Failed to delete event. Please try again.");
         });
     }
   };

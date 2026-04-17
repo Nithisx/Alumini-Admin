@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { toast } from "react-toastify";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import Pagination from "../Shared/Pagination";
@@ -529,8 +530,6 @@ export default function MembersPage() {
 
         if (results && results.length > 0) {
           allMembers = [...allMembers, ...results];
-            `[v0] Page ${page}: Got ${results.length} members, total so far: ${allMembers.length}`
-          );
         }
 
         // Check if there are more pages
@@ -539,14 +538,10 @@ export default function MembersPage() {
 
         // Safety check to prevent infinite loops
         if (page > 100) {
-            "[v0] Reached maximum page limit (100), stopping pagination"
-          );
           break;
         }
       }
 
-        `[v0] Finished fetching all filtered members: ${allMembers.length} total`
-      );
       return allMembers;
     } catch (error) {
       return [];
@@ -578,7 +573,7 @@ export default function MembersPage() {
 
   const exportToExcel = async () => {
     if (selectedMembers.size === 0) {
-      alert("Please select at least one member to export.");
+      toast.error("Please select at least one member to export.");
       return;
     }
 
@@ -673,11 +668,11 @@ export default function MembersPage() {
       XLSX.writeFile(wb, filename);
 
       // Show success message
-      alert(
+      toast.error(
         `Successfully exported ${selectedMembers.size} members to ${filename}`
       );
     } catch (error) {
-      alert("Error exporting data to Excel. Please try again.");
+      toast.error("Error exporting data to Excel. Please try again.");
     } finally {
       setExportLoading(false);
     }

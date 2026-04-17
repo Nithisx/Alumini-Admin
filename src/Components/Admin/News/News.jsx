@@ -4,6 +4,7 @@ This component fetches and displays news posts with a completely redesigned UI
 Using a green-600 theme
 */
 import React, { useEffect, useState } from 'react';
+import { toast } from "react-toastify";
 import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
 
@@ -33,7 +34,7 @@ export default function NewsList() {
       });
       if (!response.ok) throw new Error(`Error: ${response.status}`);
       const data = await response.json();
-      setPosts(Array.isArray(data) ? data : [data]);
+      setPosts(Array.isArray(data) ? data : data.results || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -55,7 +56,7 @@ export default function NewsList() {
       if (!res.ok) throw new Error(`Error: ${res.status}`);
       setPosts(posts.filter(post => post.id !== id));
     } catch (err) {
-      alert(`Failed to delete: ${err.message}`);
+      toast.error(`Failed to delete: ${err.message}`);
     } finally {
       setDeletingId(null);
     }

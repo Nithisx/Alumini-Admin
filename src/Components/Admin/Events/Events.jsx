@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -46,7 +47,7 @@ export default function Events() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setEvents(data);
+        setEvents(Array.isArray(data) ? data : data.results || []);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -65,10 +66,10 @@ export default function Events() {
       if (res.ok) {
         setEvents((prev) => prev.filter((e) => e.id !== eventId));
       } else {
-        alert("Failed to delete event.");
+        toast.error("Failed to delete event.");
       }
     } catch (err) {
-      alert("Error deleting event.");
+      toast.error("Error deleting event.");
     }
     setDeletingId(null);
   };

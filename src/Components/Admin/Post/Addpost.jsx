@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -281,7 +282,7 @@ const JobFeed = () => {
         },
       });
       const data = await response.json();
-      setPosts(data);
+      setPosts(Array.isArray(data) ? data : data.results || []);
     } catch (err) {
     } finally {
       setLoading(false);
@@ -305,10 +306,10 @@ const JobFeed = () => {
       if (response.ok) {
         setPosts(posts.filter((post) => post.id !== postId));
       } else {
-        alert("Failed to delete post. Please try again.");
+        toast.error("Failed to delete post. Please try again.");
       }
     } catch (error) {
-      alert("Failed to delete post. Please try again.");
+      toast.error("Failed to delete post. Please try again.");
     }
   };
 
@@ -341,7 +342,7 @@ const JobFeed = () => {
         size: (file.size / 1024 / 1024).toFixed(2),
       });
     } else {
-      alert("Please upload only image files.");
+      toast.success("Please upload only image files.");
     }
   };
   const removeFile = () => {
@@ -738,7 +739,7 @@ const JobFeed = () => {
       )}
 
       {/* Add custom styles for line clamp */}
-      <style jsx>{`
+      <style>{`
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;

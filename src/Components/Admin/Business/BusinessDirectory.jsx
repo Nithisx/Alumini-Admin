@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import {
@@ -221,9 +222,9 @@ const BusinessDirectory = () => {
 
       setBusinesses(businesses.filter(business => business.id !== id));
       setFilteredBusinesses(filteredBusinesses.filter(business => business.id !== id));
-      alert("Business deleted successfully!");
+      toast.success("Business deleted successfully!");
     } catch (error) {
-      alert("Failed to delete business.");
+      toast.error("Failed to delete business.");
     }
   };
 

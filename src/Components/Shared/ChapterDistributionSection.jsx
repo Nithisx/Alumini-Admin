@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+
+const CITY_INITIAL_VISIBLE = 4;
 
 const sectionConfigs = [
   {
@@ -105,6 +107,8 @@ export default function ChapterDistributionSection({
   cityStateDistribution,
   sectionClassName = "py-12 sm:py-16 lg:py-20",
 }) {
+  const [isCityExpanded, setIsCityExpanded] = useState(false);
+
   return (
     <section className={sectionClassName} id="chapters-section">
       <div className="container mx-auto px-4">
@@ -123,6 +127,13 @@ export default function ChapterDistributionSection({
               countryDistribution,
               cityStateDistribution
             );
+            const isCitySection = config.key === "city";
+            const canToggleCityItems =
+              isCitySection && items.length > CITY_INITIAL_VISIBLE;
+            const visibleItems =
+              canToggleCityItems && !isCityExpanded
+                ? items.slice(0, CITY_INITIAL_VISIBLE)
+                : items;
 
             return (
               <div key={config.key}>
@@ -142,7 +153,7 @@ export default function ChapterDistributionSection({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
                   {items.length > 0 ? (
-                    items.map((item, index) => (
+                    visibleItems.map((item, index) => (
                       <ChapterCard
                         key={`${config.key}-${config.getName(item)}-${index}`}
                         name={config.getName(item)}
@@ -153,6 +164,21 @@ export default function ChapterDistributionSection({
                     <EmptyState label={config.emptyLabel} />
                   )}
                 </div>
+
+                {canToggleCityItems && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      type="button"
+                      aria-expanded={isCityExpanded}
+                      onClick={() => setIsCityExpanded((prev) => !prev)}
+                      className="inline-flex items-center rounded-full border border-green-300 bg-white px-5 py-2 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-50"
+                    >
+                      {isCityExpanded
+                        ? "Show Less"
+                        : `Show More (${items.length - CITY_INITIAL_VISIBLE})`}
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

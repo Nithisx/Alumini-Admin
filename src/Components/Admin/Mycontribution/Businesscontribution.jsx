@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBuilding,
@@ -186,9 +187,9 @@ export default function BusinessContribution() {
       setBusinesses((prev) => [newBusiness, ...prev]);
       setShowAddModal(false);
       resetForm();
-      alert("Business added successfully!");
+      toast.success("Business added successfully!");
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -236,9 +237,9 @@ export default function BusinessContribution() {
       setShowEditModal(false);
       setSelectedBusiness(null);
       resetForm();
-      alert("Business updated successfully!");
+      toast.success("Business updated successfully!");
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -262,9 +263,9 @@ export default function BusinessContribution() {
         prev.filter((business) => business.id !== businessId)
       );
       setDeleteConfirm(null);
-      alert("Business deleted successfully!");
+      toast.success("Business deleted successfully!");
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     }
   };
 

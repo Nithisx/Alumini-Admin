@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { toast } from "react-toastify";
 import { MoreVertical, MapPin, Clock, User, Share2, Trash2, X, Heart, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus } from "lucide-react"
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1"
@@ -166,7 +167,7 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
       onUpdate(updatedEvent)
       onClose()
     } catch (error) {
-      alert("Failed to update event. Please try again.")
+      toast.error("Failed to update event. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -719,7 +720,7 @@ const Events = () => {
       const eventsData = data.events || data.posts || []
       setEvents(eventsData)
     } catch (error) {
-      alert("Failed to fetch events. Please try again.")
+      toast.error("Failed to fetch events. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -749,7 +750,7 @@ const Events = () => {
 
       setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventId))
     } catch (error) {
-      alert("Failed to delete event. Please try again.")
+      toast.error("Failed to delete event. Please try again.")
     }
   }
 

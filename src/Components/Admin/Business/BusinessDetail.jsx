@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from "react-toastify";
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -85,7 +86,7 @@ const BusinessDetail = () => {
           setLogoPreview(`${BASE_URL}${businessResponse.data.logo}`);
         }
       } catch (error) {
-        alert("Error loading business details");
+        toast.error("Error loading business details");
       } finally {
         setLoading(false);
       }
@@ -162,9 +163,9 @@ const BusinessDetail = () => {
       });
 
       setImages(images.filter(image => image.id !== imageId));
-      alert("Image deleted successfully!");
+      toast.success("Image deleted successfully!");
     } catch (error) {
-      alert("Failed to delete image");
+      toast.error("Failed to delete image");
     }
   };
 
@@ -243,7 +244,7 @@ const BusinessDetail = () => {
           );
         }
 
-        alert("Business created successfully!");
+        toast.success("Business created successfully!");
         // Redirect to business directory main page
         navigate('/admin/business');
       } else {
@@ -282,12 +283,12 @@ const BusinessDetail = () => {
           setImageFiles([]);
         }
 
-        alert("Business updated successfully!");
+        toast.success("Business updated successfully!");
         // Redirect to business directory main page
         navigate('/admin/business');
       }
     } catch (error) {
-      alert("Error saving business. Please try again.");
+      toast.error("Error saving business. Please try again.");
     } finally {
       setSaving(false);
     }

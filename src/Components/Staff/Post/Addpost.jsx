@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -45,6 +46,19 @@ const getProfilePhotoUrl = (photoPath) => {
   if (!photoPath) return "";
   if (photoPath.startsWith("http")) return photoPath;
   return `https://api.karpagamalumni.in${photoPath}`;
+};
+
+const normalizeJobsList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.jobs)) return payload.jobs;
+  return [];
+};
+
+const normalizeCreatedJob = (payload) => {
+  if (!payload || typeof payload !== "object") return null;
+  if (Array.isArray(payload)) return payload[0] || null;
+  return payload.job || payload.data || payload.result || payload;
 };
 
 // Image Gallery Component
@@ -281,7 +295,7 @@ const JobFeed = () => {
         },
       });
       const data = await response.json();
-      setPosts(data);
+      setPosts(normalizeJobsList(data));
     } catch (err) {
     } finally {
       setLoading(false);
@@ -303,12 +317,12 @@ const JobFeed = () => {
         },
       });
       if (response.ok) {
-        setPosts(posts.filter((post) => post.id !== postId));
+        setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
       } else {
-        alert("Failed to delete post. Please try again.");
+        toast.error("Failed to delete post. Please try again.");
       }
     } catch (error) {
-      alert("Failed to delete post. Please try again.");
+      toast.error("Failed to delete post. Please try again.");
     }
   };
 
@@ -341,7 +355,7 @@ const JobFeed = () => {
         size: (file.size / 1024 / 1024).toFixed(2),
       });
     } else {
-      alert("Please upload only image files.");
+      toast.success("Please upload only image files.");
     }
   };
   const removeFile = () => {
@@ -407,7 +421,12 @@ const JobFeed = () => {
       }
 
       const data = await response.json();
-      setPosts([data, ...posts]);
+      const createdJob = normalizeCreatedJob(data);
+      if (createdJob) {
+        setPosts((prevPosts) => [createdJob, ...prevPosts]);
+      } else {
+        await fetchJobs();
+      }
       closeModal();
     } catch (error) {
       setError(error.message || "Failed to create post. Please try again.");
@@ -744,7 +763,7 @@ const JobFeed = () => {
       )}
 
       {/* Add custom styles for line clamp */}
-      <style jsx>{`
+      <style>{`
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;

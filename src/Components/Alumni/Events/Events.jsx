@@ -45,7 +45,10 @@ export default function Events() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setEvents(data);
+        const normalizedEvents = Array.isArray(data)
+          ? data
+          : data?.results || data?.events || [];
+        setEvents(normalizedEvents);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -54,8 +57,8 @@ export default function Events() {
   }, [token]);
 
   const filtered = events.filter((e) =>
-    e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (e?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (e?.description || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
 

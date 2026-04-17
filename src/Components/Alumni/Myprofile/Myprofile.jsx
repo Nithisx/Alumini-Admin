@@ -1,8 +1,10 @@
 "use client"
 
 import React, { useEffect, useState, useRef, useCallback } from "react"
+import { toast } from "react-toastify";
 import axios from "axios"
 import SuggestionInput from "../../Shared/SuggestionInput"
+import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS } from "../../../config/api"
 import {
   ArrowLeft,
   Edit,
@@ -26,14 +28,40 @@ import {
   EyeOff,
 } from "lucide-react"
 
-// API Configuration.in/api/v1
-const API_URL = "https://api.karpagamalumni.in/api/v1/profile/"
-const FORGOT_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/forgot-password/"
-const CHANGE_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/change-password/"
-const BASE_URL = "https://api.karpagamalumni.in/api/v1"
+// API Configuration
+const API_URL = API_PROFILE
+const FORGOT_PASSWORD_URL = API_FORGOT_PASSWORD
+const CHANGE_PASSWORD_URL = API_CHANGE_PASSWORD
+const BASE_URL = API_BASE
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
-const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";
+const SUGGESTIONS_API = API_SUGGESTIONS;
+
+const ACADEMIC_COURSES = [
+  "Bachelor of Architecture",
+  "Bachelor of Arts",
+  "Bachelor of Business Administration",
+  "Bachelor of Commerce",
+  "Bachelor of Computer Applications",
+  "Bachelor of Design",
+  "Bachelor of Engineering",
+  "Bachelor of Pharmacy",
+  "Bachelor of Philosophy",
+  "Bachelor of Science",
+  "Bachelor of Technology",
+  "Master of Architecture",
+  "Master of Building and Engineering Management",
+  "Master of Business Administration",
+  "Master of Commerce",
+  "Master of Computer Applications",
+  "Master of Engineering",
+  "Master of Pharmacy",
+  "Master of Philosophy",
+  "Master of Planning",
+  "Master of Science",
+  "Master of Social Work",
+  "Ph.D",
+]
 
 // Utility functions
 const getMediaUrl = (uri) => {
@@ -200,7 +228,7 @@ const ProfileScreen = () => {
   const handleError = (error, customMessage) => {
     const errorMessage =
       error?.response?.data?.message || error?.response?.data?.error || error?.message || customMessage
-    alert(errorMessage)
+    toast.error(errorMessage)
   }
 
   // Add this function to fetch the profile
@@ -245,7 +273,7 @@ const ProfileScreen = () => {
   // Forgot Password function
   const handleForgotPassword = async () => {
     if (!profile.email) {
-      alert("Email is required to reset password")
+      toast.error("Email is required to reset password")
       return
     }
 
@@ -268,7 +296,7 @@ const ProfileScreen = () => {
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         "Failed to send reset email. Please try again."
-      alert(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setForgotPasswordLoading(false)
     }
@@ -283,7 +311,7 @@ const ProfileScreen = () => {
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be less than 5MB")
+      toast.error("Image size should be less than 5MB")
       return
     }
 
@@ -424,7 +452,7 @@ const ProfileScreen = () => {
 
       setSaving(false)
       setModalVisible(false)
-      alert("Profile updated successfully!")
+      toast.success("Profile updated successfully!")
       fetchProfile()
     } catch (error) {
       setSaving(false)
@@ -581,16 +609,6 @@ const ProfileScreen = () => {
                   <span className="inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">
                     Yes
                   </span>
-                </div>
-              </div>
-            )}
-
-            {profile.chapter && (
-              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
-                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Chapter</p>
-                  <p className="text-sm sm:text-base text-green-900">{profile.chapter}</p>
                 </div>
               </div>
             )}
@@ -1044,107 +1062,18 @@ const ProfileScreen = () => {
       case 1: // Academic
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Course</label>
-                <input
-                  type="text"
-                  placeholder="e.g. B.E., MBA"
-                  value={profile.course || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, course: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Branch / Specialization</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Computer Science"
-                  value={profile.branch || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, branch: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Stream</label>
-                <input
-                  type="text"
-                  placeholder="Stream"
-                  value={profile.stream || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, stream: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Roll Number</label>
-                <input
-                  type="text"
-                  placeholder="Roll No."
-                  value={profile.roll_no || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, roll_no: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">College / Institution</label>
-              <input
-                type="text"
-                placeholder="College Name"
-                value={profile.college_name || ""}
-                onChange={(e) => setProfile((prev) => ({ ...prev, college_name: e.target.value }))}
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Course Start Year</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 2015"
-                  value={profile.course_start_year || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, course_start_year: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Course End Year</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 2019"
-                  value={profile.course_end_year || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, course_end_year: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Passed Out Year</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 2019"
-                  value={profile.passed_out_year ? String(profile.passed_out_year) : ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, passed_out_year: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-            </div>
-
-            <div className="border-t border-green-200 pt-4 mt-2">
+            <div className="border-t border-green-200 pt-4">
               <h3 className="text-sm font-bold text-green-900 mb-3">Higher / Further Education</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Course</label>
-                  <input
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Qualification</label>
+                  <SuggestionInput
                     type="text"
-                    placeholder="e.g. M.Phil, Ph.D"
+                    placeholder="e.g. M.Phil, Ph.D, MBA"
                     value={profile.educational_course || ""}
-                    onChange={(e) => setProfile((prev) => ({ ...prev, educational_course: e.target.value }))}
-                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                    onChange={(v) => setProfile((prev) => ({ ...prev, educational_course: v }))}
+                    inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                    suggestions={ACADEMIC_COURSES}
                   />
                 </div>
                 <div>
@@ -1482,28 +1411,16 @@ const ProfileScreen = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Work Experience (years)</label>
-                <input
-                  type="number"
-                  placeholder="Years of experience"
-                  min="0"
-                  value={profile.work_experience || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, work_experience: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Chapter</label>
-                <input
-                  type="text"
-                  placeholder="Alumni Chapter"
-                  value={profile.chapter || ""}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, chapter: e.target.value }))}
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Work Experience (years)</label>
+              <input
+                type="number"
+                placeholder="Years of experience"
+                min="0"
+                value={profile.work_experience || ""}
+                onChange={(e) => setProfile((prev) => ({ ...prev, work_experience: e.target.value }))}
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+              />
             </div>
 
             <div className="flex items-center gap-3 py-2">

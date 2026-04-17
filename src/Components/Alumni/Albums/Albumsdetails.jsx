@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -169,7 +170,7 @@ const AlbumDetailPage = () => {
 
         setFormData({ ...formData, images: compressedFiles });
       } catch (error) {
-        alert("Error processing images. Please try again.");
+        toast.error("Error processing images. Please try again.");
       } finally {
         setUploading(false);
       }
@@ -180,7 +181,7 @@ const AlbumDetailPage = () => {
     e.preventDefault();
 
     if (formData.images.length === 0) {
-      alert("Please select at least one image.");
+      toast.error("Please select at least one image.");
       return;
     }
 
@@ -214,9 +215,9 @@ const AlbumDetailPage = () => {
       setFormData({ title: "", images: [] });
       document.getElementById("imageUpload").value = "";
       setShowForm(false);
-      alert("Event images uploaded successfully!");
+      toast.success("Event images uploaded successfully!");
     } catch (error) {
-      alert("Failed to upload event images.");
+      toast.success("Failed to upload event images.");
     } finally {
       setUploading(false); // End upload loading state
     }
@@ -230,9 +231,9 @@ const AlbumDetailPage = () => {
         headers: { Authorization: `Token ${token}` },
       });
       setEventImages(eventImages.filter((img) => img.id !== imageId));
-      alert("Image deleted successfully!");
+      toast.success("Image deleted successfully!");
     } catch (error) {
-      alert("Failed to delete image.");
+      toast.error("Failed to delete image.");
     }
   };
 

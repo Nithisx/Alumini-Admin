@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -116,7 +117,7 @@ const AdminFeed = () => {
             setSelectedImage(file);
             setSelectedImageName(file.name);
         } else {
-            alert("Please upload only images or PDF files.");
+            toast.success("Please upload only images or PDF files.");
         }
     };
 
@@ -191,7 +192,7 @@ const AdminFeed = () => {
             }
             setIsLoadingModal(false);
             setIsModalOpen(false);
-            alert("Post created successfully!");
+            toast.success("Post created successfully!");
         } catch (error) {
             let errorMessage = "Failed to submit post. Please try again.";
             if (error.response) {

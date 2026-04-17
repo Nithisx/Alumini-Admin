@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useParams, Link, useNavigate, href } from "react-router-dom";
 
 const PROFILE_PLACEHOLDER =
@@ -284,7 +285,7 @@ export default function SingleMember() {
   const handleSaveEdit = async () => {
     // Check for errors before saving
     if (usernameError) {
-      alert(`Cannot save: ${usernameError}`);
+      toast.error(`Cannot save: ${usernameError}`);
       return;
     }
 
@@ -294,7 +295,7 @@ export default function SingleMember() {
       (!editedMember.username || editedMember.username.trim() === "")
     ) {
       setUsernameError("Username cannot be empty");
-      alert("Username cannot be empty");
+      toast.error("Username cannot be empty");
       return;
     }
 
@@ -409,9 +410,6 @@ export default function SingleMember() {
         // toast.success(data.message);
       } else {
         // Handle error case
-          "Failed to update member:",
-          data.message || "Unknown error"
-        );
         // toast.error(data.message || 'Failed to update profile');
       }
     } catch (error) {
@@ -535,18 +533,15 @@ export default function SingleMember() {
       const data = await response.json();
 
       if (response.status === 200) {
-        alert(`User ${action}d successfully!`);
+        toast.success(`User ${action}d successfully!`);
         navigate("/admin/members");
         // Reload the page when response is 200
         window.location.reload();
       } else {
-          `Failed to ${action} user:`,
-          data.message || "Unknown error"
-        );
-        alert(`Failed to ${action} user: ${data.message || "Unknown error"}`);
+        toast.error(`Failed to ${action} user: ${data.message || "Unknown error"}`);
       }
     } catch (error) {
-      alert(`Network error while ${action}ing user`);
+      toast.error(`Network error while ${action}ing user`);
     } finally {
       setDeactivating(false);
     }
@@ -560,7 +555,7 @@ export default function SingleMember() {
     if (userInput !== "DELETE") {
       if (userInput !== null) {
         // User didn't cancel
-        alert('Deletion cancelled. You must type "DELETE" exactly to confirm.');
+        toast.error('Deletion cancelled. You must type "DELETE" exactly to confirm.');
       }
       return;
     }
@@ -581,13 +576,13 @@ export default function SingleMember() {
       const data = await response.json();
 
       if (response.ok) {
-        alert("User deleted successfully!");
+        toast.success("User deleted successfully!");
         navigate("/admin/members");
       } else {
-        alert(`Failed to delete user: ${data.message || data.error || "Unknown error"}`);
+        toast.error(`Failed to delete user: ${data.message || data.error || "Unknown error"}`);
       }
     } catch (error) {
-      alert("Network error while deleting user");
+      toast.error("Network error while deleting user");
     } finally {
       setDeleting(false);
     }

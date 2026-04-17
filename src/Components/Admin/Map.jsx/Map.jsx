@@ -50,7 +50,7 @@ const MapComponent = () => {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      setLocations(data);
+      setLocations(Array.isArray(data) ? data : data.results || []);
       setError(null);
     } catch (err) {
       setError(err.message);

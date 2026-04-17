@@ -20,7 +20,7 @@ const Birthday = () => {
         });
         if (!response.ok) throw new Error("Failed to fetch birthdays");
         const data = await response.json();
-        setBirthdays(data);
+        setBirthdays(Array.isArray(data) ? data : data.results || []);
       } catch (err) {
         setError(err.message);
       } finally {

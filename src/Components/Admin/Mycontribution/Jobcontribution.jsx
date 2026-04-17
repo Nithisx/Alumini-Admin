@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import {
   MoreVertical,
   MapPin,
@@ -320,7 +321,7 @@ const Jobs = () => {
 
       setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
     } catch (error) {
-      alert("Failed to delete job. Please try again.");
+      toast.error("Failed to delete job. Please try again.");
     }
   };
 

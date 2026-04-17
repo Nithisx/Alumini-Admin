@@ -135,7 +135,7 @@ const Chat = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setRooms(data);
+        setRooms(Array.isArray(data) ? data : data.results || []);
       } else {
         const text = await response.text().catch(() => "no-body");
       }
@@ -168,7 +168,7 @@ const Chat = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setSearchResults(data);
+        setSearchResults(Array.isArray(data) ? data : data.results || []);
       } else {
       }
     } catch (error) {
@@ -454,7 +454,7 @@ const Chat = () => {
 
       if (response.ok) {
         const msgs = await response.json();
-        setMessages(msgs);
+        setMessages(Array.isArray(msgs) ? msgs : msgs.results || []);
       }
     } catch (error) {
     }

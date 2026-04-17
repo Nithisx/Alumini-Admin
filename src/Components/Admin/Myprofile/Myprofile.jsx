@@ -1,8 +1,10 @@
 "use client"
 
 import React, { useEffect, useState, useRef, useCallback } from "react"
+import { toast } from "react-toastify";
 import axios from "axios"
 import SuggestionInput from "../../Shared/SuggestionInput"
+import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS } from "../../../config/api"
 import {
   ArrowLeft,
   Edit,
@@ -27,13 +29,13 @@ import {
 } from "lucide-react"
 
 // API Configuration
-const API_URL = "https://api.karpagamalumni.in/api/v1/profile/"
-const FORGOT_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/forgot-password/"
-const CHANGE_PASSWORD_URL = "https://api.karpagamalumni.in/api/v1/change-password/"
-const BASE_URL = "https://api.karpagamalumni.in/api/v1"
+const API_URL = API_PROFILE
+const FORGOT_PASSWORD_URL = API_FORGOT_PASSWORD
+const CHANGE_PASSWORD_URL = API_CHANGE_PASSWORD
+const BASE_URL = API_BASE
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
-const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";
+const SUGGESTIONS_API = API_SUGGESTIONS;
 
 // Utility functions
 const getMediaUrl = (uri) => {
@@ -159,7 +161,7 @@ const ProfileScreen = () => {
   const handleError = (error, customMessage) => {
     const errorMessage =
       error?.response?.data?.message || error?.response?.data?.error || error?.message || customMessage
-    alert(errorMessage)
+    toast.error(errorMessage)
   }
 
   // Add this function to fetch the profile
@@ -204,7 +206,7 @@ const ProfileScreen = () => {
   // Forgot Password function
   const handleForgotPassword = async () => {
     if (!profile.email) {
-      alert("Email is required to reset password")
+      toast.error("Email is required to reset password")
       return
     }
 
@@ -227,7 +229,7 @@ const ProfileScreen = () => {
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         "Failed to send reset email. Please try again."
-      alert(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setForgotPasswordLoading(false)
     }
@@ -242,7 +244,7 @@ const ProfileScreen = () => {
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be less than 5MB")
+      toast.error("Image size should be less than 5MB")
       return
     }
 
@@ -323,7 +325,7 @@ const ProfileScreen = () => {
 
       setSaving(false)
       setModalVisible(false)
-      alert("Profile updated successfully!")
+      toast.success("Profile updated successfully!")
       fetchProfile()
     } catch (error) {
       setSaving(false)

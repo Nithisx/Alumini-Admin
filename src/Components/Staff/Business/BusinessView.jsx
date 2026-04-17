@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from "react-toastify";
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -46,7 +47,7 @@ const BusinessView = () => {
         setBusiness(businessResponse.data);
         setImages(imagesResponse.data);
       } catch (error) {
-        alert("Error loading business details");
+        toast.error("Error loading business details");
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import axios from "axios";
 import { Calendar, Image, Eye, Edit, Trash2, Save, X, Upload } from "lucide-react";
 
@@ -56,9 +57,9 @@ const AlbumsContribution = () => {
 
       // Remove the deleted album from the state
       setAlbums(albums.filter(album => album.id !== albumId));
-      alert("Album deleted successfully!");
+      toast.success("Album deleted successfully!");
     } catch (error) {
-      alert("Failed to delete album. Please try again.");
+      toast.error("Failed to delete album. Please try again.");
     }
   };
 
@@ -79,7 +80,7 @@ const AlbumsContribution = () => {
 
   const handleEditSave = async (albumId) => {
     if (!editFormData.title.trim()) {
-      alert("Title is required");
+      toast.error("Title is required");
       return;
     }
 
@@ -112,9 +113,9 @@ const AlbumsContribution = () => {
       setEditingAlbum(null);
       setEditFormData({ title: "", description: "" });
       setEditCoverImage(null);
-      alert("Album updated successfully!");
+      toast.success("Album updated successfully!");
     } catch (error) {
-      alert("Failed to update album. Please try again.");
+      toast.error("Failed to update album. Please try again.");
     } finally {
       setEditLoading(false);
     }

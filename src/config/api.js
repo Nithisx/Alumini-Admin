@@ -4,7 +4,13 @@
  * environments (dev / staging / prod) requires only a .env change.
  */
 
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.karpagamalumni.in/api/v1';
+const PROD_API_BASE = 'https://api.karpagamalumni.in/api/v1';
+const DEV_API_BASE = import.meta.env.VITE_DEV_API_BASE_URL || '/api/v1';
+
+// In dev, default to a same-origin path so Vite proxy can avoid browser CORS issues.
+export const API_BASE = import.meta.env.DEV
+  ? DEV_API_BASE
+  : (import.meta.env.VITE_API_BASE_URL || PROD_API_BASE);
 
 // Auth
 export const API_LOGIN_ALUMNI   = `${API_BASE}/login/`;
