@@ -29,6 +29,7 @@ export default function OAuthSignupComplete() {
 
   // Prefill data comes from Login.jsx via navigation state
   const prefill = location.state || {};
+  const oauthAvatarUrl = prefill.avatar_url || sessionStorage.getItem("oauth_avatar_url") || "";
 
   const [form, setForm] = useState({
     first_name: prefill.first_name || "",
@@ -186,12 +187,14 @@ export default function OAuthSignupComplete() {
 
       const res = await api.post("/auth/google/signup/", {
         access_token: accessToken,
+        avatar_url: oauthAvatarUrl,
         ...form,
       });
 
       // Backend says this email is already pending or approved → go to login
       if (res.data?.status === "pending" || res.data?.status === "login") {
         sessionStorage.removeItem("oauth_access_token");
+        sessionStorage.removeItem("oauth_avatar_url");
         await supabase.auth.signOut();
         navigate("/login", {
           replace: true,
@@ -206,6 +209,7 @@ export default function OAuthSignupComplete() {
       // If backend rejected with "pending" status (old 401 path) or email-already-registered
       if (errData?.status === "pending" || errData?.error?.toLowerCase().includes("already registered")) {
         sessionStorage.removeItem("oauth_access_token");
+        sessionStorage.removeItem("oauth_avatar_url");
         await supabase.auth.signOut();
         navigate("/login", {
           replace: true,
@@ -216,6 +220,7 @@ export default function OAuthSignupComplete() {
       // Token expired (401 from Supabase verify) — redirect to signup to re-auth
       if (err.response?.status === 401) {
         sessionStorage.removeItem("oauth_access_token");
+        sessionStorage.removeItem("oauth_avatar_url");
         await supabase.auth.signOut();
         navigate("/signup", {
           replace: true,
@@ -263,9 +268,9 @@ export default function OAuthSignupComplete() {
           )}
 
           {/* Google avatar preview if available */}
-          {prefill.avatar_url && (
+          {oauthAvatarUrl && (
             <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-              <img src={prefill.avatar_url} alt="Profile" className="h-16 w-16 rounded-full object-cover ring-2 ring-green-200" />
+              <img src={oauthAvatarUrl} alt="Profile" className="h-16 w-16 rounded-full object-cover ring-2 ring-green-200" />
               <div>
                 <p className="text-sm font-medium text-gray-700">Your Google profile photo will be used</p>
                 <p className="text-xs text-gray-400">You can update it later from your profile</p>
@@ -416,7 +421,7 @@ export default function OAuthSignupComplete() {
 
           <p className="text-center text-sm text-gray-500">
             Wrong account?{" "}
-            <button type="button" onClick={() => { sessionStorage.removeItem("oauth_access_token"); navigate("/login"); }}
+            <button type="button" onClick={() => { sessionStorage.removeItem("oauth_access_token"); sessionStorage.removeItem("oauth_avatar_url"); navigate("/login"); }}
               className="text-green-600 hover:underline">
               Go back to login
             </button>

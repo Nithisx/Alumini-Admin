@@ -92,6 +92,7 @@ export default function LoginPage() {
           // Do NOT sign out here — signing out invalidates the token before the signup form submits.
           // The signup page (OAuthSignupComplete) calls signOut after successful submission.
           sessionStorage.setItem("oauth_access_token", session.access_token);
+            sessionStorage.setItem("oauth_avatar_url", data.avatar_url || "");
           navigate("/oauth-signup", {
             state: {
               email: data.email,

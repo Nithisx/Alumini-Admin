@@ -130,6 +130,7 @@ const Signup = () => {
           navigate(roleMap[data.role] === "admin" ? "/admin/dashboard" : roleMap[data.role] === "staff" ? "/staff/dashboard" : "/alumni/dashboard");
         } else if (data.status === "new_user") {
           sessionStorage.setItem("oauth_access_token", session.access_token);
+          sessionStorage.setItem("oauth_avatar_url", data.avatar_url || "");
           await supabase.auth.signOut();
           navigate("/oauth-signup", {
             state: {
