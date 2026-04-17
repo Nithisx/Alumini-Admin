@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 import kahelogo from "../assets/kahelogo.png";
 import { supabase } from "../lib/supabase";
 
@@ -32,16 +33,13 @@ export default function LoginPage() {
     password: "",
     role: "alumni",
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [showForgotPopup, setShowForgotPopup] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
-    setError("");
   }, []);
 
   const loginUrl = useMemo(() => {
@@ -74,9 +72,7 @@ export default function LoginPage() {
         });
 
         if (data.status === "login" && data.token) {
-          // Existing approved user
           localStorage.setItem("Token", data.token);
-          // Role comes from the server; map it to the localStorage key format
           const roleMap = {
             Admin: "admin",
             Staff: "staff",
@@ -86,13 +82,11 @@ export default function LoginPage() {
           const roleKey = roleMap[data.role] || "alumni";
           localStorage.setItem("Role", roleKey);
           await supabase.auth.signOut();
+          toast.success("Signed in with Google successfully!");
           redirectAfterLogin(roleKey);
         } else if (data.status === "new_user") {
-          // Store the access_token temporarily so the signup page can re-verify with backend.
-          // Do NOT sign out here — signing out invalidates the token before the signup form submits.
-          // The signup page (OAuthSignupComplete) calls signOut after successful submission.
           sessionStorage.setItem("oauth_access_token", session.access_token);
-            sessionStorage.setItem("oauth_avatar_url", data.avatar_url || "");
+          sessionStorage.setItem("oauth_avatar_url", data.avatar_url || "");
           navigate("/oauth-signup", {
             state: {
               email: data.email,
@@ -104,7 +98,7 @@ export default function LoginPage() {
         }
       } catch (err) {
         await supabase.auth.signOut();
-        setError(
+        toast.error(
           err.response?.data?.error ||
           err.message ||
           "Google sign-in failed. Please try again."
@@ -120,10 +114,10 @@ export default function LoginPage() {
   const handleLogin = useCallback(
     async (e) => {
       e.preventDefault();
-      setError("");
 
       if (form.username.length > 100) {
-        return setError("Username too long (max 100 characters)");
+        toast.error("Username too long (max 100 characters)");
+        return;
       }
 
       setLoading(true);
@@ -136,12 +130,13 @@ export default function LoginPage() {
         if (data.token) {
           localStorage.setItem("Token", data.token);
           localStorage.setItem("Role", form.role);
+          toast.success("Logged in successfully!");
           redirectAfterLogin(form.role);
         } else {
-          setError(data.error || "Login failed: no token received");
+          toast.error(data.error || "Login failed: no token received");
         }
       } catch (err) {
-        setError(
+        toast.error(
           err.response?.data?.error ||
           err.message ||
           "An unexpected error occurred"
@@ -154,7 +149,6 @@ export default function LoginPage() {
   );
 
   const handleGoogleLogin = useCallback(async () => {
-    setError("");
     setOauthLoading(true);
     try {
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
@@ -164,26 +158,23 @@ export default function LoginPage() {
         },
       });
       if (oauthErr) throw oauthErr;
-      // Supabase redirects the browser — no further code runs here
     } catch (err) {
       setOauthLoading(false);
-      setError(err.message || "Google sign-in failed. Please try again.");
+      toast.error(err.message || "Google sign-in failed. Please try again.");
     }
   }, []);
 
-  // Forgot password handler
   const handleForgotPassword = async () => {
-    setError("");
     if (!form.username) {
-      setError("Please enter your email to reset password.");
+      toast.warning("Please enter your email to reset password.");
       return;
     }
     setForgotLoading(true);
     try {
       await api.post("/forgot-password/", { email: form.username });
-      setShowForgotPopup(true);
+      toast.success("Password reset link sent! Check your email.");
     } catch (err) {
-      setError(
+      toast.error(
         err.response?.data?.error ||
         err.message ||
         "Failed to send reset email."
@@ -227,8 +218,6 @@ export default function LoginPage() {
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">
             Welcome Back!
           </h2>
-
-          {error && <ErrorBanner message={error} />}
 
           <div className="space-y-4">
             <Select
@@ -338,24 +327,6 @@ export default function LoginPage() {
             </button>
           </p>
         </form>
-        {showForgotPopup && (
-          <Popup onClose={() => setShowForgotPopup(false)}>
-            <div className="text-center">
-              <div className="text-green-600 text-lg font-semibold mb-2">
-                Check your mail
-              </div>
-              <div className="text-gray-700 mb-4">
-                A password reset link has been sent to your email.
-              </div>
-              <button
-                className="bg-green-600 text-white px-4 py-2 rounded"
-                onClick={() => setShowForgotPopup(false)}
-              >
-                OK
-              </button>
-            </div>
-          </Popup>
-        )}
       </div>
     </div>
   );
@@ -409,26 +380,3 @@ function Select({ name, label, options, ...props }) {
   );
 }
 
-function ErrorBanner({ message }) {
-  return (
-    <div className="bg-red-100 text-red-800 px-4 py-2 rounded text-sm text-center">
-      {message}
-    </div>
-  );
-}
-
-function Popup({ children, onClose }) {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 min-w-[300px] relative">
-        <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-          onClick={onClose}
-        >
-          ×
-        </button>
-        {children}
-      </div>
-    </div>
-  );
-}

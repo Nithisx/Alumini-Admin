@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -129,17 +130,8 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component
-const JobCard = ({ post, onDelete }) => {
+const JobCard = ({ post, onRequestDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this job post?")) {
-      setIsDeleting(true);
-      await onDelete(post.id);
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <div
@@ -249,6 +241,7 @@ const JobFeed = () => {
   // Posts state
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   // Modal and file upload states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -423,6 +416,15 @@ const JobFeed = () => {
 
   return (
     <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Job Post"
+        message="This will permanently delete this job post."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { deletePost(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -459,7 +461,7 @@ const JobFeed = () => {
               <JobCard
                 key={post.id}
                 post={post}
-                onDelete={deletePost}
+                onRequestDelete={setConfirmDeleteId}
               />
             ))}
           </div>

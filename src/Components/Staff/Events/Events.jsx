@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -36,6 +37,7 @@ export default function Events() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const token = localStorage.getItem("Token");
   const navigate = useNavigate(); // 👈 Add useNavigate hook
 
@@ -62,26 +64,27 @@ export default function Events() {
     (e?.description || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this event?")) {
-      fetch(`https://api.karpagamalumni.in/api/v1/events/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: token ? `Token ${token}` : "",
-          "Content-Type": "application/json"
-        },
+  const handleDelete = (id) => setConfirmDeleteId(id);
+
+  const doDelete = (id) => {
+    fetch(`https://api.karpagamalumni.in/api/v1/events/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: token ? `Token ${token}` : "",
+        "Content-Type": "application/json"
+      },
+    })
+      .then((res) => {
+        if (res.ok) {
+          setEvents((prevEvents) => prevEvents.filter((e) => e.id !== id));
+          toast.success("Event deleted successfully!");
+        } else {
+          throw new Error("Failed to delete event");
+        }
       })
-        .then((res) => {
-          if (res.ok) {
-            setEvents((prevEvents) => prevEvents.filter((e) => e.id !== id));
-          } else {
-            throw new Error("Failed to delete event");
-          }
-        })
-        .catch((error) => {
-          toast.error("Failed to delete event. Please try again.");
-        });
-    }
+      .catch(() => {
+        toast.error("Failed to delete event. Please try again.");
+      });
   };
 
   const formatDate = (dateString) => {
@@ -91,6 +94,15 @@ export default function Events() {
 
   return (
     <div className="min-h-screen my-[50px] bg-gray-50">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Event"
+        message="This will permanently delete this event."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDelete(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

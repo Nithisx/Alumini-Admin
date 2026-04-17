@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import { useParams, Link, useNavigate, href } from "react-router-dom";
 import {
   COLLEGE_NAMES,
@@ -64,6 +65,8 @@ export default function SingleMember() {
   // New state for user actions
   const [deactivating, setDeactivating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE}${name}`, {
@@ -332,13 +335,10 @@ export default function SingleMember() {
   };
 
   // Deactivate/Activate User Function
-  const handleDeactivateUser = async () => {
-    const action = member.is_active ? "deactivate" : "activate";
-    const confirmMessage = member.is_active
-      ? `Are you sure you want to deactivate ${member.first_name} ${member.last_name}? They will no longer be able to access their account.`
-      : `Are you sure you want to reactivate ${member.first_name} ${member.last_name}?`;
+  const handleDeactivateUser = () => setShowDeactivateConfirm(true);
 
-    if (!window.confirm(confirmMessage)) return;
+  const doDeactivateUser = async () => {
+    const action = member.is_active ? "deactivate" : "activate";
 
     setDeactivating(true);
     try {
@@ -371,17 +371,9 @@ export default function SingleMember() {
   };
 
   // Delete User Function
-  const handleDeleteUser = async () => {
-    const confirmMessage = `⚠️ WARNING: Are you sure you want to permanently delete ${member.first_name} ${member.last_name}?\n\nThis action cannot be undone and will:\n- Delete all user data\n- Remove their profile permanently\n- Cannot be recovered\n\nType "DELETE" below to confirm:`;
+  const handleDeleteUser = () => setShowDeleteConfirm(true);
 
-    const userInput = prompt(confirmMessage);
-    if (userInput !== "DELETE") {
-      if (userInput !== null) {
-        // User didn't cancel
-        toast.error('Deletion cancelled. You must type "DELETE" exactly to confirm.');
-      }
-      return;
-    }
+  const doDeleteUser = async () => {
 
     setDeleting(true);
     try {
@@ -521,6 +513,30 @@ export default function SingleMember() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-4 sm:py-6 lg:py-8">
+      <ConfirmModal
+        isOpen={showDeactivateConfirm}
+        title={member?.is_active ? "Deactivate User" : "Activate User"}
+        message={
+          member?.is_active
+            ? `${member.first_name} ${member.last_name} will no longer be able to access their account.`
+            : `Reactivate ${member?.first_name} ${member?.last_name}'s account?`
+        }
+        danger={!!member?.is_active}
+        confirmText={member?.is_active ? "Deactivate" : "Activate"}
+        onConfirm={() => { doDeactivateUser(); setShowDeactivateConfirm(false); }}
+        onCancel={() => setShowDeactivateConfirm(false)}
+      />
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title={`Delete ${member?.first_name} ${member?.last_name}`}
+        message="This action cannot be undone and will delete all user data."
+        bullets={["Delete all user data", "Remove their profile permanently", "Cannot be recovered"]}
+        danger
+        confirmText="Delete"
+        requireTyping="DELETE"
+        onConfirm={() => { doDeleteUser(); setShowDeleteConfirm(false); }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
       <div className="max-w-full lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <div className="mb-4 sm:mb-6">

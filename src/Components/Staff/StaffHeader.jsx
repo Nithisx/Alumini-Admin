@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileAlt,
@@ -57,7 +58,8 @@ export default function staffHeader() {
   const handleLogout = () => {
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
-    window.location.href = "/login";
+    toast.success("Logged out successfully!");
+    setTimeout(() => { window.location.href = "/login"; }, 800);
   };
 
   const navItems = [

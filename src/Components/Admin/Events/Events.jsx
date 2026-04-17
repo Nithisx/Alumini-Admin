@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -37,6 +38,7 @@ export default function Events() {
   const [viewMode, setViewMode] = useState("grid");
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const token = localStorage.getItem("Token");
   const navigate = useNavigate(); // 👈 Add useNavigate hook
 
@@ -55,8 +57,9 @@ export default function Events() {
       });
   }, [token]);
 
-  const handleDelete = async (eventId) => {
-    if (!window.confirm("Are you sure you want to delete this event?")) return;
+  const handleDelete = (eventId) => setConfirmDeleteId(eventId);
+
+  const doDelete = async (eventId) => {
     setDeletingId(eventId);
     try {
       const res = await fetch(`https://api.karpagamalumni.in/api/v1/events/${eventId}`, {
@@ -87,6 +90,15 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Event"
+        message="This will permanently delete this event."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDelete(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

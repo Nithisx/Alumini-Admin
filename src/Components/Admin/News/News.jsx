@@ -5,6 +5,7 @@ Using a green-600 theme
 */
 import React, { useEffect, useState } from 'react';
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import AddNewsModal from './Addnewsmodel';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
 
@@ -18,6 +19,7 @@ export default function NewsList() {
   const [error, setError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
 
@@ -45,8 +47,9 @@ export default function NewsList() {
   useEffect(() => { fetchNews(); }, []);
 
   // Delete a post
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this news item?')) return;
+  const handleDelete = (id) => setConfirmDeleteId(id);
+
+  const doDelete = async (id) => {
     setDeletingId(id);
     try {
       const res = await fetch(`${API_URL}${id}/`, {
@@ -92,6 +95,15 @@ export default function NewsList() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete News Item"
+        message="This will permanently delete this news item."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDelete(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-gray-200">

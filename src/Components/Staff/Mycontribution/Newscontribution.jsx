@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import {
   MoreVertical,
   Share2,
@@ -255,6 +256,7 @@ const NewsContribution = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const fetchNews = async () => {
     setLoading(true);
@@ -293,11 +295,9 @@ const NewsContribution = () => {
     setRefreshing(false);
   };
 
-  const deleteNews = async (newsId) => {
-    if (!window.confirm("Are you sure you want to delete this news article?")) {
-      return;
-    }
+  const deleteNews = (newsId) => setConfirmDeleteId(newsId);
 
+  const doDeleteNews = async (newsId) => {
     try {
       const token = localStorage.getItem("Token");
       if (!token) throw new Error("Token not found");
@@ -310,13 +310,9 @@ const NewsContribution = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete news: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Failed to delete news: ${response.status}`);
 
-      setNews((prevNews) =>
-        prevNews.filter((article) => article.id !== newsId)
-      );
+      setNews((prevNews) => prevNews.filter((article) => article.id !== newsId));
       toast.success("News article deleted successfully!");
     } catch (error) {
       toast.error(error.message || "Failed to delete news article");
@@ -338,6 +334,15 @@ const NewsContribution = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete News Article"
+        message="This will permanently delete this news article."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDeleteNews(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
         {news.length === 0 ? (

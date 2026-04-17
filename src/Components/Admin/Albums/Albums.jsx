@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFolderOpen,
@@ -23,7 +25,7 @@ const AlbumsPage = () => {
   const [editingAlbum, setEditingAlbum] = useState(null);
   const [formData, setFormData] = useState({ title: "", description: "" });
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [notification, setNotification] = useState({ message: "", type: "" });
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("grid"); // grid or list view
@@ -40,10 +42,7 @@ const AlbumsPage = () => {
         });
         setAlbums(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        showNotification(
-          "Could not load albums. Please try again later.",
-          "error"
-        );
+        toast.error("Could not load albums. Please try again later.");
         setAlbums([]);
       } finally {
         setLoading(false);
@@ -59,24 +58,22 @@ const AlbumsPage = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const showNotification = (message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification({ message: "", type: "" }), 4000);
-  };
-
   const handleDeleteAlbum = async (id, e) => {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this album?")) return;
+    setConfirmDelete(id);
+  };
+
+  const doDeleteAlbum = async (id) => {
     try {
       const token = localStorage.getItem("Token");
       await axios.delete(`https://api.karpagamalumni.in/api/v1/albums/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setAlbums((prev) => prev.filter((a) => a.id !== id));
-      showNotification("Album deleted successfully!");
+      toast.success("Album deleted successfully!");
       setOpenMenuId(null);
     } catch (error) {
-      showNotification("Could not delete album.", "error");
+      toast.error("Could not delete album.");
     }
   };
 
@@ -92,7 +89,7 @@ const AlbumsPage = () => {
   const handleUpdateAlbum = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      showNotification("Please enter an album title.", "error");
+      toast.error("Please enter an album title.");
       return;
     }
 
@@ -127,9 +124,9 @@ const AlbumsPage = () => {
       setEditingAlbum(null);
       setFormData({ title: "", description: "" });
       setUploadedFile(null);
-      showNotification("Album updated successfully!");
+      toast.success("Album updated successfully!");
     } catch (error) {
-      showNotification("Could not update album.", "error");
+      toast.error("Could not update album.");
     } finally {
       setIsEditing(false);
     }
@@ -146,7 +143,7 @@ const AlbumsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      showNotification("Please enter an album title.", "error");
+      toast.error("Please enter an album title.");
       return;
     }
 
@@ -174,9 +171,9 @@ const AlbumsPage = () => {
       setIsModalOpen(false);
       setFormData({ title: "", description: "" });
       setUploadedFile(null);
-      showNotification("Album created successfully!");
+      toast.success("Album created successfully!");
     } catch (error) {
-      showNotification("Could not create album.", "error");
+      toast.error("Could not create album.");
     } finally {
       setIsCreating(false); // Stop loading
     }
@@ -191,7 +188,7 @@ const AlbumsPage = () => {
         preview: URL.createObjectURL(file),
       });
     } else {
-      showNotification("Please upload only image files.", "error");
+      toast.error("Please upload only image files.");
     }
   };
 
@@ -340,25 +337,15 @@ const AlbumsPage = () => {
           </div>
         </div>
 
-        {/* Notification */}
-        {notification.message && (
-          <div
-            className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition transform translate-y-0 ${notification.type === "error"
-              ? "bg-red-100 text-red-800"
-              : "bg-green-100 text-green-800"
-              }`}
-          >
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={
-                  notification.type === "error" ? faExclamationCircle : faCheck
-                }
-                className="mr-2"
-              />
-              <span>{notification.message}</span>
-            </div>
-          </div>
-        )}
+        <ConfirmModal
+          isOpen={!!confirmDelete}
+          title="Delete Album"
+          message="This will permanently delete the album and all its contents."
+          danger
+          confirmText="Delete"
+          onConfirm={() => { doDeleteAlbum(confirmDelete); setConfirmDelete(null); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
 
         {/* Content Section */}
         {loading ? (

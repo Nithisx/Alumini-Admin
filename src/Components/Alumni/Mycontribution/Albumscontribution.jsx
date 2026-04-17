@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import axios from "axios";
 import { Calendar, Image, Eye, Edit, Trash2, Save, X, Upload } from "lucide-react";
 
@@ -14,6 +15,7 @@ const AlbumsContribution = () => {
   });
   const [editCoverImage, setEditCoverImage] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const token = localStorage.getItem("Token");
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
@@ -44,19 +46,13 @@ const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
     }
   };
 
-  const handleDelete = async (albumId) => {
-    if (!window.confirm("Are you sure you want to delete this album?")) {
-      return;
-    }
+  const handleDelete = (albumId) => setConfirmDeleteId(albumId);
 
+  const doDelete = async (albumId) => {
     try {
       await axios.delete(`${BASE_URL}/albums/${albumId}/`, {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
+        headers: { Authorization: `Token ${token}` },
       });
-
-      // Remove the deleted album from the state
       setAlbums(albums.filter(album => album.id !== albumId));
       toast.success("Album deleted successfully!");
     } catch (error) {
@@ -163,6 +159,15 @@ const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
   return (
     <div className="p-4">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Album"
+        message="This will permanently delete the album and all its contents."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDelete(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       {albums.length === 0 ? (
         <div className="text-center py-12">
           <Image className="mx-auto h-12 w-12 text-gray-400 mb-4" />

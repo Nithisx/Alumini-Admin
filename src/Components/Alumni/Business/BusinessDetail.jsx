@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -48,6 +49,7 @@ const BusinessDetail = () => {
   const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(!isNewBusiness);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteImageId, setConfirmDeleteImageId] = useState(null);
   const [keywordInput, setKeywordInput] = useState('');
   const [categories, setCategories] = useState([]);
 
@@ -155,14 +157,13 @@ const BusinessDetail = () => {
   };
 
   // Delete an existing image
-  const deleteImage = async (imageId) => {
-    if (!window.confirm("Are you sure you want to delete this image?")) return;
+  const deleteImage = (imageId) => setConfirmDeleteImageId(imageId);
 
+  const doDeleteImage = async (imageId) => {
     try {
       await axios.delete(`${BASE_URL}/businesses/${imageId}/images/`, {
         headers: { Authorization: `Token ${token}` },
       });
-
       setImages(images.filter(image => image.id !== imageId));
       toast.success("Image deleted successfully!");
     } catch (error) {
@@ -302,6 +303,15 @@ const BusinessDetail = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
+      <ConfirmModal
+        isOpen={!!confirmDeleteImageId}
+        title="Delete Image"
+        message="This will permanently delete the image."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDeleteImage(confirmDeleteImageId); setConfirmDeleteImageId(null); }}
+        onCancel={() => setConfirmDeleteImageId(null)}
+      />
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button

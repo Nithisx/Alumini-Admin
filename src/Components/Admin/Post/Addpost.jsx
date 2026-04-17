@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -116,17 +117,8 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component
-const JobCard = ({ post, onDelete }) => {
+const JobCard = ({ post, onRequestDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this job post?")) {
-      setIsDeleting(true);
-      await onDelete(post.id);
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <div
@@ -137,18 +129,10 @@ const JobCard = ({ post, onDelete }) => {
       {/* Delete Button - Shows on Hover */}
       {isHovered && (
         <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${isDeleting
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-red-500 hover:bg-red-600 transform hover:scale-110"
-            } text-white shadow-lg`}
+          onClick={() => onRequestDelete(post.id)}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 transform hover:scale-110 text-white shadow-lg transition-all duration-200"
         >
-          {isDeleting ? (
-            <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />
-          ) : (
-            <FontAwesomeIcon icon={faTrash} className="text-xs" />
-          )}
+          <FontAwesomeIcon icon={faTrash} className="text-xs" />
         </button>
       )}
 
@@ -252,6 +236,7 @@ const JobFeed = () => {
   // Posts state
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   // Modal and file upload states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -421,6 +406,15 @@ const JobFeed = () => {
 
   return (
     <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Job Post"
+        message="This will permanently delete this job post."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { deletePost(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -457,7 +451,7 @@ const JobFeed = () => {
               <JobCard
                 key={post.id}
                 post={post}
-                onDelete={deletePost}
+                onRequestDelete={setConfirmDeleteId}
               />
             ))}
           </div>

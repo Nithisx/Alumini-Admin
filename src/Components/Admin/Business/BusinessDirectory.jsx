@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import {
@@ -24,6 +25,7 @@ const BusinessDirectory = () => {
   const [filteredBusinesses, setFilteredBusinesses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -210,12 +212,9 @@ const BusinessDirectory = () => {
     }));
 
   // Handle business deletion
-  const handleDelete = async (id) => {
-    if (
-      !window.confirm("Are you sure you want to delete this business listing?")
-    )
-      return;
+  const handleDelete = (id) => setConfirmDeleteId(id);
 
+  const doDelete = async (id) => {
     try {
       await axios.delete(`${BASE_URL}/businesses/${id}/`, {
         headers: { Authorization: `Token ${token}` },
@@ -295,6 +294,15 @@ const BusinessDirectory = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Business Listing"
+        message="This will permanently delete this business listing."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDelete(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

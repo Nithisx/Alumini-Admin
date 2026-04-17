@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilter,
@@ -247,7 +248,7 @@ export default function AuditPage() {
       const data = await res.json();
       setSelected(data);
     } catch (e) {
-      alert("Failed to load log detail: " + e.message);
+      toast.error("Failed to load log detail: " + e.message);
     }
   };
 
@@ -291,7 +292,7 @@ export default function AuditPage() {
       const extras = { format };
       if (scope === "selected") {
         if (!selectedIds.size) {
-          alert("No logs selected.");
+          toast.warning("No logs selected.");
           setExporting(false);
           return;
         }
@@ -314,7 +315,7 @@ export default function AuditPage() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert("Export failed: " + e.message);
+      toast.error("Export failed: " + e.message);
     } finally {
       setExporting(false);
     }

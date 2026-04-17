@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -16,6 +17,7 @@ const AlbumDetailPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // New state for fullscreen image loading
   const [imageLoading, setImageLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const token = localStorage.getItem("Token"); // Get token from local storage
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
@@ -222,9 +224,9 @@ const AlbumDetailPage = () => {
     }
   };
 
-  // Delete an image by its id
-  const handleDelete = async (imageId) => {
-    if (!window.confirm("Are you sure you want to delete this image?")) return;
+  const handleDelete = (imageId) => setConfirmDeleteId(imageId);
+
+  const doDeleteImage = async (imageId) => {
     try {
       await axios.delete(`${BASE_URL}/albums/${imageId}/images/`, {
         headers: { Authorization: `Token ${token}` },
@@ -272,6 +274,15 @@ const AlbumDetailPage = () => {
 
   return (
     <div className="p-4">
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        title="Delete Image"
+        message="This will permanently delete the image."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { doDeleteImage(confirmDeleteId); setConfirmDeleteId(null); }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
       {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
       ) : (
