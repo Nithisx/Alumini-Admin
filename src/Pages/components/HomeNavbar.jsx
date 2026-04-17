@@ -101,7 +101,7 @@ export default function HomeNavbar() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/Signup")}
+                    onClick={() => navigate("/signup")}
                     className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center"
                   >
                     <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
@@ -174,7 +174,7 @@ export default function HomeNavbar() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/Signup")}
+                    onClick={() => navigate("/signup")}
                     className="py-2 w-full bg-blue-600 text-white rounded-lg flex items-center justify-center"
                   >
                     <FontAwesomeIcon icon={faUserPlus} className="mr-2" />

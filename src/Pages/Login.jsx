@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import kahelogo from "../assets/kahelogo.png";
 import { supabase } from "../lib/supabase";
@@ -10,8 +10,22 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+function defaultDashboard(role) {
+  switch (role) {
+    case "admin": return "/admin/dashboard";
+    case "staff": return "/staff/dashboard";
+    default: return "/alumni/dashboard";
+  }
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || null;
+
+  const redirectAfterLogin = useCallback((role) => {
+    navigate(from || defaultDashboard(role), { replace: true });
+  }, [from, navigate]);
 
   const [form, setForm] = useState({
     username: "",
@@ -71,18 +85,8 @@ export default function LoginPage() {
           };
           const roleKey = roleMap[data.role] || "alumni";
           localStorage.setItem("Role", roleKey);
-          // Sign out from Supabase session (we use our own DRF tokens)
           await supabase.auth.signOut();
-          switch (roleKey) {
-            case "admin":
-              navigate("/admin/dashboard");
-              break;
-            case "staff":
-              navigate("/staff/dashboard");
-              break;
-            default:
-              navigate("/alumni/dashboard");
-          }
+          redirectAfterLogin(roleKey);
         } else if (data.status === "new_user") {
           // Store the access_token temporarily so the signup page can re-verify with backend
           sessionStorage.setItem("oauth_access_token", session.access_token);
@@ -109,7 +113,7 @@ export default function LoginPage() {
     };
 
     handleOAuthCallback();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [redirectAfterLogin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogin = useCallback(
     async (e) => {
@@ -130,19 +134,7 @@ export default function LoginPage() {
         if (data.token) {
           localStorage.setItem("Token", data.token);
           localStorage.setItem("Role", form.role);
-          switch (form.role) {
-            case "admin":
-              navigate("/admin/dashboard");
-              break;
-            case "alumni":
-              navigate("/alumni/dashboard");
-              break;
-            case "student":
-              navigate("/alumni/dashboard");
-              break;
-            default:
-              navigate("/staff/dashboard");
-          }
+          redirectAfterLogin(form.role);
         } else {
           setError(data.error || "Login failed: no token received");
         }
@@ -156,7 +148,7 @@ export default function LoginPage() {
         setLoading(false);
       }
     },
-    [form, loginUrl, navigate]
+    [form, loginUrl, redirectAfterLogin]
   );
 
   const handleGoogleLogin = useCallback(async () => {
@@ -214,23 +206,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full space-y-6">
         {/* Header */}
         <div className="text-center">
-          <img src={kahelogo} alt="Logo" className="mx-auto h-20" />
-          <h1 className="mt-4 text-3xl font-bold text-green-600">
+          <img src={kahelogo} alt="Logo" className="mx-auto h-16 sm:h-20 drop-shadow-md" />
+          <h1 className="mt-3 text-2xl sm:text-3xl font-bold text-green-700">
             Karpagam Alumni
           </h1>
-          <p className="text-gray-600">Connect with your college community</p>
+          <p className="text-gray-500 text-sm mt-1">Connect with your college community</p>
         </div>
 
         {/* Form */}
         <form
           onSubmit={handleLogin}
-          className="bg-white shadow-md rounded-lg px-8 py-6 space-y-4"
+          className="bg-white shadow-lg rounded-2xl px-6 sm:px-8 py-6 space-y-4 border border-gray-100"
         >
-          <h2 className="text-2xl font-bold text-gray-900 text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">
             Welcome Back!
           </h2>
 
@@ -337,7 +329,7 @@ export default function LoginPage() {
             Don't have an account?{" "}
             <button
               type="button"
-              onClick={() => navigate("/Signup")}
+              onClick={() => navigate("/signup")}
               className="text-green-600 hover:underline font-medium"
             >
               Sign Up

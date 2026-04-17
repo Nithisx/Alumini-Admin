@@ -13,11 +13,16 @@ import {
   faChevronDown,
   faChevronUp,
   faGraduationCap,
-  faCalendarAlt,
   faIdCard,
-  faBars,
   faEye,
   faCircleNotch,
+  faPencilAlt,
+  faSave,
+  faBan,
+  faLink,
+  faBriefcase,
+  faMapMarkerAlt,
+  faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function RegisterRequest() {
@@ -28,7 +33,126 @@ export default function RegisterRequest() {
   const [selectedIds, setSelectedIds] = useState({});
   const [loading, setLoading] = useState(true); // Add loading state
   const [error, setError] = useState(null); // Add error state
+  // Edit-mode state: which request is being edited + draft form data + saving flag
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
   const API_URL = "https://api.karpagamalumni.in/api/v1/Approve-signup/";
+  const EDIT_URL = (id) => `https://api.karpagamalumni.in/api/v1/Approve-signup/${id}/`;
+
+  // Fields admin is NOT allowed to edit
+  const IMMUTABLE = new Set(["email", "username", "id", "created_at", "is_approved", "approved_at", "password"]);
+
+  // Complete list of editable fields grouped for display
+  const FIELD_GROUPS = [
+    {
+      title: "Personal",
+      icon: faUser,
+      fields: [
+        ["salutation", "Salutation", "text"],
+        ["first_name", "First Name", "text"],
+        ["last_name", "Last Name", "text"],
+        ["gender", "Gender", "select", ["", "Male", "Female", "Other"]],
+        ["date_of_birth", "Date of Birth", "date"],
+        ["label", "Label", "text"],
+        ["profile_type", "Profile Type", "text"],
+        ["bio", "Bio", "textarea"],
+      ],
+    },
+    {
+      title: "Contact",
+      icon: faEnvelope,
+      fields: [
+        ["secondary_email", "Secondary Email", "email"],
+        ["phone", "Phone", "text"],
+        ["office_phone_no", "Office Phone", "text"],
+      ],
+    },
+    {
+      title: "Academic",
+      icon: faGraduationCap,
+      fields: [
+        ["role", "Role", "select", ["", "Student", "Alumni", "Staff", "Admin"]],
+        ["college_name", "College", "text"],
+        ["roll_no", "Roll No", "text"],
+        ["course", "Course", "text"],
+        ["stream", "Stream", "text"],
+        ["branch", "Branch", "text"],
+        ["course_start_year", "Course Start Year", "text"],
+        ["course_end_year", "Course End Year", "text"],
+        ["passed_out_year", "Passed Out Year", "text"],
+        ["chapter", "Chapter", "text"],
+      ],
+    },
+    {
+      title: "Faculty",
+      icon: faUniversity,
+      fields: [
+        ["faculty_job_title", "Job Title", "text"],
+        ["faculty_institute", "Institute", "text"],
+        ["faculty_department", "Department", "text"],
+        ["faculty_start_year", "Start Year", "text"],
+        ["faculty_start_month", "Start Month", "text"],
+        ["faculty_end_year", "End Year", "text"],
+        ["faculty_end_month", "End Month", "text"],
+      ],
+    },
+    {
+      title: "Other Education",
+      icon: faGraduationCap,
+      fields: [
+        ["educational_course", "Course", "text"],
+        ["educational_institute", "Institute", "text"],
+        ["start_year", "Start Year", "text"],
+        ["end_year", "End Year", "text"],
+      ],
+    },
+    {
+      title: "Professional",
+      icon: faBriefcase,
+      fields: [
+        ["company", "Company", "text"],
+        ["position", "Position", "text"],
+        ["current_work", "Current Work", "text"],
+        ["work_experience", "Work Experience (yrs)", "number"],
+        ["member_roles", "Member Roles", "text"],
+      ],
+    },
+    {
+      title: "Location",
+      icon: faMapMarkerAlt,
+      fields: [
+        ["Address", "Address", "textarea"],
+        ["city", "City", "text"],
+        ["state", "State", "text"],
+        ["country", "Country", "text"],
+        ["zip_code", "Zip / Pincode", "text"],
+        ["current_location", "Current Location", "text"],
+        ["home_town", "Home Town", "text"],
+      ],
+    },
+    {
+      title: "Correspondence Address",
+      icon: faMapMarkerAlt,
+      fields: [
+        ["correspondence_address", "Address", "textarea"],
+        ["correspondence_city", "City", "text"],
+        ["correspondence_state", "State", "text"],
+        ["correspondence_country", "Country", "text"],
+        ["correspondence_pincode", "Pincode", "text"],
+      ],
+    },
+    {
+      title: "Social Links",
+      icon: faLink,
+      fields: [
+        ["facebook_link", "Facebook", "url"],
+        ["linkedin_link", "LinkedIn", "url"],
+        ["twitter_link", "Twitter / X", "url"],
+        ["website_link", "Website", "url"],
+      ],
+    },
+  ];
 
   // Helper function to show message and auto-clear after 3 seconds
   const showMessage = (msg) => {
@@ -312,6 +436,228 @@ export default function RegisterRequest() {
     }
   };
 
+  // --- Edit flow ---
+  const startEdit = (req) => {
+    setEditingId(req.id);
+    // Clone so the user can cancel cleanly
+    setEditDraft({ ...req });
+    // Ensure row is expanded while editing
+    setExpandedRows((prev) => ({ ...prev, [req.id]: true }));
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft({});
+  };
+
+  const updateDraft = (field, value) => {
+    setEditDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const saveEdit = async (req) => {
+    const token = localStorage.getItem("Token");
+    if (!token) {
+      showMessage({ text: "Authentication required. Please log in.", type: "error" });
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      // Strip immutable fields — backend also blocks them, but avoid sending
+      const payload = {};
+      Object.keys(editDraft).forEach((k) => {
+        if (!IMMUTABLE.has(k) && editDraft[k] !== undefined) {
+          payload[k] = editDraft[k] === null ? "" : editDraft[k];
+        }
+      });
+
+      const res = await fetch(EDIT_URL(req.id), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showMessage({ text: data.error || "Failed to update. Please try again.", type: "error" });
+        return;
+      }
+
+      // Merge updated fields back into the list
+      setRequests((prev) =>
+        prev.map((r) => (r.id === req.id ? { ...r, ...(data.data || payload) } : r))
+      );
+      showMessage({ text: "Details updated successfully.", type: "success" });
+      cancelEdit();
+    } catch (e) {
+      showMessage({ text: "Network error. Please try again.", type: "error" });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  // Render a single editable or read-only field
+  const renderField = (req, [key, label, kind, options]) => {
+    const isEditing = editingId === req.id;
+    const value = isEditing ? (editDraft[key] ?? "") : (req[key] ?? "");
+    const immutable = IMMUTABLE.has(key);
+
+    if (!isEditing) {
+      return (
+        <div key={key} className="text-sm">
+          <span className="font-semibold text-gray-600">{label}:</span>{" "}
+          <span className="text-gray-800 break-words">{value !== "" && value !== null ? String(value) : "N/A"}</span>
+        </div>
+      );
+    }
+
+    const common =
+      "w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-400 " +
+      (immutable ? "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200" : "border-gray-300");
+
+    return (
+      <div key={key} className="text-sm">
+        <label className="block text-xs font-semibold text-gray-600 mb-1">
+          {label}
+          {immutable && <span className="ml-1 text-[10px] text-gray-400">(locked)</span>}
+        </label>
+        {kind === "textarea" ? (
+          <textarea
+            className={common}
+            rows={2}
+            value={value || ""}
+            disabled={immutable}
+            onChange={(e) => updateDraft(key, e.target.value)}
+          />
+        ) : kind === "select" ? (
+          <select
+            className={common}
+            value={value || ""}
+            disabled={immutable}
+            onChange={(e) => updateDraft(key, e.target.value)}
+          >
+            {(options || []).map((opt) => (
+              <option key={opt} value={opt}>
+                {opt || "—"}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={kind || "text"}
+            className={common}
+            value={value || ""}
+            disabled={immutable}
+            onChange={(e) => updateDraft(key, e.target.value)}
+          />
+        )}
+      </div>
+    );
+  };
+
+  // Full detail + edit panel reused on both mobile and desktop
+  const DetailPanel = ({ req }) => {
+    const isEditing = editingId === req.id;
+    return (
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-100 p-4 sm:p-6">
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-2 text-green-700 text-sm">
+            <FontAwesomeIcon icon={faInfoCircle} />
+            {isEditing ? (
+              <span>Editing — email and username are locked.</span>
+            ) : (
+              <span>All registration details</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {!isEditing ? (
+              <button
+                onClick={() => startEdit(req)}
+                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+              >
+                <FontAwesomeIcon icon={faPencilAlt} className="mr-2" />
+                Edit
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => saveEdit(req)}
+                  disabled={savingEdit}
+                  className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-60 flex items-center"
+                >
+                  <FontAwesomeIcon
+                    icon={savingEdit ? faSpinner : faSave}
+                    className={`mr-2 ${savingEdit ? "animate-spin" : ""}`}
+                  />
+                  Save
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={savingEdit}
+                  className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-60 flex items-center"
+                >
+                  <FontAwesomeIcon icon={faBan} className="mr-2" />
+                  Cancel
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Identity fields (read-only always) */}
+        <div className="bg-white rounded-lg p-4 shadow-sm mb-4 border border-gray-100">
+          <h4 className="font-bold text-gray-700 text-sm mb-3 flex items-center">
+            <FontAwesomeIcon icon={faIdCard} className="mr-2 text-gray-400" />
+            Identity (read-only)
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4">
+            <div className="text-sm">
+              <span className="font-semibold text-gray-600">Email:</span>{" "}
+              <span className="text-gray-800 break-all">{req.email}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-semibold text-gray-600">Username:</span>{" "}
+              <span className="text-gray-800 break-all">{req.username}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-semibold text-gray-600">Created At:</span>{" "}
+              <span className="text-gray-800">
+                {req.created_at ? new Date(req.created_at).toLocaleString() : "N/A"}
+              </span>
+            </div>
+            <div className="text-sm">
+              <span className="font-semibold text-gray-600">Status:</span>{" "}
+              <span className="text-red-600 font-semibold">
+                {req.is_approved ? "Approved" : "Pending Approval"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Grouped fields */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {FIELD_GROUPS.map((group) => (
+            <div
+              key={group.title}
+              className="bg-white rounded-lg p-4 shadow-sm border border-green-100"
+            >
+              <h4 className="font-bold text-green-700 text-sm mb-3 flex items-center">
+                <FontAwesomeIcon icon={group.icon} className="mr-2 text-green-500" />
+                {group.title}
+              </h4>
+              <div className="space-y-2">
+                {group.fields.map((f) => renderField(req, f))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   // Mobile Card Component
   const MobileCard = ({ req }) => (
     <div className="bg-white  rounded-xl shadow-lg border  border-green-100 mb-4 overflow-hidden">
@@ -403,203 +749,7 @@ export default function RegisterRequest() {
       </div>
 
       {/* Mobile Expanded Content */}
-      {expandedRows[req.id] && (
-        <div className="border-t border-green-100 bg-gradient-to-r from-green-50 to-emerald-50 p-4">
-          <div className="space-y-4">
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <h4 className="font-semibold text-green-700 text-sm mb-2 flex items-center">
-                <FontAwesomeIcon
-                  icon={faUser}
-                  className="mr-2 text-green-500"
-                />
-                Personal Information
-              </h4>
-              <div className="grid grid-cols-1 gap-1 text-xs">
-                <div>
-                  <span className="font-medium text-gray-600">Name:</span>{" "}
-                  <span className="text-gray-800">
-                    {req.first_name} {req.last_name}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Username:</span>{" "}
-                  <span className="text-gray-800">{req.username || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Gender:</span>{" "}
-                  <span className="text-gray-800">{req.gender || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">DOB:</span>{" "}
-                  <span className="text-gray-800">
-                    {req.date_of_birth || "N/A"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <h4 className="font-semibold text-green-700 text-sm mb-2 flex items-center">
-                <FontAwesomeIcon
-                  icon={faIdCard}
-                  className="mr-2 text-green-500"
-                />
-                Student ID
-              </h4>
-              <div className="grid grid-cols-1 gap-1 text-xs">
-                <div>
-                  <span className="font-medium text-gray-600">
-                    Roll Number:
-                  </span>{" "}
-                  <span className="text-gray-800 font-mono bg-gray-100 px-1 rounded">
-                    {req.roll_no || "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Chapter:</span>{" "}
-                  <span className="text-gray-800">{req.chapter || "N/A"}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <h4 className="font-semibold text-green-700 text-sm mb-2 flex items-center">
-                <FontAwesomeIcon
-                  icon={faGraduationCap}
-                  className="mr-2 text-green-500"
-                />
-                Academic Details
-              </h4>
-              <div className="grid grid-cols-1 gap-1 text-xs">
-                <div>
-                  <span className="font-medium text-gray-600">Course:</span>{" "}
-                  <span className="text-gray-800">{req.course || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Start Year:</span>{" "}
-                  <span className="text-gray-800">
-                    {req.course_start_year || "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">End Year:</span>{" "}
-                  <span className="text-gray-800">
-                    {req.course_end_year || "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Passed Out:</span>{" "}
-                  <span className="text-gray-800">
-                    {req.passed_out_year || "N/A"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <h4 className="font-semibold text-green-700 text-sm mb-2 flex items-center">
-                <FontAwesomeIcon
-                  icon={faEnvelope}
-                  className="mr-2 text-green-500"
-                />
-                Contact Details
-              </h4>
-              <div className="grid grid-cols-1 gap-1 text-xs">
-                <div>
-                  <span className="font-medium text-gray-600">
-                    Primary Email:
-                  </span>{" "}
-                  <span className="text-gray-800 break-all">{req.email}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">
-                    Secondary Email:
-                  </span>{" "}
-                  <span className="text-gray-800 break-all">
-                    {req.secondary_email || "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Phone:</span>{" "}
-                  <span className="text-gray-800">{req.phone}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Location:</span>{" "}
-                  <span className="text-gray-800">
-                    {req.current_location || "N/A"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {req.role !== "Student" && (
-              <div className="bg-white rounded-lg p-3 shadow-sm">
-                <h4 className="font-semibold text-green-700 text-sm mb-2 flex items-center">
-                  <FontAwesomeIcon
-                    icon={faUniversity}
-                    className="mr-2 text-green-500"
-                  />
-                  Professional Info
-                </h4>
-                <div className="grid grid-cols-1 gap-1 text-xs">
-                  <div>
-                    <span className="font-medium text-gray-600">Company:</span>{" "}
-                    <span className="text-gray-800">
-                      {req.company || "N/A"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Position:</span>{" "}
-                    <span className="text-gray-800">
-                      {req.position || "N/A"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">
-                      Experience:
-                    </span>{" "}
-                    <span className="text-gray-800">
-                      {req.work_experience
-                        ? `${req.work_experience} years`
-                        : "N/A"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg p-3 shadow-sm">
-              <h4 className="font-semibold text-green-700 text-sm mb-2 flex items-center">
-                <FontAwesomeIcon
-                  icon={faCalendarAlt}
-                  className="mr-2 text-green-500"
-                />
-                Registration Status
-              </h4>
-              <div className="grid grid-cols-1 gap-1 text-xs">
-                <div>
-                  <span className="font-medium text-gray-600">Created:</span>{" "}
-                  <span className="text-gray-800">
-                    {new Date(req.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Status:</span>{" "}
-                  {req.is_active ? (
-                    <span className="text-red-600 font-semibold">
-                      Deactivated User
-                    </span>
-                  ) : (
-                    <span className="text-red-600 font-semibold">
-                      Pending Approval
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {expandedRows[req.id] && <DetailPanel req={req} />}
     </div>
   );
 
@@ -960,266 +1110,13 @@ export default function RegisterRequest() {
                               </td>
                             </tr>
 
+
                             {/* Dropdown Content */}
                             {expandedRows[req.id] && (
                               <tr>
                                 <td colSpan="6" className="px-0 py-0">
-                                  <div className="dropdown-content bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-100">
-                                    <div className="px-8 py-6">
-                                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                          <div className="flex items-center mb-3">
-                                            <FontAwesomeIcon
-                                              icon={faUser}
-                                              className="text-green-500 text-lg mr-3"
-                                            />
-                                            <h4 className="font-bold text-green-700">
-                                              Personal Information
-                                            </h4>
-                                          </div>
-                                          <div className="space-y-2">
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                First Name:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.first_name || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Last Name:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.last_name || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Username:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.username || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Gender:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.gender || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Date of Birth:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.date_of_birth || "N/A"}
-                                              </span>
-                                            </p>
-                                          </div>
-                                        </div>
-
-                                        <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                          <div className="flex items-center mb-3">
-                                            <FontAwesomeIcon
-                                              icon={faIdCard}
-                                              className="text-green-500 text-lg mr-3"
-                                            />
-                                            <h4 className="font-bold text-green-700">
-                                              Student ID
-                                            </h4>
-                                          </div>
-                                          <div className="space-y-2">
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Roll Number:
-                                              </span>{" "}
-                                              <span className="text-gray-800 font-mono bg-gray-100 px-2 py-1 rounded">
-                                                {req.roll_no || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Chapter:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.chapter || "N/A"}
-                                              </span>
-                                            </p>
-                                          </div>
-                                        </div>
-
-                                        <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                          <div className="flex items-center mb-3">
-                                            <FontAwesomeIcon
-                                              icon={faGraduationCap}
-                                              className="text-green-500 text-lg mr-3"
-                                            />
-                                            <h4 className="font-bold text-green-700">
-                                              Academic Details
-                                            </h4>
-                                          </div>
-                                          <div className="space-y-2">
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Course:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.course || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Branch:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.branch || "N/A"}
-                                              </span>
-                                            </p>
-                                            <div className="flex items-center">
-                                              <FontAwesomeIcon
-                                                icon={faCalendarAlt}
-                                                className="text-green-500 mr-2"
-                                              />
-                                              <span className="font-semibold text-gray-600">
-                                                Start Year:
-                                              </span>
-                                              <span className="ml-2 text-gray-800 font-semibold">
-                                                {req.course_start_year || "N/A"}
-                                              </span>
-                                            </div>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                End Year:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.course_end_year || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Passed Out Year:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.passed_out_year || "N/A"}
-                                              </span>
-                                            </p>
-                                          </div>
-                                        </div>
-
-                                        <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                          <div className="flex items-center mb-3">
-                                            <FontAwesomeIcon
-                                              icon={faEnvelope}
-                                              className="text-green-500 text-lg mr-3"
-                                            />
-                                            <h4 className="font-bold text-green-700">
-                                              Contact Details
-                                            </h4>
-                                          </div>
-                                          <div className="space-y-2">
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Primary Email:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.email}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Secondary Email:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.secondary_email || "N/A"}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Phone:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.phone}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Location:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {req.current_location || "N/A"}
-                                              </span>
-                                            </p>
-                                          </div>
-                                        </div>
-
-                                        {req.role !== "Student" && (
-                                          <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                            <div className="flex items-center mb-3">
-                                              <FontAwesomeIcon
-                                                icon={faUniversity}
-                                                className="text-green-500 text-lg mr-3"
-                                              />
-                                              <h4 className="font-bold text-green-700">
-                                                Professional Info
-                                              </h4>
-                                            </div>
-                                            <div className="space-y-2">
-                                              <p>
-                                                <span className="font-semibold text-gray-600">
-                                                  Experience:
-                                                </span>{" "}
-                                                <span className="text-gray-800">
-                                                  {req.work_experience
-                                                    ? `${req.work_experience} years`
-                                                    : "N/A"}
-                                                </span>
-                                              </p>
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        <div className="bg-white rounded-xl p-5 shadow-md border border-green-100">
-                                          <div className="flex items-center mb-3">
-                                            <FontAwesomeIcon
-                                              icon={faCalendarAlt}
-                                              className="text-green-500 text-lg mr-3"
-                                            />
-                                            <h4 className="font-bold text-green-700">
-                                              Registration Status
-                                            </h4>
-                                          </div>
-                                          <div className="space-y-2">
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Created At:
-                                              </span>{" "}
-                                              <span className="text-gray-800">
-                                                {new Date(
-                                                  req.created_at
-                                                ).toLocaleDateString()}
-                                              </span>
-                                            </p>
-                                            <p>
-                                              <span className="font-semibold text-gray-600">
-                                                Status:
-                                              </span>{" "}
-                                              {req.is_approved ? (
-                                                <span className="text-red-600 font-semibold">
-                                                  Deactivated User
-                                                </span>
-                                              ) : (
-                                                <span className="text-red-600 font-semibold">
-                                                  Pending Approval
-                                                </span>
-                                              )}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
+                                  <div className="dropdown-content">
+                                    <DetailPanel req={req} />
                                   </div>
                                 </td>
                               </tr>

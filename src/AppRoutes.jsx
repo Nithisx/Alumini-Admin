@@ -18,43 +18,40 @@ import AlumniLayout from './Components/Alumni/AlumniLayout';
 // Protected route wrapper
 import ProtectedRoute from './Components/Shared/ProtectedRoute';
 
-const AppRoutes = () => {
+function AuthRedirect() {
   const token = localStorage.getItem('Token');
   const role = localStorage.getItem('Role');
+  if (!token) return <Navigate to="/home" replace />;
+  switch (role) {
+    case 'admin': return <Navigate to="/admin/dashboard" replace />;
+    case 'staff': return <Navigate to="/staff/dashboard" replace />;
+    case 'alumni':
+    case 'student': return <Navigate to="/alumni/dashboard" replace />;
+    default: return <Navigate to="/home" replace />;
+  }
+}
 
-  // Redirect authenticated users to their respective dashboards
-  const redirectAuthenticated = () => {
-    if (!token) return <Navigate to="/home" replace />;
+function GuestOnly({ children }) {
+  const token = localStorage.getItem('Token');
+  return token ? <AuthRedirect /> : children;
+}
 
-    switch (role) {
-      case 'admin':
-        return <Navigate to="/admin/dashboard" replace />;
-      case 'staff':
-        return <Navigate to="/staff/dashboard" replace />;
-      case 'alumni':
-        return <Navigate to="/alumni/dashboard" replace />;
-      case 'student':
-        return <Navigate to="/alumni/dashboard" replace />;
-      default:
-        return <Navigate to="/home" replace />;
-    }
-  };
-
+const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        {/* Initial Route - Redirect based on role or to home */}
-        <Route path="/" element={redirectAuthenticated()} />
+        {/* Initial Route */}
+        <Route path="/" element={<AuthRedirect />} />
 
         {/* Public Routes */}
         <Route path="/home" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
-        
-        {/* Login and Signup */}
-        <Route path="/login" element={token ? redirectAuthenticated() : <LoginPage />} />
-        <Route path="/signup" element={token ? redirectAuthenticated() : <Signup />} />
+
+        {/* Auth Routes — redirect away if already logged in */}
+        <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
+        <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
         <Route path="/oauth-signup" element={<OAuthSignupComplete />} />
 
         {/* Admin Routes */}
@@ -88,7 +85,7 @@ const AppRoutes = () => {
         />
 
         {/* Fallback Route */}
-        <Route path="*" element={token ? redirectAuthenticated() : <Navigate to="/home" />} />
+        <Route path="*" element={<AuthRedirect />} />
       </Routes>
     </Router>
   );

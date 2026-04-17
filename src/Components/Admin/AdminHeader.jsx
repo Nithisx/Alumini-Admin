@@ -18,7 +18,8 @@ import {
   faHandHoldingHeart,
   faChevronDown,
   faMailBulk,
-  faComment
+  faComment,
+  faClipboardList
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../images/logo.png"; // Adjust the path as necessary
 
@@ -198,6 +199,12 @@ export default function AdminHeader() {
       icon: faComment,
       label: "Chats",
       color: "text-blue-600",
+    },
+    {
+      path: "/admin/audit",
+      icon: faClipboardList,
+      label: "Audit",
+      color: "text-slate-600",
     },
   ];
 

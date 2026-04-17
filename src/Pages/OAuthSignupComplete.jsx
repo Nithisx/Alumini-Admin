@@ -184,7 +184,7 @@ export default function OAuthSignupComplete() {
   if (!prefill.email) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 py-6 sm:py-10 px-3 sm:px-4">
       {showSuccess && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
@@ -209,7 +209,7 @@ export default function OAuthSignupComplete() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg px-8 py-8 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-2xl px-4 sm:px-8 py-6 sm:py-8 space-y-6 border border-gray-100">
           {error && (
             <div className="bg-red-50 text-red-700 px-4 py-3 rounded text-sm">{error}</div>
           )}

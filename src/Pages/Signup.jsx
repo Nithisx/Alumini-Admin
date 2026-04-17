@@ -1,5 +1,9 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import SuggestionInput from "../Components/Shared/SuggestionInput";
+import { supabase } from "../lib/supabase";
+
+const api_base = "https://api.karpagamalumni.in/api/v1";
 
 const SIGNUP_OTP_URL = "https://api.karpagamalumni.in/api/v1/signup-otp/";
 const SIGNUP_URL = "https://api.karpagamalumni.in/api/v1/signup/";
@@ -255,7 +259,78 @@ const SelectField = React.memo(
   )
 );
 
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      <path fill="none" d="M0 0h48v48H0z"/>
+    </svg>
+  );
+}
+
 const Signup = () => {
+  const navigate = useNavigate();
+  const [oauthLoading, setOauthLoading] = useState(false);
+
+  // Handle OAuth redirect callback (when Google redirects back to /signup)
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      setOauthLoading(true);
+      try {
+        const res = await fetch(`${api_base}/auth/google/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ access_token: session.access_token }),
+        });
+        const data = await res.json();
+
+        if (data.status === "login" && data.token) {
+          // Already registered — log them in
+          const roleMap = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "student" };
+          localStorage.setItem("Token", data.token);
+          localStorage.setItem("Role", roleMap[data.role] || "alumni");
+          await supabase.auth.signOut();
+          navigate(roleMap[data.role] === "admin" ? "/admin/dashboard" : roleMap[data.role] === "staff" ? "/staff/dashboard" : "/alumni/dashboard");
+        } else if (data.status === "new_user") {
+          sessionStorage.setItem("oauth_access_token", session.access_token);
+          await supabase.auth.signOut();
+          navigate("/oauth-signup", {
+            state: {
+              email: data.email,
+              first_name: data.first_name,
+              last_name: data.last_name,
+              avatar_url: data.avatar_url,
+            },
+          });
+        }
+      } catch {
+        await supabase.auth.signOut();
+      } finally {
+        setOauthLoading(false);
+      }
+    };
+    handleOAuthCallback();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleGoogleSignup = useCallback(async () => {
+    setOauthLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/signup` },
+      });
+      if (error) throw error;
+    } catch (err) {
+      setOauthLoading(false);
+    }
+  }, []);
+
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -280,8 +355,31 @@ const Signup = () => {
     country: "",
     state: "",
     city: "",
-    pincode: ""
+    pincode: "",
+    // Optional extras — wired to PendingSignup fields
+    salutation: "",
+    secondary_email: "",
+    bio: "",
+    home_town: "",
+    current_location: "",
+    Address: "",
+    correspondence_address: "",
+    correspondence_city: "",
+    correspondence_state: "",
+    correspondence_country: "",
+    correspondence_pincode: "",
+    chapter: "",
+    company: "",
+    position: "",
+    current_work: "",
+    work_experience: "",
+    facebook_link: "",
+    linkedin_link: "",
+    twitter_link: "",
+    website_link: ""
   });
+
+  const [showOptional, setShowOptional] = useState(false);
 
   const [signLoading, setSignLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -534,10 +632,17 @@ const Signup = () => {
       const payload = new FormData();
 
       Object.keys(formData).forEach((key) => {
-        if (key !== "profile_photo" && formData[key]) {
+        if (key === "profile_photo") return;
+        if (key === "pincode") return; // mapped separately to zip_code
+        if (formData[key]) {
           payload.append(key, formData[key]);
         }
       });
+
+      // Map frontend `pincode` -> backend `zip_code`
+      if (formData.pincode) {
+        payload.append("zip_code", formData.pincode);
+      }
 
       payload.append("name", `${formData.first_name} ${formData.last_name}`);
 
@@ -625,12 +730,23 @@ const Signup = () => {
     setUsernameDebounceTimer(timer);
   }, [usernameDebounceTimer]);
 
+  if (oauthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-green-600 font-semibold text-lg">Signing you in with Google...</p>
+          <p className="text-gray-500 text-sm mt-2">Please wait</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
       {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-8 border w-96 shadow-lg rounded-lg bg-white">
+          <div className="relative top-20 mx-auto p-8 border w-11/12 max-w-sm shadow-lg rounded-lg bg-white">
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                 <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -648,14 +764,14 @@ const Signup = () => {
       )}
 
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
-          <p className="mt-2 text-sm text-gray-600">Join our academic community</p>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <p className="mt-1 text-sm text-gray-500">Join our academic community</p>
         </div>
 
-        <div className="bg-white shadow-lg rounded-lg">
+        <div className="bg-white shadow-lg rounded-2xl border border-gray-100">
           {/* Profile Photo Section */}
-          <div className="px-8 pt-8 pb-6 border-b border-gray-200">
+          <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-5 border-b border-gray-200">
             <div className="flex items-center space-x-6">
               <div className="shrink-0">
                 {formData.profile_photo ? (
@@ -686,7 +802,7 @@ const Signup = () => {
             </div>
           </div>
 
-          <div className="px-8 py-6">
+          <div className="px-4 sm:px-8 py-6">
             {error && (
               <div className="mb-6 rounded-md bg-red-50 p-4">
                 <div className="flex">
@@ -699,6 +815,25 @@ const Signup = () => {
                 </div>
               </div>
             )}
+
+            {/* Google OAuth Sign Up */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                disabled={oauthLoading}
+                className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 rounded-md transition duration-200 disabled:opacity-50 shadow-sm"
+              >
+                <GoogleIcon />
+                Sign up with Google
+              </button>
+
+              <div className="flex items-center my-5">
+                <div className="flex-1 border-t border-gray-300" />
+                <span className="mx-3 text-gray-400 text-sm">or fill in the form below</span>
+                <div className="flex-1 border-t border-gray-300" />
+              </div>
+            </div>
 
             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
               {/* Personal Information */}
@@ -973,6 +1108,214 @@ const Signup = () => {
                     required={formData.role !== "Staff"}
                   />
                 </div>
+              </div>
+
+              {/* Additional Information (Optional) */}
+              <div className="pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowOptional((s) => !s)}
+                  className="w-full flex items-center justify-between text-left group"
+                >
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Additional Information
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      All fields below are optional — helps the admin review your profile faster
+                    </p>
+                  </div>
+                  <span className="ml-4 text-green-600 group-hover:text-green-700">
+                    {showOptional ? "Hide" : "Show"}
+                  </span>
+                </button>
+
+                {showOptional && (
+                  <div className="mt-5 space-y-6">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <InputField
+                        label="Salutation"
+                        value={formData.salutation}
+                        onChange={(v) => updateField("salutation", v)}
+                        placeholder="Mr. / Ms. / Dr."
+                        required={false}
+                      />
+                      <InputField
+                        label="Secondary Email"
+                        type="email"
+                        value={formData.secondary_email}
+                        onChange={(v) => updateField("secondary_email", v)}
+                        placeholder="alternate@example.com"
+                        required={false}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={3}
+                        maxLength={500}
+                        value={formData.bio}
+                        onChange={(e) => updateField("bio", e.target.value)}
+                        placeholder="Tell us a bit about yourself"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <InputField
+                        label="Home Town"
+                        value={formData.home_town}
+                        onChange={(v) => updateField("home_town", v)}
+                        placeholder="Your home town"
+                        required={false}
+                      />
+                      <InputField
+                        label="Current Location"
+                        value={formData.current_location}
+                        onChange={(v) => updateField("current_location", v)}
+                        placeholder="City you live in"
+                        required={false}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        value={formData.Address}
+                        onChange={(e) => updateField("Address", e.target.value)}
+                        placeholder="Street / area / landmark"
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-dashed border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-3">Correspondence Address</h4>
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        value={formData.correspondence_address}
+                        onChange={(e) => updateField("correspondence_address", e.target.value)}
+                        placeholder="Correspondence address (if different)"
+                      />
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-4">
+                        <InputField
+                          label="Correspondence City"
+                          value={formData.correspondence_city}
+                          onChange={(v) => updateField("correspondence_city", v)}
+                          placeholder="City"
+                          required={false}
+                        />
+                        <InputField
+                          label="Correspondence State"
+                          value={formData.correspondence_state}
+                          onChange={(v) => updateField("correspondence_state", v)}
+                          placeholder="State"
+                          required={false}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                        <InputField
+                          label="Correspondence Country"
+                          value={formData.correspondence_country}
+                          onChange={(v) => updateField("correspondence_country", v)}
+                          placeholder="Country"
+                          required={false}
+                        />
+                        <InputField
+                          label="Correspondence Pincode"
+                          value={formData.correspondence_pincode}
+                          onChange={(v) => updateField("correspondence_pincode", v)}
+                          placeholder="Pincode"
+                          required={false}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-dashed border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-3">Professional</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <InputField
+                          label="Chapter"
+                          value={formData.chapter}
+                          onChange={(v) => updateField("chapter", v)}
+                          placeholder="Chapter / region"
+                          required={false}
+                        />
+                        <InputField
+                          label="Company"
+                          value={formData.company}
+                          onChange={(v) => updateField("company", v)}
+                          placeholder="Current company"
+                          required={false}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                        <InputField
+                          label="Position"
+                          value={formData.position}
+                          onChange={(v) => updateField("position", v)}
+                          placeholder="Your position"
+                          required={false}
+                        />
+                        <InputField
+                          label="Current Work"
+                          value={formData.current_work}
+                          onChange={(v) => updateField("current_work", v)}
+                          placeholder="What you currently do"
+                          required={false}
+                        />
+                      </div>
+                      <div className="mt-6">
+                        <InputField
+                          label="Work Experience (years)"
+                          type="number"
+                          value={formData.work_experience}
+                          onChange={(v) => updateField("work_experience", v)}
+                          placeholder="e.g. 3.5"
+                          required={false}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-dashed border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-3">Social Links</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <InputField
+                          label="Facebook"
+                          value={formData.facebook_link}
+                          onChange={(v) => updateField("facebook_link", v)}
+                          placeholder="https://facebook.com/…"
+                          required={false}
+                        />
+                        <InputField
+                          label="LinkedIn"
+                          value={formData.linkedin_link}
+                          onChange={(v) => updateField("linkedin_link", v)}
+                          placeholder="https://linkedin.com/in/…"
+                          required={false}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                        <InputField
+                          label="Twitter / X"
+                          value={formData.twitter_link}
+                          onChange={(v) => updateField("twitter_link", v)}
+                          placeholder="https://x.com/…"
+                          required={false}
+                        />
+                        <InputField
+                          label="Website"
+                          value={formData.website_link}
+                          onChange={(v) => updateField("website_link", v)}
+                          placeholder="https://…"
+                          required={false}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Email Verification */}

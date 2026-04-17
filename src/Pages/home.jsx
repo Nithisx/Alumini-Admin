@@ -8,7 +8,6 @@ import Image1 from "../images/image1.jpeg";
 import Image2 from "../images/image2.jpg";
 import Image3 from "../images/image3.jpg";
 import Footer from "../Pages/about_components/Footer.jsx";
-import Loader from "./Loder.jsx";
 import ChapterDistributionSection from "../Components/Shared/ChapterDistributionSection.jsx";
 export default function Home() {
   const [data, setData] = useState({
@@ -29,16 +28,6 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [newsSlide, setNewsSlide] = useState(0);
-  const [showLoader, setShowLoader] = useState(true);
-
-  useEffect(() => {
-    // Hide loader after 4 seconds
-    const timer = setTimeout(() => {
-      setShowLoader(false);
-    }, 4000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,9 +92,6 @@ export default function Home() {
     }
   }, []);
 
-  if (showLoader) {
-    return <Loader />;
-  }
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -151,7 +137,7 @@ export default function Home() {
       <Herosection />
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-70">
         {/* Statistics Section */}
-        <section className="py-20 ">
+        <section className="py-8 sm:py-16 lg:py-20">
           <div className="container mx-auto px-4">
             <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-3xl p-4 sm:p-6 lg:p-8 border border-green-100">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -214,13 +200,13 @@ export default function Home() {
 
         {/* Latest Photo Albums */}
         {data.latest_album_images && data.latest_album_images.length > 0 && (
-          <section className="py-20" id="photo-gallery-section">
+          <section className="py-8 sm:py-16 lg:py-20" id="photo-gallery-section">
             <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                   Photo Gallery
                 </h2>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
                   Memories captured in time
                 </p>
               </div>
@@ -274,13 +260,13 @@ export default function Home() {
 
         {/* Featured News Slider */}
         {data.featured_news.length > 0 && (
-          <section className="py-20 " id="news-section">
+          <section className="py-8 sm:py-16 lg:py-20" id="news-section">
             <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                   Latest News & Updates
                 </h2>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
                   Stay informed with the latest achievements and stories from
                   our alumni community
                 </p>
@@ -414,13 +400,13 @@ export default function Home() {
 
         {/* Upcoming Events */}
         {data.upcoming_events.length > 0 && (
-          <section className="py-20 " id="events-section">
+          <section className="py-8 sm:py-16 lg:py-20" id="events-section">
             <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                   Events
                 </h2>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
                   Join us for exciting events and networking opportunities
                 </p>
               </div>
@@ -527,10 +513,10 @@ export default function Home() {
         )}
 
         {/* Latest Members Section */}
-        <section className="py-20" id="member-section">
+        <section className="py-8 sm:py-16 lg:py-20" id="member-section">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
+            <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-black mb-3 sm:mb-4">
                 Latest Members
               </h2>
               <p className="text-xl text-black max-w-2xl mx-auto">
@@ -658,18 +644,18 @@ export default function Home() {
         <ChapterDistributionSection
           countryDistribution={countryDistribution}
           cityStateDistribution={cityStateDistribution}
-          sectionClassName="py-20"
+          sectionClassName="py-8 sm:py-16 lg:py-20"
         />
 
         {/* Call to Action */}
         <section
-          className="py-20  text-green-900 relative overflow-hidden"
+          className="py-8 sm:py-16 lg:py-20 text-green-900 relative overflow-hidden"
           id="contact-section"
         >
           <div className="absolute inset-0 bg-green-100/40"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
                 Ready to Connect?
               </h2>
               <p className="text-xl md:text-2xl mb-12 text-green-700 leading-relaxed">
