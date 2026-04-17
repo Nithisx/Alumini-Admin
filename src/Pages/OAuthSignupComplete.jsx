@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import kahelogo from "../assets/kahelogo.png";
+import SuggestionInput from "../Components/Shared/SuggestionInput";
+
+const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";
 
 const api = axios.create({
   baseURL: "https://api.karpagamalumni.in/api/v1",
@@ -87,6 +90,33 @@ export default function OAuthSignupComplete() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState(""); // "checking" | "available" | "taken" | ""
   const [usernameTimer, setUsernameTimer] = useState(null);
+
+  const [locationSuggestions, setLocationSuggestions] = useState({ countries: [], states: [], cities: [] });
+  const [loadingLoc, setLoadingLoc] = useState({});
+  const locTimers = useRef({});
+
+  const fetchLocationSuggestions = useCallback(async (type, params) => {
+    try {
+      setLoadingLoc(prev => ({ ...prev, [type]: true }));
+      const query = new URLSearchParams(params).toString();
+      const res = await fetch(`${SUGGESTIONS_API}/signup?${query}`);
+      if (res.ok) {
+        const json = await res.json();
+        const loc = json.data?.locationSuggestions || {};
+        setLocationSuggestions(prev => ({
+          countries: loc.countries ?? prev.countries,
+          states: loc.states ?? prev.states,
+          cities: loc.cities ?? prev.cities,
+        }));
+      }
+    } catch {}
+    finally { setLoadingLoc(prev => ({ ...prev, [type]: false })); }
+  }, []);
+
+  const debouncedLocFetch = useCallback((type, params, delay = 300) => {
+    if (locTimers.current[type]) clearTimeout(locTimers.current[type]);
+    locTimers.current[type] = setTimeout(() => fetchLocationSuggestions(type, params), delay);
+  }, [fetchLocationSuggestions]);
 
   // Guard: if no access_token or prefill data, redirect to login
   useEffect(() => {
@@ -270,13 +300,40 @@ export default function OAuthSignupComplete() {
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Location</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label="Country">
-                <input name="country" value={form.country} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" placeholder="Country" />
+                <SuggestionInput
+                  value={form.country}
+                  onChange={(v) => { setForm(f => ({ ...f, country: v })); debouncedLocFetch("countries", { country: v }); }}
+                  onFocus={() => fetchLocationSuggestions("countries", { country: form.country })}
+                  placeholder="Country"
+                  required={false}
+                  suggestions={locationSuggestions.countries}
+                  loading={loadingLoc.countries}
+                  inputClassName="focus:ring-green-600"
+                />
               </Field>
               <Field label="State">
-                <input name="state" value={form.state} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" placeholder="State" />
+                <SuggestionInput
+                  value={form.state}
+                  onChange={(v) => { setForm(f => ({ ...f, state: v })); debouncedLocFetch("states", { country: form.country, state: v }); }}
+                  onFocus={() => fetchLocationSuggestions("states", { country: form.country, state: form.state })}
+                  placeholder="State"
+                  required={false}
+                  suggestions={locationSuggestions.states}
+                  loading={loadingLoc.states}
+                  inputClassName="focus:ring-green-600"
+                />
               </Field>
               <Field label="City">
-                <input name="city" value={form.city} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" placeholder="City" />
+                <SuggestionInput
+                  value={form.city}
+                  onChange={(v) => { setForm(f => ({ ...f, city: v })); debouncedLocFetch("cities", { country: form.country, state: form.state, city: v }); }}
+                  onFocus={() => fetchLocationSuggestions("cities", { country: form.country, state: form.state, city: form.city })}
+                  placeholder="City"
+                  required={false}
+                  suggestions={locationSuggestions.cities}
+                  loading={loadingLoc.cities}
+                  inputClassName="focus:ring-green-600"
+                />
               </Field>
             </div>
           </section>

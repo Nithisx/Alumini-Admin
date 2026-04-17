@@ -445,7 +445,7 @@ const Signup = () => {
 
   const availableColleges = useMemo(() => {
     return formData.role === "Staff"
-      ? COLLEGE_NAMES
+      ? [STAFF_ONLY_COLLEGE]
       : COLLEGE_NAMES.filter((college) => college !== STAFF_ONLY_COLLEGE);
   }, [formData.role]);
 

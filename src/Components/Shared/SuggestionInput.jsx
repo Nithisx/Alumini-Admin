@@ -4,6 +4,7 @@ const SuggestionInput = ({
   value,
   onChange,
   onSelect,
+  onFocus,
   placeholder,
   error,
   type = "text",
@@ -59,6 +60,10 @@ const SuggestionInput = ({
           if (!showSuggestions && filteredSuggestions.length > 0) {
             setShowSuggestions(true);
           }
+        }}
+        onFocus={() => {
+          if (onFocus) onFocus();
+          setShowSuggestions(true);
         }}
         placeholder={placeholder}
       />
