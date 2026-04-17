@@ -24,45 +24,12 @@ import {
   faMapMarkerAlt,
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
-
-const COLLEGE_NAMES = [
-  "FASCM-Faculty of Arts, Science, Commerce and Management",
-  "FOADP-Faculty of Architecture, Designing and Planning",
-  "FOE-Faculty of Engineering",
-  "FOP-Faculty of Pharmacy",
-  "KAHE",
-];
-
-const COURSES = [
-  "Bachelor of Architecture", "Bachelor of Arts", "Bachelor of Business Administration",
-  "Bachelor of Commerce", "Bachelor of Computer Applications", "Bachelor of Design",
-  "Bachelor of Engineering", "Bachelor of Pharmacy", "Bachelor of Philosophy",
-  "Bachelor of Science", "Bachelor of Technology", "Master of Architecture",
-  "Master of Building and Engineering Management", "Master of Business Administration",
-  "Master of Commerce", "Master of Computer Applications", "Master of Engineering",
-  "Master of Pharmacy", "Master of Philosophy", "Master of Planning",
-  "Master of Science", "Master of Social Work", "Ph.D",
-];
-
-const COURSE_BRANCH_MAPPING = {
-  "Bachelor of Architecture": ["General"],
-  "Bachelor of Arts": ["English Literature", "General"],
-  "Bachelor of Business Administration": ["BBA", "Business Process Services", "General"],
-  "Bachelor of Commerce": ["FA", "General", "IAF", "Information Technology", "Professional Accounting", "Computer Application", "Computer Science"],
-  "Bachelor of Computer Applications": ["Computer Application", "General"],
-  "Bachelor of Design": ["General", "Interior Design"],
-  "Bachelor of Engineering": ["Aeronautical Engineering", "Aerospace Engineering", "Automobile Engineering", "Bio Medical Engineering", "Chemical Engineering", "Civil Engineering", "Computer Science and Design", "Computer Science Engineering", "Computer Science Engineering(Cyber)", "Electrical & Electronics Engineering", "Electronics & Communication Engineering", "Food Technology", "Information Technology", "Mechanical Engineering"],
-  "Bachelor of Pharmacy": ["Pharmacy"],
-  "Bachelor of Science": ["Artificial Intelligence / Data Science", "Bio Chemistry", "Bio Informatics", "Bio Technology", "Catering Science and Hotel Management", "Chemistry", "Cognitive systems", "Computer Science", "Computer Technology", "General", "Mathematics", "Microbiology", "Physics"],
-  "Bachelor of Technology": ["Aeronautical Engineering", "Aerospace Engineering", "Artificial Intelligence / Data Science", "Automobile Engineering", "Bio Medical Engineering", "Bio Technology", "Chemical Engineering", "Civil Engineering", "Computer Science Engineering", "Electrical & Electronics Engineering", "Electronics & Communication Engineering", "Food Technology", "Mechanical Engineering"],
-  "Master of Architecture": ["General"], "Master of Building and Engineering Management": ["General"],
-  "Master of Business Administration": ["Business Process Services", "General", "MBA"],
-  "Master of Commerce": ["General"], "Master of Computer Applications": ["General"],
-  "Master of Engineering": ["General"], "Master of Pharmacy": ["General"],
-  "Master of Philosophy": ["General"], "Master of Planning": ["General"],
-  "Master of Science": ["General"], "Master of Social Work": ["General"],
-  "Ph.D": ["General"],
-};
+  import {
+    COLLEGE_NAMES,
+    COURSES,
+    COURSE_BRANCH_MAPPING,
+    STAFF_ONLY_COLLEGE,
+  } from "../../../constants/academicOptions";
 
 export default function RegisterRequest() {
   const [requests, setRequests] = useState([]); // Initialize as empty array
@@ -566,7 +533,7 @@ export default function RegisterRequest() {
 
     // College dropdown: Staff sees only KAHE, others see all colleges
     if (kind === "select-college") {
-      const collegeOptions = currentRole === "Staff" ? ["KAHE"] : COLLEGE_NAMES;
+      const collegeOptions = currentRole === "Staff" ? [STAFF_ONLY_COLLEGE] : COLLEGE_NAMES;
       return (
         <div key={key} className="text-sm">
           <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>

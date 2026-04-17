@@ -2,6 +2,12 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import SuggestionInput from "../Components/Shared/SuggestionInput";
 import { supabase } from "../lib/supabase";
+import {
+  COLLEGE_NAMES,
+  COURSES,
+  COURSE_BRANCH_MAPPING,
+  STAFF_ONLY_COLLEGE,
+} from "../constants/academicOptions";
 
 const api_base = "https://api.karpagamalumni.in/api/v1";
 
@@ -34,182 +40,6 @@ const REQUIRED_FIELDS = [
 
 const ROLES = ["Student", "Alumni", "Staff"];
 const GENDERS = ["Male", "Female", "Other"];
-
-const COLLEGE_NAMES = [
-  "FASCM-Faculty of Arts, Science, Commerce and Management",
-  "FOADP-Faculty of Architecture, Designing and Planning",
-  "FOE-Faculty of Engineering",
-  "FOP-Faculty of Pharmacy",
-  "KAHE",
-];
-const STAFF_ONLY_COLLEGE = "KAHE";
-
-const COURSES = [
-  "Bachelor of Architecture",
-  "Bachelor of Arts",
-  "Bachelor of Business Administration",
-  "Bachelor of Commerce",
-  "Bachelor of Computer Applications",
-  "Bachelor of Design",
-  "Bachelor of Engineering",
-  "Bachelor of Pharmacy",
-  "Bachelor of Philosophy",
-  "Bachelor of Science",
-  "Bachelor of Technology",
-  "Master of Architecture",
-  "Master of Building and Engineering Management",
-  "Master of Business Administration",
-  "Master of Commerce",
-  "Master of Computer Applications",
-  "Master of Engineering",
-  "Master of Pharmacy",
-  "Master of Philosophy",
-  "Master of Planning",
-  "Master of Science",
-  "Master of Social Work",
-  "Ph.D"
-];
-
-const COURSE_BRANCH_MAPPING = {
-  "Bachelor of Architecture": ["General"],
-  "Bachelor of Arts": ["English Literature", "General"],
-  "Bachelor of Business Administration": [
-    "BBA",
-    "Business Process Services",
-    "General"
-  ],
-  "Bachelor of Commerce": ["FA", "General", "IAF", "Information Technology", "Professional Accounting", "Computer Application", "Computer Science"],
-  "Bachelor of Computer Applications": ["Computer Application", "General"],
-  "Bachelor of Design": ["General", "Interior Design"],
-  "Bachelor of Engineering": [
-    "Aeronautical Engineering",
-    "Aerospace Engineering",
-    "Automobile Engineering",
-    "Bio Medical Engineering",
-    "Chemical Engineering",
-    "Civil Engineering",
-    "Computer Science and Design",
-    "Computer Science Engineering",
-    "Computer Science Engineering(Cyber)",
-    "Electrical & Electronics Engineering",
-    "Electronics & Communication Engineering",
-    "Food Technology",
-    "Information Technology",
-    "Mechanical Engineering"
-  ],
-  "Bachelor of Pharmacy": ["Pharmacy"],
-  "Bachelor of Science": [
-    "Artificial Intelligence / Data Science",
-    "Bio Chemistry",
-    "Bio Informatics",
-    "Bio Technology",
-    "Catering Science and Hotel Management",
-    "Chemistry",
-    "Cognitive systems",
-    "Computer Science",
-    "Computer Technology",
-    "Information Technology",
-    "General",
-    "Mathematics",
-    "Microbiology",
-    "Physics"
-  ],
-  "Bachelor of Technology": [
-    "Aeronautical Engineering",
-    "Aerospace Engineering",
-    "Artificial Intelligence / Data Science",
-    "Automobile Engineering",
-    "Bio Medical Engineering",
-    "Bio Technology",
-    "Chemical Engineering",
-    "Civil Engineering",
-    "Computer Science Engineering",
-    "Electrical & Electronics Engineering",
-    "Electronics & Communication Engineering",
-    "Food Technology",
-    "Mechanical Engineering"
-  ],
-  "Master of Architecture": ["General"],
-  "Master of Building and Engineering Management": ["General"],
-  "Master of Business Administration": ["Business Process Services", "General", "MBA"],
-  "Master of Commerce": ["General", "Professional Accounting"],
-  "Master of Computer Applications": ["Computer Application", "General"],
-  "Master of Engineering": [
-    "Aeronautical Engineering",
-    "Aerospace Engineering",
-    "Automobile Engineering",
-    "Bio Medical Engineering",
-    "Chemical Engineering",
-    "Civil Engineering",
-    "Computer Science Engineering",
-    "Electrical & Electronics Engineering",
-    "Electronics & Communication Engineering",
-    "Food Technology",
-    "Information Technology",
-    "Mechanical Engineering",
-    "Power Electronics and Drives",
-    "Power System Engineering",
-    "Structural Engineering",
-    "Structural Engineering (Part Time)",
-    "VLSI",
-    "Water Resources And Environmental Engineering"
-  ],
-  "Master of Pharmacy": ["Pharmacy"],
-  "Master of Planning": ["General"],
-  "Master of Science": [
-    "Bio Chemistry",
-    "Bio Informatics",
-    "Bio Technology",
-    "Catering Science and Hotel Management",
-    "Chemistry",
-    "Cognitive Science",
-    "Computer Science",
-    "Computer Technology",
-    "General",
-    "Mathematics",
-    "Microbiology",
-    "Physics"
-  ],
-  "Ph.D": [
-    "Aeronautical Engineering",
-    "Aerospace Engineering",
-    "Artificial Intelligence/Data Science",
-    "Automobile Engineering",
-    "Bio Chemistry",
-    "Bio Informatics",
-    "Bio Medical Engineering",
-    "Bio Technology",
-    "Business Process Services",
-    "Chemical Engineering",
-    "Chemistry",
-    "Civil Engineering",
-    "Cognitive Science",
-    "Computer Application",
-    "Computer Science",
-    "Computer Science Engineering",
-    "Computer Science Engineering(Cyber)",
-    "Computer Technology",
-    "Electrical & Electronics Engineering",
-    "Electronics & Communication Engineering",
-    "English Literature",
-    "Food Technology",
-    "General",
-    "Information Technology",
-    "Interior Design",
-    "Mathematics",
-    "Mechanical Engineering",
-    "Microbiology",
-    "Pharmacy",
-    "Physics",
-    "Power Electronics and Drives",
-    "Power System Engineering",
-    "Professional Accounting",
-    "Structural Engineering",
-    "Structural Engineering (Part Time)",
-    "VLSI",
-    "Water Resources And Environmental Engineering"
-  ]
-};
 
 const InputField = React.memo(
   ({ value, onChange, placeholder, error, type, required = true, label }) => (
