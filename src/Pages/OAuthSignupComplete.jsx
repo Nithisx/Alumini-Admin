@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import kahelogo from "../assets/kahelogo.png";
 import SuggestionInput from "../Components/Shared/SuggestionInput";
+import { supabase } from "../lib/supabase";
 
 const SUGGESTIONS_API = "https://api.karpagamalumni.in/api/v1/suggestions";
 
@@ -128,8 +129,9 @@ export default function OAuthSignupComplete() {
   // Redirect to login after success
   useEffect(() => {
     if (showSuccess) {
-      const t = setTimeout(() => {
+      const t = setTimeout(async () => {
         sessionStorage.removeItem("oauth_access_token");
+        await supabase.auth.signOut();
         navigate("/login", { replace: true });
       }, 3000);
       return () => clearTimeout(t);

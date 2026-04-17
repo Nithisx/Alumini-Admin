@@ -88,9 +88,10 @@ export default function LoginPage() {
           await supabase.auth.signOut();
           redirectAfterLogin(roleKey);
         } else if (data.status === "new_user") {
-          // Store the access_token temporarily so the signup page can re-verify with backend
+          // Store the access_token temporarily so the signup page can re-verify with backend.
+          // Do NOT sign out here — signing out invalidates the token before the signup form submits.
+          // The signup page (OAuthSignupComplete) calls signOut after successful submission.
           sessionStorage.setItem("oauth_access_token", session.access_token);
-          await supabase.auth.signOut();
           navigate("/oauth-signup", {
             state: {
               email: data.email,
