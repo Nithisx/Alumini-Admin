@@ -194,23 +194,70 @@ export default function OAuthSignupComplete() {
 
     setLoading(true);
     try {
-      // Refresh the Supabase session to get a fresh access token before submitting
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData?.session?.access_token) {
-        sessionStorage.removeItem("oauth_access_token");
-        navigate("/login", { replace: true });
-        return;
-      }
-      const freshToken = sessionData.session.access_token;
-      sessionStorage.setItem("oauth_access_token", freshToken);
+      // Try to get a live Supabase session first
+      const { data: sessionData } = await supabase.auth.getSession();
+      let accessToken = sessionData?.session?.access_token;
 
-      await api.post("/auth/google/signup/", {
-        access_token: freshToken,
+      if (!accessToken) {
+        // Session expired — check if this email is already in the system before asking to re-auth
+        const storedToken = sessionStorage.getItem("oauth_access_token");
+        if (storedToken) {
+          // Try with the stored token; backend will reject if it's expired too
+          accessToken = storedToken;
+        } else {
+          // No token at all — send back to signup to re-authenticate with Google
+          sessionStorage.removeItem("oauth_access_token");
+          await supabase.auth.signOut();
+          navigate("/signup", {
+            replace: true,
+            state: { message: "Your session expired. Please sign in with Google again." },
+          });
+          return;
+        }
+      } else {
+        sessionStorage.setItem("oauth_access_token", accessToken);
+      }
+
+      const res = await api.post("/auth/google/signup/", {
+        access_token: accessToken,
         ...form,
       });
+
+      // Backend says this email is already pending or approved → go to login
+      if (res.data?.status === "pending" || res.data?.status === "login") {
+        sessionStorage.removeItem("oauth_access_token");
+        await supabase.auth.signOut();
+        navigate("/login", {
+          replace: true,
+          state: { message: res.data?.error || "Account already exists. Please log in." },
+        });
+        return;
+      }
+
       setShowSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || "Signup failed. Please try again.");
+      const errData = err.response?.data;
+      // If backend rejected with "pending" status (old 401 path) or email-already-registered
+      if (errData?.status === "pending" || errData?.error?.toLowerCase().includes("already registered")) {
+        sessionStorage.removeItem("oauth_access_token");
+        await supabase.auth.signOut();
+        navigate("/login", {
+          replace: true,
+          state: { message: errData?.error || "Account already exists. Please log in." },
+        });
+        return;
+      }
+      // Token expired (401 from Supabase verify) — redirect to signup to re-auth
+      if (err.response?.status === 401) {
+        sessionStorage.removeItem("oauth_access_token");
+        await supabase.auth.signOut();
+        navigate("/signup", {
+          replace: true,
+          state: { message: "Your session expired. Please sign in with Google again." },
+        });
+        return;
+      }
+      setError(errData?.error || err.message || "Signup failed. Please try again.");
     } finally {
       setLoading(false);
     }

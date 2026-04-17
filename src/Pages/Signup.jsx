@@ -108,6 +108,7 @@ const COURSE_BRANCH_MAPPING = {
     "Cognitive systems",
     "Computer Science",
     "Computer Technology",
+    "Information Technology",
     "General",
     "Mathematics",
     "Microbiology",
