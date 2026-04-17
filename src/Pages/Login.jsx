@@ -65,7 +65,6 @@ export default function LoginPage() {
 
       // A session exists — this is the post-OAuth redirect landing
       setOauthLoading(true);
-      setError("");
       try {
         const { data } = await api.post("/auth/google/", {
           access_token: session.access_token,
@@ -84,6 +83,9 @@ export default function LoginPage() {
           await supabase.auth.signOut();
           toast.success("Signed in with Google successfully!");
           redirectAfterLogin(roleKey);
+        } else if (data.status === "pending") {
+          await supabase.auth.signOut();
+          toast.info("Your account is pending admin approval. You will be notified once approved.");
         } else if (data.status === "new_user") {
           sessionStorage.setItem("oauth_access_token", session.access_token);
           sessionStorage.setItem("oauth_avatar_url", data.avatar_url || "");
