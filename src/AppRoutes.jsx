@@ -8,6 +8,7 @@ import OAuthSignupComplete from './Pages/OAuthSignupComplete';
 import Home from './Pages/home';
 import About from './Pages/about';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
+import TermsOfService from './Pages/TermsOfService';
 
 // Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
@@ -49,6 +50,7 @@ const AppRoutes = () => {
         <Route path="/home" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
         
         {/* Login and Signup */}
         <Route path="/login" element={token ? redirectAuthenticated() : <LoginPage />} />
