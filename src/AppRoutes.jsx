@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 // Pages
 import LoginPage from './Pages/Login';
 import Signup from './Pages/Signup';
+import OAuthSignupComplete from './Pages/OAuthSignupComplete';
 import Home from './Pages/home';
 import About from './Pages/about';
 
@@ -50,6 +51,7 @@ const AppRoutes = () => {
         {/* Login and Signup */}
         <Route path="/login" element={token ? redirectAuthenticated() : <LoginPage />} />
         <Route path="/signup" element={token ? redirectAuthenticated() : <Signup />} />
+        <Route path="/oauth-signup" element={<OAuthSignupComplete />} />
 
         {/* Admin Routes */}
         <Route
