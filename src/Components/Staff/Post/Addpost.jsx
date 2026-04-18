@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
+import EngagementPanel from "../../Shared/EngagementPanel";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -130,7 +131,7 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component
-const JobCard = ({ post, onRequestDelete }) => {
+const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -236,6 +237,14 @@ const JobCard = ({ post, onRequestDelete }) => {
         <ImageGallery images={post.images || []} />
       </div>
 
+      {/* Engagement: like / comment / share */}
+      <EngagementPanel
+        contentType="jobs"
+        contentId={post.id}
+        canModerate={canModerate}
+        currentUserId={currentUserId}
+      />
+
       {/* Bottom border accent */}
       <div className="h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
     </div>
@@ -247,6 +256,8 @@ const JobFeed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [canModerate, setCanModerate] = useState(false);
 
   // Modal and file upload states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -286,6 +297,19 @@ const JobFeed = () => {
 
   useEffect(() => {
     fetchJobs();
+    const token = localStorage.getItem("Token");
+    if (token) {
+      fetch("https://api.karpagamalumni.in/api/v1/profile/", {
+        headers: { Authorization: `Token ${token}` },
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          setCurrentUserId(d.id);
+          const role = (d.role || "").toLowerCase();
+          setCanModerate(d.is_staff || role === "admin" || role === "staff");
+        })
+        .catch(() => {});
+    }
   }, []);
 
   // Delete a post
@@ -470,7 +494,7 @@ const JobFeed = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {posts.map((post) => (
-              <JobCard key={post.id} post={post} onRequestDelete={setConfirmDeleteId} />
+              <JobCard key={post.id} post={post} onRequestDelete={setConfirmDeleteId} currentUserId={currentUserId} canModerate={canModerate} />
             ))}
           </div>
         )}

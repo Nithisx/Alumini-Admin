@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import EngagementPanel from '../../Shared/EngagementPanel';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -21,10 +22,26 @@ const BusinessView = () => {
   const [business, setBusiness] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [canModerate, setCanModerate] = useState(false);
 
   const token = localStorage.getItem("Token");
   const API_BASE_URL = "https://api.karpagamalumni.in/api/v1";
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API_BASE_URL}/profile/`, {
+      headers: { Authorization: `Token ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        setCurrentUserId(d.id);
+        const role = (d.role || "").toLowerCase();
+        setCanModerate(d.is_staff || role === "admin" || role === "staff");
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     const fetchBusinessDetails = async () => {
@@ -228,6 +245,16 @@ const BusinessView = () => {
             </div>
           </div>
         )}
+
+        {/* Engagement: like / comment / share */}
+        <div className="border-t border-gray-100 -mx-6 mt-4">
+          <EngagementPanel
+            contentType="businesses"
+            contentId={Number(id)}
+            canModerate={canModerate}
+            currentUserId={currentUserId}
+          />
+        </div>
       </div>
     </div>
   );

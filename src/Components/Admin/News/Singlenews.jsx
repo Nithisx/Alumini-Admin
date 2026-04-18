@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import EngagementPanel from "../../Shared/EngagementPanel";
 
 const TOKEN = localStorage.getItem("Token");
 const API_BASE = "https://api.karpagamalumni.in/api/v1/news/";
@@ -11,6 +12,22 @@ export default function SingleNews() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [canModerate, setCanModerate] = useState(false);
+
+  useEffect(() => {
+    if (!TOKEN) return;
+    fetch("https://api.karpagamalumni.in/api/v1/profile/", {
+      headers: { Authorization: `Token ${TOKEN}` },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        setCurrentUserId(d.id);
+        const role = (d.role || "").toLowerCase();
+        setCanModerate(d.is_staff || role === "admin" || role === "staff");
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -207,6 +224,18 @@ export default function SingleNews() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Engagement: like / comment / share */}
+        {post && (
+          <div className="bg-white rounded shadow mb-6">
+            <EngagementPanel
+              contentType="news"
+              contentId={Number(id)}
+              canModerate={canModerate}
+              currentUserId={currentUserId}
+            />
           </div>
         )}
 

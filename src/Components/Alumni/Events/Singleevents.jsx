@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Tag, User } from 'lucide-react';
+import EngagementPanel from '../../Shared/EngagementPanel';
 
 const SingleEvents = () => {
   const { id } = useParams();
@@ -9,7 +10,23 @@ const SingleEvents = () => {
   const [error, setError] = useState(null);
   const [showFullScreen, setShowFullScreen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [canModerate, setCanModerate] = useState(false);
   const token = localStorage.getItem('Token');
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('https://api.karpagamalumni.in/api/v1/profile/', {
+      headers: { Authorization: `Token ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        setCurrentUserId(d.id);
+        const role = (d.role || '').toLowerCase();
+        setCanModerate(d.is_staff || role === 'admin' || role === 'staff');
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -221,11 +238,19 @@ const SingleEvents = () => {
             </div>
 
             {/* Event Description */}
-            <div className="p-6 mt-6 bg-white rounded-lg shadow-lg">
-              <h2 className="mb-4 text-2xl font-bold text-gray-800">About This Event</h2>
-              <div className="text-gray-600 prose-lg max-w-none">
-                {event.description}
+            <div className="mt-6 bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="p-6">
+                <h2 className="mb-4 text-2xl font-bold text-gray-800">About This Event</h2>
+                <div className="text-gray-600 prose-lg max-w-none">
+                  {event.description}
+                </div>
               </div>
+              <EngagementPanel
+                contentType="events"
+                contentId={Number(id)}
+                canModerate={canModerate}
+                currentUserId={currentUserId}
+              />
             </div>
           </div>
 
