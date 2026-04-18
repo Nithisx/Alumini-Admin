@@ -44,11 +44,11 @@ export const COURSE_BRANCH_MAPPING = {
   ],
   "Bachelor of Commerce": [
     "FA",
-    "B.Com",
+    "B. Com",
     "IAF",
     "Information Technology",
     "Professional Accounting",
-    "Computer Application",
+    // "Computer Application",
     "Computer Science",
   ],
   "Bachelor of Computer Applications": ["Computer Application", "General"],
