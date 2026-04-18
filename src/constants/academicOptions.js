@@ -127,7 +127,7 @@ export const COURSE_BRANCH_MAPPING = {
     "VLSI",
     "Water Resources And Environmental Engineering",
   ],
-  "Master of Pharmacy": ["Pharmacy"],
+  "Master of Pharmacy": ["M. Pharm (Pharmaceutics)", "M. Pharm (Analysis)", "M. Pharm (Chemistry)"],
   "Master of Philosophy": ["General"],
   "Master of Planning": ["General"],
   "Master of Science": [
