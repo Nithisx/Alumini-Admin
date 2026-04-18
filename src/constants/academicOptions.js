@@ -69,7 +69,7 @@ export const COURSE_BRANCH_MAPPING = {
     "Information Technology",
     "Mechanical Engineering",
   ],
-  "Bachelor of Pharmacy": ["Pharmacy"],
+  "Bachelor of Pharmacy": ["B. Pharm", "Pharm. D"],
   "Bachelor of Science": [
     "Artificial Intelligence / Data Science",
     "Bio Chemistry",
@@ -80,6 +80,7 @@ export const COURSE_BRANCH_MAPPING = {
     "Cognitive systems",
     "Computer Science",
     "Computer Technology",
+    "Cyber Security",
     "General",
     "Information Technology",
     "Mathematics",
