@@ -9,6 +9,7 @@ import Home from './Pages/home';
 import About from './Pages/about';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import TermsOfService from './Pages/TermsOfService';
+import ResetPassword from './Pages/ResetPassword';
 
 // Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
@@ -53,6 +54,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
         <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
         <Route path="/oauth-signup" element={<OAuthSignupComplete />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Admin Routes */}
         <Route
