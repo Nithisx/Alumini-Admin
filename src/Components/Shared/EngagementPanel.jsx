@@ -15,7 +15,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Heart, MessageCircle, Share2, Send, Reply, Pencil, Trash2, X, Check, Copy, ChevronDown, ChevronUp } from "lucide-react";
+import { Heart, MessageCircle, Share2, Send, Reply, Pencil, Trash2, X, Check, Copy, ChevronDown, ChevronUp, Linkedin, Instagram } from "lucide-react";
 import { toast } from "react-toastify";
 
 const API_ROOT = "https://api.karpagamalumni.in/api/v1";
@@ -303,48 +303,6 @@ const CommentItem = ({ comment, contentType, canModerate, currentUserId, onDelet
   );
 };
 
-// ── Share modal ───────────────────────────────────────────────────────────────
-
-const ShareModal = ({ shareUrl, onClose }) => {
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Could not copy to clipboard.");
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-800">Share this post</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-        </div>
-        <p className="text-sm text-gray-500 mb-3">Anyone with this link can view this post — no login required.</p>
-        <div className="flex gap-2">
-          <input
-            readOnly
-            value={shareUrl}
-            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 truncate focus:outline-none"
-          />
-          <button
-            onClick={copy}
-            className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? "Copied!" : "Copy"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ── Main EngagementPanel ──────────────────────────────────────────────────────
 
 const EngagementPanel = ({ contentType, contentId, canModerate = false, currentUserId = null }) => {
@@ -360,7 +318,8 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
 
   const [shareUrl, setShareUrl] = useState(null);
   const [shareLoading, setShareLoading] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareActions, setShowShareActions] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [totalShares, setTotalShares] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
 
@@ -502,6 +461,44 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
     }
   };
 
+  const copyShareLink = useCallback(async (url = shareUrl) => {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Share link copied.");
+    } catch {
+      toast.error("Could not copy to clipboard.");
+    }
+  }, [shareUrl]);
+
+  const openShareTarget = useCallback(async (platform) => {
+    if (!shareUrl) return;
+
+    if (platform === "copy") {
+      await copyShareLink(shareUrl);
+      return;
+    }
+
+    if (platform === "instagram") {
+      await copyShareLink(shareUrl);
+      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      toast.info("Link copied. Paste it in Instagram.");
+      return;
+    }
+
+    const encoded = encodeURIComponent(shareUrl);
+    const targetMap = {
+      whatsapp: `https://wa.me/?text=${encoded}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
+    };
+    const target = targetMap[platform];
+    if (target) {
+      window.open(target, "_blank", "noopener,noreferrer");
+    }
+  }, [copyShareLink, shareUrl]);
+
   // ── share ────────────────────────────────────────────────────────────────
   const handleShare = async () => {
     if (shareLoading) return;
@@ -517,7 +514,22 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
       const url = `${window.location.origin}/share/${data.token}`;
       setShareUrl(url);
       setTotalShares((n) => n + 1);
-      setShowShareModal(true);
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Karpagam Alumni",
+            text: "Check this out",
+            url,
+          });
+          setShowShareActions(false);
+          return;
+        } catch {
+          // User cancelled or the platform could not open native share sheet.
+        }
+      }
+
+      setShowShareActions(true);
     } catch {
       toast.error("Failed to generate share link.");
     } finally {
@@ -560,6 +572,44 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
           <span>{totalShares > 0 ? totalShares : ""} Share</span>
         </button>
       </div>
+
+      {/* Share actions (no modal popup) */}
+      {showShareActions && shareUrl && (
+        <div className="border-t border-gray-100 px-4 py-3">
+          <p className="text-xs text-gray-500 mb-2">Share this link</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => openShareTarget("whatsapp")}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-green-50 text-green-700 hover:bg-green-100 text-sm"
+            >
+              <span className="font-semibold">WA</span>
+              WhatsApp
+            </button>
+            <button
+              onClick={() => openShareTarget("linkedin")}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm"
+            >
+              <Linkedin size={14} />
+              LinkedIn
+            </button>
+            <button
+              onClick={() => openShareTarget("instagram")}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-pink-50 text-pink-700 hover:bg-pink-100 text-sm"
+            >
+              <Instagram size={14} />
+              Instagram
+            </button>
+            <button
+              onClick={() => openShareTarget("copy")}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
+            >
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? "Copied" : "Copy link"}
+            </button>
+          </div>
+          <p className="text-[11px] text-gray-400 mt-2 break-all">{shareUrl}</p>
+        </div>
+      )}
 
       {/* Comment section */}
       {showComments && (
@@ -606,10 +656,6 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
         </div>
       )}
 
-      {/* Share modal */}
-      {showShareModal && shareUrl && (
-        <ShareModal shareUrl={shareUrl} onClose={() => setShowShareModal(false)} />
-      )}
     </div>
   );
 };

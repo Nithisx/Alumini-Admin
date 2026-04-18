@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { API_SHARE_RESOLVE } from '../config/api';
 
 function normalizeRole(role) {
-  if (role === 'student') return 'alumni';
-  if (role === 'admin' || role === 'staff' || role === 'alumni') return role;
+  const value = String(role || '').trim().toLowerCase();
+  if (value === 'student') return 'alumni';
+  if (value === 'admin' || value === 'staff' || value === 'alumni') return value;
   return null;
 }
 
