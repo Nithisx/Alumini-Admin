@@ -10,6 +10,7 @@ import About from './Pages/about';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import TermsOfService from './Pages/TermsOfService';
 import ResetPassword from './Pages/ResetPassword';
+import ShareRedirect from './Pages/ShareRedirect';
 
 // Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
@@ -49,6 +50,7 @@ const AppRoutes = () => {
         <Route path="/about" element={<About />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/share/:token" element={<ShareRedirect />} />
 
         {/* Auth Routes — redirect away if already logged in */}
         <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
