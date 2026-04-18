@@ -773,7 +773,7 @@ function AuditLogsTab() {
   useEffect(() => {
     const interval = setInterval(() => {
       dispatch(fetchAuditLogs({ page: localPage, filters: { ...filters, page_size: pageSize } }));
-    }, 30000);
+    }, 10000);
     return () => clearInterval(interval);
   }, [dispatch, filters, localPage, pageSize]);
 

@@ -173,7 +173,7 @@ export default function RegisterRequest() {
   // Initial fetch + auto-refresh every 30 seconds
   useEffect(() => {
     dispatch(fetchLoginRequests());
-    const interval = setInterval(() => dispatch(fetchLoginRequests()), 30000);
+    const interval = setInterval(() => dispatch(fetchLoginRequests()), 10000);
     return () => clearInterval(interval);
   }, [dispatch]);
 
