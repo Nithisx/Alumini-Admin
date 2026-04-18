@@ -17,6 +17,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Heart, MessageCircle, Share2, Send, Reply, Pencil, Trash2, X, Check, Copy, ChevronDown, ChevronUp, Linkedin, Instagram } from "lucide-react";
 import { toast } from "react-toastify";
+import { API_SHARE_PREVIEW } from "../../config/api";
 
 const API_ROOT = "https://api.karpagamalumni.in/api/v1";
 const getToken = () => localStorage.getItem("Token");
@@ -511,7 +512,7 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
-      const url = `${window.location.origin}/share/${data.token}`;
+      const url = API_SHARE_PREVIEW(data.token);
       setShareUrl(url);
       setTotalShares((n) => n + 1);
 
