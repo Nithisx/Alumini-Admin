@@ -30,7 +30,7 @@ const AlumniLayout = () => {
       <AdminHeader />
 
       {/* Main Content */}
-      <main className="p-4">
+      <main className="p-0">
         {" "}
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />

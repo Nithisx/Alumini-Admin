@@ -67,13 +67,7 @@ const normalizeCreatedJob = (payload) => {
 const ImageGallery = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!images || images.length === 0)
-    return (
-      <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden my-3 flex items-center justify-center">
-        {/* Placeholder image or icon */}
-        <FontAwesomeIcon icon={faImage} className="text-5xl text-gray-300" />
-      </div>
-    );
+  if (!images || images.length === 0) return null;
 
   const nextImage = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -85,7 +79,6 @@ const ImageGallery = ({ images }) => {
     );
   };
 
-  // Fix for image paths that might be relative
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
@@ -93,11 +86,12 @@ const ImageGallery = ({ images }) => {
   };
 
   return (
-    <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden my-3">
+    <div className="relative w-full bg-black overflow-hidden" style={{ maxHeight: "500px" }}>
       <img
         src={getImageUrl(images[currentIndex].image)}
         alt={`Job image ${currentIndex + 1}`}
-        className="w-full h-full object-cover"
+        className="w-full object-contain"
+        style={{ maxHeight: "500px" }}
       />
 
       {images.length > 1 && (
@@ -130,20 +124,15 @@ const ImageGallery = ({ images }) => {
   );
 };
 
-// Job Card Component
+// Job Card Component — social feed style (full-width, like Facebook/Instagram)
 const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const isOwn = post.user?.id === currentUserId;
+  const canDelete = isOwn || canModerate;
 
   return (
-    <div
-      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-
-
-      {/* Header with user info */}
-      <div className="p-4 pb-2 border-b border-gray-100">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* Header with user info + delete */}
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {post.user?.profile_photo ? (
             <img
@@ -152,85 +141,63 @@ const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
               className="w-10 h-10 rounded-full object-cover border-2 border-green-100"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-              <FontAwesomeIcon
-                icon={faUserCircle}
-                className="w-6 h-6 text-green-600"
-              />
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+              <FontAwesomeIcon icon={faUserCircle} className="w-6 h-6 text-green-600" />
             </div>
           )}
-          <div className="flex-1">
-            <div className="font-semibold text-gray-800 text-sm">
+          <div>
+            <div className="font-semibold text-gray-900 text-sm leading-tight">
               {post.user?.first_name} {post.user?.last_name}
             </div>
-            <div className="flex items-center text-xs text-gray-500">
-              <FontAwesomeIcon
-                icon={faCalendarAlt}
-                className="mr-1"
-              />
-              <span>{formatDate(post.posted_on)}</span>
+            <div className="flex items-center text-xs text-gray-400 mt-0.5">
+              <FontAwesomeIcon icon={faCalendarAlt} className="mr-1" />
+              {formatDate(post.posted_on)}
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Job Content */}
-      <div className="p-4">
-        {/* Company and Role */}
-        <div className="mb-4">
-          <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2">
-            {post.role}
-          </h3>
-          <div className="flex items-center text-gray-600 text-sm mb-2">
-            <FontAwesomeIcon
-              icon={faBuilding}
-              className="mr-2 text-green-600 flex-shrink-0"
-            />
-            <span className="truncate">{post.company_name}</span>
-          </div>
-        </div>
-
-        {/* Job Details Grid */}
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center text-sm text-gray-600">
-            <FontAwesomeIcon
-              icon={faMapMarkerAlt}
-              className="mr-2 text-green-600 w-4 flex-shrink-0"
-            />
-            <span className="truncate">{post.location}</span>
-          </div>
-
-          {post.salary_range && (
-            <div className="flex items-center text-sm text-gray-600">
-              <FontAwesomeIcon
-                icon={faMoneyBillWave}
-                className="mr-2 text-green-600 w-4 flex-shrink-0"
-              />
-              <span className="truncate">{post.salary_range}</span>
-            </div>
-          )}
-
-          {post.job_type && (
-            <div className="flex items-center text-sm text-gray-600">
-              <FontAwesomeIcon
-                icon={faClock}
-                className="mr-2 text-green-600 w-4 flex-shrink-0"
-              />
-              <span className="capitalize truncate">{post.job_type}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Description */}
-        {post.description && (
-          <p className="text-gray-700 text-sm mb-4 line-clamp-3">
-            {post.description}
-          </p>
+        {canDelete && (
+          <button
+            onClick={() => onRequestDelete(post.id)}
+            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
+            title="Delete post"
+          >
+            <FontAwesomeIcon icon={faTrash} className="text-xs" />
+          </button>
         )}
-
-        {/* Images - Always render ImageGallery to show placeholder when no images */}
-        <ImageGallery images={post.images || []} />
       </div>
+
+      {/* Job content body */}
+      <div className="px-4 pb-3">
+        <h3 className="text-base font-bold text-gray-900 mb-0.5">{post.role}</h3>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mb-2">
+          <span className="flex items-center gap-1">
+            <FontAwesomeIcon icon={faBuilding} className="text-green-600 text-xs" />
+            {post.company_name}
+          </span>
+          <span className="flex items-center gap-1">
+            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-green-600 text-xs" />
+            {post.location}
+          </span>
+          {post.salary_range && (
+            <span className="flex items-center gap-1">
+              <FontAwesomeIcon icon={faMoneyBillWave} className="text-green-600 text-xs" />
+              {post.salary_range}
+            </span>
+          )}
+          {post.job_type && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-medium capitalize">
+              <FontAwesomeIcon icon={faClock} className="text-xs" />
+              {post.job_type}
+            </span>
+          )}
+        </div>
+        {post.description && (
+          <p className="text-gray-700 text-sm leading-relaxed">{post.description}</p>
+        )}
+      </div>
+
+      {/* Full-width image */}
+      <ImageGallery images={post.images || []} />
 
       {/* Engagement: like / comment / share */}
       <EngagementPanel
@@ -239,9 +206,6 @@ const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
         canModerate={canModerate}
         currentUserId={currentUserId}
       />
-
-      {/* Bottom border accent */}
-      <div className="h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
     </div>
   );
 };
@@ -439,7 +403,7 @@ const JobFeed = () => {
   };
 
   return (
-    <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen">
       <ConfirmModal
         isOpen={!!confirmDeleteId}
         title="Delete Job Post"
@@ -449,60 +413,86 @@ const JobFeed = () => {
         onConfirm={() => { deletePost(confirmDeleteId); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Job Feed</h1>
-          <p className="text-gray-600 mb-4">Discover amazing career opportunities</p>
-          <div className="h-1 w-24 bg-gradient-to-r from-green-500 to-green-600 mx-auto rounded-full"></div>
-        </div>
 
-        {/* Posts Grid */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-600 mb-4"></div>
-              <p className="text-gray-600">Loading jobs...</p>
+      {/* Two-column layout: feed + sidebar */}
+      <div className="max-w-5xl mx-auto px-4 py-6 flex gap-6 items-start">
+        {/* Main feed column */}
+        <div className="flex-1 min-w-0">
+          {/* Create post prompt */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3 mb-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+              <FontAwesomeIcon icon={faUserCircle} className="text-green-600 text-lg" />
             </div>
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="bg-white p-16 rounded-2xl shadow-lg text-center max-w-md mx-auto">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FontAwesomeIcon icon={faBriefcase} className="text-2xl text-green-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Jobs Yet</h3>
-            <p className="text-gray-600 mb-6">Be the first to post a job opportunity!</p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              className="flex-1 text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 text-sm transition-colors"
             >
-              Post First Job
+              Share a job opportunity...
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlus} className="text-xs" />
+              Post
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {posts.map((post) => (
-              <JobCard
-                key={post.id}
-                post={post}
-                onRequestDelete={setConfirmDeleteId}
-                currentUserId={currentUserId}
-                canModerate={canModerate}
-              />
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Floating Add Post Button */}
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white shadow-2xl 
-                 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-4 focus:ring-green-300
-                 flex items-center justify-center transition-all duration-300 hover:scale-110 group"
-      >
-        <FontAwesomeIcon icon={faPlus} className="text-xl group-hover:rotate-90 transition-transform duration-300" />
-      </button>
+          {/* Posts feed */}
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="flex flex-col items-center gap-3">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-green-600"></div>
+                <p className="text-gray-500 text-sm">Loading jobs...</p>
+              </div>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FontAwesomeIcon icon={faBriefcase} className="text-xl text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">No Jobs Yet</h3>
+              <p className="text-gray-500 text-sm mb-4">Be the first to share a job opportunity!</p>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Post a Job
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <JobCard
+                  key={post.id}
+                  post={post}
+                  onRequestDelete={setConfirmDeleteId}
+                  currentUserId={currentUserId}
+                  canModerate={canModerate}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="hidden lg:block w-72 flex-shrink-0 space-y-4 sticky top-20">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-semibold text-gray-800 mb-1 text-sm">Job Feed</h3>
+            <p className="text-xs text-gray-500">Browse and share career opportunities with the alumni community.</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-semibold text-gray-800 mb-3 text-sm">Quick Actions</h3>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlus} className="text-xs" />
+              Post a Job
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Modal */}
       {isModalOpen && (

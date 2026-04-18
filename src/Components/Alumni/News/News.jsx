@@ -72,147 +72,181 @@ export default function NewsList() {
   const featuredPosts = posts.filter(post => post.featured);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-gray-200">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-800">Newsroom</h1>
-            <p className="text-gray-500 mt-2">Stay updated with our latest announcements</p>
+    <div className="bg-gray-100 min-h-screen">
+      <div className="max-w-5xl mx-auto px-4 py-6 flex gap-6 items-start">
+
+        {/* Main feed column */}
+        <div className="flex-1 min-w-0">
+          {/* Create post prompt */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3 mb-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+              <Bookmark size={18} className="text-green-600" />
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex-1 text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 text-sm transition-colors"
+            >
+              Share a news story...
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <Plus size={14} />
+              Post
+            </button>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition shadow-md"
-          >
-            <Plus size={18} className="mr-2" />
-            Post News
-          </button>
-        </div>
 
-        {/* Featured Posts - Only show if we have featured posts */}
-        {featuredPosts.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Featured</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {featuredPosts.slice(0, 2).map(post => (
-                <div key={`featured-${post.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg transition transform hover:scale-[1.02]">
-                  <div className="relative h-60">
-                    <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/600x400'}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                      onError={e => e.target.src = 'https://via.placeholder.com/600x400'}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <span className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-full">
-                        <Tag size={14} className="mr-1" />
-                        {post.category}
-                      </span>
-                      <h3 className="text-xl font-bold text-white mt-2">{post.title}</h3>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center text-gray-500 text-sm mb-4">
-                      <Calendar size={16} className="mr-2" />
-                      {formatDate(post.published_on)}
-                      <span className="mx-2">•</span>
-                      <Bookmark size={16} className="mr-2" />
-                      Featured
-                    </div>
-                    <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
-                    <div className="flex justify-between items-center">
-                      <a
-                        href={`/alumni/news/${post.id}/`}
-                        className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
-                      >
-                        Read Full Story
-                        <ChevronRight size={16} className="ml-1" />
-                      </a>
-
-                    </div>
-                  </div>
-                </div>
+          {/* Category filter pills */}
+          <div className="mb-4 overflow-x-auto">
+            <div className="flex space-x-2 pb-1">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`px-4 py-1.5 rounded-full whitespace-nowrap text-sm font-medium transition-colors ${activeCategory === category
+                    ? 'bg-green-600 text-white shadow-sm'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                >
+                  {category}
+                </button>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Category Filter */}
-        <div className="mb-8 overflow-x-auto">
-          <div className="flex space-x-2 pb-2">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap ${activeCategory === category
-                  ? 'bg-green-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                  }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* News List */}
-        {isLoading ? (
-          <div className="flex flex-col items-center py-16">
-            <div className="text-green-600">
-              <Loader size={40} className="animate-spin" />
+          {/* News feed */}
+          {isLoading ? (
+            <div className="flex flex-col items-center py-16 gap-3">
+              <Loader size={36} className="animate-spin text-green-600" />
+              <p className="text-gray-500 text-sm">Loading news...</p>
             </div>
-            <p className="mt-4 text-gray-600">Loading news...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
-            <p className="text-red-700">Failed to load news: {error}</p>
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow-md">
-            <p className="text-gray-600">No news articles found in this category</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {filteredPosts.map(post => (
-              <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition">
-                <div className="sm:flex">
-                  <div className="sm:w-1/3 relative">
-                    <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/400x300'}
-                      alt={post.title}
-                      className="w-full h-48 sm:h-full object-cover"
-                      onError={e => e.target.src = 'https://via.placeholder.com/400x300'}
-                    />
-                  </div>
-                  <div className="p-6 sm:w-2/3">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                        {post.category}
+          ) : error ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-lg text-red-700 text-sm">
+              Failed to load news: {error}
+            </div>
+          ) : filteredPosts.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+              <p className="text-gray-500">No news articles found in this category.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Featured posts first */}
+              {activeCategory === 'All' && featuredPosts.length > 0 && featuredPosts.slice(0, 1).map(post => (
+                <div key={`featured-${post.id}`} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  {post.thumbnail && (
+                    <div className="relative">
+                      <img
+                        src={getFullImageUrl(post.thumbnail)}
+                        alt={post.title}
+                        className="w-full object-cover"
+                        style={{ maxHeight: "400px" }}
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                      <span className="absolute bottom-3 left-4 inline-flex items-center gap-1 px-2.5 py-1 bg-green-600 text-white text-xs rounded-full font-medium">
+                        <Bookmark size={11} /> Featured
                       </span>
-                      <div className="flex items-center text-gray-500 text-sm">
-                        <Calendar size={14} className="mr-1" />
-                        {formatDate(post.published_on)}
-                      </div>
                     </div>
-                    <h2 className="text-xl font-bold mb-3 text-gray-800">{post.title}</h2>
-                    <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
-                    <div className="flex justify-between items-center">
-                      <a
-                        href={`/alumni/news/${post.id}/`}
-                        className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
-                      >
-                        Read More
-                        <ChevronRight size={16} className="ml-1" />
-                      </a>
-
+                  )}
+                  <div className="px-4 py-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                        <Tag size={10} /> {post.category}
+                      </span>
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <Calendar size={11} /> {formatDate(post.published_on)}
+                      </span>
                     </div>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">{post.title}</h2>
+                    <p className="text-gray-600 text-sm line-clamp-3 mb-3">{post.content}</p>
+                    <a href={`/alumni/news/${post.id}/`} className="inline-flex items-center text-green-600 font-medium text-sm hover:text-green-700">
+                      Read Full Story <ChevronRight size={14} className="ml-1" />
+                    </a>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+
+              {/* Regular posts */}
+              {filteredPosts.filter(p => !p.featured || activeCategory !== 'All').length === 0 && activeCategory === 'All' ? null :
+                filteredPosts
+                  .filter(p => activeCategory !== 'All' || !p.featured)
+                  .map(post => (
+                    <div key={post.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                      {post.thumbnail && (
+                        <img
+                          src={getFullImageUrl(post.thumbnail)}
+                          alt={post.title}
+                          className="w-full object-cover"
+                          style={{ maxHeight: "350px" }}
+                          onError={e => { e.target.style.display = 'none'; }}
+                        />
+                      )}
+                      <div className="px-4 py-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                            <Tag size={10} /> {post.category}
+                          </span>
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <Calendar size={11} /> {formatDate(post.published_on)}
+                          </span>
+                        </div>
+                        <h2 className="text-base font-bold text-gray-900 mb-1">{post.title}</h2>
+                        <p className="text-gray-600 text-sm line-clamp-3 mb-3">{post.content}</p>
+                        <a href={`/alumni/news/${post.id}/`} className="inline-flex items-center text-green-600 font-medium text-sm hover:text-green-700">
+                          Read More <ChevronRight size={14} className="ml-1" />
+                        </a>
+                      </div>
+                    </div>
+                  ))
+              }
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="hidden lg:block w-72 flex-shrink-0 space-y-4 sticky top-20">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-semibold text-gray-800 mb-1 text-sm">Newsroom</h3>
+            <p className="text-xs text-gray-500">Stay updated with the latest alumni news and announcements.</p>
           </div>
-        )}
+          {featuredPosts.length > 1 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-800 mb-3 text-sm">More Featured</h3>
+              <div className="space-y-3">
+                {featuredPosts.slice(1, 4).map(post => (
+                  <a key={post.id} href={`/alumni/news/${post.id}/`} className="flex gap-2 group">
+                    {post.thumbnail ? (
+                      <img src={getFullImageUrl(post.thumbnail)} alt={post.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" onError={e => { e.target.style.display = 'none'; }} />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <Bookmark size={16} className="text-green-600" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-800 group-hover:text-green-600 line-clamp-2 leading-tight">{post.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(post.published_on)}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-semibold text-gray-800 mb-3 text-sm">Categories</h3>
+            <div className="flex flex-wrap gap-2">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${activeCategory === cat ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Add News Modal */}
