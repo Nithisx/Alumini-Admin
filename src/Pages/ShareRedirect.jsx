@@ -28,6 +28,38 @@ function prettyDate(value) {
   return date.toLocaleString();
 }
 
+function formatDateOnly(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString();
+}
+
+function formatTimeOnly(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function resolveEventDate(content) {
+  const rawDate = firstText(content, ['event_date', 'date']);
+  if (rawDate) return rawDate;
+  return formatDateOnly(content?.from_date_time);
+}
+
+function resolveEventTime(content) {
+  const rawTime = firstText(content, ['event_time', 'time']);
+  if (rawTime) return rawTime;
+
+  const start = formatTimeOnly(content?.from_date_time);
+  const end = formatTimeOnly(content?.end_date_time);
+
+  if (start === '-' && end === '-') return '-';
+  if (start !== '-' && end !== '-') return `${start} - ${end}`;
+  return start !== '-' ? start : end;
+}
+
 function firstText(content, keys) {
   for (const key of keys) {
     const value = content?.[key];
@@ -78,7 +110,7 @@ function collectImageUrls(content, apiOrigin) {
 function buildPreview(sharePayload) {
   const type = sharePayload?.type || '';
   const content = sharePayload?.content || {};
-  const user = content?.user || {};
+  const user = content?.user || content?.owner_details || {};
 
   const authorName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || 'Alumni member';
   const sharedAt = prettyDate(sharePayload?.shared_at);
@@ -109,8 +141,8 @@ function buildPreview(sharePayload) {
       subtitle: `Posted by ${authorName}`,
       description: firstText(content, ['description', 'content']),
       meta: [
-        ['Date', firstValue(content, ['event_date', 'date'])],
-        ['Time', firstValue(content, ['event_time', 'time'])],
+        ['Date', resolveEventDate(content)],
+        ['Time', resolveEventTime(content)],
         ['Venue', firstValue(content, ['venue', 'location'])],
         ['Shared At', sharedAt],
       ],
@@ -119,6 +151,14 @@ function buildPreview(sharePayload) {
   }
 
   if (type === 'business') {
+    const locationParts = [content?.address, content?.city, content?.state, content?.country]
+      .map((value) => (typeof value === 'string' ? value.trim() : ''))
+      .filter(Boolean);
+
+    const location = locationParts.length > 0
+      ? locationParts.join(', ')
+      : firstValue(content, ['location', 'address']);
+
     return {
       heading: 'Shared Business',
       title: firstText(content, ['business_name', 'company_name']) || 'Business Post',
@@ -126,8 +166,27 @@ function buildPreview(sharePayload) {
       description: firstText(content, ['description', 'about']),
       meta: [
         ['Category', firstValue(content, ['category', 'business_type'])],
-        ['Location', firstValue(content, ['location', 'address'])],
-        ['Contact', firstValue(content, ['phone_number', 'contact_number'])],
+        ['Location', location],
+        ['Contact', firstValue(content, ['phone', 'phone_number', 'contact_number'])],
+        ['Email', firstValue(content, ['email'])],
+        ['Website', firstValue(content, ['website'])],
+        ['Founded', firstValue(content, ['year_founded'])],
+        ['Shared At', sharedAt],
+      ],
+      shareMessage,
+    };
+  }
+
+  if (type === 'news') {
+    return {
+      heading: 'Shared News',
+      title: firstText(content, ['title', 'headline']) || 'News Post',
+      subtitle: `Posted by ${authorName}`,
+      description: firstText(content, ['description', 'content', 'body']),
+      meta: [
+        ['Category', firstValue(content, ['category'])],
+        ['Published', prettyDate(content?.published_on || content?.created_at || content?.posted_on)],
+        ['Updated', prettyDate(content?.updated_on || content?.updated_at)],
         ['Shared At', sharedAt],
       ],
       shareMessage,
