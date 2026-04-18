@@ -637,7 +637,7 @@ export default function AuditPage() {
               >
                 <option value="">All</option>
                 <option value="admin">Admin</option>
-                <option value="superuser">Superuser</option>
+                {/* <option value="superuser">Superuser</option> */}
                 <option value="alumni">Alumni</option>
                 <option value="student">Student</option>
                 <option value="staff">Staff</option>
