@@ -754,7 +754,11 @@ export default function RegisterRequest() {
 
   // Mobile Card Component
   const MobileCard = ({ req }) => (
-    <div className="bg-white  rounded-xl shadow-lg border  border-green-100 mb-4 overflow-hidden">
+    <div className={`rounded-xl shadow-lg border mb-4 overflow-hidden ${
+      req.role === "Staff"
+        ? "bg-amber-50 border-amber-300"
+        : "bg-white border-green-100"
+    }`}>
       <div className="p-4 ">
         <div className="flex  items-center justify-between mb-3">
           <div className="flex items-center">
@@ -1105,7 +1109,11 @@ export default function RegisterRequest() {
                         requests.map((req) => (
                           <React.Fragment key={req.id}>
                             <tr
-                              className="table-row-animate card-hover border-l-4 border-l-transparent hover:border-l-green-400"
+                              className={`table-row-animate card-hover border-l-4 hover:border-l-green-400 ${
+                                req.role === "Staff"
+                                  ? "bg-amber-50 border-l-amber-400 hover:bg-amber-100"
+                                  : "border-l-transparent"
+                              }`}
                               onClick={() => toggleRowExpansion(req.id)}
                             >
                               <td className="px-6 py-6" onClick={(e) => e.stopPropagation()}>
@@ -1174,12 +1182,19 @@ export default function RegisterRequest() {
                                 </div>
                               </td>
                               <td className="px-6 py-6">
-                                <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
+                                <span className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-semibold border ${
+                                  req.role === "Staff"
+                                    ? "bg-amber-100 text-amber-800 border-amber-300"
+                                    : "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200"
+                                }`}>
                                   <FontAwesomeIcon
                                     icon={faUserTag}
                                     className="mr-2"
                                   />
                                   {req.role}
+                                  {req.role === "Staff" && (
+                                    <span className="ml-1.5 text-xs font-bold text-amber-600">(Staff)</span>
+                                  )}
                                 </span>
                               </td>
                               <td className="px-6 py-6 text-sm text-gray-700 font-medium">

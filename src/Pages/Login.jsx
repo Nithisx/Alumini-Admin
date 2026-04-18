@@ -1,18 +1,17 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/kahelogo.png";
 import { supabase } from "../lib/supabase";
 
-// axios instance
 const api = axios.create({
   baseURL: "https://api.karpagamalumni.in/api/v1",
   headers: { "Content-Type": "application/json" },
 });
 
-function defaultDashboard(role) {
-  switch (role) {
+function defaultDashboard(roleKey) {
+  switch (roleKey) {
     case "admin": return "/admin/dashboard";
     case "staff": return "/staff/dashboard";
     default: return "/alumni/dashboard";
@@ -24,46 +23,27 @@ export default function LoginPage() {
   const location = useLocation();
   const from = location.state?.from?.pathname || null;
 
-  const redirectAfterLogin = useCallback((role) => {
-    navigate(from || defaultDashboard(role), { replace: true });
+  const redirectAfterLogin = useCallback((roleKey) => {
+    navigate(from || defaultDashboard(roleKey), { replace: true });
   }, [from, navigate]);
 
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    role: "alumni",
-  });
+  const [form, setForm] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   }, []);
 
-  const loginUrl = useMemo(() => {
-    switch (form.role) {
-      case "admin":
-        return "/login/admin/";
-      case "alumni":
-        return "/login/user/";
-      case "student":
-        return "/login/user/";
-      default:
-        return "/login/staff/";
-    }
-  }, [form.role]);
-
   // After Supabase OAuth redirect, the hash contains the session.
-  // We handle it here on mount.
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      // supabase.auth.getSession() reads the hash/cookie automatically
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // A session exists — this is the post-OAuth redirect landing
       setOauthLoading(true);
       try {
         const { data } = await api.post("/auth/google/", {
@@ -72,12 +52,7 @@ export default function LoginPage() {
 
         if (data.status === "login" && data.token) {
           localStorage.setItem("Token", data.token);
-          const roleMap = {
-            Admin: "admin",
-            Staff: "staff",
-            Alumni: "alumni",
-            Student: "student",
-          };
+          const roleMap = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "student" };
           const roleKey = roleMap[data.role] || "alumni";
           localStorage.setItem("Role", roleKey);
           await supabase.auth.signOut();
@@ -101,9 +76,7 @@ export default function LoginPage() {
       } catch (err) {
         await supabase.auth.signOut();
         toast.error(
-          err.response?.data?.error ||
-          err.message ||
-          "Google sign-in failed. Please try again."
+          err.response?.data?.error || err.message || "Google sign-in failed. Please try again."
         );
       } finally {
         setOauthLoading(false);
@@ -113,51 +86,44 @@ export default function LoginPage() {
     handleOAuthCallback();
   }, [redirectAfterLogin]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleLogin = useCallback(
-    async (e) => {
-      e.preventDefault();
+  const handleLogin = useCallback(async (e) => {
+    e.preventDefault();
 
-      if (form.username.length > 100) {
-        toast.error("Username too long (max 100 characters)");
-        return;
+    if (form.username.length > 100) {
+      toast.error("Username too long (max 100 characters)");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data } = await api.post("/login/", {
+        username: form.username,
+        password: form.password,
+      });
+
+      if (data.token) {
+        localStorage.setItem("Token", data.token);
+        localStorage.setItem("Role", data.role_key);
+        toast.success("Logged in successfully!");
+        redirectAfterLogin(data.role_key);
+      } else {
+        toast.error(data.error || "Login failed: no token received");
       }
-
-      setLoading(true);
-      try {
-        const { data } = await api.post(loginUrl, {
-          username: form.username,
-          password: form.password,
-        });
-
-        if (data.token) {
-          localStorage.setItem("Token", data.token);
-          localStorage.setItem("Role", form.role);
-          toast.success("Logged in successfully!");
-          redirectAfterLogin(form.role);
-        } else {
-          toast.error(data.error || "Login failed: no token received");
-        }
-      } catch (err) {
-        toast.error(
-          err.response?.data?.error ||
-          err.message ||
-          "An unexpected error occurred"
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [form, loginUrl, redirectAfterLogin]
-  );
+    } catch (err) {
+      toast.error(
+        err.response?.data?.error || err.message || "An unexpected error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [form, redirectAfterLogin]);
 
   const handleGoogleLogin = useCallback(async () => {
     setOauthLoading(true);
     try {
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/login`,
-        },
+        options: { redirectTo: `${window.location.origin}/login` },
       });
       if (oauthErr) throw oauthErr;
     } catch (err) {
@@ -177,16 +143,12 @@ export default function LoginPage() {
       toast.success("Password reset link sent! Check your email.");
     } catch (err) {
       toast.error(
-        err.response?.data?.error ||
-        err.message ||
-        "Failed to send reset email."
+        err.response?.data?.error || err.message || "Failed to send reset email."
       );
     } finally {
       setForgotLoading(false);
     }
   };
-
-  const [showPassword, setShowPassword] = useState(false);
 
   if (oauthLoading) {
     return (
@@ -222,33 +184,22 @@ export default function LoginPage() {
           </h2>
 
           <div className="space-y-4">
-            <Select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              options={[
-                { value: "admin", label: "Admin" },
-                { value: "staff", label: "Staff" },
-                { value: "alumni", label: "Alumni" },
-                { value: "student", label: "Student" },
-              ]}
-            />
-
-            <Input
-              name="username"
-              type="text"
-              label="Email"
-              placeholder="Enter your username or email"
-              value={form.username}
-              onChange={handleChange}
-              maxLength={100}
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email or Username</label>
+              <input
+                name="username"
+                type="text"
+                placeholder="Enter your username or email"
+                value={form.username}
+                onChange={handleChange}
+                maxLength={100}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+            </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">
                 <input
                   name="password"
@@ -345,40 +296,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-
-function Input({ name, label, ...props }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      <input
-        name={name}
-        {...props}
-        className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-      />
-    </div>
-  );
-}
-
-function Select({ name, label, options, ...props }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label || "Role"}
-      </label>
-      <select
-        name={name}
-        {...props}
-        className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-

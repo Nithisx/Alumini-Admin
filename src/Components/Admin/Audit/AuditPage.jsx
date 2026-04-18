@@ -14,6 +14,12 @@ import {
   faCircleXmark,
   faUserSlash,
   faXmark,
+  faBan,
+  faShield,
+  faPlus,
+  faPencilAlt,
+  faTrash,
+  faClipboardList,
 } from "@fortawesome/free-solid-svg-icons";
 
 const API_BASE = "https://api.karpagamalumni.in/api/v1";
@@ -213,6 +219,338 @@ function AutocompleteInput({ value, onChange, suggestions = [], placeholder, cla
   );
 }
 
+const ENTITY_TYPE_LABELS = { ip: "IP Address", username: "Username", email: "Email" };
+const MODE_LABELS = { block: "Blocked", whitelist: "Whitelisted" };
+const MODE_COLORS = {
+  block: "bg-rose-50 text-rose-700 border-rose-200",
+  whitelist: "bg-emerald-50 text-emerald-700 border-emerald-200",
+};
+const ENTITY_TYPE_COLORS = {
+  ip: "bg-blue-50 text-blue-700 border-blue-200",
+  username: "bg-purple-50 text-purple-700 border-purple-200",
+  email: "bg-amber-50 text-amber-700 border-amber-200",
+};
+
+function BlockForm({ initial, onSave, onCancel, saving }) {
+  const [form, setForm] = useState(
+    initial || { entity_type: "ip", value: "", mode: "block", reason: "" }
+  );
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-medium text-gray-500">Type</label>
+          <select
+            value={form.entity_type}
+            onChange={(e) => set("entity_type", e.target.value)}
+            className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          >
+            <option value="ip">IP Address</option>
+            <option value="username">Username</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-gray-500">Mode</label>
+          <select
+            value={form.mode}
+            onChange={(e) => set("mode", e.target.value)}
+            className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          >
+            <option value="block">Block</option>
+            <option value="whitelist">Whitelist</option>
+          </select>
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs font-medium text-gray-500">
+            Value <span className="text-gray-400">(e.g. 192.168.1.1 / john_doe / john@example.com)</span>
+          </label>
+          <input
+            value={form.value}
+            onChange={(e) => set("value", e.target.value)}
+            placeholder="Enter IP, username, or email"
+            className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none font-mono"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs font-medium text-gray-500">Reason <span className="text-gray-400">(optional)</span></label>
+          <input
+            value={form.reason}
+            onChange={(e) => set("reason", e.target.value)}
+            placeholder="Why is this entry blocked or whitelisted?"
+            className="w-full mt-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={onCancel}
+          className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => onSave(form)}
+          disabled={saving || !form.value.trim()}
+          className="px-4 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2"
+        >
+          {saving && <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BlockManagementTab() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filterType, setFilterType] = useState("");
+  const [filterMode, setFilterMode] = useState("");
+  const [search, setSearch] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("Token") : null;
+  const headers = useMemo(
+    () => ({ Authorization: `Token ${token}`, "Content-Type": "application/json" }),
+    [token]
+  );
+
+  const fetchEntries = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterType) params.set("entity_type", filterType);
+      if (filterMode) params.set("mode", filterMode);
+      if (search) params.set("search", search);
+      const res = await fetch(`${API_BASE}/blocked-entities/?${params}`, { headers });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setEntries(Array.isArray(data) ? data : (data.results || []));
+    } catch (e) {
+      toast.error("Failed to load blocked entities: " + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterType, filterMode, search, headers]);
+
+  useEffect(() => { fetchEntries(); }, [fetchEntries]);
+
+  const handleAdd = async (form) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/blocked-entities/`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.value?.[0] || data.detail || JSON.stringify(data));
+      toast.success("Entry added successfully.");
+      setShowAddForm(false);
+      fetchEntries();
+    } catch (e) {
+      toast.error("Failed to add entry: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = async (id, form) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/blocked-entities/${id}/`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.value?.[0] || data.detail || JSON.stringify(data));
+      toast.success("Entry updated.");
+      setEditingId(null);
+      fetchEntries();
+    } catch (e) {
+      toast.error("Failed to update: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Remove this entry?")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`${API_BASE}/blocked-entities/${id}/`, {
+        method: "DELETE",
+        headers,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast.success("Entry removed.");
+      fetchEntries();
+    } catch (e) {
+      toast.error("Failed to delete: " + e.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[180px]">
+          <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-3.5 w-3.5" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search value..."
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          />
+        </div>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+        >
+          <option value="">All types</option>
+          <option value="ip">IP Address</option>
+          <option value="username">Username</option>
+          <option value="email">Email</option>
+        </select>
+        <select
+          value={filterMode}
+          onChange={(e) => setFilterMode(e.target.value)}
+          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+        >
+          <option value="">All modes</option>
+          <option value="block">Blocked</option>
+          <option value="whitelist">Whitelisted</option>
+        </select>
+        <button
+          onClick={fetchEntries}
+          disabled={loading}
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          <FontAwesomeIcon icon={faRotateRight} className={loading ? "animate-spin" : ""} />
+          Refresh
+        </button>
+        <button
+          onClick={() => { setShowAddForm(true); setEditingId(null); }}
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+        >
+          <FontAwesomeIcon icon={faPlus} />
+          Add Entry
+        </button>
+      </div>
+
+      {/* Add form */}
+      {showAddForm && (
+        <BlockForm
+          onSave={handleAdd}
+          onCancel={() => setShowAddForm(false)}
+          saving={saving}
+        />
+      )}
+
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-600 tracking-wide">
+              <tr>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3 text-left">Value</th>
+                <th className="px-4 py-3 text-left">Mode</th>
+                <th className="px-4 py-3 text-left">Reason</th>
+                <th className="px-4 py-3 text-left">Added by</th>
+                <th className="px-4 py-3 text-left">Created</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">Loading...</td>
+                </tr>
+              )}
+              {!loading && entries.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
+                    No entries yet. Add an IP, username, or email to block or whitelist.
+                  </td>
+                </tr>
+              )}
+              {!loading && entries.map((entry) => (
+                <tr key={entry.id} className="border-t border-gray-100 hover:bg-gray-50">
+                  {editingId === entry.id ? (
+                    <td colSpan={7} className="px-4 py-3">
+                      <BlockForm
+                        initial={entry}
+                        onSave={(form) => handleEdit(entry.id, form)}
+                        onCancel={() => setEditingId(null)}
+                        saving={saving}
+                      />
+                    </td>
+                  ) : (
+                    <>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-2 py-0.5 rounded border text-xs font-medium ${ENTITY_TYPE_COLORS[entry.entity_type] || ""}`}>
+                          {ENTITY_TYPE_LABELS[entry.entity_type] || entry.entity_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-800">{entry.value}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium ${MODE_COLORS[entry.mode] || ""}`}>
+                          <FontAwesomeIcon icon={entry.mode === "block" ? faBan : faShield} className="h-3 w-3" />
+                          {MODE_LABELS[entry.mode] || entry.mode}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 max-w-[200px] truncate" title={entry.reason}>
+                        {entry.reason || <span className="text-gray-300">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500">{entry.created_by_username || "—"}</td>
+                      <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
+                        {entry.created_at ? new Date(entry.created_at).toLocaleDateString() : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => { setEditingId(entry.id); setShowAddForm(false); }}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                            title="Edit"
+                          >
+                            <FontAwesomeIcon icon={faPencilAlt} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(entry.id)}
+                            disabled={deletingId === entry.id}
+                            className="text-xs text-rose-500 hover:text-rose-700 font-medium disabled:opacity-50"
+                            title="Remove"
+                          >
+                            <FontAwesomeIcon icon={deletingId === entry.id ? faRotateRight : faTrash} className={deletingId === entry.id ? "animate-spin" : ""} />
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
+          {entries.length} {entries.length === 1 ? "entry" : "entries"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Bug 3: StatusBadge with tooltip explaining what the code means
 function StatusBadge({ code }) {
   if (code == null) return <span className="text-gray-400">-</span>;
@@ -354,7 +692,358 @@ function DetailModal({ log, onClose }) {
   );
 }
 
-export default function AuditPage() {
+const ENTITY_TYPES = ["ip", "username", "email"];
+const MODES = ["block", "whitelist"];
+
+const MODE_COLORS = {
+  block: "bg-rose-50 text-rose-700 border-rose-200",
+  whitelist: "bg-emerald-50 text-emerald-700 border-emerald-200",
+};
+
+const ENTITY_TYPE_ICONS = {
+  ip: faBan,
+  username: faUserSlash,
+  email: faSearch,
+};
+
+function BlockEntityForm({ initial, onSave, onCancel, saving }) {
+  const [form, setForm] = useState(
+    initial || { entity_type: "ip", value: "", mode: "block", reason: "" }
+  );
+
+  const handleChange = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-medium text-gray-500 block mb-1">Type</label>
+          <select
+            value={form.entity_type}
+            onChange={(e) => handleChange("entity_type", e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          >
+            {ENTITY_TYPES.map((t) => (
+              <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-gray-500 block mb-1">Mode</label>
+          <select
+            value={form.mode}
+            onChange={(e) => handleChange("mode", e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          >
+            {MODES.map((m) => (
+              <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+            ))}
+          </select>
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs font-medium text-gray-500 block mb-1">
+            Value ({form.entity_type === "ip" ? "IP address" : form.entity_type})
+          </label>
+          <input
+            value={form.value}
+            onChange={(e) => handleChange("value", e.target.value)}
+            placeholder={
+              form.entity_type === "ip" ? "e.g. 203.0.113.42"
+              : form.entity_type === "username" ? "e.g. john_doe"
+              : "e.g. user@example.com"
+            }
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none font-mono"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs font-medium text-gray-500 block mb-1">Reason (optional)</label>
+          <input
+            value={form.reason}
+            onChange={(e) => handleChange("reason", e.target.value)}
+            placeholder="Why is this entry blocked / whitelisted?"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={onCancel}
+          disabled={saving}
+          className="px-4 py-2 text-sm rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => onSave(form)}
+          disabled={saving || !form.value.trim()}
+          className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BlockManagementTab() {
+  const [entities, setEntities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filterType, setFilterType] = useState("");
+  const [filterMode, setFilterMode] = useState("");
+  const [search, setSearch] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("Token") : null;
+  const headers = useMemo(
+    () => ({ Authorization: `Token ${token}`, "Content-Type": "application/json" }),
+    [token]
+  );
+
+  const fetchEntities = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterType) params.set("entity_type", filterType);
+      if (filterMode) params.set("mode", filterMode);
+      if (search) params.set("search", search);
+      const res = await fetch(`${API_BASE}/blocked-entities/?${params}`, { headers });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setEntities(data);
+    } catch (e) {
+      toast.error("Failed to load blocked entities: " + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterType, filterMode, search, headers]);
+
+  useEffect(() => {
+    fetchEntities();
+  }, [fetchEntities]);
+
+  const handleCreate = async (form) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/blocked-entities/`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.value?.[0] || data.detail || JSON.stringify(data));
+      toast.success(`${form.mode === "block" ? "Blocked" : "Whitelisted"} ${form.entity_type}: ${form.value}`);
+      setShowForm(false);
+      fetchEntities();
+    } catch (e) {
+      toast.error("Failed to save: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdate = async (id, form) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/blocked-entities/${id}/`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+      toast.success("Entry updated.");
+      setEditingId(null);
+      setEditDraft(null);
+      fetchEntities();
+    } catch (e) {
+      toast.error("Failed to update: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id, label) => {
+    if (!window.confirm(`Remove "${label}" from the list?`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/blocked-entities/${id}/`, {
+        method: "DELETE",
+        headers,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast.success("Entry removed.");
+      fetchEntities();
+    } catch (e) {
+      toast.error("Failed to delete: " + e.message);
+    }
+  };
+
+  const startEdit = (entity) => {
+    setEditingId(entity.id);
+    setEditDraft({ entity_type: entity.entity_type, value: entity.value, mode: entity.mode, reason: entity.reason || "" });
+    setShowForm(false);
+  };
+
+  return (
+    <div className="max-w-[1600px] mx-auto">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Block / Whitelist Management</h1>
+          <p className="text-sm text-gray-500">Control access by IP address, username, or email</p>
+        </div>
+        <button
+          onClick={() => { setShowForm((s) => !s); setEditingId(null); }}
+          className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+        >
+          <FontAwesomeIcon icon={faPlus} />
+          Add Entry
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="mb-4">
+          <BlockEntityForm
+            onSave={handleCreate}
+            onCancel={() => setShowForm(false)}
+            saving={saving}
+          />
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <label className="text-xs font-medium text-gray-500">Type</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+            >
+              <option value="">All</option>
+              {ENTITY_TYPES.map((t) => (
+                <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500">Mode</label>
+            <select
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+            >
+              <option value="">All</option>
+              <option value="block">Blocked</option>
+              <option value="whitelist">Whitelisted</option>
+            </select>
+          </div>
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-gray-500">Search value</label>
+            <div className="relative">
+              <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-3.5 w-3.5" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search IP, username, email..."
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-600 tracking-wide">
+              <tr>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3 text-left">Value</th>
+                <th className="px-4 py-3 text-left">Mode</th>
+                <th className="px-4 py-3 text-left">Reason</th>
+                <th className="px-4 py-3 text-left">Added By</th>
+                <th className="px-4 py-3 text-left">Date</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-500">Loading...</td></tr>
+              )}
+              {!loading && entities.length === 0 && (
+                <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400">No entries found.</td></tr>
+              )}
+              {!loading && entities.map((entity) => (
+                <tr key={entity.id} className="border-t border-gray-100 hover:bg-gray-50">
+                  {editingId === entity.id ? (
+                    <td colSpan={7} className="px-4 py-3">
+                      <BlockEntityForm
+                        initial={editDraft}
+                        onSave={(form) => handleUpdate(entity.id, form)}
+                        onCancel={() => { setEditingId(null); setEditDraft(null); }}
+                        saving={saving}
+                      />
+                    </td>
+                  ) : (
+                    <>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                          <FontAwesomeIcon icon={ENTITY_TYPE_ICONS[entity.entity_type] || faBan} className="h-3 w-3" />
+                          {entity.entity_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs font-medium text-gray-800">{entity.value}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-2 py-0.5 rounded border text-xs font-semibold ${MODE_COLORS[entity.mode] || ""}`}>
+                          <FontAwesomeIcon icon={entity.mode === "block" ? faBan : faShield} className="mr-1 h-3 w-3" />
+                          {entity.mode}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 max-w-[200px] truncate" title={entity.reason}>
+                        {entity.reason || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-600">{entity.created_by_username || "-"}</td>
+                      <td className="px-4 py-3 text-xs font-mono text-gray-500">
+                        {entity.created_at ? new Date(entity.created_at).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => startEdit(entity)}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            <FontAwesomeIcon icon={faPencilAlt} className="mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(entity.id, `${entity.entity_type}:${entity.value}`)}
+                            className="text-xs text-rose-600 hover:text-rose-700 font-medium"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="mr-1" />
+                            Remove
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 text-sm text-gray-500">
+          {entities.length} {entities.length === 1 ? "entry" : "entries"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AuditLogsTab() {
   const [logs, setLogs] = useState([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -878,6 +1567,40 @@ export default function AuditPage() {
       </div>
 
       <DetailModal log={selected} onClose={() => setSelected(null)} />
+    </div>
+  );
+}
+
+const TABS = [
+  { id: "logs", label: "Audit Logs", icon: faClipboardList },
+  { id: "blocks", label: "Block / Whitelist", icon: faBan },
+];
+
+export default function AuditPage() {
+  const [activeTab, setActiveTab] = useState("logs");
+
+  return (
+    <div>
+      {/* Tab bar */}
+      <div className="flex gap-1 mb-5 border-b border-gray-200">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+              activeTab === tab.id
+                ? "border-emerald-600 text-emerald-700 bg-emerald-50"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <FontAwesomeIcon icon={tab.icon} className="h-3.5 w-3.5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "logs" && <AuditLogsTab />}
+      {activeTab === "blocks" && <BlockManagementTab />}
     </div>
   );
 }
