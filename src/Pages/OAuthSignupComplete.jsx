@@ -20,6 +20,7 @@ const api = axios.create({
 
 const ROLES = ["Student", "Alumni", "Staff"];
 const GENDERS = ["Male", "Female", "Other"];
+const SALUTATIONS = ["Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
 
 const currentYear = new Date().getFullYear();
 
@@ -32,6 +33,7 @@ export default function OAuthSignupComplete() {
   const oauthAvatarUrl = prefill.avatar_url || sessionStorage.getItem("oauth_avatar_url") || "";
 
   const [form, setForm] = useState({
+    salutation: "",
     first_name: prefill.first_name || "",
     last_name: prefill.last_name || "",
     email: prefill.email || "",
@@ -110,8 +112,6 @@ export default function OAuthSignupComplete() {
       const updated = { ...f, [name]: value };
       // Reset branch when course changes
       if (name === "course") updated.branch = "";
-      // Staff must select KAHE
-      if (name === "role" && value === "Staff") updated.college_name = STAFF_ONLY_COLLEGE;
       if (name === "role" && value !== "Staff" && updated.college_name === STAFF_ONLY_COLLEGE) updated.college_name = "";
       return updated;
     });
@@ -290,6 +290,12 @@ export default function OAuthSignupComplete() {
                 <input name="last_name" value={form.last_name} onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" placeholder="Last name" />
               </Field>
+              <Field label="Salutation (Optional)">
+                <select name="salutation" value={form.salutation} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm">
+                  <option value="">Select salutation</option>
+                  {SALUTATIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Field>
               <Field label="Email (from Google)" fullWidth>
                 <input value={form.email} readOnly
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50 text-gray-500 cursor-not-allowed" />
@@ -372,9 +378,9 @@ export default function OAuthSignupComplete() {
               </Field>
               <Field label="College *">
                 <select name="college_name" value={form.college_name} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm"
-                  disabled={isStaff}>
+                >
                   <option value="">Select college</option>
-                  {(isStaff ? [STAFF_ONLY_COLLEGE] : COLLEGE_NAMES).map(c => (
+                  {(isStaff ? COLLEGE_NAMES : COLLEGE_NAMES.filter((c) => c !== STAFF_ONLY_COLLEGE)).map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>

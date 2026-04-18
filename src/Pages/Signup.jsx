@@ -40,6 +40,7 @@ const REQUIRED_FIELDS = [
 
 const ROLES = ["Student", "Alumni", "Staff"];
 const GENDERS = ["Male", "Female", "Other"];
+const SALUTATIONS = ["Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
 
 const InputField = React.memo(
   ({ value, onChange, placeholder, error, type, required = true, label }) => (
@@ -200,7 +201,6 @@ const Signup = () => {
     correspondence_state: "",
     correspondence_country: "",
     correspondence_pincode: "",
-    chapter: "",
     company: "",
     position: "",
     current_work: "",
@@ -277,7 +277,7 @@ const Signup = () => {
 
   const availableColleges = useMemo(() => {
     return formData.role === "Staff"
-      ? [STAFF_ONLY_COLLEGE]
+      ? COLLEGE_NAMES
       : COLLEGE_NAMES.filter((college) => college !== STAFF_ONLY_COLLEGE);
   }, [formData.role]);
 
@@ -689,6 +689,17 @@ const Signup = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <SelectField
+                    label="Salutation"
+                    options={SALUTATIONS}
+                    value={formData.salutation}
+                    onChange={(v) => updateField("salutation", v)}
+                    error={fieldErrors.salutation}
+                    required={false}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
                   <SuggestionInput
                     label="Email"
                     type="email"
@@ -966,13 +977,6 @@ const Signup = () => {
                   <div className="mt-5 space-y-6">
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <InputField
-                        label="Salutation"
-                        value={formData.salutation}
-                        onChange={(v) => updateField("salutation", v)}
-                        placeholder="Mr. / Ms. / Dr."
-                        required={false}
-                      />
-                      <InputField
                         label="Secondary Email"
                         type="email"
                         value={formData.secondary_email}
@@ -1068,13 +1072,6 @@ const Signup = () => {
                     <div className="pt-4 border-t border-dashed border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-800 mb-3">Professional</h4>
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <InputField
-                          label="Chapter"
-                          value={formData.chapter}
-                          onChange={(v) => updateField("chapter", v)}
-                          placeholder="Chapter / region"
-                          required={false}
-                        />
                         <InputField
                           label="Company"
                           value={formData.company}
