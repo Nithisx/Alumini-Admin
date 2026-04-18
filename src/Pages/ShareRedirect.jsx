@@ -1,16 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_SHARE_RESOLVE } from '../config/api';
-
-function normalizeRole(role) {
-  const value = String(role || '').trim().toLowerCase();
-  if (value === 'student') return 'alumni';
-  if (value === 'admin' || value === 'staff' || value === 'alumni') return value;
-  return null;
-}
+import { normalizeRoleForBase } from '../lib/authRole';
 
 function buildTargetPath(role, shareType, contentId) {
-  const roleBase = normalizeRole(role);
+  const roleBase = normalizeRoleForBase(role);
   if (!roleBase || !shareType || !contentId) return null;
 
   switch (shareType) {

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { normalizeRoleKey } from '../../lib/authRole';
 
 const ProtectedRoute = ({ requiredRole, children }) => {
   const token = localStorage.getItem('Token');
-  const role = localStorage.getItem('Role');
+  const role = normalizeRoleKey(localStorage.getItem('Role'));
   const location = useLocation();
 
   if (!token) {
@@ -12,8 +13,8 @@ const ProtectedRoute = ({ requiredRole, children }) => {
   }
 
   const hasAccess = Array.isArray(requiredRole)
-    ? requiredRole.includes(role)
-    : role === requiredRole;
+    ? requiredRole.map((r) => normalizeRoleKey(r)).includes(role)
+    : role === normalizeRoleKey(requiredRole);
 
   if (!hasAccess) {
     return <Navigate to="/login" state={{ from: location }} replace />;

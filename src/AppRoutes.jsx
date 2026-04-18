@@ -11,6 +11,7 @@ import PrivacyPolicy from './Pages/PrivacyPolicy';
 import TermsOfService from './Pages/TermsOfService';
 import ResetPassword from './Pages/ResetPassword';
 import ShareRedirect from './Pages/ShareRedirect';
+import { normalizeRoleForBase } from './lib/authRole';
 
 // Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
@@ -22,13 +23,13 @@ import ProtectedRoute from './Components/Shared/ProtectedRoute';
 
 function AuthRedirect() {
   const token = localStorage.getItem('Token');
-  const role = localStorage.getItem('Role');
+  const role = normalizeRoleForBase(localStorage.getItem('Role'));
   if (!token) return <Navigate to="/home" replace />;
   switch (role) {
     case 'admin': return <Navigate to="/admin/dashboard" replace />;
     case 'staff': return <Navigate to="/staff/dashboard" replace />;
     case 'alumni':
-    case 'student': return <Navigate to="/alumni/dashboard" replace />;
+      return <Navigate to="/alumni/dashboard" replace />;
     default: return <Navigate to="/home" replace />;
   }
 }
