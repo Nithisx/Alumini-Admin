@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+const COUNTRY_INITIAL_VISIBLE = 4;
 const CITY_INITIAL_VISIBLE = 4;
 
 const normalizeCountryItems = (countryDistribution) => {
@@ -117,7 +118,10 @@ export default function ChapterDistributionSection({
   cityStateDistribution,
   sectionClassName = "py-12 sm:py-16 lg:py-20",
 }) {
-  const [isCityExpanded, setIsCityExpanded] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    country: false,
+    city: false,
+  });
 
   return (
     <section className={sectionClassName} id="chapters-section">
@@ -137,12 +141,22 @@ export default function ChapterDistributionSection({
               countryDistribution,
               cityStateDistribution
             );
-            const isCitySection = config.key === "city";
-            const canToggleCityItems =
-              isCitySection && items.length > CITY_INITIAL_VISIBLE;
+            const initialVisibleCount =
+              config.key === "country"
+                ? COUNTRY_INITIAL_VISIBLE
+                : config.key === "city"
+                  ? CITY_INITIAL_VISIBLE
+                  : items.length;
+            const canToggleItems =
+              (config.key === "country" || config.key === "city") &&
+              items.length > initialVisibleCount;
+            const isExpanded =
+              config.key === "country" || config.key === "city"
+                ? Boolean(expandedSections[config.key])
+                : true;
             const visibleItems =
-              canToggleCityItems && !isCityExpanded
-                ? items.slice(0, CITY_INITIAL_VISIBLE)
+              canToggleItems && !isExpanded
+                ? items.slice(0, initialVisibleCount)
                 : items;
 
             return (
@@ -175,17 +189,22 @@ export default function ChapterDistributionSection({
                   )}
                 </div>
 
-                {canToggleCityItems && (
+                {canToggleItems && (
                   <div className="mt-6 flex justify-center">
                     <button
                       type="button"
-                      aria-expanded={isCityExpanded}
-                      onClick={() => setIsCityExpanded((prev) => !prev)}
+                      aria-expanded={isExpanded}
+                      onClick={() =>
+                        setExpandedSections((prev) => ({
+                          ...prev,
+                          [config.key]: !prev[config.key],
+                        }))
+                      }
                       className="inline-flex items-center rounded-full border border-green-300 bg-white px-5 py-2 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-50"
                     >
-                      {isCityExpanded
+                      {isExpanded
                         ? "Show Less"
-                        : `Show More (${items.length - CITY_INITIAL_VISIBLE})`}
+                        : `Show More (${items.length - initialVisibleCount})`}
                     </button>
                   </div>
                 )}

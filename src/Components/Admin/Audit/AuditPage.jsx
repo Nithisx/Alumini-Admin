@@ -769,10 +769,10 @@ function AuditLogsTab() {
     fetchLogs();
   }, [fetchLogs]);
 
-  // Auto-refresh every 30 seconds to keep audit log up to date
+  // Auto-refresh every 10 seconds — silent so no loading spinner / re-render flicker
   useEffect(() => {
     const interval = setInterval(() => {
-      dispatch(fetchAuditLogs({ page: localPage, filters: { ...filters, page_size: pageSize } }));
+      dispatch(fetchAuditLogs({ page: localPage, filters: { ...filters, page_size: pageSize }, silent: true }));
     }, 10000);
     return () => clearInterval(interval);
   }, [dispatch, filters, localPage, pageSize]);

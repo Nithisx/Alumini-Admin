@@ -10,12 +10,13 @@ function authHeaders() {
 
 export const fetchLoginRequests = createAsyncThunk(
   "loginRequests/fetch",
-  async (_, { rejectWithValue }) => {
+  async ({ silent = false } = {}, { rejectWithValue }) => {
     try {
       const res = await fetch(API_URL, { headers: authHeaders() });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      return Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+      const results = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+      return { results, silent };
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -113,15 +114,36 @@ const loginRequestSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // fetch
-      .addCase(fetchLoginRequests.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchLoginRequests.pending, (state, { meta }) => {
+        if (!meta.arg?.silent) {
+          state.loading = true;
+          state.error = null;
+        }
+      })
       .addCase(fetchLoginRequests.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.requests = payload;
+        const incoming = payload.results;
+        if (payload.silent && state.requests.length > 0) {
+          // Silently add new requests and remove approved ones without full re-render
+          const existingIds = new Set(state.requests.map((r) => r.id));
+          const incomingIds = new Set(incoming.map((r) => r.id));
+          // Add new entries at the top
+          const newEntries = incoming.filter((r) => !existingIds.has(r.id));
+          // Remove entries no longer pending
+          const stillPending = state.requests.filter((r) => incomingIds.has(r.id));
+          if (newEntries.length > 0 || stillPending.length !== state.requests.length) {
+            state.requests = [...newEntries, ...stillPending];
+          }
+        } else {
+          state.requests = incoming;
+        }
         state.lastRefreshed = Date.now();
       })
-      .addCase(fetchLoginRequests.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload ?? "Failed to load requests";
+      .addCase(fetchLoginRequests.rejected, (state, { payload, meta }) => {
+        if (!meta.arg?.silent) {
+          state.loading = false;
+          state.error = payload ?? "Failed to load requests";
+        }
       })
       // approve single
       .addCase(approveRequest.pending, (state) => { state.processing = true; })

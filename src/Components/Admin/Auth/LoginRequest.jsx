@@ -170,10 +170,10 @@ export default function RegisterRequest() {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  // Initial fetch + auto-refresh every 30 seconds
+  // Initial fetch + silent background refresh every 10 seconds
   useEffect(() => {
     dispatch(fetchLoginRequests());
-    const interval = setInterval(() => dispatch(fetchLoginRequests()), 10000);
+    const interval = setInterval(() => dispatch(fetchLoginRequests({ silent: true })), 10000);
     return () => clearInterval(interval);
   }, [dispatch]);
 
@@ -289,13 +289,25 @@ export default function RegisterRequest() {
     });
   };
 
+  // File-upload fields must never be sent as plain strings — skip them entirely
+  const FILE_FIELDS = new Set(["profile_photo", "cover_photo", "profile_image"]);
+
   const saveEdit = useCallback(async (req) => {
     const payload = {};
     Object.keys(editDraft).forEach((k) => {
-      if (!IMMUTABLE.has(k) && editDraft[k] !== undefined) {
-        payload[k] = editDraft[k] === null ? "" : editDraft[k];
+      if (IMMUTABLE.has(k) || FILE_FIELDS.has(k)) return;
+      // Only include fields that actually changed from the original
+      const original = req[k] ?? "";
+      const current = editDraft[k] ?? "";
+      if (String(current) !== String(original)) {
+        payload[k] = current === null ? "" : current;
       }
     });
+    if (Object.keys(payload).length === 0) {
+      showMessage({ text: "No changes to save.", type: "error" });
+      cancelEdit();
+      return;
+    }
     setSavingEdit(true);
     const result = await dispatch(editRequest({ id: req.id, payload }));
     setSavingEdit(false);

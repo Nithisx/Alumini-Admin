@@ -12,7 +12,7 @@ function authHeaders() {
 
 export const fetchAuditLogs = createAsyncThunk(
   "audit/fetchLogs",
-  async ({ page = 1, filters = {} } = {}, { rejectWithValue }) => {
+  async ({ page = 1, filters = {}, silent = false } = {}, { rejectWithValue }) => {
     try {
       const params = new URLSearchParams({ page });
       Object.entries(filters).forEach(([k, v]) => {
@@ -23,7 +23,8 @@ export const fetchAuditLogs = createAsyncThunk(
       });
       const res = await fetch(`${API_BASE}/audit-logs/?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error(res.statusText);
-      return await res.json();
+      const data = await res.json();
+      return { ...data, silent };
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -80,16 +81,35 @@ const auditSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAuditLogs.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchAuditLogs.pending, (state, { meta }) => {
+        // Only show loading spinner for non-silent fetches
+        if (!meta.arg?.silent) {
+          state.loading = true;
+          state.error = null;
+        }
+      })
       .addCase(fetchAuditLogs.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.logs = payload.results ?? [];
-        state.count = payload.count ?? 0;
+        const incoming = payload.results ?? [];
+        if (payload.silent && state.logs.length > 0 && state.page === 1) {
+          // Silently prepend new records without replacing the whole list (page 1 only)
+          const existingIds = new Set(state.logs.map((l) => l.id));
+          const newEntries = incoming.filter((l) => !existingIds.has(l.id));
+          if (newEntries.length > 0) {
+            state.logs = [...newEntries, ...state.logs];
+            state.count = payload.count ?? state.count;
+          }
+        } else if (!payload.silent) {
+          state.logs = incoming;
+          state.count = payload.count ?? 0;
+        }
         state.lastRefreshed = Date.now();
       })
-      .addCase(fetchAuditLogs.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload ?? "Failed to load audit logs";
+      .addCase(fetchAuditLogs.rejected, (state, { payload, meta }) => {
+        if (!meta.arg?.silent) {
+          state.loading = false;
+          state.error = payload ?? "Failed to load audit logs";
+        }
       })
       .addCase(fetchAuditFilters.pending, (state) => { state.filtersLoading = true; })
       .addCase(fetchAuditFilters.fulfilled, (state, { payload }) => {

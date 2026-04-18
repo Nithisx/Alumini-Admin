@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 import * as XLSX from "xlsx";
@@ -291,31 +292,88 @@ const AutocompleteInput = ({
 };
 
 export default function MembersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [members, setMembers] = useState([]);
   const [filteredTotal, setFilteredTotal] = useState(0);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
-  const [roleFilter, setRoleFilter] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
-  const [workedInFilter, setWorkedInFilter] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [rolesPlayedFilter, setRolesPlayedFilter] = useState("");
-  const [genderFilter, setGenderFilter] = useState("");
-  const [courseEndYearFilter, setCourseEndYearFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
-  const [countryFilter, setCountryFilter] = useState("");
-  const [stateFilter, setStateFilter] = useState("");
-  const [passedOutYearFilter, setPassedOutYearFilter] = useState("");
-  const [courseFilter, setCourseFilter] = useState("");
-  const [collegeNameFilter, setCollegeNameFilter] = useState("");
-  const [currentWorkFilter, setCurrentWorkFilter] = useState("");
-  const [chapterFilter, setChapterFilter] = useState(""); // Add chapter filter state
-  const [branchFilter, setBranchFilter] = useState(""); // Add branch filter state
-  const [emailFilter, setEmailFilter] = useState(""); // Declare emailFilter state
-  const [rollNoFilter, setRollNoFilter] = useState(""); // Declare rollNoFilter state
+  // Helper to read/write a param — returns "" when absent
+  const getParam = (key) => searchParams.get(key) ?? "";
+  const setParam = useCallback((key, value) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value === "" || value === null || value === undefined) {
+        next.delete(key);
+      } else {
+        next.set(key, String(value));
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  // All filter/sort/pagination state lives in the URL
+  const roleFilter = getParam("role");
+  const cityFilter = getParam("city");
+  const workedInFilter = getParam("worked_in");
+  const searchQuery = getParam("search");
+  const rolesPlayedFilter = getParam("roles_played");
+  const genderFilter = getParam("gender");
+  const courseEndYearFilter = getParam("course_end_year");
+  const companyFilter = getParam("company");
+  const countryFilter = getParam("country");
+  const stateFilter = getParam("state");
+  const passedOutYearFilter = getParam("passed_out_year");
+  const courseFilter = getParam("course");
+  const collegeNameFilter = getParam("college_name");
+  const currentWorkFilter = getParam("current_work");
+  const chapterFilter = getParam("current_location");
+  const branchFilter = getParam("branch");
+  const emailFilter = getParam("email");
+  const rollNoFilter = getParam("roll_no");
+  const currentPage = parseInt(getParam("page") || "1", 10);
+  const pageSize = parseInt(getParam("page_size") || "25", 10);
+  const sortField = getParam("sort_field") || "id";
+  const sortDirection = getParam("sort_dir") || "asc";
+
+  // Filter setters reset page to 1; setSearchParams batches updates atomically
+  const makeFilterSetter = (key) => (v) => setSearchParams((prev) => {
+    const next = new URLSearchParams(prev);
+    if (v === "" || v === null || v === undefined) next.delete(key); else next.set(key, String(v));
+    next.delete("page"); // reset to page 1 on filter change
+    return next;
+  }, { replace: true });
+
+  const setRoleFilter = makeFilterSetter("role");
+  const setCityFilter = makeFilterSetter("city");
+  const setWorkedInFilter = makeFilterSetter("worked_in");
+  const setSearchQuery = makeFilterSetter("search");
+  const setRolesPlayedFilter = makeFilterSetter("roles_played");
+  const setGenderFilter = makeFilterSetter("gender");
+  const setCourseEndYearFilter = makeFilterSetter("course_end_year");
+  const setCompanyFilter = makeFilterSetter("company");
+  const setCountryFilter = makeFilterSetter("country");
+  const setStateFilter = makeFilterSetter("state");
+  const setPassedOutYearFilter = makeFilterSetter("passed_out_year");
+  const setCourseFilter = makeFilterSetter("course");
+  const setCollegeNameFilter = makeFilterSetter("college_name");
+  const setCurrentWorkFilter = makeFilterSetter("current_work");
+  const setChapterFilter = makeFilterSetter("current_location");
+  const setBranchFilter = makeFilterSetter("branch");
+  const setEmailFilter = makeFilterSetter("email");
+  const setRollNoFilter = makeFilterSetter("roll_no");
+  const setCurrentPage = (v) => setParam("page", v === 1 ? "" : v);
+  const setPageSize = (v) => setSearchParams((prev) => {
+    const next = new URLSearchParams(prev);
+    if (v === 25) next.delete("page_size"); else next.set("page_size", String(v));
+    next.delete("page");
+    return next;
+  }, { replace: true });
+  const setSortField = (v) => setParam("sort_field", v === "id" ? "" : v);
+  const setSortDirection = (v) => setParam("sort_dir", v === "asc" ? "" : v);
+
   const [showFilters, setShowFilters] = useState(false);
-  const [manualSearchTrigger, setManualSearchTrigger] = useState(0); // Trigger for manual search
+  const [manualSearchTrigger, setManualSearchTrigger] = useState(0);
 
   // Store dropdown options
   const [dropdownFilters, setDropdownFilters] = useState({
@@ -338,14 +396,7 @@ export default function MembersPage() {
   const [selectAllLoading, setSelectAllLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
-
-  // Sorting states
-  const [sortField, setSortField] = useState("id");
-  const [sortDirection, setSortDirection] = useState("asc"); // 'asc' or 'desc'
 
   // Fetch dropdown filter options
   const fetchDropdownFilters = async () => {
@@ -678,30 +729,6 @@ export default function MembersPage() {
     }
   };
 
-  // When filters change, always reset page to 1
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    roleFilter,
-    cityFilter,
-    workedInFilter,
-    rolesPlayedFilter,
-    genderFilter,
-    courseEndYearFilter,
-    companyFilter,
-    countryFilter,
-    stateFilter,
-    passedOutYearFilter,
-    courseFilter,
-    collegeNameFilter,
-    currentWorkFilter,
-    chapterFilter,
-    emailFilter,
-    branchFilter,
-    rollNoFilter,
-    // Remove searchQuery from automatic dependencies
-    manualSearchTrigger, // Add manual search trigger to dependencies
-  ]);
 
   useEffect(() => {
     setSelectedMembers(new Set());
@@ -763,46 +790,22 @@ export default function MembersPage() {
 
   // Handle page size change
   const handlePageSizeChange = (size) => {
-    setPageSize(size);
-    setCurrentPage(1);
+    setPageSize(size); // also resets page to 1 internally
   };
 
   // Handle sorting changes
   const handleSortChange = (field) => {
-    // If clicking the same field, toggle direction
     if (field === sortField) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // New field, default to ascending
       setSortField(field);
       setSortDirection("asc");
     }
-
-    // Reset to first page when sorting changes
     setCurrentPage(1);
   };
 
   const handleResetFilters = () => {
-    setRoleFilter("");
-    setCityFilter("");
-    setWorkedInFilter("");
-    setRolesPlayedFilter("");
-    setSearchQuery("");
-    setGenderFilter("");
-    setCourseEndYearFilter("");
-    setCompanyFilter("");
-    setCountryFilter("");
-    setStateFilter("");
-    setPassedOutYearFilter("");
-    setEmailFilter("");
-    setCourseFilter("");
-    setCollegeNameFilter("");
-    setCurrentWorkFilter("");
-    setChapterFilter("");
-    setBranchFilter("");
-    setRollNoFilter("");
-    setCurrentPage(1);
-    // Reset manual search trigger to ensure search is cleared
+    setSearchParams({}, { replace: true });
     setManualSearchTrigger((prev) => prev + 1);
   };
 
