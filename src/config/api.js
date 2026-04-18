@@ -44,6 +44,40 @@ export const API_HOME           = `${API_BASE}/home/`;
 export const API_STATISTICS     = `${API_BASE}/user-statistics/`;
 export const API_COUNTRY_DIST   = `${API_BASE}/country-distribution/`;
 
+// ── Engagement: Share / Like / Comment / Reply ────────────────────────────
+
+// Public share resolver (no auth needed)
+export const API_SHARE_RESOLVE   = (token) => `${API_BASE}/share/${token}/`;
+
+// Events
+export const API_EVENT_SHARE     = (id) => `${API_BASE}/events/${id}/share/`;
+export const API_EVENT_LIKE      = (id) => `${API_BASE}/events/${id}/like/`;
+export const API_EVENT_COMMENTS  = (id) => `${API_BASE}/events/${id}/comments/`;
+export const API_EVENT_COMMENT   = (id) => `${API_BASE}/events/comments/${id}/`;
+export const API_EVENT_COMMENT_REPLIES = (commentId) => `${API_BASE}/events/comments/${commentId}/replies/`;
+export const API_EVENT_COMMENT_REPLY   = (id) => `${API_BASE}/events/comments/replies/${id}/`;
+
+// Jobs (reaction endpoint already exists; adding share + reply)
+export const API_JOB_SHARE       = (id) => `${API_BASE}/jobs/${id}/share/`;
+export const API_JOB_COMMENT_REPLIES = (commentId) => `${API_BASE}/jobs/comments/${commentId}/replies/`;
+export const API_JOB_COMMENT_REPLY   = (id) => `${API_BASE}/jobs/comments/replies/${id}/`;
+
+// News
+export const API_NEWS_SHARE      = (id) => `${API_BASE}/news/${id}/share/`;
+export const API_NEWS_LIKE       = (id) => `${API_BASE}/news/${id}/like/`;
+export const API_NEWS_COMMENTS   = (id) => `${API_BASE}/news/${id}/comments/`;
+export const API_NEWS_COMMENT    = (id) => `${API_BASE}/news/comments/${id}/`;
+export const API_NEWS_COMMENT_REPLIES = (commentId) => `${API_BASE}/news/comments/${commentId}/replies/`;
+export const API_NEWS_COMMENT_REPLY   = (id) => `${API_BASE}/news/comments/replies/${id}/`;
+
+// Business
+export const API_BUSINESS_SHARE     = (id) => `${API_BASE}/businesses/${id}/share/`;
+export const API_BUSINESS_LIKE      = (id) => `${API_BASE}/businesses/${id}/like/`;
+export const API_BUSINESS_COMMENTS  = (id) => `${API_BASE}/businesses/${id}/comments/`;
+export const API_BUSINESS_COMMENT   = (id) => `${API_BASE}/businesses/comments/${id}/`;
+export const API_BUSINESS_COMMENT_REPLIES = (commentId) => `${API_BASE}/businesses/comments/${commentId}/replies/`;
+export const API_BUSINESS_COMMENT_REPLY   = (id) => `${API_BASE}/businesses/comments/replies/${id}/`;
+
 // Media helper — resolves a relative media path to a full URL
 export const getMediaUrl = (uri) => {
   if (!uri) return '';
