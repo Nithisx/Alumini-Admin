@@ -2,13 +2,23 @@ import React, { useState } from "react";
 
 const CITY_INITIAL_VISIBLE = 4;
 
+const normalizeCountryItems = (countryDistribution) => {
+  if (Array.isArray(countryDistribution)) {
+    return countryDistribution;
+  }
+  if (Array.isArray(countryDistribution?.chapters)) {
+    return countryDistribution.chapters;
+  }
+  return [];
+};
+
 const sectionConfigs = [
   {
     key: "country",
     title: "By Country",
     subtitle: "Global alumni communities",
     emptyLabel: "No country chapters available right now.",
-    getItems: (countryDistribution) => countryDistribution?.chapters ?? [],
+    getItems: (countryDistribution) => normalizeCountryItems(countryDistribution),
     getName: (item) => item.country,
   },
   {
