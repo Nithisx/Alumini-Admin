@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAuditLogs, fetchAuditFilters, fetchAuditDetail, setPage as setReduxPage, clearSelected } from "../../../store/auditSlice";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -712,36 +714,25 @@ function BlockManagementTab() {
 }
 
 function AuditLogsTab() {
-  const [logs, setLogs] = useState([]);
-  const [count, setCount] = useState(0);
-  const [page, setPage] = useState(1);
+  const dispatch = useDispatch();
+  const { logs, count, page, loading, error, filterOptions, selectedLog: selected, detailLoading } = useSelector((s) => s.audit);
+
+  const [localPage, setLocalPage] = useState(page);
   const [pageSize] = useState(25);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [selected, setSelected] = useState(null);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [showFilters, setShowFilters] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  // Bug 5: dropdown data fetched from backend
-  const [filterOptions, setFilterOptions] = useState({
-    status_codes: [],
-    target_types: [],
-    usernames: [],
-    actions: [],
-  });
-
-  // Bug 5: multi-value filters stored as arrays; others as strings
   const [filters, setFilters] = useState({
     search: "",
     username: "",
     role: "",
     category: "",
-    action: [],        // multi-value
+    action: [],
     method: "",
-    target_type: [],   // multi-value
-    status_code: [],   // multi-value
+    target_type: [],
+    status_code: [],
     date_from: "",
     date_to: "",
   });
@@ -754,66 +745,49 @@ function AuditLogsTab() {
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
-  // Fetch dropdown options once on mount
+  // Fetch filter options on mount
   useEffect(() => {
-    fetch(`${API_BASE}/audit-logs/filters/`, { headers })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data) setFilterOptions(data);
-      })
-      .catch(() => {});
-  }, [headers]);
+    dispatch(fetchAuditFilters());
+  }, [dispatch]);
 
-  // Re-fetch username suggestions when username input changes
+  // Re-fetch username suggestions when username filter changes (debounced)
   const usernameSuggestionsRef = useRef([]);
   useEffect(() => {
-    if (!filters.username) {
-      usernameSuggestionsRef.current = filterOptions.usernames;
-      return;
-    }
+    usernameSuggestionsRef.current = filterOptions.usernames || [];
+    if (!filters.username) return;
     const t = setTimeout(() => {
-      fetch(`${API_BASE}/audit-logs/filters/?username_q=${encodeURIComponent(filters.username)}`, { headers })
-        .then((r) => r.ok ? r.json() : null)
-        .then((data) => {
-          if (data) usernameSuggestionsRef.current = data.usernames;
-        })
-        .catch(() => {});
+      dispatch(fetchAuditFilters(filters.username));
     }, 250);
     return () => clearTimeout(t);
-  }, [filters.username, headers, filterOptions.usernames]);
+  }, [filters.username, dispatch, filterOptions.usernames]);
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const qs = buildQuery(filters, { page, page_size: pageSize });
-      const res = await fetch(`${API_BASE}/audit-logs/?${qs}`, { headers });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setLogs(data.results || []);
-      setCount(data.count || 0);
-    } catch (e) {
-      setError(e.message || "Failed to load audit logs");
-      setLogs([]);
-      setCount(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, page, pageSize, headers]);
+  const fetchLogs = useCallback(() => {
+    dispatch(fetchAuditLogs({ page: localPage, filters: { ...filters, page_size: pageSize } }));
+  }, [dispatch, filters, localPage, pageSize]);
 
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
-  const openDetail = async (id) => {
-    try {
-      const res = await fetch(`${API_BASE}/audit-logs/${id}/`, { headers });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setSelected(data);
-    } catch (e) {
-      toast.error("Failed to load log detail: " + e.message);
-    }
+  // Auto-refresh every 30 seconds to keep audit log up to date
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(fetchAuditLogs({ page: localPage, filters: { ...filters, page_size: pageSize } }));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [dispatch, filters, localPage, pageSize]);
+
+  const setPage = (p) => {
+    setLocalPage(p);
+    dispatch(setReduxPage(p));
+  };
+
+  const openDetail = (id) => {
+    dispatch(fetchAuditDetail(id));
+  };
+
+  const closeDetail = () => {
+    dispatch(clearSelected());
   };
 
   const toggleSelect = (id) => {
@@ -896,7 +870,7 @@ function AuditLogsTab() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Audit Logs</h1>
-          <p className="text-sm text-gray-500">Every write action and chat message across the portal</p>
+          <p className="text-sm text-gray-500">Every API call across the portal — authorized or not. Auto-refreshes every 30s.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -1234,7 +1208,7 @@ function AuditLogsTab() {
         </div>
       </div>
 
-      <DetailModal log={selected} onClose={() => setSelected(null)} />
+      <DetailModal log={selected} onClose={closeDetail} />
     </div>
   );
 }

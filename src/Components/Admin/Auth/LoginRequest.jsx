@@ -1,4 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchLoginRequests,
+  approveRequest,
+  declineRequest,
+  bulkApproveRequests,
+  editRequest,
+} from "../../../store/loginRequestSlice";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
@@ -33,20 +41,16 @@ import { getMediaUrl } from "../../../config/api";
   } from "../../../constants/academicOptions";
 
 export default function RegisterRequest() {
-  const [requests, setRequests] = useState([]); // Initialize as empty array
+  const dispatch = useDispatch();
+  const { requests, loading, error, processing } = useSelector((s) => s.loginRequests);
+
   const [message, setMessage] = useState(null);
-  const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedIds, setSelectedIds] = useState({});
-  const [loading, setLoading] = useState(true); // Add loading state
-  const [error, setError] = useState(null); // Add error state
-  // Edit-mode state: which request is being edited + draft form data + saving flag
   const [editingId, setEditingId] = useState(null);
   const [editDraft, setEditDraft] = useState({});
   const [savingEdit, setSavingEdit] = useState(false);
   const [imageLoadErrors, setImageLoadErrors] = useState({});
-  const API_URL = "https://api.karpagamalumni.in/api/v1/Approve-signup/";
-  const EDIT_URL = (id) => `https://api.karpagamalumni.in/api/v1/Approve-signup/${id}/`;
 
   // Fields admin is NOT allowed to edit
   const IMMUTABLE = new Set(["email", "username", "id", "created_at", "is_approved", "approved_at", "password"]);
@@ -161,72 +165,24 @@ export default function RegisterRequest() {
     },
   ];
 
-  // Helper function to show message and auto-clear after 3 seconds
   const showMessage = (msg) => {
     setMessage(msg);
     setTimeout(() => setMessage(null), 3000);
   };
 
+  // Initial fetch + auto-refresh every 30 seconds
   useEffect(() => {
-    setLoading(true); // Set loading to true when starting to fetch
-    const token = localStorage.getItem('Token');
+    dispatch(fetchLoginRequests());
+    const interval = setInterval(() => dispatch(fetchLoginRequests()), 30000);
+    return () => clearInterval(interval);
+  }, [dispatch]);
 
-    if (!token) {
-      setError("Authentication required. Please log in to view registration requests.");
-      setLoading(false);
-      return;
-    }
-
-    fetch(API_URL, {
-      headers: {
-        'Authorization': `Token ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        // Handle paginated response format
-        if (data && data.results && Array.isArray(data.results)) {
-          setRequests(data.results);
-        } else if (Array.isArray(data)) {
-          // Fallback if API directly returns an array
-          setRequests(data);
-        } else {
-          setRequests([]); // Set to empty array as fallback
-          showMessage({
-            text: "Invalid data format received. Please try again.",
-            type: "error",
-          });
-        }
-      })
-      .catch((error) => {
-        if (error.message.includes('401') || error.message.includes('Authentication')) {
-          setError("Authentication failed. Please log in with admin credentials.");
-        } else {
-          setError("Failed to load requests. Please try again.");
-        }
-        showMessage({
-          text: "Failed to load requests. Please try again.",
-          type: "error",
-        });
-      })
-      .finally(() => {
-        setLoading(false); // Set loading to false when fetch completes (success or error)
-      });
-  }, []);
-
+  // Keep selectedIds in sync when requests list changes (remove stale ids)
   useEffect(() => {
     setSelectedIds((prev) => {
-      if (!requests || requests.length === 0) {
-        return {};
-      }
-
+      if (!requests || requests.length === 0) return {};
       const next = {};
-      requests.forEach((req) => {
-        if (prev[req.id]) {
-          next[req.id] = true;
-        }
-      });
+      requests.forEach((req) => { if (prev[req.id]) next[req.id] = true; });
       return next;
     });
   }, [requests]);
@@ -275,173 +231,40 @@ export default function RegisterRequest() {
     setSelectedIds(next);
   };
 
-  const handleAccept = async (id, email) => {
-    setProcessing(true);
-    const token = localStorage.getItem('Token');
-
-    if (!token) {
-      showMessage({
-        text: "Authentication required. Please log in.",
-        type: "error",
-      });
-      setProcessing(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Token ${token}`
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.status === 401) {
-        showMessage({
-          text: "Authentication failed. Please log in again.",
-          type: "error",
-        });
-        return;
-      }
-
+  const handleAccept = useCallback(async (id, email) => {
+    const result = await dispatch(approveRequest(email));
+    if (approveRequest.fulfilled.match(result)) {
       showMessage({ text: "Request accepted successfully!", type: "success" });
-      // Filter out the accepted request
-      setRequests((prev) => prev.filter((req) => req.id !== id));
-    } catch (error) {
-      showMessage({
-        text: "Failed to accept request. Please try again.",
-        type: "error",
-      });
-    } finally {
-      setProcessing(false);
+    } else {
+      showMessage({ text: result.payload || "Failed to accept request.", type: "error" });
     }
-  };
+  }, [dispatch]);
 
-  const handleBulkAccept = async () => {
-    if (!Array.isArray(requests) || selectedUserIds.length === 0) {
-      showMessage({
-        text: "Select at least one user to approve.",
-        type: "error",
-      });
-      return;
-    }
-
-    setProcessing(true);
-    const token = localStorage.getItem('Token');
-
-    if (!token) {
-      showMessage({
-        text: "Authentication required. Please log in.",
-        type: "error",
-      });
-      setProcessing(false);
-      return;
-    }
-
+  const handleBulkAccept = useCallback(async () => {
     const selectedRequests = requests.filter((req) => selectedIds[req.id]);
-
-    try {
-      let approvedCount = 0;
-      let failedCount = 0;
-
-      for (const req of selectedRequests) {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Token ${token}`,
-          },
-          body: JSON.stringify({ email: req.email }),
-        });
-
-        if (response.status === 401) {
-          showMessage({
-            text: "Authentication failed. Please log in again.",
-            type: "error",
-          });
-          return;
-        }
-
-        if (response.ok) {
-          approvedCount += 1;
-        } else {
-          failedCount += 1;
-        }
-      }
-
-      if (approvedCount > 0) {
-        showMessage({
-          text: `${approvedCount} request${approvedCount > 1 ? "s" : ""} approved successfully!`,
-          type: "success",
-        });
-      }
-
-      if (failedCount > 0) {
-        showMessage({
-          text: `${failedCount} request${failedCount > 1 ? "s" : ""} failed to approve. Please try again.`,
-          type: "error",
-        });
-      }
-
-      setRequests((prev) =>
-        prev.filter((req) => !selectedIds[req.id])
-      );
-      clearSelection();
-    } catch (error) {
-      showMessage({
-        text: "Failed to approve selected requests. Please try again.",
-        type: "error",
-      });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleDecline = async (id, email) => {
-    setProcessing(true);
-    const token = localStorage.getItem('Token');
-
-    if (!token) {
-      showMessage({
-        text: "Authentication required. Please log in.",
-        type: "error",
-      });
-      setProcessing(false);
+    if (selectedRequests.length === 0) {
+      showMessage({ text: "Select at least one user to approve.", type: "error" });
       return;
     }
-
-    try {
-      const response = await fetch(API_URL, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Token ${token}`
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.status === 401) {
-        showMessage({
-          text: "Authentication failed. Please log in again.",
-          type: "error",
-        });
-        return;
-      }
-
-      showMessage({ text: "Request rejected successfully!", type: "error" });
-      // Filter out the declined request
-      setRequests((prev) => prev.filter((req) => req.id !== id));
-    } catch (error) {
-      showMessage({
-        text: "Failed to decline request. Please try again.",
-        type: "error",
-      });
-    } finally {
-      setProcessing(false);
+    const result = await dispatch(bulkApproveRequests(selectedRequests));
+    if (bulkApproveRequests.fulfilled.match(result)) {
+      const { approved, failed } = result.payload;
+      if (approved.length > 0) showMessage({ text: `${approved.length} request${approved.length > 1 ? "s" : ""} approved!`, type: "success" });
+      if (failed.length > 0) showMessage({ text: `${failed.length} failed to approve.`, type: "error" });
+      clearSelection();
+    } else {
+      showMessage({ text: result.payload || "Bulk approve failed.", type: "error" });
     }
-  };
+  }, [dispatch, requests, selectedIds]);
+
+  const handleDecline = useCallback(async (id, email) => {
+    const result = await dispatch(declineRequest(email));
+    if (declineRequest.fulfilled.match(result)) {
+      showMessage({ text: "Request rejected successfully!", type: "error" });
+    } else {
+      showMessage({ text: result.payload || "Failed to decline request.", type: "error" });
+    }
+  }, [dispatch]);
 
   // --- Edit flow ---
   const startEdit = (req) => {
@@ -466,49 +289,23 @@ export default function RegisterRequest() {
     });
   };
 
-  const saveEdit = async (req) => {
-    const token = localStorage.getItem("Token");
-    if (!token) {
-      showMessage({ text: "Authentication required. Please log in.", type: "error" });
-      return;
-    }
-    setSavingEdit(true);
-    try {
-      // Strip immutable fields — backend also blocks them, but avoid sending
-      const payload = {};
-      Object.keys(editDraft).forEach((k) => {
-        if (!IMMUTABLE.has(k) && editDraft[k] !== undefined) {
-          payload[k] = editDraft[k] === null ? "" : editDraft[k];
-        }
-      });
-
-      const res = await fetch(EDIT_URL(req.id), {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        showMessage({ text: data.error || "Failed to update. Please try again.", type: "error" });
-        return;
+  const saveEdit = useCallback(async (req) => {
+    const payload = {};
+    Object.keys(editDraft).forEach((k) => {
+      if (!IMMUTABLE.has(k) && editDraft[k] !== undefined) {
+        payload[k] = editDraft[k] === null ? "" : editDraft[k];
       }
-
-      // Merge updated fields back into the list
-      setRequests((prev) =>
-        prev.map((r) => (r.id === req.id ? { ...r, ...(data.data || payload) } : r))
-      );
+    });
+    setSavingEdit(true);
+    const result = await dispatch(editRequest({ id: req.id, payload }));
+    setSavingEdit(false);
+    if (editRequest.fulfilled.match(result)) {
       showMessage({ text: "Details updated successfully.", type: "success" });
       cancelEdit();
-    } catch (e) {
-      showMessage({ text: "Network error. Please try again.", type: "error" });
-    } finally {
-      setSavingEdit(false);
+    } else {
+      showMessage({ text: result.payload || "Failed to update. Please try again.", type: "error" });
     }
-  };
+  }, [dispatch, editDraft]);
 
   const resolveProfileImage = (req) => {
     const imagePath = req?.profile_image || req?.profile_photo_url || req?.profile_photo || "";
@@ -953,23 +750,32 @@ export default function RegisterRequest() {
       <div className="w-full lg:mx-10 mx-auto px-4">
         <div className="bg-white shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden border border-green-100 mb-4 sm:mb-8">
           {/* Header */}
-          <div className=" px-4 sm:px-8 py-4 sm:py-6">
-            <h2 className="text-xl sm:text-3xl font-bold text-green-600 flex items-center">
-              <FontAwesomeIcon
-                icon={faUserTag}
-                className="mr-2 sm:mr-4 text-green-600"
-              />
-              <span className="hidden sm:inline">
-                Registration Requests Management
+          <div className="px-4 sm:px-8 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h2 className="text-xl sm:text-3xl font-bold text-green-600 flex items-center">
+                <FontAwesomeIcon icon={faUserTag} className="mr-2 sm:mr-4 text-green-600" />
+                <span className="hidden sm:inline">Registration Requests Management</span>
+                <span className="sm:hidden">Registration Requests</span>
+              </h2>
+              <p className="text-green-600 mt-1 sm:mt-2 text-sm sm:text-lg">
+                <span className="hidden sm:inline">Review and manage pending user registrations</span>
+                <span className="sm:hidden">Manage pending registrations</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 border border-green-200 px-2 py-1 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
+                Live · auto-refreshes every 30s
               </span>
-              <span className="sm:hidden">Registration Requests</span>
-            </h2>
-            <p className="text-green-600 mt-1 sm:mt-2 text-sm sm:text-lg">
-              <span className="hidden sm:inline">
-                Review and manage pending user registrations
-              </span>
-              <span className="sm:hidden">Manage pending registrations</span>
-            </p>
+              <button
+                onClick={() => dispatch(fetchLoginRequests())}
+                disabled={loading}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50"
+              >
+                <FontAwesomeIcon icon={faCircleNotch} className={loading ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
           </div>
 
           {/* Loader Display */}
