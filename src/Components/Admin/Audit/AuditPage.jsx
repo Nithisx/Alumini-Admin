@@ -278,6 +278,10 @@ function DetailModal({ log, onClose }) {
                 <div className="font-mono text-xs">{log.ip || "-"}</div>
               </div>
               <div>
+                <div className="text-gray-500">Location</div>
+                <div className="text-xs">{log.location || "-"}</div>
+              </div>
+              <div className="col-span-2">
                 <div className="text-gray-500">User Agent</div>
                 {/* Bug 6: show full user_agent, no truncation */}
                 <div className="font-mono text-xs break-words whitespace-pre-wrap">
@@ -754,27 +758,28 @@ export default function AuditPage() {
                 <th className="px-3 py-3 text-left">Method</th>
                 <th className="px-3 py-3 text-left">Status</th>
                 <th className="px-3 py-3 text-left">IP</th>
+                <th className="px-3 py-3 text-left">Location</th>
                 <th className="px-3 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={10} className="px-3 py-12 text-center text-gray-500">
+                  <td colSpan={11} className="px-3 py-12 text-center text-gray-500">
                     Loading...
                   </td>
                 </tr>
               )}
               {!loading && error && (
                 <tr>
-                  <td colSpan={10} className="px-3 py-12 text-center text-rose-600">
+                  <td colSpan={11} className="px-3 py-12 text-center text-rose-600">
                     {error}
                   </td>
                 </tr>
               )}
               {!loading && !error && logs.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-3 py-12 text-center text-gray-400">
+                  <td colSpan={11} className="px-3 py-12 text-center text-gray-400">
                     No audit logs match the current filters.
                   </td>
                 </tr>
@@ -826,6 +831,9 @@ export default function AuditPage() {
                     <td className="px-3 py-2 font-mono text-xs">{log.method || "-"}</td>
                     <td className="px-3 py-2"><StatusBadge code={log.status_code} /></td>
                     <td className="px-3 py-2 font-mono text-xs text-gray-500">{log.ip || "-"}</td>
+                    <td className="px-3 py-2 text-xs text-gray-600 max-w-[200px] truncate" title={log.location || ""}>
+                      {log.location || "-"}
+                    </td>
                     <td className="px-3 py-2 text-right">
                       <button
                         onClick={() => openDetail(log.id)}
