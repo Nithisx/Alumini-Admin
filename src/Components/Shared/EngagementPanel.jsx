@@ -1,17 +1,13 @@
 /**
  * EngagementPanel
  *
- * Renders Like / Comment (with nested replies) / Share for any content type.
- *
  * Props
  * ─────
  *   contentType  : "events" | "jobs" | "news" | "businesses"
  *   contentId    : number
- *   canModerate  : boolean  – true when current user is admin/staff (enables edit/delete on any comment)
- *   currentUserId: number   – id of the logged-in user (used to show own edit/delete)
- *
- * For Jobs the like toggle is handled via the existing /jobs/<id>/react/ endpoint.
- * All other types use the new /…/<id>/like/ toggle endpoint.
+ *   postOwnerId  : number | null  – user.id of the post author
+ *   canModerate  : boolean        – true for staff/admin (full edit+delete on any comment)
+ *   currentUserId: number | null  – id of the logged-in user
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -38,6 +34,12 @@ const timeAgo = (iso) => {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
+// Compare timestamps at second-level precision to avoid false "edited" from sub-second diffs
+const wasEdited = (created_at, updated_at) => {
+  if (!created_at || !updated_at) return false;
+  return Math.floor(new Date(created_at) / 1000) !== Math.floor(new Date(updated_at) / 1000);
+};
+
 const Avatar = ({ user, size = 8 }) => {
   const initials = ((user?.first_name?.[0] || "") + (user?.last_name?.[0] || "")).toUpperCase() || "?";
   return user?.profile_photo ? (
@@ -49,12 +51,14 @@ const Avatar = ({ user, size = 8 }) => {
 
 // ── Reply item ────────────────────────────────────────────────────────────────
 
-const ReplyItem = ({ reply, contentType, canModerate, currentUserId, onDeleted, onEdited }) => {
+const ReplyItem = ({ reply, contentType, canModerate, isPostOwner, currentUserId, onDeleted, onEdited }) => {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(reply.reply);
 
   const isOwn = reply.user?.id === currentUserId;
-  const canAct = isOwn || canModerate;
+  // Post owner and admin can delete any reply; only own-reply owner can edit
+  const canDelete = isOwn || canModerate || isPostOwner;
+  const canEdit = isOwn || canModerate;
 
   const saveEdit = async () => {
     if (!editText.trim()) return;
@@ -95,7 +99,9 @@ const ReplyItem = ({ reply, contentType, canModerate, currentUserId, onDeleted, 
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-semibold text-gray-800">{reply.user?.first_name} {reply.user?.last_name}</span>
             <span className="text-xs text-gray-400">{timeAgo(reply.created_at)}</span>
-            {reply.updated_at !== reply.created_at && <span className="text-xs text-gray-400 italic">(edited)</span>}
+            {wasEdited(reply.created_at, reply.updated_at) && (
+              <span className="text-xs text-gray-400 italic">(edited)</span>
+            )}
           </div>
           {editing ? (
             <div className="flex gap-2 items-center">
@@ -113,16 +119,18 @@ const ReplyItem = ({ reply, contentType, canModerate, currentUserId, onDeleted, 
             <p className="text-sm text-gray-700 break-words">{reply.reply}</p>
           )}
         </div>
-        {canAct && !editing && (
+        {(canDelete || canEdit) && !editing && (
           <div className="flex gap-3 mt-1 ml-2">
-            {isOwn && (
+            {canEdit && (
               <button onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
                 <Pencil size={10} /> Edit
               </button>
             )}
-            <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1">
-              <Trash2 size={10} /> Delete
-            </button>
+            {canDelete && (
+              <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1">
+                <Trash2 size={10} /> Delete
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -132,7 +140,7 @@ const ReplyItem = ({ reply, contentType, canModerate, currentUserId, onDeleted, 
 
 // ── Comment item ──────────────────────────────────────────────────────────────
 
-const CommentItem = ({ comment, contentType, canModerate, currentUserId, onDeleted, onEdited }) => {
+const CommentItem = ({ comment, contentType, canModerate, isPostOwner, currentUserId, onDeleted, onEdited }) => {
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState(comment.replies || []);
   const [replyText, setReplyText] = useState("");
@@ -142,7 +150,9 @@ const CommentItem = ({ comment, contentType, canModerate, currentUserId, onDelet
   const replyInputRef = useRef(null);
 
   const isOwn = comment.user?.id === currentUserId;
-  const canAct = isOwn || canModerate;
+  // Post owner and admin can delete any comment; only comment owner can edit
+  const canDelete = isOwn || canModerate || isPostOwner;
+  const canEdit = isOwn || canModerate;
 
   useEffect(() => {
     if (showReplyInput) replyInputRef.current?.focus();
@@ -210,7 +220,9 @@ const CommentItem = ({ comment, contentType, canModerate, currentUserId, onDelet
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-semibold text-gray-800">{comment.user?.first_name} {comment.user?.last_name}</span>
               <span className="text-xs text-gray-400">{timeAgo(comment.created_at)}</span>
-              {comment.updated_at !== comment.created_at && <span className="text-xs text-gray-400 italic">(edited)</span>}
+              {wasEdited(comment.created_at, comment.updated_at) && (
+                <span className="text-xs text-gray-400 italic">(edited)</span>
+              )}
             </div>
             {editing ? (
               <div className="flex gap-2 items-center">
@@ -246,16 +258,18 @@ const CommentItem = ({ comment, contentType, canModerate, currentUserId, onDelet
                 {replyCount} {replyCount === 1 ? "reply" : "replies"}
               </button>
             )}
-            {canAct && !editing && (
+            {!editing && (
               <>
-                {isOwn && (
+                {canEdit && (
                   <button onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
                     <Pencil size={10} /> Edit
                   </button>
                 )}
-                <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1">
-                  <Trash2 size={10} /> Delete
-                </button>
+                {canDelete && (
+                  <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1">
+                    <Trash2 size={10} /> Delete
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -290,6 +304,7 @@ const CommentItem = ({ comment, contentType, canModerate, currentUserId, onDelet
                   reply={r}
                   contentType={contentType}
                   canModerate={canModerate}
+                  isPostOwner={isPostOwner}
                   currentUserId={currentUserId}
                   onDeleted={(rid) => setReplies((prev) => prev.filter((x) => x.id !== rid))}
                   onEdited={(updated) => setReplies((prev) => prev.map((x) => x.id === updated.id ? updated : x))}
@@ -305,7 +320,7 @@ const CommentItem = ({ comment, contentType, canModerate, currentUserId, onDelet
 
 // ── Main EngagementPanel ──────────────────────────────────────────────────────
 
-const EngagementPanel = ({ contentType, contentId, canModerate = false, currentUserId = null }) => {
+const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModerate = false, currentUserId = null }) => {
   const [liked, setLiked] = useState(false);
   const [totalLikes, setTotalLikes] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
@@ -325,14 +340,15 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
 
   const commentInputRef = useRef(null);
 
-  // Jobs use the existing reaction endpoint; all others use the new like toggle
   const isJobs = contentType === "jobs";
+
+  // Alumni who own the post have the same delete rights as admin, but not edit rights on others' comments
+  const isPostOwner = postOwnerId != null && currentUserId != null && postOwnerId === currentUserId;
 
   // ── fetch initial counts ────────────────────────────────────────────────
   useEffect(() => {
     if (!contentId) return;
 
-    // Like state
     if (!isJobs) {
       fetch(`${API_ROOT}/${contentType}/${contentId}/like/`, {
         method: "GET",
@@ -345,42 +361,33 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
         })
         .catch(() => {});
     } else {
-      // For jobs, load from the job detail which has reaction count + user reaction
       fetch(`${API_ROOT}/jobs/${contentId}/`, { headers: authHeaders() })
         .then((r) => r.json())
         .then((d) => {
           setTotalLikes(d.total_reactions ?? 0);
-          // Check if the current user has reacted
-          fetch(`${API_ROOT}/jobs/${contentId}/react/`, {
-            method: "POST",
-            headers: authHeaders(),
-            body: JSON.stringify({ reaction: { like: 0 } }),
-          })
-            .then((r) => r.json())
-            .then((rd) => {
-              // This is a toggle — we used 0 to check state without changing it
-              // Actually just read from reactions data if available
-              setLiked(false); // Will be updated when user interacts
-            })
-            .catch(() => {});
+          setLiked(false);
         })
         .catch(() => {});
     }
 
-    // Comment count
+    // Comment count — also pre-load comments so we can show them immediately
     fetch(`${API_ROOT}/${contentType}/${contentId}/comments/`, { headers: authHeaders() })
       .then((r) => r.json())
-      .then((d) => setTotalComments(Array.isArray(d) ? d.length : 0))
+      .then((d) => {
+        if (Array.isArray(d)) {
+          setComments(d);
+          setTotalComments(d.length);
+        }
+      })
       .catch(() => {});
 
-    // Share count
     fetch(`${API_ROOT}/${contentType}/${contentId}/share/`, { headers: authHeaders() })
       .then((r) => r.json())
       .then((d) => setTotalShares(d.total_shares ?? 0))
       .catch(() => {});
   }, [contentId, contentType, isJobs]);
 
-  // ── load comments when panel opens ─────────────────────────────────────
+  // ── load / refresh comments ─────────────────────────────────────────────
   const loadComments = useCallback(async () => {
     setCommentsLoading(true);
     try {
@@ -517,15 +524,11 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
 
       if (navigator.share) {
         try {
-          await navigator.share({
-            title: "Karpagam Alumni",
-            text: "Check this out",
-            url,
-          });
+          await navigator.share({ title: "Karpagam Alumni", text: "Check this out", url });
           setShowShareActions(false);
           return;
         } catch {
-          // User cancelled or the platform could not open native share sheet.
+          // User cancelled or native share unavailable
         }
       }
 
@@ -573,7 +576,7 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
         </button>
       </div>
 
-      {/* Share actions (no modal popup) */}
+      {/* Share actions */}
       {showShareActions && shareUrl && (
         <div className="border-t border-gray-100 px-4 py-3">
           <p className="text-xs text-gray-500 mb-2">Share this link</p>
@@ -646,6 +649,7 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
                   comment={c}
                   contentType={contentType}
                   canModerate={canModerate}
+                  isPostOwner={isPostOwner}
                   currentUserId={currentUserId}
                   onDeleted={(id) => { setComments((prev) => prev.filter((x) => x.id !== id)); setTotalComments((n) => n - 1); }}
                   onEdited={(updated) => setComments((prev) => prev.map((x) => x.id === updated.id ? updated : x))}
@@ -655,7 +659,6 @@ const EngagementPanel = ({ contentType, contentId, canModerate = false, currentU
           )}
         </div>
       )}
-
     </div>
   );
 };

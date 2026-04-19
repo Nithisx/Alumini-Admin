@@ -11,6 +11,7 @@ const SingleEvents = () => {
   const [showFullScreen, setShowFullScreen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [canModerate, setCanModerate] = useState(false);
+  const [postOwnerId, setPostOwnerId] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const token = localStorage.getItem('Token');
 
@@ -39,6 +40,7 @@ const SingleEvents = () => {
         if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         setEvent(data);
+        setPostOwnerId(data.user ?? null);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -248,6 +250,7 @@ const SingleEvents = () => {
               <EngagementPanel
                 contentType="events"
                 contentId={Number(id)}
+                postOwnerId={postOwnerId}
                 canModerate={canModerate}
                 currentUserId={currentUserId}
               />

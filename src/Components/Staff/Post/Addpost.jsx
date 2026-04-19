@@ -241,6 +241,7 @@ const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
       <EngagementPanel
         contentType="jobs"
         contentId={post.id}
+        postOwnerId={post.user?.id ?? null}
         canModerate={canModerate}
         currentUserId={currentUserId}
       />

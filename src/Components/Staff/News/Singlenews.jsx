@@ -14,6 +14,7 @@ export default function SingleNews() {
   const [error, setError] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [canModerate, setCanModerate] = useState(false);
+  const [postOwnerId, setPostOwnerId] = useState(null);
 
   useEffect(() => {
     if (!TOKEN) return;
@@ -41,7 +42,7 @@ export default function SingleNews() {
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         return res.json();
       })
-      .then((data) => setPost(data))
+      .then((data) => { setPost(data); setPostOwnerId(data.user ?? null); })
       .catch((err) => {
         setError(err.message);
       })
@@ -233,6 +234,7 @@ export default function SingleNews() {
             <EngagementPanel
               contentType="news"
               contentId={Number(id)}
+              postOwnerId={postOwnerId}
               canModerate={canModerate}
               currentUserId={currentUserId}
             />

@@ -24,6 +24,7 @@ const BusinessView = () => {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [canModerate, setCanModerate] = useState(false);
+  const [postOwnerId, setPostOwnerId] = useState(null);
 
   const token = localStorage.getItem("Token");
   const API_BASE_URL = "https://api.karpagamalumni.in/api/v1";
@@ -63,6 +64,7 @@ const BusinessView = () => {
         );
 
         setBusiness(businessResponse.data);
+        setPostOwnerId(businessResponse.data.owner ?? businessResponse.data.owner_details?.id ?? null);
         setImages(imagesResponse.data);
       } catch (error) {
         toast.error("Error loading business details");
@@ -251,6 +253,7 @@ const BusinessView = () => {
           <EngagementPanel
             contentType="businesses"
             contentId={Number(id)}
+            postOwnerId={postOwnerId}
             canModerate={canModerate}
             currentUserId={currentUserId}
           />
