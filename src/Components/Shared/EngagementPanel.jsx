@@ -349,26 +349,16 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
   useEffect(() => {
     if (!contentId) return;
 
-    if (!isJobs) {
-      fetch(`${API_ROOT}/${contentType}/${contentId}/like/`, {
-        method: "GET",
-        headers: authHeaders(),
+    const likeUrl = isJobs
+      ? `${API_ROOT}/jobs/${contentId}/react/`
+      : `${API_ROOT}/${contentType}/${contentId}/like/`;
+    fetch(likeUrl, { method: "GET", headers: authHeaders() })
+      .then((r) => r.json())
+      .then((d) => {
+        setLiked(!!d.liked);
+        setTotalLikes(d.total_likes ?? 0);
       })
-        .then((r) => r.json())
-        .then((d) => {
-          setLiked(!!d.liked);
-          setTotalLikes(d.total_likes ?? 0);
-        })
-        .catch(() => {});
-    } else {
-      fetch(`${API_ROOT}/jobs/${contentId}/`, { headers: authHeaders() })
-        .then((r) => r.json())
-        .then((d) => {
-          setTotalLikes(d.total_reactions ?? 0);
-          setLiked(false);
-        })
-        .catch(() => {});
-    }
+      .catch(() => {});
 
     // Comment count — also pre-load comments so we can show them immediately
     fetch(`${API_ROOT}/${contentType}/${contentId}/comments/`, { headers: authHeaders() })
@@ -419,25 +409,13 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
     if (likeLoading) return;
     setLikeLoading(true);
     try {
-      if (isJobs) {
-        const res = await fetch(`${API_ROOT}/jobs/${contentId}/react/`, {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ reaction: { like: liked ? 0 : 1 } }),
-        });
-        const d = await res.json();
-        const newTotal = Object.values(d.reaction || {}).reduce((a, b) => a + b, 0);
-        setTotalLikes(newTotal);
-        setLiked(!liked);
-      } else {
-        const res = await fetch(`${API_ROOT}/${contentType}/${contentId}/like/`, {
-          method: "POST",
-          headers: authHeaders(),
-        });
-        const d = await res.json();
-        setLiked(d.liked);
-        setTotalLikes(d.total_likes);
-      }
+      const url = isJobs
+        ? `${API_ROOT}/jobs/${contentId}/react/`
+        : `${API_ROOT}/${contentType}/${contentId}/like/`;
+      const res = await fetch(url, { method: "POST", headers: authHeaders() });
+      const d = await res.json();
+      setLiked(d.liked);
+      setTotalLikes(d.total_likes ?? 0);
     } catch {
       toast.error("Failed to update like.");
     } finally {
