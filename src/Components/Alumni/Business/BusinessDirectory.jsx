@@ -4,20 +4,8 @@ import ConfirmModal from "../../Shared/ConfirmModal";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Globe,
-  Phone,
-  Mail,
-  MapPin,
-  Users,
-  ChevronDown,
-  ChevronRight,
-  Building,
-  Package,
-  Settings,
+  Search, Plus, Edit, Trash2, Globe, Phone, Mail, MapPin,
+  Users, ChevronDown, ChevronRight, Building, Package, Settings,
 } from "lucide-react";
 
 const BusinessDirectory = () => {
@@ -33,259 +21,95 @@ const BusinessDirectory = () => {
   const [selectedIndustry, setSelectedIndustry] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [selectedService, setSelectedService] = useState("");
-
-  // Sidebar collapse states
+  const [showSidebar, setShowSidebar] = useState(false);
   const [industriesCollapsed, setIndustriesCollapsed] = useState(false);
   const [productsCollapsed, setProductsCollapsed] = useState(false);
   const [servicesCollapsed, setServicesCollapsed] = useState(false);
 
   const token = localStorage.getItem("Token");
-  const userType = localStorage.getItem("userType"); // Get user type from localStorage
-  const currentUserId = localStorage.getItem("userId"); // Get current user ID
+  const userType = localStorage.getItem("userType");
+  const currentUserId = localStorage.getItem("userId");
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
-  // Check if current user can edit/delete a business
   const canEditBusiness = (business) => {
-    // Admin can edit/delete all businesses
-    if (userType === "admin") {
-      return true;
-    }
-
-    // Students and staff can only edit/delete their own businesses
-    // and not businesses created by admin
+    if (userType === "admin") return true;
     if (userType === "student" || userType === "staff") {
-      // Check if the business owner is admin
-      if (business.owner_details && business.owner_details.user_type === "admin") {
-        return false;
-      }
-
-      // Check if current user is the owner
-      return business.owner_details &&
-        business.owner_details.id === parseInt(currentUserId);
+      if (business.owner_details?.user_type === "admin") return false;
+      return business.owner_details?.id === parseInt(currentUserId);
     }
-
     return false;
   };
 
-  // Fetch all businesses and categories when component mounts
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       setLoading(true);
       try {
-        // Fetch businesses
-        const businessesResponse = await axios.get(
-          `${BASE_URL}/businesses/`,
-          {
-            headers: { Authorization: `Token ${token}` },
-          }
-        );
-
-        // Fetch categories
-        const categoriesResponse = await axios.get(
-          `${BASE_URL}/businesses/categories/`,
-          {
-            headers: { Authorization: `Token ${token}` },
-          }
-        );
-
-        setBusinesses(businessesResponse.data);
-        setFilteredBusinesses(businessesResponse.data);
-        setCategories(categoriesResponse.data);
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+        const [bRes, cRes] = await Promise.all([
+          axios.get(`${BASE_URL}/businesses/`, { headers: { Authorization: `Token ${token}` } }),
+          axios.get(`${BASE_URL}/businesses/categories/`, { headers: { Authorization: `Token ${token}` } }),
+        ]);
+        setBusinesses(bRes.data);
+        setFilteredBusinesses(bRes.data);
+        setCategories(cRes.data);
+      } catch { }
+      finally { setLoading(false); }
+    })();
   }, [token]);
 
-  // Apply filters when search query or filter values change
   useEffect(() => {
     let results = [...businesses];
-
-    // Apply search query
-    if (searchQuery) {
-      results = results.filter(
-        (business) =>
-          business.business_name
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          business.description
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          (business.keywords &&
-            business.keywords.some((keyword) =>
-              keyword.toLowerCase().includes(searchQuery.toLowerCase())
-            ))
-      );
-    }
-
-    // Apply category filter
-    if (categoryFilter) {
-      results = results.filter(
-        (business) => business.category === categoryFilter
-      );
-    }
-
-    // Apply city filter
-    if (cityFilter) {
-      results = results.filter((business) => business.city === cityFilter);
-    }
-
-    // Apply state filter
-    if (stateFilter) {
-      results = results.filter((business) => business.state === stateFilter);
-    }
-
-    // Apply industry filter
-    if (selectedIndustry) {
-      results = results.filter(
-        (business) => business.category === selectedIndustry
-      );
-    }
-
-    // Apply product filter
-    if (selectedProduct) {
-      results = results.filter(
-        (business) =>
-          business.products?.includes(selectedProduct) ||
-          business.description
-            ?.toLowerCase()
-            .includes(selectedProduct.toLowerCase())
-      );
-    }
-
-    // Apply service filter
-    if (selectedService) {
-      results = results.filter(
-        (business) =>
-          business.services?.includes(selectedService) ||
-          business.description
-            ?.toLowerCase()
-            .includes(selectedService.toLowerCase())
-      );
-    }
-
+    if (searchQuery) results = results.filter((b) =>
+      b.business_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.keywords?.some((k) => k.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+    if (categoryFilter) results = results.filter((b) => b.category === categoryFilter);
+    if (cityFilter) results = results.filter((b) => b.city === cityFilter);
+    if (stateFilter) results = results.filter((b) => b.state === stateFilter);
+    if (selectedIndustry) results = results.filter((b) => b.category === selectedIndustry);
+    if (selectedProduct) results = results.filter((b) => b.products?.includes(selectedProduct) || b.description?.toLowerCase().includes(selectedProduct.toLowerCase()));
+    if (selectedService) results = results.filter((b) => b.services?.includes(selectedService) || b.description?.toLowerCase().includes(selectedService.toLowerCase()));
     setFilteredBusinesses(results);
-  }, [
-    searchQuery,
-    categoryFilter,
-    cityFilter,
-    stateFilter,
-    selectedIndustry,
-    selectedProduct,
-    selectedService,
-    businesses,
-  ]);
+  }, [searchQuery, categoryFilter, cityFilter, stateFilter, selectedIndustry, selectedProduct, selectedService, businesses]);
 
-  // Extract unique cities and states for filters
-  const cities = [...new Set(businesses.map((b) => b.city))]
-    .filter(Boolean)
-    .sort();
-  const states = [...new Set(businesses.map((b) => b.state))]
-    .filter(Boolean)
-    .sort();
-
-  // Create dynamic industries, products, and services from fetched data
   const industries = categories.length > 0 ? categories :
-    [...new Set(businesses.map(b => b.category))]
-      .filter(Boolean)
-      .map(category => ({
-        name: category,
-        count: businesses.filter(b => b.category === category).length
-      }));
-
-  const products = [...new Set(businesses.flatMap(b => b.products || []))]
-    .filter(Boolean)
-    .map(product => ({
-      name: product,
-      count: businesses.filter(b => b.products?.includes(product)).length
-    }));
-
-  const services = [...new Set(businesses.flatMap(b => b.services || []))]
-    .filter(Boolean)
-    .map(service => ({
-      name: service,
-      count: businesses.filter(b => b.services?.includes(service)).length
-    }));
-
-  // Handle business deletion
-  const handleDelete = (id) => setConfirmDeleteId(id);
+    [...new Set(businesses.map((b) => b.category))].filter(Boolean).map((c) => ({ name: c, count: businesses.filter((b) => b.category === c).length }));
+  const products = [...new Set(businesses.flatMap((b) => b.products || []))].filter(Boolean).map((p) => ({ name: p, count: businesses.filter((b) => b.products?.includes(p)).length }));
+  const services = [...new Set(businesses.flatMap((b) => b.services || []))].filter(Boolean).map((s) => ({ name: s, count: businesses.filter((b) => b.services?.includes(s)).length }));
 
   const doDelete = async (id) => {
     try {
-      await axios.delete(`${BASE_URL}/businesses/${id}/`, {
-        headers: { Authorization: `Token ${token}` },
-      });
-
-      setBusinesses(businesses.filter(business => business.id !== id));
-      setFilteredBusinesses(filteredBusinesses.filter(business => business.id !== id));
-      toast.success("Business deleted successfully!");
-    } catch (error) {
-      toast.error("Failed to delete business.");
-    }
+      await axios.delete(`${BASE_URL}/businesses/${id}/`, { headers: { Authorization: `Token ${token}` } });
+      setBusinesses((p) => p.filter((b) => b.id !== id));
+      setFilteredBusinesses((p) => p.filter((b) => b.id !== id));
+      toast.success("Business deleted!");
+    } catch { toast.error("Failed to delete business."); }
   };
 
-  // Handle navigation
-  const handleNavigation = (path) => {
-    window.location.href = path;
-  };
-
-  const SidebarSection = ({
-    title,
-    items,
-    collapsed,
-    setCollapsed,
-    selectedValue,
-    onSelect,
-    icon,
-  }) => (
-    <div className="mb-6">
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-between w-full text-left font-medium text-gray-700 hover:text-gray-900 pb-2"
-      >
-        <div className="flex items-center">
-          {React.createElement(icon, { className: "mr-2 w-4 h-4" })}
+  const SidebarSection = ({ title, items, collapsed, setCollapsed, selectedValue, onSelect, icon }) => (
+    <div className="mb-5">
+      <button onClick={() => setCollapsed(!collapsed)} className="flex items-center justify-between w-full text-left font-semibold text-gray-700 text-sm pb-2 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          {React.createElement(icon, { className: "w-4 h-4 text-emerald-600" })}
           <span>{title}</span>
         </div>
-        {collapsed ? (
-          <ChevronRight className="w-3 h-3 text-gray-500" />
-        ) : (
-          <ChevronDown className="w-3 h-3 text-gray-500" />
-        )}
+        {collapsed ? <ChevronRight className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
       </button>
       {!collapsed && (
         <div className="mt-2 space-y-1">
           {items.map((item) => (
-            <label
-              key={item.name}
-              className="flex items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
-            >
-              <input
-                type="radio"
-                name={title.toLowerCase()}
-                value={item.name}
+            <label key={item.name} className="flex items-center cursor-pointer hover:bg-emerald-50 p-1.5 rounded-xl transition-colors">
+              <input type="radio" name={title.toLowerCase()} value={item.name}
                 checked={selectedValue === item.name}
-                onChange={() =>
-                  onSelect(selectedValue === item.name ? "" : item.name)
-                }
-                className="mr-2 text-blue-600"
-              />
-              <span className="text-sm text-gray-600 flex-1">
-                {item.category || item.name} {item.count && `(${item.count})`}
-              </span>
+                onChange={() => onSelect(selectedValue === item.name ? "" : item.name)}
+                className="mr-2.5 text-emerald-600 accent-emerald-600" />
+              <span className="text-sm text-gray-600 flex-1">{item.category || item.name}</span>
+              {item.count && <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{item.count}</span>}
             </label>
           ))}
           {selectedValue && (
-            <button
-              onClick={() => onSelect("")}
-              className="text-xs text-blue-600 hover:text-blue-800 ml-5"
-            >
-              Clear selection
-            </button>
+            <button onClick={() => onSelect("")} className="text-xs text-emerald-600 hover:text-emerald-800 ml-1 mt-1">Clear</button>
           )}
         </div>
       )}
@@ -293,270 +117,167 @@ const BusinessDirectory = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
       <ConfirmModal
         isOpen={!!confirmDeleteId}
         title="Delete Business Listing"
         message="This will permanently delete this business listing."
-        danger
-        confirmText="Delete"
+        danger confirmText="Delete"
         onConfirm={() => { doDelete(confirmDeleteId); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Business Directory
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                List your Business for others to find, or search for one in the
-                Directory
-              </p>
+
+      {/* ── Sticky page header ── */}
+      <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
+        <div className="max-w-5xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Business</h1>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search businesses…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              />
             </div>
-            <div className="flex items-center space-x-3">
-              <Link
-                to="/alumni/business/add"
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add a Business Listing</span>
-              </Link>
-            </div>
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition ${showSidebar ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+            <Link
+              to="/alumni/business/add"
+              className="flex-shrink-0 w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition"
+            >
+              <Plus className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
-          <div className="lg:w-80 bg-white rounded-lg shadow-sm p-6 h-fit">
-            <SidebarSection
-              title="Industries"
-              items={industries}
-              collapsed={industriesCollapsed}
-              setCollapsed={setIndustriesCollapsed}
-              selectedValue={selectedIndustry}
-              onSelect={setSelectedIndustry}
-              icon={Building}
-            />
+      <div className="max-w-5xl mx-auto px-4 py-4">
+        <div className="flex gap-4">
+          {/* ── Sidebar (slide in on mobile, static on desktop) ── */}
+          {(showSidebar) && (
+            <aside className="w-60 flex-shrink-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 h-fit sticky top-32 hidden md:block">
+              <SidebarSection title="Industries" items={industries} collapsed={industriesCollapsed} setCollapsed={setIndustriesCollapsed} selectedValue={selectedIndustry} onSelect={setSelectedIndustry} icon={Building} />
+              <SidebarSection title="Products" items={products} collapsed={productsCollapsed} setCollapsed={setProductsCollapsed} selectedValue={selectedProduct} onSelect={setSelectedProduct} icon={Package} />
+              <SidebarSection title="Services" items={services} collapsed={servicesCollapsed} setCollapsed={setServicesCollapsed} selectedValue={selectedService} onSelect={setSelectedService} icon={Settings} />
+            </aside>
+          )}
 
-            <SidebarSection
-              title="Products"
-              items={products}
-              collapsed={productsCollapsed}
-              setCollapsed={setProductsCollapsed}
-              selectedValue={selectedProduct}
-              onSelect={setSelectedProduct}
-              icon={Package}
-            />
-
-            <SidebarSection
-              title="Services"
-              items={services}
-              collapsed={servicesCollapsed}
-              setCollapsed={setServicesCollapsed}
-              selectedValue={selectedService}
-              onSelect={setSelectedService}
-              icon={Settings}
-            />
-          </div>
-
-          {/* Main Content Area */}
-          <div className="flex-1">
-            {/* Search Bar */}
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by Location, Industry, Product or Service"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Search className="absolute left-3 top-4 w-4 h-4 text-gray-400" />
-              </div>
+          {/* ── Mobile filter panel ── */}
+          {showSidebar && (
+            <div className="md:hidden fixed inset-x-0 bottom-14 bg-white border-t border-gray-200 z-40 p-4 rounded-t-3xl shadow-2xl max-h-[60vh] overflow-y-auto">
+              <SidebarSection title="Industries" items={industries} collapsed={industriesCollapsed} setCollapsed={setIndustriesCollapsed} selectedValue={selectedIndustry} onSelect={setSelectedIndustry} icon={Building} />
+              <SidebarSection title="Products" items={products} collapsed={productsCollapsed} setCollapsed={setProductsCollapsed} selectedValue={selectedProduct} onSelect={setSelectedProduct} icon={Package} />
+              <SidebarSection title="Services" items={services} collapsed={servicesCollapsed} setCollapsed={setServicesCollapsed} selectedValue={selectedService} onSelect={setSelectedService} icon={Settings} />
             </div>
+          )}
 
-            {/* Results Count */}
-            <div className="mb-4">
-              <p className="text-lg text-gray-600">
-                <strong>{filteredBusinesses.length}</strong> Businesses Found
-              </p>
-            </div>
+          {/* ── Business feed ── */}
+          <div className="flex-1 space-y-3">
+            <p className="text-sm text-gray-500">
+              <span className="font-bold text-gray-800">{filteredBusinesses.length}</span> businesses found
+            </p>
 
-            {/* Business Listings */}
             {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              [1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 animate-pulse">
+                  <div className="flex gap-4">
+                    <div className="w-20 h-20 bg-gray-200 rounded-xl flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-1/2" />
+                      <div className="h-3 bg-gray-100 rounded w-3/4" />
+                      <div className="h-3 bg-gray-100 rounded w-1/3" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : filteredBusinesses.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <Building className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No businesses found</p>
+                <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
               </div>
             ) : (
-              <>
-                {filteredBusinesses.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredBusinesses.map((business) => (
-                      <Link
-                        key={business.id}
-                        to={`/alumni/business/view/${business.id}`} // This should work with the updated route
-                        className="block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex flex-col md:flex-row gap-4">
-                          {/* Business Logo */}
-                          <div className="md:w-32">
-                            <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden mx-auto md:mx-0">
-                              {business.logo ? (
-                                <img
-                                  src={`${MEDIA_BASE_URL}${business.logo}`}
-                                  alt={business.business_name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                  <span className="text-gray-500 text-xl font-bold">
-                                    {business.business_name?.[0] || "B"}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Business Details */}
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition">
-                                {business.business_name}
-                              </h3>
-
-                              {/* Only show edit/delete buttons if user has permission */}
-                              {canEditBusiness(business) && (
-                                <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
-                                  <Link
-                                    to={`/alumni/business/edit/${business.id}`}
-                                    className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
-                                    onClick={(e) => e.stopPropagation()}
-                                    title="Edit Business"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Link>
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleDelete(business.id);
-                                    }}
-                                    className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition"
-                                    title="Delete Business"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-
-                            <p className="text-blue-600 font-medium mb-1">
-                              {business.category}
-                            </p>
-                            <p className="text-gray-600 mb-3">
-                              {business.description}
-                            </p>
-
-                            {/* Show business owner info if it's an admin post */}
-                            {business.owner_details && business.owner_details.user_type === "admin" && (
-                              <div className="mb-3">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                  Official Business Listing
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Contact Information */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                              {business.address && (
-                                <div className="flex items-start">
-                                  <MapPin className="text-gray-500 mt-1 mr-2 w-4 h-4 flex-shrink-0" />
-                                  <span className="text-gray-600">
-                                    {business.address}, {business.city},{" "}
-                                    {business.state}
-                                  </span>
-                                </div>
-                              )}
-
-                              {business.phone && (
-                                <div className="flex items-center">
-                                  <Phone className="text-gray-500 mr-2 w-4 h-4 flex-shrink-0" />
-                                  <a
-                                    href={`tel:${business.phone}`}
-                                    className="text-gray-600 hover:text-blue-600"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {business.phone}
-                                  </a>
-                                </div>
-                              )}
-
-                              {business.email && (
-                                <div className="flex items-center">
-                                  <Mail className="text-gray-500 mr-2 w-4 h-4 flex-shrink-0" />
-                                  <a
-                                    href={`mailto:${business.email}`}
-                                    className="text-gray-600 hover:text-blue-600 truncate"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {business.email}
-                                  </a>
-                                </div>
-                              )}
-
-                              {business.website && (
-                                <div className="flex items-center">
-                                  <Globe className="text-gray-500 mr-2 w-4 h-4 flex-shrink-0" />
-                                  <a
-                                    href={
-                                      business.website.startsWith("http")
-                                        ? business.website
-                                        : `https://${business.website}`
-                                    }
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 truncate"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {business.website.replace(
-                                      /(^\w+:|^)\/\//,
-                                      ""
-                                    )}
-                                  </a>
-                                </div>
-                              )}
-
-                              {business.employee_count && (
-                                <div className="flex items-center">
-                                  <Users className="text-gray-500 mr-2 w-4 h-4 flex-shrink-0" />
-                                  <span className="text-gray-600">
-                                    {business.employee_count} employees
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+              filteredBusinesses.map((business) => (
+                <Link
+                  key={business.id}
+                  to={`/alumni/business/view/${business.id}`}
+                  className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                >
+                  <div className="flex gap-4 p-4">
+                    {/* Logo */}
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      {business.logo ? (
+                        <img src={`${MEDIA_BASE_URL}${business.logo}`} alt={business.business_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-emerald-50">
+                          <span className="text-emerald-600 text-xl font-bold">{business.business_name?.[0] || "B"}</span>
                         </div>
-                      </Link>
-                    ))}
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-bold text-emerald-700 truncate">{business.business_name}</h3>
+                          <p className="text-xs text-gray-400 font-medium">{business.category}</p>
+                        </div>
+                        {canEditBusiness(business) && (
+                          <div className="flex gap-1.5 flex-shrink-0" onClick={(e) => e.preventDefault()}>
+                            <Link to={`/alumni/business/edit/${business.id}`} onClick={(e) => e.stopPropagation()}
+                              className="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-100 transition">
+                              <Edit className="w-3.5 h-3.5" />
+                            </Link>
+                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(business.id); }}
+                              className="w-7 h-7 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-100 transition">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {business.description && (
+                        <p className="text-xs text-gray-500 line-clamp-2 mb-2">{business.description}</p>
+                      )}
+
+                      {business.owner_details?.user_type === "admin" && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 mb-2">
+                          Official Listing
+                        </span>
+                      )}
+
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {business.address && (
+                          <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <MapPin className="w-3 h-3 text-emerald-500" />
+                            <span className="truncate max-w-[120px]">{business.city}, {business.state}</span>
+                          </div>
+                        )}
+                        {business.phone && (
+                          <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <Phone className="w-3 h-3 text-emerald-500" />
+                            <span>{business.phone}</span>
+                          </div>
+                        )}
+                        {business.website && (
+                          <div className="flex items-center gap-1 text-xs text-emerald-600">
+                            <Globe className="w-3 h-3" />
+                            <span className="truncate max-w-[100px]">{business.website.replace(/(^\w+:|^)\/\//, "")}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-12 bg-white rounded-lg">
-                    <p className="text-gray-500 text-lg">
-                      No businesses found matching your criteria.
-                    </p>
-                    <p className="text-gray-400 mt-2">
-                      Try adjusting your search or filters.
-                    </p>
-                  </div>
-                )}
-              </>
+                </Link>
+              ))
             )}
           </div>
         </div>

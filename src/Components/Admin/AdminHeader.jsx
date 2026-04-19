@@ -5,7 +5,6 @@ import {
   faFileAlt,
   faCalendarCheck,
   faPhotoFilm,
-  faMapMarker,
   faSignOutAlt,
   faBars,
   faTimes,
@@ -17,44 +16,20 @@ import {
   faBuilding,
   faUser,
   faHandHoldingHeart,
-  faChevronDown,
-  faMailBulk,
-  faComment,
+  faComments,
   faClipboardList
 } from "@fortawesome/free-solid-svg-icons";
-import Logo from "../../images/logo.png"; // Adjust the path as necessary
+import Logo from "../../images/logo.png";
 
 export default function AdminHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1300);
 
   useEffect(() => {
-    const handleLocationChange = () => {
-      setPathname(window.location.pathname);
-    };
+    const handleLocationChange = () => setPathname(window.location.pathname);
 
     window.addEventListener("popstate", handleLocationChange);
     return () => window.removeEventListener("popstate", handleLocationChange);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1350);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleResize);
-    };
   }, []);
 
   // Authentication check useEffect
@@ -120,376 +95,188 @@ export default function AdminHeader() {
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
     toast.success("Logged out successfully!");
-    setTimeout(() => { window.location.href = "/login"; }, 800);
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 800);
   };
 
   const navItems = [
     {
       path: "/admin/dashboard",
       icon: faFileAlt,
-      label: "Dashboard",
-      color: "text-blue-600",
+      label: "Home",
     },
     {
       path: "/admin/event",
       icon: faCalendarCheck,
       label: "Events",
-      color: "text-purple-600",
     },
     {
       path: "/admin/jobs",
       icon: faBriefcase,
       label: "Jobs",
-      color: "text-orange-600",
     },
     {
       path: "/admin/albums",
       icon: faPhotoFilm,
       label: "Albums",
-      color: "text-pink-600",
     },
     {
       path: "/admin/news",
       icon: faNewspaper,
-      label: "NewsRoom",
-      color: "text-red-600",
+      label: "News",
     },
     {
       path: "/admin/members",
       icon: faIdBadge,
       label: "Members",
-      color: "text-indigo-600",
     },
     {
       path: "/admin/birthday",
       icon: faBirthdayCake,
       label: "Birthdays",
-      color: "text-yellow-600",
     },
     {
       path: "/admin/business",
       icon: faBuilding,
       label: "Business",
-      color: "text-teal-600",
     },
     {
       path: "/admin/my-profile",
       icon: faUser,
       label: "Profile",
-      color: "text-gray-600",
     },
     {
       path: "/admin/my-contribution",
       icon: faHandHoldingHeart,
-      label: "Contribution",
-      color: "text-green-600",
+      label: "Contribute",
     },
     {
       path: "/admin/register-request",
       icon: faShield,
       label: "Requests",
-      color: "text-emerald-600",
     },
-    // {
-    //   path: "/admin/sendmail",
-    //   icon: faMailBulk,
-    //   label: "Send a Mail",
-    //   color: "text-emerald-600",
-    // },
     {
       path: "/admin/chat",
-      icon: faComment,
-      label: "Chats",
-      color: "text-blue-600",
+      icon: faComments,
+      label: "Chat",
     },
     {
       path: "/admin/audit",
       icon: faClipboardList,
       label: "Audit",
-      color: "text-slate-600",
     },
   ];
 
+  const mobileBottomItems = navItems.slice(0, 5);
+
   return (
     <>
-      {/* Main Navigation Bar */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300  ${isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
-          : "bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-b border-emerald-100"
-          }`}
-      >
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 w-full">
-            {/* Left section - Logo */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <div
-                className="relative w-10 h-10 flex-shrink-0 cursor-pointer"
-                onClick={() => (window.location.href = "/")}
-                title="Go to Home Page"
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+          <a href="/admin/dashboard" className="flex items-center gap-2">
+            <img src={Logo} alt="KAHEAA" className="h-8 w-8 rounded-full ring-2 ring-emerald-300 object-cover" />
+            <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-emerald-700 to-emerald-500 bg-clip-text text-transparent hidden sm:block">
+              KAHEAA
+            </span>
+          </a>
+
+          <div className="hidden lg:flex items-center gap-1 overflow-x-auto">
+            {navItems.map((item) => (
+              <a
+                key={item.path}
+                href={item.path}
+                title={item.label}
+                className={`flex flex-col items-center px-3 py-2 rounded-xl transition-all duration-200 group ${
+                  pathname === item.path
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-emerald-600"
+                }`}
               >
-                <img
-                  src={Logo}
-                  alt="Logo"
-                  className="h-10 w-10 rounded-full shadow-md ring-2 ring-emerald-200 object-cover"
-                />
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
-              </div>
-              <div
-                className="leading-tight cursor-pointer hidden sm:block"
-                onClick={() => (window.location.href = "/home")}
-                title="Go to Home Page"
-              >
-                <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
-                  KAHEAA
-                </h1>
-              </div>
-            </div>
+                <FontAwesomeIcon icon={item.icon} className="h-5 w-5" />
+                <span className="text-[10px] mt-0.5 font-medium">{item.label}</span>
+                {pathname === item.path && <div className="w-1 h-1 bg-emerald-500 rounded-full mt-0.5" />}
+              </a>
+            ))}
+          </div>
 
-            {/* Desktop Navigation - Only shown at >= 1300px */}
-            {isDesktop && (
-              <div className="flex items-center flex-1 justify-between">
-                <div className="flex items-center flex-1 justify-center">
-                  <div className="flex items-center space-x-2">
-                    {navItems.map((item) => (
-                      <a
-                        key={item.path}
-                        href={item.path}
-                        className={`group relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${pathname === item.path
-                          ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
-                          : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                          }`}
-                      >
-                        <FontAwesomeIcon
-                          icon={item.icon}
-                          className={`h-3.5 w-3.5 transition-all duration-300 ${pathname === item.path
-                            ? "text-emerald-600"
-                            : `${item.color} group-hover:text-emerald-600`
-                            }`}
-                        />
-                        <span className="text-xs font-medium whitespace-nowrap">
-                          {item.label}
-                        </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-all"
+            >
+              <FontAwesomeIcon icon={faSignOutAlt} />
+              <span className="text-xs font-medium">Logout</span>
+            </button>
 
-                        {/* Active indicator */}
-                        {pathname === item.path && (
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></div>
-                        )}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Logout Button */}
-                <div className="ml-4 pl-4 border-l border-gray-200">
-                  <button
-                    onClick={handleLogout}
-                    className="group flex items-center gap-1.5 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300 hover:scale-105"
-                  >
-                    <FontAwesomeIcon
-                      icon={faSignOutAlt}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-xs font-medium">Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tablet/Medium Desktop Navigation - Between 768px and 1299px */}
-            {!isDesktop && (
-              <div className="hidden md:flex items-center flex-1 mx-4">
-                <div className="flex items-center space-x-1">
-                  {/* Show first 6 items for medium screens, first 5 for smaller medium screens */}
-                  {navItems.slice(0, window.innerWidth >= 1100 ? 6 : window.innerWidth >= 900 ? 5 : 4).map((item) => (
-                    <a
-                      key={item.path}
-                      href={item.path}
-                      className={`group relative flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${pathname === item.path
-                        ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                        }`}
-                    >
-                      <FontAwesomeIcon
-                        icon={item.icon}
-                        className={`h-3.5 w-3.5 transition-all duration-300 ${pathname === item.path
-                          ? "text-emerald-600"
-                          : `${item.color} group-hover:text-emerald-600`
-                          }`}
-                      />
-                      <span className="text-xs font-medium">
-                        {item.label}
-                      </span>
-                    </a>
-                  ))}
-
-                  {/* More dropdown for remaining items */}
-                  <div className="relative group">
-                    <button
-                      className="flex items-center gap-1 px-2 py-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-all duration-300"
-                      aria-haspopup="true"
-                      aria-label="More navigation items"
-                    >
-                      <FontAwesomeIcon
-                        icon={faChevronDown}
-                        className="h-3.5 w-3.5"
-                        aria-hidden="true"
-                      />
-                      <span className="text-xs font-medium">More</span>
-                    </button>
-
-                    {/* Dropdown menu */}
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                      <div className="py-2">
-                        {navItems.slice(window.innerWidth >= 1100 ? 6 : window.innerWidth >= 900 ? 5 : 4).map((item) => (
-                          <a
-                            key={item.path}
-                            href={item.path}
-                            className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${pathname === item.path
-                              ? "text-emerald-700 bg-emerald-50"
-                              : "text-gray-700"
-                              }`}
-                          >
-                            <FontAwesomeIcon
-                              icon={item.icon}
-                              className={`h-4 w-4 ${pathname === item.path
-                                ? "text-emerald-600"
-                                : item.color
-                                }`}
-                            />
-                            {item.label}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Logout Button */}
-                <div className="ml-3 pl-3 border-l border-gray-200">
-                  <button
-                    onClick={handleLogout}
-                    className="group flex items-center gap-1.5 px-2 py-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300"
-                  >
-                    <FontAwesomeIcon
-                      icon={faSignOutAlt}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-xs font-medium">
-                      Logout
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
-              aria-expanded={isMobileOpen}
-              aria-controls="admin-mobile-menu"
-              aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
-              className="md:hidden relative p-2.5 rounded-lg bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-all duration-300 shadow-md hover:shadow-lg"
+              className="lg:hidden p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-all"
+              aria-label="Open menu"
             >
-              <FontAwesomeIcon
-                icon={isMobileOpen ? faTimes : faBars}
-                aria-hidden="true"
-                className={`h-4 w-4 text-emerald-700 transition-transform duration-300 ${isMobileOpen ? "rotate-180" : "rotate-0"
-                  }`}
-              />
+              <FontAwesomeIcon icon={isMobileOpen ? faTimes : faBars} className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation Dropdown */}
-        <div
-          id="admin-mobile-menu"
-          role="navigation"
-          aria-label="Mobile navigation"
-          className={`md:hidden transition-all duration-300 ease-in-out ${isMobileOpen
-            ? "max-h-screen overflow-y-auto opacity-100 bg-white/95 backdrop-blur-md"
-            : "max-h-0 opacity-0 overflow-hidden"
-            }`}
-        >
-          <div className="px-4 py-6 space-y-2 border-t border-gray-200">
-            {navItems.map((item, index) => (
-              <a
-                key={item.path}
-                href={item.path}
-                onClick={() => setIsMobileOpen(false)}
-                className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 transform hover:scale-102 ${pathname === item.path
-                  ? "bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 shadow-md"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+        {isMobileOpen && (
+          <div className="lg:hidden bg-white border-t border-gray-100 shadow-lg">
+            <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {navItems.map((item) => (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  onClick={() => setIsMobileOpen(false)}
+                  className={`flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-center transition-all ${
+                    pathname === item.path ? "bg-emerald-50 text-emerald-700" : "text-gray-600 hover:bg-gray-50"
                   }`}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div
-                  className={`p-2 rounded-lg ${pathname === item.path
-                    ? "bg-emerald-200"
-                    : "bg-gray-100 group-hover:bg-emerald-100"
-                    }`}
                 >
-                  <FontAwesomeIcon
-                    icon={item.icon}
-                    className={`h-5 w-5 transition-all duration-300 ${pathname === item.path
-                      ? "text-emerald-600"
-                      : `${item.color} group-hover:text-emerald-600`
-                      }`}
-                  />
-                </div>
-                <span className="font-medium">{item.label}</span>
-
-                {pathname === item.path && (
-                  <div className="ml-auto w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                )}
-              </a>
-            ))}
-
-            {/* Mobile Logout */}
-            <div className="pt-4 mt-4 border-t border-gray-200">
+                  <FontAwesomeIcon icon={item.icon} className="h-5 w-5" />
+                  <span className="text-xs font-medium">{item.label}</span>
+                </a>
+              ))}
               <button
                 onClick={handleLogout}
-                className="w-full group flex items-center gap-4 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300"
+                className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all"
               >
-                <div className="p-2 rounded-lg bg-red-100 group-hover:bg-red-200">
-                  <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Logout</span>
+                <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
+                <span className="text-xs font-medium">Logout</span>
               </button>
-
-              <div className="mt-4 text-center">
-                <p className="text-xs text-gray-500">Logged in as Admin</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  © 2025 Admin Portal
-                </p>
-              </div>
             </div>
           </div>
+        )}
+      </nav>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 safe-area-bottom">
+        <div className="flex items-center justify-around h-14 px-2">
+          {mobileBottomItems.map((item) => (
+            <a
+              key={item.path}
+              href={item.path}
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all ${
+                pathname === item.path ? "text-emerald-600" : "text-gray-400"
+              }`}
+            >
+              <FontAwesomeIcon
+                icon={item.icon}
+                className={`h-6 w-6 ${pathname === item.path ? "scale-110" : ""} transition-transform`}
+              />
+              {pathname === item.path && <div className="w-1 h-1 bg-emerald-500 rounded-full mt-1" />}
+            </a>
+          ))}
         </div>
       </nav>
 
-      {/* Mobile Backdrop */}
+      <div className="h-14" />
+
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 z-40 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
           aria-hidden="true"
         />
       )}
-
-      {/* Spacer to prevent content from being hidden under fixed navbar */}
-      <div className="h-16"></div>
-
-      {/* Custom scrollbar styles */}
-      <style>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </>
   );
 }

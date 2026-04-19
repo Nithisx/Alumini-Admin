@@ -887,80 +887,76 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-      <div className="max-w-full lg:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            Members Directory
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Manage and explore our community members
-          </p>
-        </div>
-
-        {/* Filters Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center">
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                />
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      {/* ── Instagram-style sticky header ── */}
+      <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
+        <div className="max-w-5xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Members</h1>
+            {/* Inline search */}
+            <div className="relative flex-1 min-w-[160px]">
+              <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <span className="hidden sm:inline">Filter & Search</span>
-              <span className="sm:hidden">Filters</span>
-            </h2>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleResetFilters}
-                className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
-              >
-                Clear All
-              </button>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="lg:hidden text-blue-600 hover:text-blue-800 p-2 rounded-md hover:bg-blue-50 transition-colors"
-              >
-                <svg
-                  className={`w-5 h-5 transform transition-transform ${showFilters ? "rotate-180" : ""
-                    }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
+              <input
+                id="search-box"
+                type="text"
+                className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                placeholder="Search name, email, roll no…"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyPress}
+              />
             </div>
+            <button
+              onClick={handleSearchClick}
+              className="flex-shrink-0 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition"
+            >
+              Search
+            </button>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border transition ${showFilters ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+            </button>
+            <button
+              onClick={handleResetFilters}
+              className="flex-shrink-0 text-sm text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-xl hover:bg-red-50 transition"
+            >
+              Clear
+            </button>
           </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
+        {/* Filters Panel */}
+        <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all ${showFilters ? "block" : "hidden"}`}>
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filter & Search
+              </h2>
+            </div>
 
           {/* Filters Loading State or Grid */}
           {filtersLoading ? (
             <div className="flex justify-center items-center py-8">
               <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="text-gray-600 text-sm sm:text-base">
-                  Loading filters...
-                </span>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+                <span className="text-gray-500 text-sm">Loading filters…</span>
               </div>
             </div>
           ) : (
-            <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+            <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {/* Role Filter */}
                 <AutocompleteInput
                   id="role-filter"
@@ -1317,277 +1313,89 @@ export default function MembersPage() {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Results Summary */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
-            <p className="text-sm sm:text-base text-gray-700 font-medium">
-              {filteredTotal} {filteredTotal === 1 ? "member" : "members"} found
-            </p>
-            {(roleFilter ||
-              cityFilter ||
-              workedInFilter ||
-              searchQuery ||
-              countryFilter ||
-              stateFilter ||
-              passedOutYearFilter ||
-              courseFilter ||
-              collegeNameFilter ||
-              currentWorkFilter ||
-              chapterFilter ||
-              genderFilter ||
-              courseEndYearFilter ||
-              companyFilter ||
-              emailFilter) && (
-                <span className="text-xs sm:text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full w-fit">
-                  Filtered
-                </span>
-              )}
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Results summary bar */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500 font-medium">
+            <span className="font-bold text-gray-800">{filteredTotal}</span> {filteredTotal === 1 ? "member" : "members"}
+            {(roleFilter || cityFilter || searchQuery || countryFilter || stateFilter || passedOutYearFilter || courseFilter || collegeNameFilter || currentWorkFilter || chapterFilter || emailFilter) && (
+              <span className="ml-2 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">filtered</span>
+            )}
+          </p>
+          <button
+            onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
+            className="flex items-center gap-1 text-xs font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 transition"
+          >
+            {sortDirection === "asc" ? "↑ Ascending" : "↓ Descending"}
+          </button>
+        </div>
+
+        {/* Members content */}
         {loading ? (
-          <div className="flex justify-center items-center h-48 sm:h-64">
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
-              <span className="text-gray-600 font-medium text-sm sm:text-base">
-                Loading members...
-              </span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {[1,2,3,4,5,6,8,9,10].map((i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
+                <div className="aspect-square bg-gray-200" />
+                <div className="p-3 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-3/4" />
+                  <div className="h-2.5 bg-gray-100 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : members.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
             </div>
+            <p className="text-gray-500 font-medium">No members found</p>
+            <p className="text-gray-400 text-sm mt-1">Try adjusting your filters</p>
           </div>
         ) : (
-          <>
-            {/* Results Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2 sm:gap-0">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-                {filteredTotal > 0 ? (
-                  <>
-                    Showing {members.length} of {filteredTotal} members
-                    {selectedMembers.size > 0 && (
-                      <span className="ml-2 text-sm font-normal text-blue-600">
-                        ({selectedMembers.size} selected)
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  "No members found"
-                )}
-              </h2>
-
-              {/* Sorting Controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-                  }
-                  className="flex items-center gap-1 text-sm border border-gray-300 rounded-md px-2 py-1 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {sortDirection === "asc" ? "Ascending" : "Descending"}
-                  <svg
-                    className={`w-4 h-4 ${sortDirection === "asc" ? "rotate-0" : "rotate-180"
-                      } transition-transform`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 15l7-7 7 7"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {members.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
-                  No members found
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600">
-                  Try adjusting your filters or search terms.
-                </p>
-              </div>
-            ) : (
-              /* Members Grid */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
-                {members.map((member) => (
-                  <div key={member.id} className="relative">
-                    <div
-                      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-300 group cursor-pointer"
-                      onClick={() => {
-                        window.location.href = `/alumni/members/${member.username}`;
-                      }}
-                    >
-                      {/* Profile Image */}
-                      <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-                        <img
-                          src={
-                            member.profile_photo
-                              ? `https://api.karpagamalumni.in${member.profile_photo}`
-                              : placeholder
-                          }
-                          alt={`${member.first_name || "Alumni"} ${member.last_name || ""
-                            }`}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          onError={(e) => {
-                            e.target.onerror = null; // Prevent infinite loop
-                            // Generate avatar with initials if image fails to load
-                            e.target.src = getInitialsAvatar(
-                              member.first_name,
-                              member.last_name
-                            );
-                          }}
-                        />
-                        {/* Role Badge */}
-                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-                          <span
-                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
-                              member.role
-                            )}`}
-                          >
-                            {member.role}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Member Info */}
-                      <div className="p-3 sm:p-5">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {member.first_name} {member.last_name}
-                        </h3>
-
-                        <div className="space-y-1.5 sm:space-y-2">
-                          {/* Add Chapter/Current Location display */}
-                          {member.current_location && (
-                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                              <svg
-                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                />
-                              </svg>
-                              <span
-                                className="truncate"
-                                title={member.current_location}
-                              >
-                                {member.current_location}
-                              </span>
-                            </div>
-                          )}
-
-                          {member.city && (
-                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                              <svg
-                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                              </svg>
-                              <span className="truncate">{member.city}</span>
-                            </div>
-                          )}
-
-                          {member.worked_in && (
-                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                              <svg
-                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"
-                                />
-                              </svg>
-                              <span className="truncate">
-                                {member.worked_in}
-                              </span>
-                            </div>
-                          )}
-
-                          {member.course_name && (
-                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                              <svg
-                                className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-gray-400 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                />
-                              </svg>
-                              <span className="truncate">
-                                {member.course_name}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+          /* ── Instagram-style profile grid ── */
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {members.map((member) => (
+              <div
+                key={member.id}
+                onClick={() => { window.location.href = `/alumni/members/${member.username}`; }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer group hover:shadow-md transition-shadow"
+              >
+                {/* Square photo */}
+                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                  <img
+                    src={member.profile_photo ? `https://api.karpagamalumni.in${member.profile_photo}` : placeholder}
+                    alt={`${member.first_name} ${member.last_name}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => { e.target.onerror = null; e.target.src = getInitialsAvatar(member.first_name, member.last_name); }}
+                  />
+                  <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadgeColor(member.role)}`}>
+                    {member.role}
                   </div>
-                ))}
+                </div>
+                {/* Info */}
+                <div className="p-3">
+                  <p className="text-sm font-bold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
+                  {member.city && <p className="text-xs text-gray-400 truncate mt-0.5">{member.city}</p>}
+                  {member.current_work && <p className="text-xs text-emerald-600 truncate mt-0.5">{member.current_work}</p>}
+                </div>
               </div>
-            )}
-            {members.length > 0 && (
-              <div className="mt-6 sm:mt-8">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={filteredTotal}
-                  pageSize={pageSize}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                />
-              </div>
-            )}
-          </>
+            ))}
+          </div>
+        )}
+
+        {members.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredTotal}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
         )}
       </div>
     </div>

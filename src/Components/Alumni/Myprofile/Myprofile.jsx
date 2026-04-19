@@ -1708,10 +1708,10 @@ const ProfileScreen = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 text-green-600 animate-spin mx-auto mb-3" />
-          <p className="text-green-600 text-lg">Loading profile...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm font-medium">Loading profile…</p>
         </div>
       </div>
     )
@@ -1732,107 +1732,113 @@ const ProfileScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-green-50 py-4 sm:py-6 lg:py-8">
-      <div className="max-w-full lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Profile Header */}
-        <div className="relative mb-3 sm:mb-4 overflow-hidden rounded-lg shadow-sm">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      <div className="max-w-2xl mx-auto">
+        {/* ── Instagram-style profile header ── */}
+        <div className="bg-white border-b border-gray-100">
+          {/* Cover photo */}
           <div
-            className="px-4 py-6 text-center sm:px-6 sm:py-8"
-            style={{
-              backgroundImage: `url(${profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE})`,
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-            }}
-          >
-            <div className="absolute inset-0 bg-black/45" />
-            <div className="relative z-10">
-              <div className="relative inline-block">
+            className="h-36 sm:h-44 bg-gray-200 bg-cover bg-center"
+            style={{ backgroundImage: `url(${profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE})` }}
+          />
+          {/* Avatar + actions row */}
+          <div className="px-4 pb-4">
+            <div className="flex items-end justify-between -mt-12 mb-3">
+              <div className="ring-4 ring-white rounded-full shadow-md">
                 <img
                   src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
                   alt="Profile"
-                  className="mx-auto mb-3 h-20 w-20 rounded-full border-4 border-white object-cover shadow-md sm:h-24 sm:w-24"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
                 />
               </div>
-              <h2 className="mb-1 text-lg font-bold text-white sm:text-xl">
-                {`${profile.first_name} ${profile.last_name}`}
-              </h2>
-              <p className="break-all px-4 text-xs text-green-50 sm:text-sm">{profile.username || "username"}</p>
-              {profile.current_work && (
-                <div className="mt-2 inline-flex items-center rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-green-800 sm:px-3">
-                  <Briefcase className="mr-1 h-3 w-3" />
-                  <span className="truncate max-w-xs">{profile.current_work}</span>
-                </div>
-              )}
+              <button
+                onClick={() => setModalVisible(true)}
+                className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+              >
+                <Edit className="w-4 h-4" />
+                Edit profile
+              </button>
             </div>
+            {/* Name + bio */}
+            <h2 className="text-base font-bold text-gray-900">{profile.first_name} {profile.last_name}</h2>
+            <p className="text-sm text-gray-400 mb-1">@{profile.username}</p>
+            {profile.current_work && (
+              <div className="flex items-center gap-1.5 text-sm text-emerald-700 font-medium mb-1">
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>{profile.current_work}</span>
+              </div>
+            )}
+            {profile.bio && <p className="text-sm text-gray-600 mt-1">{profile.bio}</p>}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex overflow-x-auto border-t border-gray-100 scrollbar-hide">
+            {tabs.map((tab, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveTab(index)}
+                className={`flex-shrink-0 px-4 py-3 text-xs sm:text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                  activeTab === index
+                    ? "border-emerald-600 text-emerald-700"
+                    : "border-transparent text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex bg-white mx-2 sm:mx-3 rounded-lg p-1 shadow-md mb-3 sm:mb-4 overflow-x-auto">
-          {tabs.map((tab, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveTab(index)}
-              className={`flex-1 min-w-0 py-2.5 sm:py-3 text-center rounded text-xs sm:text-sm font-medium whitespace-nowrap px-2 ${activeTab === index
-                ? "bg-green-600 text-white font-bold shadow-sm"
-                : "text-green-700 hover:bg-green-50 transition-colors"
-                }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        <div className="mx-2 sm:mx-3 mb-6">
-          <div className="bg-white rounded-lg p-4 sm:p-5 shadow-md min-h-[300px] sm:min-h-[400px]">{renderTabContent()}</div>
+        {/* Tab content */}
+        <div className="px-4 py-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 min-h-[300px]">
+            {renderTabContent()}
+          </div>
         </div>
 
         {/* Edit Modal */}
         {modalVisible && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
             <div
               role="dialog"
               aria-modal="true"
               aria-labelledby="edit-profile-title"
-              className="bg-green-50 rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
+              className="bg-white w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl"
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 bg-green-600 rounded-t-lg">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <button
                   onClick={() => setModalVisible(false)}
-                  className="p-1 hover:bg-green-700 rounded-full transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
                 >
-                  <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
-                <h2 id="edit-profile-title" className="text-base sm:text-lg font-bold text-white">Edit Profile</h2>
+                <h2 id="edit-profile-title" className="text-base font-bold text-gray-900">Edit Profile</h2>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-800 rounded-lg text-white font-medium text-sm disabled:opacity-50 hover:bg-green-900 transition-colors shadow-sm"
+                  className="px-4 py-1.5 bg-emerald-600 rounded-xl text-white font-semibold text-sm disabled:opacity-50 hover:bg-emerald-700 transition"
                 >
                   {saving ? (
                     <div className="flex items-center gap-2">
                       <Loader className="w-4 h-4 animate-spin" />
-                      <span className="hidden sm:inline">Saving...</span>
+                      <span>Saving…</span>
                     </div>
-                  ) : (
-                    "Save"
-                  )}
+                  ) : "Save"}
                 </button>
               </div>
 
               {/* Edit Tabs */}
-              <div className="flex bg-white mx-2 sm:mx-3 mt-2 sm:mt-3 rounded-lg p-1 shadow-sm overflow-x-auto">
+              <div className="flex overflow-x-auto border-b border-gray-100 scrollbar-hide">
                 {editTabs.map((tab, index) => (
                   <button
                     key={index}
                     onClick={() => setEditPage(index)}
-                    className={`flex-1 min-w-0 py-2 sm:py-3 text-center rounded text-xs font-medium whitespace-nowrap px-1 ${editPage === index
-                      ? "bg-green-600 text-white font-bold"
-                      : "text-green-700 hover:bg-green-50 transition-colors"
-                      }`}
+                    className={`flex-shrink-0 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                      editPage === index
+                        ? "border-emerald-600 text-emerald-700"
+                        : "border-transparent text-gray-400 hover:text-gray-600"
+                    }`}
                   >
                     {tab}
                   </button>
@@ -1840,8 +1846,8 @@ const ProfileScreen = () => {
               </div>
 
               {/* Edit Content */}
-              <div className="mx-2 sm:mx-3 mt-2 sm:mt-3 mb-2 sm:mb-3">
-                <div className="bg-white rounded-lg p-3 sm:p-5 shadow-md min-h-[400px] sm:min-h-[500px]">{renderEditContent()}</div>
+              <div className="p-4 sm:p-5">
+                <div className="min-h-[400px]">{renderEditContent()}</div>
               </div>
             </div>
           </div>
@@ -1850,20 +1856,25 @@ const ProfileScreen = () => {
         {/* Change Password Modal */}
         {renderChangePasswordModal()}
 
-        {/* Fixed floating action button */}
+        {/* FAB — hidden since edit is in header now, keep as fallback on mobile */}
         <button
-          onClick={() => {
-            setEditPage(0)
-            setModalVisible(true)
-          }}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-colors"
+          onClick={() => { setEditPage(0); setModalVisible(true); }}
+          className="lg:hidden fixed bottom-20 right-4 z-40 flex items-center justify-center w-12 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg transition-colors"
           aria-label="Edit Profile"
         >
-          <Edit className="w-5 h-5 sm:w-6 sm:h-6" />
+          <Edit className="w-5 h-5" />
         </button>
       </div>
     </div>
   )
+}
+
+// Inject scrollbar-hide once
+if (typeof document !== "undefined" && !document.getElementById("scrollbar-hide-style")) {
+  const s = document.createElement("style");
+  s.id = "scrollbar-hide-style";
+  s.textContent = ".scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}.scrollbar-hide::-webkit-scrollbar{display:none}";
+  document.head.appendChild(s);
 }
 
 export default ProfileScreen
