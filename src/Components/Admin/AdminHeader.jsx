@@ -173,7 +173,7 @@ export default function AdminHeader() {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 h-14 flex items-center justify-between">
           <a href="/admin/dashboard" className="flex items-center gap-2">
             <img src={Logo} alt="KAHEAA" className="h-8 w-8 rounded-full ring-2 ring-emerald-300 object-cover" />
             <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-emerald-700 to-emerald-500 bg-clip-text text-transparent hidden sm:block">
@@ -222,7 +222,7 @@ export default function AdminHeader() {
 
         {isMobileOpen && (
           <div className="lg:hidden bg-white border-t border-gray-100 shadow-lg">
-            <div className="max-w-5xl mx-auto px-4 py-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
+            <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
               {navItems.map((item) => (
                 <a
                   key={item.path}

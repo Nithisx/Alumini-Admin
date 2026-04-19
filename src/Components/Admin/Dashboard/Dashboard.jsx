@@ -66,7 +66,7 @@ const HomePage = () => {
 
   const stats = [
     { label: "Members", value: data.total_users, color: "bg-emerald-500", path: "/admin/members/", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
-    { label: "Events", value: data.upcoming_event, color: "bg-violet-500", path: "/admin/event/", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
+    { label: "Upcoming Events", value: data.upcoming_event, color: "bg-violet-500", path: "/admin/event/", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
     { label: "Albums", value: data.albums_count, color: "bg-pink-500", path: "/admin/albums/", icon: "M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z" },
     { label: "News", value: data.new_users, color: "bg-amber-500", path: "/admin/news/", icon: "M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" },
   ];
@@ -78,15 +78,15 @@ const HomePage = () => {
         <Herosection />
       </div>
 
-      <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 py-6 space-y-8">
+      <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-6 space-y-8">
 
         {/* ── Stats strip (Instagram Stories style) ── */}
-        <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-4 pb-1">
           {stats.map((s) => (
             <button
               key={s.label}
               onClick={() => navigate(s.path)}
-              className="flex-shrink-0 flex flex-col items-center gap-2 group"
+              className="w-full flex flex-col items-center justify-start gap-2 group"
             >
               <div className={`w-16 h-16 ${s.color} rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform ring-2 ring-white ring-offset-2 ring-offset-gray-50`}>
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

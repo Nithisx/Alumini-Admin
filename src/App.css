@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+.App {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.role-content {
+  width: 100%;
+}
+
+/* Expand common page wrappers across roles while preserving modal/dialog max-widths. */
+.role-content :where(
+  [class*="max-w-2xl"][class*="mx-auto"],
+  [class*="max-w-3xl"][class*="mx-auto"],
+  [class*="max-w-4xl"][class*="mx-auto"],
+  [class*="max-w-5xl"][class*="mx-auto"],
+  [class*="max-w-7xl"][class*="mx-auto"],
+  [class*="max-w-[1600px]"][class*="mx-auto"]
+) {
+  max-width: 100%;
+}
+
+@media (min-width: 1280px) {
+  .role-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
 /* @layer utilities {
   .navy-50 {
     background-color: #f8fafc;

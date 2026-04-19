@@ -30,7 +30,7 @@ const StaffLayout = () => {
       <StaffHeader />
 
       {/* Main Content */}
-      <main className="p-0 pb-14 lg:pb-0">
+      <main className="role-content w-full min-w-0 p-0 pb-14 lg:pb-0">
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="event" element={<AddEvent />} />
