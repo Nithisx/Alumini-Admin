@@ -172,11 +172,20 @@ const BusinessDirectory = () => {
 
           {/* ── Mobile filter panel ── */}
           {showSidebar && (
-            <div className="md:hidden fixed inset-x-0 bottom-14 bg-white border-t border-gray-200 z-40 p-4 rounded-t-3xl shadow-2xl max-h-[60vh] overflow-y-auto">
-              <SidebarSection title="Industries" items={industries} collapsed={industriesCollapsed} setCollapsed={setIndustriesCollapsed} selectedValue={selectedIndustry} onSelect={setSelectedIndustry} icon={Building} />
-              <SidebarSection title="Products" items={products} collapsed={productsCollapsed} setCollapsed={setProductsCollapsed} selectedValue={selectedProduct} onSelect={setSelectedProduct} icon={Package} />
-              <SidebarSection title="Services" items={services} collapsed={servicesCollapsed} setCollapsed={setServicesCollapsed} selectedValue={selectedService} onSelect={setSelectedService} icon={Settings} />
-            </div>
+            <>
+              <div className="md:hidden fixed inset-0 bg-black/30 z-30" onClick={() => setShowSidebar(false)} />
+              <div className="md:hidden fixed inset-x-0 bottom-14 bg-white border-t border-gray-200 z-40 rounded-t-3xl shadow-2xl max-h-[55vh] overflow-y-auto">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <span className="font-semibold text-gray-800 text-sm">Filters</span>
+                  <button onClick={() => setShowSidebar(false)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 text-lg">&times;</button>
+                </div>
+                <div className="p-4">
+                  <SidebarSection title="Industries" items={industries} collapsed={industriesCollapsed} setCollapsed={setIndustriesCollapsed} selectedValue={selectedIndustry} onSelect={setSelectedIndustry} icon={Building} />
+                  <SidebarSection title="Products" items={products} collapsed={productsCollapsed} setCollapsed={setProductsCollapsed} selectedValue={selectedProduct} onSelect={setSelectedProduct} icon={Package} />
+                  <SidebarSection title="Services" items={services} collapsed={servicesCollapsed} setCollapsed={setServicesCollapsed} selectedValue={selectedService} onSelect={setSelectedService} icon={Settings} />
+                </div>
+              </div>
+            </>
           )}
 
           {/* ── Business feed ── */}

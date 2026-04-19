@@ -72,11 +72,11 @@ export default function NewsList() {
   const featuredPosts = posts.filter(post => post.featured);
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 py-6 flex gap-6 items-start">
+    <div className="bg-gray-100 min-h-screen pb-20 lg:pb-6">
+      <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6 items-start">
 
         {/* Main feed column */}
-        <div className="flex-1 min-w-0">
+        <div className="w-full lg:flex-1 min-w-0">
           {/* Create post prompt */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3 mb-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -205,7 +205,7 @@ export default function NewsList() {
         </div>
 
         {/* Sidebar */}
-        <div className="hidden lg:block w-72 flex-shrink-0 space-y-4 sticky top-20">
+        <div className="hidden lg:block w-72 flex-shrink-0 space-y-4 sticky top-20 self-start">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-semibold text-gray-800 mb-1 text-sm">Newsroom</h3>
             <p className="text-xs text-gray-500">Stay updated with the latest alumni news and announcements.</p>

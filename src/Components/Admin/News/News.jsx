@@ -94,7 +94,7 @@ export default function NewsList() {
   const featuredPosts = posts.filter(post => post.featured);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen pb-20 lg:pb-6">
       <ConfirmModal
         isOpen={!!confirmDeleteId}
         title="Delete News Item"

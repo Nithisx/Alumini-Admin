@@ -144,12 +144,12 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="news-modal-title"
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-full overflow-y-auto p-6 relative"
+        className="bg-white rounded-t-3xl sm:rounded-lg shadow-xl w-full max-w-2xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 relative"
       >
         <button
           onClick={handleClose}

@@ -142,10 +142,10 @@ export default function SingleMember() {
   } = member;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-4 sm:py-6 lg:py-8 pb-20 lg:pb-8">
       <div className="max-w-full lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-4 sm:mb-6 flex items-center justify-between flex-wrap gap-2">
           <Link
             to="/alumni/members"
             className="inline-flex items-center text-green-600 hover:text-green-800 font-medium transition-colors group"
@@ -159,28 +159,27 @@ export default function SingleMember() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="text-sm sm:text-base">Back to Members</span>
-
-            <button
-              onClick={handlechat}
-              className="ml-170 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-            >
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
-                />
-              </svg>
-              Chat Now
-            </button>
-
           </Link>
+
+          <button
+            onClick={handlechat}
+            className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            Chat Now
+          </button>
         </div>
 
         {/* Main Profile Card */}

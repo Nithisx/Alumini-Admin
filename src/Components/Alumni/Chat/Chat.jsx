@@ -521,7 +521,7 @@ const Chat = () => {
   }
 
   return (
-    <div className="bg-gray-50" style={{ height: "calc(100vh - 56px)" }}>
+    <div className="bg-gray-50 h-[calc(100vh-56px-56px)] lg:h-[calc(100vh-56px)]">
       {/* ── Agreement modal ── */}
       {showAgreement && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">

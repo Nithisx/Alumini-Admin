@@ -404,7 +404,7 @@ const JobFeed = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen pb-20 lg:pb-6">
       <ConfirmModal
         isOpen={!!confirmDeleteId}
         title="Delete Job Post"
@@ -416,9 +416,9 @@ const JobFeed = () => {
       />
 
       {/* Two-column layout: feed + sidebar */}
-      <div className="max-w-5xl mx-auto px-4 py-6 flex gap-6 items-start">
+      <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6 items-start">
         {/* Main feed column */}
-        <div className="flex-1 min-w-0">
+        <div className="w-full lg:flex-1 min-w-0">
           {/* Create post prompt */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3 mb-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">

@@ -512,7 +512,7 @@ export default function SingleMember() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-4 sm:py-6 lg:py-8 pb-20 lg:pb-8">
       <ConfirmModal
         isOpen={showDeactivateConfirm}
         title={member?.is_active ? "Deactivate User" : "Activate User"}
@@ -582,7 +582,7 @@ export default function SingleMember() {
 
               <button
                 onClick={handlechat}
-                className="ml-60 inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
               >
                 <svg
                   className="w-4 h-4 mr-2"

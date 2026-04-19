@@ -99,16 +99,18 @@ const BusinessView = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center mb-6">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
         <button
           onClick={() => navigate('/alumni/business')}
-          className="mr-4 text-gray-600 hover:text-gray-800"
+          className="inline-flex items-center text-emerald-600 hover:text-emerald-800 font-medium transition-colors"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Back to Directory
         </button>
-        <h1 className="text-2xl font-bold text-gray-800">Business Details</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Business Details</h1>
       </div>
 
       <div className="space-y-6">
@@ -258,6 +260,8 @@ const BusinessView = () => {
             currentUserId={currentUserId}
           />
         </div>
+      </div>
+      </div>
       </div>
     </div>
   );

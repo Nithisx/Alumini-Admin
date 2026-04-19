@@ -126,7 +126,7 @@ export default function SingleNews() {
   const hasImages = post.images && post.images.length > 0;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen pb-20 lg:pb-6">
       {/* Simple Header */}
       <div className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">

@@ -32,7 +32,7 @@ const AdminLayout = () => {
       <AdminHeader />
 
       {/* Main Content */}
-      <main className="p-0">
+      <main className="p-0 pb-14 lg:pb-0">
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="register-request" element={<RegisterRequestPage />} />

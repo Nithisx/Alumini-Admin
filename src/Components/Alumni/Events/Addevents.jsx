@@ -156,12 +156,12 @@ const AddEvent = () => {
     <div className="relative min-h-screen bg-gray-50">
       <Events />
 
-      {/* Add button */}
+      {/* Add button — positioned above mobile bottom nav */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 h-16 w-16 rounded-full bg-green-600 text-white shadow-xl 
+        className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 h-14 w-14 lg:h-16 lg:w-16 rounded-full bg-green-600 text-white shadow-xl
                    hover:bg-green-700 transform hover:scale-105 transition-all duration-200
-                   flex items-center justify-center"
+                   flex items-center justify-center z-40"
         aria-label="Add new event"
       >
         <FontAwesomeIcon icon={faPlus} className="text-2xl" />
@@ -176,7 +176,7 @@ const AddEvent = () => {
             className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
           >
             {/* Header */}
-            <div className="px-8 py-6 bg-green-600 text-white flex justify-between items-center">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-green-600 text-white flex justify-between items-center">
               <h3 id="add-event-title" className="text-xl font-bold flex items-center">
                 <FontAwesomeIcon icon={faCalendarPlus} className="mr-3 text-white" aria-hidden="true" />
                 New Event
@@ -191,8 +191,8 @@ const AddEvent = () => {
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
-              <form onSubmit={handleSubmit} className="p-8">
+            <div className="overflow-y-auto max-h-[calc(90vh-140px)] sm:max-h-[calc(90vh-180px)]">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left */}
                   <div className="space-y-6">
@@ -420,7 +420,7 @@ const AddEvent = () => {
             </div>
 
             {/* Footer */}
-            <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-4">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
