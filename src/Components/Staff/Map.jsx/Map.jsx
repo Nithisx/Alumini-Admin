@@ -95,103 +95,78 @@ const MapComponent = () => {
       ]
       : [10.921, 76.978];
 
-  // Loading state with better UI
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-xl text-gray-700">Loading map data...</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex flex-col justify-center items-center bg-gray-50" style={{ height: "calc(100vh - 56px)" }}>
+      <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3" />
+      <p className="text-sm text-gray-500">Loading map data…</p>
+    </div>
+  );
 
-  // Error state with retry option
-  if (error) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
-        <AlertCircle size={48} className="text-red-500 mb-4" />
-        <p className="text-xl text-red-600 mb-4">Error: {error}</p>
-        <button
-          onClick={fetchLocations}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center hover:bg-blue-600 transition-colors"
-        >
-          <RefreshCw size={18} className="mr-2" /> Retry
-        </button>
-      </div>
-    );
-  }
+  if (error) return (
+    <div className="flex flex-col justify-center items-center bg-gray-50 px-4" style={{ height: "calc(100vh - 56px)" }}>
+      <AlertCircle size={40} className="text-red-400 mb-3" />
+      <p className="text-sm text-red-600 mb-4">{error}</p>
+      <button onClick={fetchLocations} className="px-4 py-2 bg-emerald-600 text-white text-sm rounded-xl flex items-center gap-2 hover:bg-emerald-700 transition">
+        <RefreshCw size={16} /> Retry
+      </button>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header with search and controls */}
-      <div className="bg-white shadow-md p-4">
-        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center mb-4 md:mb-0">
-            <Map size={24} className="text-blue-500 mr-2" />
-            <h1 className="text-xl font-bold text-gray-800">User Locations Map</h1>
-          </div>
-
-          <div className="relative w-full md:w-1/3">
+    <div className="flex flex-col" style={{ height: "calc(100vh - 56px)" }}>
+      {/* Sticky sub-header */}
+      <div className="bg-white border-b border-gray-200 z-30">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+          <h1 className="text-base font-bold text-gray-900 flex-shrink-0 flex items-center gap-1.5">
+            <Map size={16} className="text-emerald-600" /> Alumni Map
+          </h1>
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Search users…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
-            <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
           </div>
+          <span className="flex-shrink-0 text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+            {filteredLocations.length}
+          </span>
         </div>
       </div>
 
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* User sidebar */}
-        <div className="w-64 bg-white shadow-md overflow-y-auto hidden md:block">
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center">
-              <Users size={18} className="text-blue-500 mr-2" />
-              <h2 className="font-semibold">Users ({filteredLocations.length})</h2>
-            </div>
-          </div>
-          <div className="divide-y divide-gray-100">
+        {/* User sidebar (desktop only) */}
+        <div className="w-60 bg-white border-r border-gray-100 overflow-y-auto hidden md:block flex-shrink-0">
+          <div className="divide-y divide-gray-50">
             {filteredLocations.map((user) => {
-              const iconUrl =
-                user.user_details.profile_photo &&
-                  user.user_details.profile_photo.startsWith('/media')
-                  ? `${MEDIA_BASE_URL}${user.user_details.profile_photo}`
-                  : defaultIconUrl;
-
+              const iconUrl = user.user_details.profile_photo?.startsWith('/media')
+                ? `${MEDIA_BASE_URL}${user.user_details.profile_photo}`
+                : defaultIconUrl;
               return (
                 <div
                   key={user.id}
-                  className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                    }`}
                   onClick={() => handleUserSelect(user)}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${selectedUser?.id === user.id ? 'bg-emerald-50 border-l-2 border-emerald-500' : 'hover:bg-gray-50'}`}
                 >
-                  <div className="flex items-center">
-                    <img
-                      src={iconUrl}
-                      alt={user.user_details.username}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                    />
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-800">{user.user_details.username}</p>
-                      <p className="text-xs text-gray-500">ID: {user.id}</p>
-                    </div>
+                  <img src={iconUrl} alt={user.user_details.username}
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-emerald-100 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{user.user_details.username}</p>
+                    <p className="text-xs text-gray-400">#{user.id}</p>
                   </div>
                 </div>
               );
             })}
             {filteredLocations.length === 0 && (
-              <div className="p-4 text-center text-gray-500">
-                No users match your search
-              </div>
+              <div className="p-6 text-center text-sm text-gray-400">No users found</div>
             )}
           </div>
         </div>
 
-        {/* Map container */}
+        {/* Map */}
         <div className="flex-1 relative">
           <MapContainer
             center={defaultPosition}
@@ -199,93 +174,47 @@ const MapComponent = () => {
             scrollWheelZoom={true}
             className="h-full w-full"
             zoomControl={false}
-            whenCreated={mapInstance => {
-              mapRef.current = mapInstance;
-            }}
+            whenCreated={(mapInstance) => { mapRef.current = mapInstance; }}
           >
             <ZoomControl position="bottomright" />
-            <TileLayer
-              attribution={mapTileOptions[mapView].attribution}
-              url={mapTileOptions[mapView].url}
-            />
-
+            <TileLayer attribution={mapTileOptions[mapView].attribution} url={mapTileOptions[mapView].url} />
             {filteredLocations.map((user) => {
-              const iconUrl =
-                user.user_details.profile_photo &&
-                  user.user_details.profile_photo.startsWith('/media')
-                  ? `${MEDIA_BASE_URL}${user.user_details.profile_photo}`
-                  : defaultIconUrl;
-
-              const userIcon = new L.Icon({
-                iconUrl,
-                iconSize: [40, 40],
-                iconAnchor: [20, 40],
-                popupAnchor: [0, -35],
-                className: 'rounded-full border-2 border-white shadow-lg',
-              });
-
+              const iconUrl = user.user_details.profile_photo?.startsWith('/media')
+                ? `${MEDIA_BASE_URL}${user.user_details.profile_photo}`
+                : defaultIconUrl;
+              const userIcon = new L.Icon({ iconUrl, iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -35], className: 'rounded-full border-2 border-white shadow-lg' });
               return (
-                <Marker
-                  key={user.id}
-                  position={[parseFloat(user.latitude), parseFloat(user.longitude)]}
-                  icon={userIcon}
-                  eventHandlers={{
-                    click: () => {
-                      navigate(`/admin/members/${user.user_details.username}`);
-                    },
-                  }}
+                <Marker key={user.id} position={[parseFloat(user.latitude), parseFloat(user.longitude)]} icon={userIcon}
+                  eventHandlers={{ click: () => navigate(`/admin/members/${user.user_details.username}`) }}
                 />
               );
             })}
           </MapContainer>
 
-          {/* Map controls overlay */}
-          <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-2 z-400">
-            <div className="flex flex-col">
-              <button
-                className={`p-2 rounded-lg mb-1 flex items-center ${mapView === 'streets' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
-                onClick={() => setMapView('streets')}
-                title="Streets View"
-              >
-                <Map size={20} />
+          {/* Map style controls */}
+          <div className="absolute top-3 right-3 bg-white rounded-2xl shadow-lg p-1.5 z-[400] flex flex-col gap-1">
+            {[["streets", Map], ["satellite", Layers], ["dark", Users]].map(([view, Icon]) => (
+              <button key={view} onClick={() => setMapView(view)} title={view}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${mapView === view ? "bg-emerald-100 text-emerald-700" : "hover:bg-gray-100 text-gray-500"}`}>
+                <Icon size={16} />
               </button>
-              <button
-                className={`p-2 rounded-lg mb-1 flex items-center ${mapView === 'satellite' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
-                onClick={() => setMapView('satellite')}
-                title="Satellite View"
-              >
-                <Layers size={20} />
-              </button>
-              <button
-                className={`p-2 rounded-lg flex items-center ${mapView === 'dark' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
-                onClick={() => setMapView('dark')}
-                title="Dark Mode"
-              >
-                <Users size={20} />
-              </button>
+            ))}
+          </div>
+
+          {/* Refresh */}
+          <div className="absolute bottom-6 right-3 z-[400]">
+            <button onClick={fetchLocations} title="Refresh"
+              className="w-10 h-10 bg-white rounded-2xl shadow-lg flex items-center justify-center hover:bg-gray-50 transition">
+              <RefreshCw size={16} className="text-emerald-600" />
+            </button>
+          </div>
+
+          {/* Mobile users pill */}
+          <div className="md:hidden absolute bottom-6 left-3 right-16 z-[400]">
+            <div className="bg-white rounded-2xl shadow-lg px-4 py-2.5 flex items-center gap-2">
+              <Users size={15} className="text-emerald-600" />
+              <span className="text-sm font-semibold text-gray-700">{filteredLocations.length} users on map</span>
             </div>
-          </div>
-
-          {/* Mobile user list toggle */}
-          <div className="md:hidden absolute bottom-4 left-4 right-4">
-            <button
-              className="w-full bg-white rounded-lg shadow-lg p-3 flex items-center justify-center"
-              onClick={() => {/* Toggle mobile user list */ }}
-            >
-              <Users size={18} className="mr-2" />
-              <span>Show Users ({filteredLocations.length})</span>
-            </button>
-          </div>
-
-          {/* Refresh button */}
-          <div className="absolute bottom-4 right-4 md:bottom-20">
-            <button
-              className="bg-white rounded-full shadow-lg p-3 hover:bg-gray-50"
-              onClick={fetchLocations}
-              title="Refresh Data"
-            >
-              <RefreshCw size={20} className="text-blue-500" />
-            </button>
           </div>
         </div>
       </div>

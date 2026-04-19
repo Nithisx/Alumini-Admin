@@ -27,12 +27,12 @@ import Chart from "./Chat/Chat"
 import AuditPage from "./Audit/AuditPage";
 const AdminLayout = () => {
   return (
-    <div className="">
-      {/* Admin Header (Sidebar) */}
+    <div>
+      {/* Admin Header */}
       <AdminHeader />
 
       {/* Main Content */}
-      <main className=" p-4">
+      <main className="p-0">
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="register-request" element={<RegisterRequestPage />} />

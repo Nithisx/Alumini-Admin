@@ -521,579 +521,270 @@ const Chat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Chat Monitoring Agreement Modal */}
+    <div className="bg-gray-50" style={{ height: "calc(100vh - 56px)" }}>
+      {/* ── Agreement modal ── */}
       {showAgreement && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="chat-agree-title"
-            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in"
-          >
-            {/* Modal Header */}
-            <div className="bg-green-600 px-6 py-5">
-              <div className="flex flex-col">
-                <h2 id="chat-agree-title" className="text-xl font-bold text-white">Chat Usage Agreement</h2>
-                <p className="text-green-100 text-sm mt-1">Please read before proceeding</p>
-              </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="chat-agree-title"
+            className="bg-white w-full sm:max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-100">
+              <h2 id="chat-agree-title" className="text-base font-bold text-gray-900">Chat Usage Agreement</h2>
+              <p className="text-gray-400 text-sm mt-0.5">Please read before continuing</p>
             </div>
-
-            {/* Modal Body */}
-            <div className="px-6 py-5 space-y-4">
-              {/* Monitoring Notice */}
-              <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
-                <Eye className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+            <div className="px-6 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+              <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
+                <Eye className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-green-800 text-sm">Messages Are Monitored</h3>
-                  <p className="text-green-700 text-sm mt-1">
-                    All messages sent through this chat feature are monitored by the Administrators of this panel for safety and compliance purposes.
-                  </p>
+                  <p className="text-sm font-semibold text-emerald-800">Messages Are Monitored</p>
+                  <p className="text-emerald-700 text-xs mt-1">All messages are monitored by Administrators for safety and compliance.</p>
                 </div>
               </div>
-
-              {/* Disclaimer */}
-              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
-                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-3">
+                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-red-800 text-sm">Data Disclaimer</h3>
-                  <p className="text-red-700 text-sm mt-1">
-                    In case any issues arise on behalf of this panel's chat feature, this organisation shall not be held responsible for your data,
-                    content shared, or any consequences arising from the use of this chat service.
-                  </p>
+                  <p className="text-sm font-semibold text-red-800">Data Disclaimer</p>
+                  <p className="text-red-700 text-xs mt-1">This organisation shall not be held responsible for your data or any consequences from using this chat service.</p>
                 </div>
               </div>
-
-              {/* Terms */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  By clicking <strong>"I Agree & Continue"</strong>, you acknowledge that:
-                </p>
-                <ul className="mt-2 space-y-1.5 text-sm text-gray-600">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">✓</span>
-                    Your messages may be reviewed by panel administrators
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">✓</span>
-                    You are responsible for the content you share
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">✓</span>
-                    The organisation is not liable for any data-related issues
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">✓</span>
-                    You agree to use the chat responsibly and respectfully
-                  </li>
-                </ul>
-              </div>
+              <ul className="text-xs text-gray-500 space-y-1.5 px-1">
+                {["Your messages may be reviewed by administrators","You are responsible for content you share","The organisation is not liable for data-related issues","Use the chat responsibly and respectfully"].map((t) => (
+                  <li key={t} className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span>{t}</li>
+                ))}
+              </ul>
             </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-3 sm:justify-end">
-              <button
-                onClick={handleDeclineAgreement}
-                className="px-5 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition font-medium text-sm"
-              >
-                Decline & Go Back
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+              <button onClick={handleDeclineAgreement} className="px-4 py-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-semibold">
+                Decline
               </button>
-              <button
-                onClick={handleAcceptAgreement}
-                className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium text-sm shadow-sm"
-              >
+              <button onClick={handleAcceptAgreement} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition text-sm font-semibold shadow-sm">
                 I Agree & Continue
               </button>
             </div>
           </div>
         </div>
       )}
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Alumni Connect
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Connect and communicate with your network
-              </p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setShowSearch(!showSearch)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
-              >
-                <Search className="w-4 h-4" />
-                <span>Find Users</span>
-              </button>
-            </div>
+
+      {/* ── Instagram DM layout ── */}
+      <div className="flex h-full max-w-5xl mx-auto border-x border-gray-200 bg-white">
+
+        {/* ── Left panel: conversation list ── */}
+        <div className={`${selectedChat ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-80 border-r border-gray-200`}>
+          {/* Panel header */}
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <h1 className="text-base font-bold text-gray-900">Messages</h1>
+            <button
+              onClick={() => setShowSearch(!showSearch)}
+              className={`w-9 h-9 flex items-center justify-center rounded-xl transition ${showSearch ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+              title="Find users"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
-          {/* Sidebar - Chat List */}
-          <div
-            className={`${selectedChat ? "hidden lg:block" : "block"
-              } lg:w-80 bg-white rounded-lg shadow-sm h-full flex flex-col`}
-          >
-            {/* Sidebar Header */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-gray-800">Messages</h2>
+          {/* Search */}
+          {showSearch && (
+            <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search people…"
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); searchUsers(e.target.value); }}
+                  className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                />
               </div>
-
-              {/* Search */}
-              {showSearch && (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder="Search users..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        searchUsers(e.target.value);
-                      }}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    />
-                  </div>
-
-                  {/* Search Results */}
-                  {searchResults.length > 0 && (
-                    <div className="bg-gray-50 rounded-lg max-h-40 overflow-y-auto">
-                      {searchResults.map((user) => (
-                        <div
-                          key={user.id}
-                          onClick={() => createRoom(user.id)}
-                          className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center overflow-hidden">
-                              {user.profile_photo ? (
-                                <img
-                                  src={
-                                    user.profile_photo.startsWith("http")
-                                      ? user.profile_photo
-                                      : `https://api.karpagamalumni.in${user.profile_photo}`
-                                  }
-                                  alt={user.username}
-                                  className="w-8 h-8 rounded-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-white text-sm font-medium">
-                                  {user.first_name?.charAt(0) ||
-                                    user.username?.charAt(0)}
-                                </span>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-gray-800 font-medium text-sm">
-                                {user.first_name} {user.last_name}
-                              </p>
-                              <p className="text-gray-500 text-xs">
-                                @{user.username}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {searchQuery && searchResults.length === 0 && (
-                    <p className="text-gray-500 text-center py-4 text-sm">
-                      No users found
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Chat List */}
-            <div className="flex-1 overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
-                </div>
-              ) : getSortedRooms().length > 0 ? (
-                <div className="divide-y divide-gray-200">
-                  {getSortedRooms().map((chat) => (
-                    <div
-                      key={chat.id}
-                      onClick={() => {
-                        setSelectedChat(chat);
-                        connectWebSocket(chat.id);
-                      }}
-                      className={`p-4 hover:bg-gray-50 cursor-pointer transition relative group ${selectedChat?.id === chat.id
-                        ? "bg-green-50 border-r-2 border-green-500"
-                        : ""
-                        } ${chat.is_community
-                          ? "bg-gradient-to-r from-blue-50 to-indigo-50"
-                          : ""
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ${chat.is_community
-                            ? "bg-gradient-to-r from-blue-600 to-indigo-600"
-                            : "bg-green-600"
-                            }`}
-                        >
-                          {chat.is_community ? (
-                            <Globe className="w-6 h-6 text-white" />
-                          ) : chat.avatar ? (
-                            <img
-                              src={
-                                chat.avatar.startsWith("http")
-                                  ? chat.avatar
-                                  : `https://api.karpagamalumni.in${chat.avatar}`
-                              }
-                              alt={chat.name}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-medium">
-                              {chat.name?.charAt(0)}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <h3
-                                className={`font-medium truncate ${chat.is_community
-                                  ? "text-blue-800"
-                                  : "text-gray-800"
-                                  }`}
-                              >
-                                {chat.name}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-500 text-xs">
-                                {formatTime(chat.lastMessageTime)}
-                              </span>
-                              {!chat.is_community && (
-                                <button
-                                  onClick={(e) => handleDeleteClick(chat, e)}
-                                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 rounded transition-all duration-200"
-                                  title="Delete chat"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-gray-500 text-sm truncate">
-                            {chat.is_community
-                              ? "Connect with the entire community"
-                              : chat.lastMessage || "No messages yet"}
-                          </p>
-                        </div>
-                        {chat.unreadCount > 0 && (
-                          <div
-                            className={`text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ${chat.is_community ? "bg-blue-500" : "bg-green-500"
-                              }`}
-                          >
-                            {chat.unreadCount}
-                          </div>
+              {searchResults.length > 0 && (
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden max-h-48 overflow-y-auto">
+                  {searchResults.map((user) => (
+                    <div key={user.id} onClick={() => createRoom(user.id)}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0">
+                      <div className="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {user.profile_photo ? (
+                          <img src={user.profile_photo.startsWith("http") ? user.profile_photo : `https://api.karpagamalumni.in${user.profile_photo}`} alt={user.username} className="w-9 h-9 rounded-full object-cover" />
+                        ) : (
+                          <span className="text-white text-sm font-bold">{user.first_name?.charAt(0) || user.username?.charAt(0)}</span>
                         )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{user.first_name} {user.last_name}</p>
+                        <p className="text-xs text-gray-400">@{user.username}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 px-4">
-                  <Users className="w-12 h-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500 text-center">
-                    No conversations yet
-                  </p>
-                  <p className="text-gray-400 text-sm mt-2 text-center">
-                    Click "Find Users" to start a new conversation or join the
-                    Community
-                  </p>
-                </div>
+              )}
+              {searchQuery && searchResults.length === 0 && (
+                <p className="text-center text-gray-400 text-sm py-3">No users found</p>
               )}
             </div>
-          </div>
+          )}
 
-          {/* Chat Area */}
-          <div
-            className={`${selectedChat ? "block" : "hidden lg:block"
-              } flex-1 bg-white rounded-lg shadow-sm flex flex-col h-full`}
-          >
-            {selectedChat ? (
-              <>
-                {/* Chat Header */}
-                <div
-                  className={`p-4 border-b border-gray-200 flex items-center justify-between ${selectedChat.is_community
-                    ? "bg-gradient-to-r from-blue-50 to-indigo-50"
-                    : ""
-                    }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setSelectedChat(null)}
-                      className="lg:hidden text-gray-500 hover:text-gray-700 p-1 rounded"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                    </button>
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${selectedChat.is_community
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600"
-                        : "bg-green-600"
-                        }`}
-                    >
-                      {selectedChat.is_community ? (
-                        <Globe className="w-5 h-5 text-white" />
-                      ) : selectedChat.avatar ? (
-                        <img
-                          src={
-                            selectedChat.avatar.startsWith("http")
-                              ? selectedChat.avatar
-                              : `https://api.karpagamalumni.in${selectedChat.avatar}`
-                          }
-                          alt={selectedChat.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-white font-medium">
-                          {selectedChat.name?.charAt(0)}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2
-                          className={`font-semibold ${selectedChat.is_community
-                            ? "text-blue-800"
-                            : "text-gray-800"
-                            }`}
-                        >
-                          {selectedChat.name}
-                        </h2>
-                        {selectedChat.is_community && (
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                            Community
-                          </span>
-                        )}
-                      </div>
-                      {/* <p className="text-sm text-gray-500">
-                        {isConnected ? (
-                          <span className="flex items-center gap-1">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                            {selectedChat.is_community
-                              ? "Community Online"
-                              : "Online"}
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-                            Connecting...
-                          </span>
-                        )}
-                      </p> */}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-                  {selectedChat.is_community && messages.length === 0 && (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="text-center">
-                        <Globe className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                          Welcome to Community Chat!
-                        </h3>
-                        <p className="text-gray-600">
-                          Connect with all alumni members in this shared space.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {!isConnected && messages.length === 0 && (
-                    <div className="flex items-center justify-center py-4 mb-4">
-                      <div className="bg-yellow-100 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-lg flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span>Connecting to chat...</span>
-                        <button
-                          onClick={() => connectWebSocket(selectedChat.id)}
-                          className="ml-2 underline hover:no-underline"
-                        >
-                          Retry
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    {messages.length === 0 && isConnected ? (
-                      <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-500">
-                          {selectedChat.is_community
-                            ? "No messages yet. Be the first to say hello to the community!"
-                            : "No messages yet. Start the conversation!"}
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((msg) => {
-                        const isOwnMessage =
-                          currentUser &&
-                          (msg.sender?.id === currentUser.id ||
-                            msg.sender?.username === currentUser.username);
-
-                        return (
-                          <div
-                            key={msg.id}
-                            className={`flex ${isOwnMessage ? "justify-end" : "justify-start"
-                              }`}
-                          >
-                            <div className="max-w-xs lg:max-w-md">
-                              {!isOwnMessage && msg.sender && (
-                                <p className="text-gray-500 text-xs mb-1 px-1">
-                                  {msg.sender.first_name} {msg.sender.last_name}
-                                  {selectedChat.is_community && (
-                                    <span className="ml-1 text-blue-500">
-                                      • Community
-                                    </span>
-                                  )}
-                                </p>
-                              )}
-                              <div
-                                className={`px-4 py-2 rounded-lg shadow-sm ${isOwnMessage
-                                  ? selectedChat.is_community
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-green-600 text-white"
-                                  : "bg-white text-gray-800 border border-gray-200"
-                                  }`}
-                              >
-                                <p>{msg.text}</p>
-                                <p
-                                  className={`text-xs mt-1 ${isOwnMessage
-                                    ? selectedChat.is_community
-                                      ? "text-blue-100"
-                                      : "text-green-100"
-                                    : "text-gray-500"
-                                    }`}
-                                >
-                                  {msg.time}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </div>
-
-                {/* Message Input */}
-                <div className="p-4 border-t border-gray-200 bg-white">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex items-center bg-gray-100 rounded-lg">
-                      <input
-                        type="text"
-                        placeholder={
-                          selectedChat.is_community
-                            ? "Message the community..."
-                            : "Type a message..."
-                        }
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                        className="flex-1 bg-transparent text-gray-800 px-4 py-3 focus:outline-none"
-                        disabled={!isConnected}
-                      />
-                      <button
-                        onClick={sendMessage}
-                        disabled={!message.trim() || !isConnected}
-                        className={`p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed mr-1 ${selectedChat.is_community
-                          ? "text-blue-600 hover:text-blue-700"
-                          : "text-green-600 hover:text-green-700"
-                          }`}
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageSquare className="w-12 h-12 text-green-600" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                    Alumni Connect
-                  </h2>
-                  <p className="text-gray-600 mb-2">
-                    Send and receive messages in real-time.
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    Select a conversation to start messaging
-                  </p>
-                </div>
+          {/* Room list */}
+          <div className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex justify-center items-center py-10">
+                <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
               </div>
+            ) : getSortedRooms().length === 0 ? (
+              <div className="text-center py-12 px-4">
+                <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">No conversations yet</p>
+                <p className="text-gray-300 text-xs mt-1">Tap + to start one</p>
+              </div>
+            ) : (
+              getSortedRooms().map((chat) => (
+                <div
+                  key={chat.id}
+                  onClick={() => { setSelectedChat(chat); connectWebSocket(chat.id); }}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition group relative ${selectedChat?.id === chat.id ? "bg-emerald-50" : ""}`}
+                >
+                  {/* Avatar */}
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${chat.is_community ? "bg-gradient-to-br from-indigo-500 to-violet-600" : "bg-emerald-500"}`}>
+                    {chat.is_community ? <Globe className="w-6 h-6 text-white" /> :
+                      chat.avatar ? <img src={chat.avatar.startsWith("http") ? chat.avatar : `https://api.karpagamalumni.in${chat.avatar}`} alt={chat.name} className="w-12 h-12 object-cover" /> :
+                      <span className="text-white font-bold">{chat.name?.charAt(0)}</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                      <p className={`text-sm font-semibold truncate ${chat.is_community ? "text-indigo-800" : "text-gray-900"}`}>{chat.name}</p>
+                      <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{formatTime(chat.lastMessageTime)}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">
+                      {chat.is_community ? "Community · All members" : chat.lastMessage || "No messages yet"}
+                    </p>
+                  </div>
+                  {!chat.is_community && (
+                    <button onClick={(e) => handleDeleteClick(chat, e)}
+                      className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 transition flex-shrink-0">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {chat.unreadCount > 0 && (
+                    <div className="w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">{chat.unreadCount}</div>
+                  )}
+                </div>
+              ))
             )}
           </div>
+        </div>
+
+        {/* ── Right panel: chat window ── */}
+        <div className={`${selectedChat ? "flex" : "hidden lg:flex"} flex-1 flex-col`}>
+          {selectedChat ? (
+            <>
+              {/* Chat top bar */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white">
+                <button onClick={() => setSelectedChat(null)} className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition">
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${selectedChat.is_community ? "bg-gradient-to-br from-indigo-500 to-violet-600" : "bg-emerald-500"}`}>
+                  {selectedChat.is_community ? <Globe className="w-4 h-4 text-white" /> :
+                    selectedChat.avatar ? <img src={selectedChat.avatar.startsWith("http") ? selectedChat.avatar : `https://api.karpagamalumni.in${selectedChat.avatar}`} alt={selectedChat.name} className="w-9 h-9 object-cover" /> :
+                    <span className="text-white text-sm font-bold">{selectedChat.name?.charAt(0)}</span>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-bold truncate ${selectedChat.is_community ? "text-indigo-800" : "text-gray-900"}`}>{selectedChat.name}</p>
+                  <div className="flex items-center gap-1">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500" : "bg-yellow-400 animate-pulse"}`} />
+                    <p className="text-xs text-gray-400">{isConnected ? "Connected" : "Connecting…"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50 space-y-3">
+                {!isConnected && messages.length === 0 && (
+                  <div className="flex justify-center">
+                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-2 rounded-xl flex items-center gap-2 text-sm">
+                      <div className="w-3.5 h-3.5 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin" />
+                      Connecting…
+                      <button onClick={() => connectWebSocket(selectedChat.id)} className="underline text-yellow-800 font-medium">Retry</button>
+                    </div>
+                  </div>
+                )}
+                {messages.length === 0 && isConnected && (
+                  <div className="text-center py-12">
+                    <MessageSquare className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">{selectedChat.is_community ? "Be first to say hello!" : "Start the conversation!"}</p>
+                  </div>
+                )}
+                {messages.map((msg) => {
+                  const isOwn = currentUser && (msg.sender?.id === currentUser.id || msg.sender?.username === currentUser.username);
+                  return (
+                    <div key={msg.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
+                      <div className="max-w-[70%]">
+                        {!isOwn && msg.sender && (
+                          <p className="text-xs text-gray-400 mb-1 px-1">{msg.sender.first_name} {msg.sender.last_name}</p>
+                        )}
+                        <div className={`px-4 py-2.5 rounded-2xl text-sm ${isOwn
+                          ? selectedChat.is_community ? "bg-indigo-600 text-white rounded-tr-sm" : "bg-emerald-600 text-white rounded-tr-sm"
+                          : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-sm"}`}>
+                          <p>{msg.text}</p>
+                          <p className={`text-xs mt-1 ${isOwn ? "text-white/60" : "text-gray-400"}`}>{msg.time}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message input */}
+              <div className="px-4 py-3 border-t border-gray-100 bg-white">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-4 py-2">
+                  <input
+                    type="text"
+                    placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                    className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none"
+                    disabled={!isConnected}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!message.trim() || !isConnected}
+                    className={`w-8 h-8 flex items-center justify-center rounded-xl transition disabled:opacity-40 ${selectedChat.is_community ? "text-indigo-600 hover:bg-indigo-50" : "text-emerald-600 hover:bg-emerald-50"}`}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center">
+                <MessageSquare className="w-10 h-10 text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-800">Your messages</h2>
+                <p className="text-sm text-gray-400 mt-1">Select a conversation or start a new one</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-chat-title"
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
-          >
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div role="dialog" aria-modal="true" className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-red-600" aria-hidden="true" />
+              <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-500" />
               </div>
               <div>
-                <h3 id="delete-chat-title" className="text-lg font-semibold text-gray-900">
-                  Delete Chat
-                </h3>
-                <p className="text-sm text-gray-500">
-                  This action cannot be undone
-                </p>
+                <h3 className="text-base font-bold text-gray-900">Delete Chat</h3>
+                <p className="text-xs text-gray-400">This cannot be undone</p>
               </div>
             </div>
-
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete your chat with{" "}
-              <span className="font-medium">{roomToDelete?.name}</span>? All
-              messages will be permanently removed.
-            </p>
-
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setRoomToDelete(null);
-                }}
-                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => deleteRoom(roomToDelete?.id)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
-              >
-                Delete Chat
-              </button>
+            <p className="text-sm text-gray-600 mb-5">Delete your chat with <span className="font-semibold">{roomToDelete?.name}</span>?</p>
+            <div className="flex gap-3">
+              <button onClick={() => { setShowDeleteModal(false); setRoomToDelete(null); }}
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+              <button onClick={() => deleteRoom(roomToDelete?.id)}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition">Delete</button>
             </div>
           </div>
         </div>

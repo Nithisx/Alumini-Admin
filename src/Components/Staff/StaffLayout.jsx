@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 
 // Staff UI Components
-import AdminHeader from "./StaffHeader";
+import StaffHeader from "./StaffHeader";
 import Addpost from "./Post/Addpost";
 import AddEvent from "./Events/Addevents";
 import AlbumsPage from "./Albums/Albums";
@@ -23,14 +23,14 @@ import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
 import Chat from "./Chat/Chat";
 
-const AdminLayout = () => {
+const StaffLayout = () => {
   return (
-    <div className="">
-      {/* Admin Header (Sidebar) */}
-      <AdminHeader />
+    <div>
+      {/* Staff Header */}
+      <StaffHeader />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-gray-100 ">
+      <main className="p-0">
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="event" element={<AddEvent />} />
@@ -40,7 +40,7 @@ const AdminLayout = () => {
           <Route path="students" element={<StudentImageUpload />} />
           <Route path="map" element={<Map />} />
           <Route path="news" element={<NewsRoom />} />
-          <Route path="news/:id" element={<SingleNews />} />{" "}
+          <Route path="news/:id" element={<SingleNews />} />
           <Route path="members" element={<Members />} />
           <Route path="members/:name" element={<Singlemember />} />
           <Route path="jobs" element={<Addpost />} />
@@ -58,4 +58,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default StaffLayout;

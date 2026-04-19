@@ -5,63 +5,37 @@ import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faFolderOpen,
-  faPlus,
-  faTimes,
-  faTrash,
-  faImage,
-  faCheck,
-  faExclamationCircle,
-  faSpinner,
-  faEllipsisV,
-  faEdit,
+  faFolderOpen, faPlus, faTimes, faTrash, faImage,
+  faCheck, faSpinner, faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumsPage = () => {
   const navigate = useNavigate();
   const [albums, setAlbums] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingAlbum, setEditingAlbum] = useState(null);
   const [formData, setFormData] = useState({ title: "", description: "" });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [view, setView] = useState("grid"); // grid or list view
-  const [isCreating, setIsCreating] = useState(false); // Loading state for create button
-  const [isEditing, setIsEditing] = useState(false); // Loading state for edit button
-  const [openMenuId, setOpenMenuId] = useState(null); // Track which menu is open
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    const fetchAlbums = async () => {
+    (async () => {
       try {
         const token = localStorage.getItem("Token");
-        const response = await axios.get("https://api.karpagamalumni.in/api/v1/albums/", {
+        const r = await axios.get("https://api.karpagamalumni.in/api/v1/albums/", {
           headers: { Authorization: `Token ${token}` },
         });
-        setAlbums(Array.isArray(response.data) ? response.data : []);
-      } catch (error) {
-        toast.error("Could not load albums. Please try again later.");
+        setAlbums(Array.isArray(r.data) ? r.data : []);
+      } catch {
+        toast.error("Could not load albums.");
         setAlbums([]);
       } finally {
         setLoading(false);
       }
-    };
-    fetchAlbums();
+    })();
   }, []);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => setOpenMenuId(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
-
-  const handleDeleteAlbum = async (id, e) => {
-    e.stopPropagation();
-    setConfirmDelete(id);
-  };
 
   const doDeleteAlbum = async (id) => {
     try {
@@ -70,126 +44,37 @@ const AlbumsPage = () => {
         headers: { Authorization: `Token ${token}` },
       });
       setAlbums((prev) => prev.filter((a) => a.id !== id));
-      toast.success("Album deleted successfully!");
-      setOpenMenuId(null);
-    } catch (error) {
-      toast.error("Could not delete album.");
-    }
+      toast.success("Album deleted!");
+    } catch { toast.error("Could not delete album."); }
   };
-
-  const handleEditAlbum = (album, e) => {
-    e.stopPropagation();
-    setEditingAlbum(album);
-    setFormData({ title: album.title, description: album.description || "" });
-    setUploadedFile(null);
-    setIsEditModalOpen(true);
-    setOpenMenuId(null);
-  };
-
-  const handleUpdateAlbum = async (e) => {
-    e.preventDefault();
-    if (!formData.title.trim()) {
-      toast.error("Please enter an album title.");
-      return;
-    }
-
-    setIsEditing(true);
-
-    try {
-      const token = localStorage.getItem("Token");
-      const payload = new FormData();
-      payload.append("title", formData.title);
-      payload.append("description", formData.description);
-      if (uploadedFile) {
-        payload.append("cover_image", uploadedFile.file, uploadedFile.name);
-      }
-
-      const response = await axios.put(
-        `https://api.karpagamalumni.in/api/v1/albums/${editingAlbum.id}/`,
-        payload,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      setAlbums((prev) =>
-        prev.map((album) =>
-          album.id === editingAlbum.id ? response.data : album
-        )
-      );
-      setIsEditModalOpen(false);
-      setEditingAlbum(null);
-      setFormData({ title: "", description: "" });
-      setUploadedFile(null);
-      toast.success("Album updated successfully!");
-    } catch (error) {
-      toast.error("Could not update album.");
-    } finally {
-      setIsEditing(false);
-    }
-  };
-
-  const toggleMenu = (albumId, e) => {
-    e.stopPropagation();
-    setOpenMenuId(openMenuId === albumId ? null : albumId);
-  };
-
-  const handleInputChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
-      toast.error("Please enter an album title.");
-      return;
-    }
-
-    setIsCreating(true); // Start loading
-
+    if (!formData.title.trim()) { toast.error("Please enter a title."); return; }
+    setIsCreating(true);
     try {
       const token = localStorage.getItem("Token");
       const payload = new FormData();
       payload.append("title", formData.title);
       payload.append("description", formData.description);
-      if (uploadedFile)
-        payload.append("cover_image", uploadedFile.file, uploadedFile.name);
-
-      const response = await axios.post(
-        "https://api.karpagamalumni.in/api/v1/albums/",
-        payload,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      setAlbums((prev) => [response.data, ...prev]);
+      if (uploadedFile) payload.append("cover_image", uploadedFile.file, uploadedFile.name);
+      const r = await axios.post("https://api.karpagamalumni.in/api/v1/albums/", payload, {
+        headers: { Authorization: `Token ${token}`, "Content-Type": "multipart/form-data" },
+      });
+      setAlbums((prev) => [r.data, ...prev]);
       setIsModalOpen(false);
       setFormData({ title: "", description: "" });
       setUploadedFile(null);
-      toast.success("Album created successfully!");
-    } catch (error) {
-      toast.error("Could not create album.");
-    } finally {
-      setIsCreating(false); // Stop loading
-    }
+      toast.success("Album created!");
+    } catch { toast.error("Could not create album."); }
+    finally { setIsCreating(false); }
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      setUploadedFile({
-        file,
-        name: file.name,
-        preview: URL.createObjectURL(file),
-      });
-    } else {
-      toast.error("Please upload only image files.");
-    }
+    if (file?.type.startsWith("image/")) {
+      setUploadedFile({ file, name: file.name, preview: URL.createObjectURL(file) });
+    } else { toast.error("Please upload an image file."); }
   };
 
   const removeFile = () => {
@@ -197,456 +82,172 @@ const AlbumsPage = () => {
     setUploadedFile(null);
   };
 
-  // Handle drag and drop box click
-  const handleDragBoxClick = () => {
-    document.getElementById(isEditModalOpen ? "edit-file-upload" : "file-upload").click();
-  };
-
-  const filteredAlbums = searchTerm
+  const filtered = searchTerm
     ? albums.filter(
-      (album) =>
-        album.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        album.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+        (a) =>
+          a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          a.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     : albums;
 
-  // Menu Component
-  const AlbumMenu = ({ album }) => (
-    <div className="relative">
-      <button
-        onClick={(e) => toggleMenu(album.id, e)}
-        className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
-        title="More options"
-      >
-        <FontAwesomeIcon icon={faEllipsisV} className="text-gray-600" />
-      </button>
-
-      {openMenuId === album.id && (
-        <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-20 w-36 overflow-hidden">
-          <button
-            onClick={(e) => handleEditAlbum(album, e)}
-            className="flex items-center w-full px-4 py-3 text-left hover:bg-gray-50 text-gray-700 transition-colors duration-200"
-          >
-            <FontAwesomeIcon icon={faEdit} className="mr-3 text-blue-500" />
-            Edit
-          </button>
-          <button
-            onClick={(e) => handleDeleteAlbum(album.id, e)}
-            className="flex items-center w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors duration-200"
-          >
-            <FontAwesomeIcon icon={faTrash} className="mr-3" />
-            Delete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section - Updated with green gradient and smaller size */}
-        {/* Header Section with search in header */}
-        <div className="bg-white shadow-sm pm-4 rounded-lg mb-6">
-          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <h1 className="text-3xl font-bold text-green-700">
-                Albums Dashboard
-              </h1>
-              <div className="flex items-center space-x-3 w-full md:w-auto">
-                <div className="relative flex-1 md:w-64">
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search albums..."
-                    className="w-full border border-gray-300 rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </span>
-                </div>
-                <div className="flex space-x-2 bg-gray-100 p-1 rounded-md">
-                  <button
-                    className={`p-2 rounded ${view === "grid"
-                      ? "bg-white shadow text-green-600"
-                      : "text-gray-500"
-                      }`}
-                    onClick={() => setView("grid")}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    className={`p-2 rounded ${view === "list"
-                      ? "bg-white shadow text-green-600"
-                      : "text-gray-500"
-                      }`}
-                    onClick={() => setView("list")}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16M4 18h16"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center font-medium"
-                >
-                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                  New Album
-                </button>
-              </div>
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      <ConfirmModal
+        isOpen={!!confirmDelete}
+        title="Delete Album"
+        message="This will permanently delete the album and all its contents."
+        danger confirmText="Delete"
+        onConfirm={() => { doDeleteAlbum(confirmDelete); setConfirmDelete(null); }}
+        onCancel={() => setConfirmDelete(null)}
+      />
+
+      {/* ── Sticky header ── */}
+      <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Albums</h1>
+            <div className="relative flex-1">
+              <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search albums…"
+                className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              />
             </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-shrink-0 w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition"
+            >
+              <FontAwesomeIcon icon={faPlus} />
+            </button>
           </div>
         </div>
+      </div>
 
-        <ConfirmModal
-          isOpen={!!confirmDelete}
-          title="Delete Album"
-          message="This will permanently delete the album and all its contents."
-          danger
-          confirmText="Delete"
-          onConfirm={() => { doDeleteAlbum(confirmDelete); setConfirmDelete(null); }}
-          onCancel={() => setConfirmDelete(null)}
-        />
-
-        {/* Content Section */}
+      <div className="max-w-2xl mx-auto px-4 py-4">
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-600"></div>
+          /* Skeleton grid */
+          <div className="grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="aspect-square bg-gray-200 animate-pulse" />
+            ))}
           </div>
-        ) : filteredAlbums.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-md p-12 flex flex-col items-center justify-center text-center">
-            {searchTerm ? (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16 text-gray-300 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <h3 className="text-2xl font-semibold text-gray-700 mb-2">
-                  No matching albums found
-                </h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  We couldn't find any albums matching "{searchTerm}". Try a
-                  different search term or clear your search.
-                </p>
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="mt-4 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
-                >
-                  Clear Search
-                </button>
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon
-                  icon={faFolderOpen}
-                  className="text-6xl text-gray-300 mb-4"
-                />
-                <h3 className="text-2xl font-semibold text-gray-700 mb-2">
-                  No Albums Yet
-                </h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  You haven't created any photo albums yet. Start organizing
-                  your photos by creating your first album.
-                </p>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="mt-6 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center font-medium"
-                >
-                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                  Create Your First Album
-                </button>
-              </>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20">
+            <FontAwesomeIcon icon={faFolderOpen} className="text-5xl text-gray-200 mb-4" />
+            <p className="text-gray-500 font-medium">{searchTerm ? "No albums match your search" : "No albums yet"}</p>
+            {!searchTerm && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="mt-4 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
+              >
+                Create First Album
+              </button>
             )}
           </div>
         ) : (
-          <>
-            {view === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredAlbums.map((album) => (
-                  <div
-                    key={album.id}
-                    onClick={() => navigate(`/admin/albums/${album.id}`)}
-                    className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer relative"
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      {/* 3-dots menu positioned at top right */}
-                      <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                        <AlbumMenu album={album} />
-                      </div>
-
-                      {album.cover_image ? (
-                        <img
-                          src={`https://api.karpagamalumni.in${album.cover_image}`}
-                          alt={album.title}
-                          className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <FontAwesomeIcon
-                            icon={faImage}
-                            className="text-3xl text-gray-400"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
-                        {album.title}
-                      </h3>
-                      <p className="text-gray-500 text-sm line-clamp-2">
-                        {album.description || "No description"}
-                      </p>
-                    </div>
+          /* Instagram-style square grid */
+          <div className="grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden">
+            {filtered.map((album) => (
+              <div
+                key={album.id}
+                onClick={() => navigate(`/admin/albums/${album.id}`)}
+                className="relative aspect-square cursor-pointer group overflow-hidden bg-gray-100"
+              >
+                {album.cover_image ? (
+                  <img
+                    src={`https://api.karpagamalumni.in${album.cover_image}`}
+                    alt={album.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                    <FontAwesomeIcon icon={faImage} className="text-gray-300 text-2xl" />
                   </div>
-                ))}
+                )}
+                {/* Hover overlay with title + delete */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+                  <p className="text-white text-xs font-semibold text-center truncate w-full">{album.title}</p>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(album.id); }}
+                    className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center"
+                    title="Delete"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="text-white text-xs" />
+                  </button>
+                </div>
               </div>
-            ) : (
-              <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <ul className="divide-y divide-gray-200">
-                  {filteredAlbums.map((album) => (
-                    <li
-                      key={album.id}
-                      onClick={() => navigate(`/admin/albums/${album.id}`)}
-                      className="hover:bg-gray-50 cursor-pointer transition group"
-                    >
-                      <div className="flex items-center p-4">
-                        <div className="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
-                          {album.cover_image ? (
-                            <img
-                              src={`https://api.karpagamalumni.in${album.cover_image}`}
-                              alt={album.title}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                              <FontAwesomeIcon
-                                icon={faImage}
-                                className="text-gray-400"
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <div className="ml-4 flex-grow">
-                          <h3 className="text-lg font-medium text-gray-800">
-                            {album.title}
-                          </h3>
-                          <p className="text-gray-500 text-sm truncate">
-                            {album.description || "No description"}
-                          </p>
-                        </div>
-                        <div className="ml-4">
-                          <AlbumMenu album={album} />
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Create Album Modal */}
+      {/* ── Create Album Modal ── */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="create-album-title"
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
+            role="dialog" aria-modal="true"
+            className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
-              <div className="flex justify-between items-center">
-                <h3 id="create-album-title" className="text-white text-xl font-semibold flex items-center">
-                  <FontAwesomeIcon icon={faFolderOpen} className="mr-2" aria-hidden="true" />
-                  Create New Album
-                </h3>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-white hover:text-green-100 transition"
-                  disabled={isCreating}
-                >
-                  <FontAwesomeIcon icon={faTimes} size="lg" />
-                </button>
-              </div>
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900">New Album</h3>
+              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Album Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  placeholder="Enter album title"
-                  disabled={isCreating}
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  placeholder="Describe what this album is about"
-                  disabled={isCreating}
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Album title"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                disabled={isCreating}
+              />
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                placeholder="Description (optional)"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                disabled={isCreating}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Cover Image
+              {/* Cover image upload */}
+              {uploadedFile ? (
+                <div className="relative rounded-xl overflow-hidden">
+                  <img src={uploadedFile.preview} alt="Preview" className="w-full h-40 object-cover" />
+                  <button type="button" onClick={removeFile} disabled={isCreating}
+                    className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center text-white">
+                    <FontAwesomeIcon icon={faTimes} className="text-xs" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition">
+                  <FontAwesomeIcon icon={faImage} className="text-gray-300 text-2xl mb-2" />
+                  <span className="text-sm text-gray-400">Tap to add cover photo</span>
+                  <input id="file-upload" type="file" accept="image/*" onChange={handleFileSelect} className="sr-only" disabled={isCreating} />
                 </label>
-                {uploadedFile ? (
-                  <div className="relative bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
-                    <button
-                      onClick={removeFile}
-                      type="button"
-                      className="absolute top-2 right-2 bg-white text-red-500 rounded-full p-1 shadow-md hover:bg-red-50 transition"
-                      disabled={isCreating}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
-                    <div className="flex flex-col items-center">
-                      <img
-                        src={uploadedFile.preview}
-                        alt="Preview"
-                        className="w-full max-w-xs h-auto max-h-48 object-contain rounded-lg"
-                      />
-                      <p className="mt-2 text-sm text-gray-500 truncate max-w-full">
-                        {uploadedFile.name}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition"
-                    onClick={handleDragBoxClick}
-                  >
-                    <div className="space-y-1 text-center">
-                      <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
-                        stroke="currentColor"
-                        fill="none"
-                        viewBox="0 0 48 48"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <div className="flex text-sm text-gray-600">
-                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none">
-                          Upload a file
-                        </span>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        PNG, JPG, GIF up to 10MB
-                      </p>
-                    </div>
-                    <input
-                      id="file-upload"
-                      name="file-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="sr-only"
-                      disabled={isCreating}
-                    />
-                  </div>
-                )}
-              </div>
+              )}
 
-              <div className="flex justify-end pt-4 space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-50 transition"
-                  disabled={isCreating}
-                >
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setIsModalOpen(false)} disabled={isCreating}
+                  className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 transition flex items-center disabled:bg-green-400 disabled:cursor-not-allowed"
-                  disabled={isCreating}
-                >
+                <button type="submit" disabled={isCreating}
+                  className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition flex items-center justify-center gap-2 disabled:opacity-60">
                   {isCreating ? (
-                    <>
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        className="mr-2 animate-spin"
-                      />
-                      Creating...
-                    </>
+                    <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Creating…</>
                   ) : (
-                    <>
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                      Create Album
-                    </>
+                    <><FontAwesomeIcon icon={faCheck} /> Create Album</>
                   )}
                 </button>
               </div>
@@ -654,191 +255,6 @@ const AlbumsPage = () => {
           </div>
         </div>
       )}
-
-      {/* Edit Album Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-album-title"
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-              <div className="flex justify-between items-center">
-                <h3 id="edit-album-title" className="text-white text-xl font-semibold flex items-center">
-                  <FontAwesomeIcon icon={faEdit} className="mr-2" aria-hidden="true" />
-                  Edit Album
-                </h3>
-                <button
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="text-white hover:text-blue-100 transition"
-                  disabled={isEditing}
-                >
-                  <FontAwesomeIcon icon={faTimes} size="lg" />
-                </button>
-              </div>
-            </div>
-            <form onSubmit={handleUpdateAlbum} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Album Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="Enter album title"
-                  disabled={isEditing}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="Describe what this album is about"
-                  disabled={isEditing}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Cover Image
-                </label>
-
-                {/* Show current image if no new file selected */}
-                {!uploadedFile && editingAlbum?.cover_image && (
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">Current image:</p>
-                    <img
-                      src={`https://api.karpagamalumni.in${editingAlbum.cover_image}`}
-                      alt="Current cover"
-                      className="w-full max-w-xs h-auto max-h-48 object-contain rounded-lg border"
-                    />
-                  </div>
-                )}
-
-                {uploadedFile ? (
-                  <div className="relative bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
-                    <button
-                      onClick={removeFile}
-                      type="button"
-                      className="absolute top-2 right-2 bg-white text-red-500 rounded-full p-1 shadow-md hover:bg-red-50 transition"
-                      disabled={isEditing}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
-                    <div className="flex flex-col items-center">
-                      <img
-                        src={uploadedFile.preview}
-                        alt="Preview"
-                        className="w-full max-w-xs h-auto max-h-48 object-contain rounded-lg"
-                      />
-                      <p className="mt-2 text-sm text-gray-500 truncate max-w-full">
-                        {uploadedFile.name}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
-                    onClick={handleDragBoxClick}
-                  >
-                    <div className="space-y-1 text-center">
-                      <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
-                        stroke="currentColor"
-                        fill="none"
-                        viewBox="0 0 48 48"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <div className="flex text-sm text-gray-600">
-                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                          Upload a new file
-                        </span>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        PNG, JPG, GIF up to 10MB
-                      </p>
-                    </div>
-                    <input
-                      id="edit-file-upload"
-                      name="edit-file-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="sr-only"
-                      disabled={isEditing}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end pt-4 space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-50 transition"
-                  disabled={isEditing}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition flex items-center disabled:bg-blue-400 disabled:cursor-not-allowed"
-                  disabled={isEditing}
-                >
-                  {isEditing ? (
-                    <>
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        className="mr-2 animate-spin"
-                      />
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                      Update Album
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes fade-in-out { 0%,100% { opacity: 0;} 10%,90% { opacity:1;} }
-        .animate-fade-in-out { animation: fade-in-out 4s ease-in-out forwards; }
-        @keyframes scale-in { from { transform: scale(0.95); opacity: 0;} to { transform: scale(1); opacity: 1;} }
-        .animate-scale-in { animation: scale-in 0.3s ease-out forwards; }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
     </div>
   );
 };

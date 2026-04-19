@@ -247,8 +247,7 @@ const BusinessDetail = () => {
         }
 
         toast.success("Business created successfully!");
-        // Redirect to business directory main page
-        navigate('/admin/business');
+        navigate(`/staff/business/${response.data.id}`);
       } else {
         // Update existing business
         response = await axios.put(
@@ -286,8 +285,6 @@ const BusinessDetail = () => {
         }
 
         toast.success("Business updated successfully!");
-        // Redirect to business directory main page
-        navigate('/admin/business');
       }
     } catch (error) {
       toast.error("Error saving business. Please try again.");
@@ -804,7 +801,7 @@ const BusinessDetail = () => {
         <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => navigate('/admin/business')}
+            onClick={() => navigate('/staff/business')}
             className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
           >
             Cancel

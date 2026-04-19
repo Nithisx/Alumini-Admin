@@ -89,7 +89,7 @@ const BusinessView = () => {
       <div className="text-center py-16">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Business Not Found</h2>
         <button
-          onClick={() => navigate('/alumni/business')}
+          onClick={() => navigate('/staff/business')}
           className="text-blue-600 hover:text-blue-800"
         >
           Back to Directory
@@ -102,7 +102,7 @@ const BusinessView = () => {
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center mb-6">
         <button
-          onClick={() => navigate('/alumni/business')}
+          onClick={() => navigate('/staff/business')}
           className="mr-4 text-gray-600 hover:text-gray-800"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />

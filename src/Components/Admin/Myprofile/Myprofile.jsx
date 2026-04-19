@@ -37,6 +37,32 @@ const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
 const SUGGESTIONS_API = API_SUGGESTIONS;
 
+const ACADEMIC_COURSES = [
+  "Bachelor of Architecture",
+  "Bachelor of Arts",
+  "Bachelor of Business Administration",
+  "Bachelor of Commerce",
+  "Bachelor of Computer Applications",
+  "Bachelor of Design",
+  "Bachelor of Engineering",
+  "Bachelor of Pharmacy",
+  "Bachelor of Philosophy",
+  "Bachelor of Science",
+  "Bachelor of Technology",
+  "Master of Architecture",
+  "Master of Building and Engineering Management",
+  "Master of Business Administration",
+  "Master of Commerce",
+  "Master of Computer Applications",
+  "Master of Engineering",
+  "Master of Pharmacy",
+  "Master of Philosophy",
+  "Master of Planning",
+  "Master of Science",
+  "Master of Social Work",
+  "Ph.D",
+]
+
 // Utility functions
 const getMediaUrl = (uri) => {
   if (!uri) return ""
@@ -70,20 +96,61 @@ const ProfileScreen = () => {
     last_name: "",
     username: "",
     email: "",
+    secondary_email: "",
     social_links: {},
+    facebook_link: "",
+    linkedin_link: "",
+    twitter_link: "",
+    website_link: "",
     bio: "",
     phone: "",
+    home_phone_no: "",
+    office_phone_no: "",
     passed_out_year: "",
     current_work: "",
+    company: "",
+    position: "",
+    work_experience: "",
+    professional_skills: [],
+    industries_worked_in: [],
+    roles_played: [],
     Worked_in: [],
     experience: [],
     salutation: "",
+    gender: "",
+    date_of_birth: null,
+    // Academic
+    course: "",
+    branch: "",
+    stream: "",
+    roll_no: "",
+    college_name: "",
+    course_start_year: "",
+    course_end_year: "",
+    educational_course: "",
+    educational_institute: "",
+    // Address
     Address: "",
     city: "",
     state: "",
     country: "",
     zip_code: "",
-    date_of_birth: null,
+    // Correspondence address (from old portal seeded data)
+    correspondence_address: "",
+    correspondence_city: "",
+    correspondence_state: "",
+    correspondence_country: "",
+    correspondence_pincode: "",
+    current_location: "",
+    home_town: "",
+    // Faculty fields (for old seeded data)
+    faculty_job_title: "",
+    faculty_institute: "",
+    faculty_department: "",
+    faculty_start_year: "",
+    faculty_end_year: "",
+    chapter: "",
+    is_entrepreneur: false,
     profile_photo: DEFAULT_PROFILE_IMAGE,
     cover_photo: DEFAULT_COVER_IMAGE,
   })
@@ -130,7 +197,7 @@ const ProfileScreen = () => {
       const res = await fetch(`${SUGGESTIONS_API}/profile?${query}`);
       if (res.ok) {
         const json = await res.json();
-        
+
         setApiSuggestions(prev => ({
           ...prev,
           usernames: json.data?.usernameSuggestions || prev.usernames,
@@ -140,7 +207,7 @@ const ProfileScreen = () => {
           zipcodes: json.data?.locationSuggestions?.zipcodes || json.data?.locationSuggestions?.pincodes || prev.zipcodes,
         }));
       }
-    } catch(err) {
+    } catch (err) {
     } finally {
       setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
     }
@@ -156,7 +223,7 @@ const ProfileScreen = () => {
   }, [fetchSuggestions]);
 
   const tabs = ["Personal", "Work", "Contact", "Social"]
-  const editTabs = ["Basic Info", "Contact & Address", "Work & Social"]
+  const editTabs = ["Basic Info", "Academic", "Contact & Address", "Work & Social"]
 
   const handleError = (error, customMessage) => {
     const errorMessage =
@@ -288,24 +355,84 @@ const ProfileScreen = () => {
       // Create FormData for the entire profile update (including text fields)
       const formData = new FormData()
 
-      // Add text data
-      formData.append("bio", profile.bio || "")
-      formData.append("email", profile.email || "")
-      formData.append("username", profile.username || "")
-      formData.append("passed_out_year", profile.passed_out_year || "")
-      formData.append("phone", profile.phone || "")
+      // Core identity
       formData.append("first_name", profile.first_name || "")
       formData.append("last_name", profile.last_name || "")
-      formData.append("experience", JSON.stringify(profile.experience || {}))
-      formData.append("social_links", JSON.stringify(profile.social_links || {}))
-      formData.append("current_work", profile.current_work || "")
-      formData.append("Worked_in", JSON.stringify(profile.Worked_in || []))
+      formData.append("username", profile.username || "")
+      formData.append("email", profile.email || "")
+      formData.append("secondary_email", profile.secondary_email || "")
+      formData.append("salutation", profile.salutation || "")
+      formData.append("gender", profile.gender || "")
+      formData.append("date_of_birth", profile.date_of_birth || "")
+      formData.append("bio", profile.bio || "")
+
+      // Contact
+      formData.append("phone", profile.phone || "")
+      formData.append("home_phone_no", profile.home_phone_no || "")
+      formData.append("office_phone_no", profile.office_phone_no || "")
+
+      // Address
       formData.append("Address", profile.Address || "")
       formData.append("city", profile.city || "")
       formData.append("state", profile.state || "")
       formData.append("country", profile.country || "")
       formData.append("zip_code", profile.zip_code || "")
-      formData.append("date_of_birth", profile.date_of_birth || "")
+      formData.append("current_location", profile.current_location || "")
+      formData.append("home_town", profile.home_town || "")
+
+      // Correspondence address (important for old seeded data)
+      formData.append("correspondence_address", profile.correspondence_address || "")
+      formData.append("correspondence_city", profile.correspondence_city || "")
+      formData.append("correspondence_state", profile.correspondence_state || "")
+      formData.append("correspondence_country", profile.correspondence_country || "")
+      formData.append("correspondence_pincode", profile.correspondence_pincode || "")
+
+      // Academic
+      formData.append("course", profile.course || "")
+      formData.append("branch", profile.branch || "")
+      formData.append("stream", profile.stream || "")
+      formData.append("roll_no", profile.roll_no || "")
+      formData.append("college_name", profile.college_name || "")
+      formData.append("course_start_year", profile.course_start_year || "")
+      formData.append("course_end_year", profile.course_end_year || "")
+      formData.append("passed_out_year", profile.passed_out_year || "")
+      formData.append("educational_course", profile.educational_course || "")
+      formData.append("educational_institute", profile.educational_institute || "")
+
+      // Professional
+      formData.append("current_work", profile.current_work || "")
+      formData.append("company", profile.company || "")
+      formData.append("position", profile.position || "")
+      formData.append("work_experience", profile.work_experience || "")
+      formData.append("chapter", profile.chapter || "")
+      formData.append("is_entrepreneur", profile.is_entrepreneur ? "true" : "false")
+
+      // Faculty fields
+      formData.append("faculty_job_title", profile.faculty_job_title || "")
+      formData.append("faculty_institute", profile.faculty_institute || "")
+      formData.append("faculty_department", profile.faculty_department || "")
+      formData.append("faculty_start_year", profile.faculty_start_year || "")
+      formData.append("faculty_end_year", profile.faculty_end_year || "")
+
+      // JSON fields
+      formData.append("experience", JSON.stringify(profile.experience || {}))
+      formData.append("social_links", JSON.stringify(profile.social_links || {}))
+      formData.append("Worked_in", JSON.stringify(profile.Worked_in || []))
+      formData.append("professional_skills", JSON.stringify(
+        Array.isArray(profile.professional_skills) ? profile.professional_skills : []
+      ))
+      formData.append("industries_worked_in", JSON.stringify(
+        Array.isArray(profile.industries_worked_in) ? profile.industries_worked_in : []
+      ))
+      formData.append("roles_played", JSON.stringify(
+        Array.isArray(profile.roles_played) ? profile.roles_played : []
+      ))
+
+      // Individual social links
+      formData.append("facebook_link", profile.facebook_link || "")
+      formData.append("linkedin_link", profile.linkedin_link || "")
+      formData.append("twitter_link", profile.twitter_link || "")
+      formData.append("website_link", profile.website_link || "")
 
       // Add image files if they exist
       if (profile.profile_photo_file) {
@@ -464,6 +591,28 @@ const ProfileScreen = () => {
               </div>
             </div>
 
+            {profile.gender && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Gender</p>
+                  <p className="text-sm sm:text-base text-green-900">{profile.gender}</p>
+                </div>
+              </div>
+            )}
+
+            {profile.is_entrepreneur && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Entrepreneur</p>
+                  <span className="inline-block text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">
+                    Yes
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Password Management Section */}
             <div className="pt-3 sm:pt-4 border-t border-green-200">
               <div className="flex items-start space-x-3 mb-4">
@@ -506,41 +655,124 @@ const ProfileScreen = () => {
       case 1: // Work
         return (
           <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
-              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">Current Work</p>
-                <p className="text-sm sm:text-base text-green-900 break-words">{profile.current_work || "N/A"}</p>
+            {(profile.current_work || profile.company || profile.position) && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Current Position</p>
+                  <p className="text-sm sm:text-base text-green-900 break-words font-medium">
+                    {profile.position || profile.current_work || "N/A"}
+                  </p>
+                  {profile.company && (
+                    <p className="text-xs text-green-600 mt-0.5">{profile.company}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
-              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">Passed Out Year</p>
-                <p className="text-sm sm:text-base text-green-900">{profile.passed_out_year || "N/A"}</p>
+            {profile.work_experience && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Work Experience</p>
+                  <p className="text-sm sm:text-base text-green-900">{profile.work_experience} years</p>
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">Experience</p>
-                <p className="text-sm sm:text-base text-green-900 break-words">
-                  {profile.experience?.role
-                    ? `${profile.experience.role} (${profile.experience.years} years)`
-                    : "No experience details"}
-                </p>
+            {(profile.course || profile.branch || profile.passed_out_year) && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Education</p>
+                  {(profile.course || profile.branch) && (
+                    <p className="text-sm sm:text-base text-green-900 break-words">
+                      {[profile.course, profile.branch].filter(Boolean).join(" — ")}
+                    </p>
+                  )}
+                  {profile.college_name && (
+                    <p className="text-xs text-green-600 mt-0.5">{profile.college_name}</p>
+                  )}
+                  {profile.passed_out_year && (
+                    <p className="text-xs text-green-500 mt-0.5">Passed out: {profile.passed_out_year}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
-              <Building className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">Previous Work</p>
-                <p className="text-sm sm:text-base text-green-900 line-clamp-2 break-words">{profile.Worked_in?.join(", ") || "N/A"}</p>
+            {Array.isArray(profile.professional_skills) && profile.professional_skills.length > 0 && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Professional Skills</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {profile.professional_skills.map((skill, i) => (
+                      <span key={i} className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {Array.isArray(profile.industries_worked_in) && profile.industries_worked_in.length > 0 && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <Building className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Industries</p>
+                  <p className="text-sm sm:text-base text-green-900 break-words">{profile.industries_worked_in.join(", ")}</p>
+                </div>
+              </div>
+            )}
+
+            {profile.experience?.role && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Experience</p>
+                  <p className="text-sm sm:text-base text-green-900 break-words">
+                    {profile.experience.role}
+                    {profile.experience.years ? ` (${profile.experience.years} yrs)` : ""}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {Array.isArray(profile.Worked_in) && profile.Worked_in.length > 0 && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <Building className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Previous Companies</p>
+                  <p className="text-sm sm:text-base text-green-900 break-words">{profile.Worked_in.join(", ")}</p>
+                </div>
+              </div>
+            )}
+
+            {profile.faculty_job_title && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Faculty / Teaching</p>
+                  <p className="text-sm sm:text-base text-green-900 break-words">{profile.faculty_job_title}</p>
+                  {profile.faculty_department && (
+                    <p className="text-xs text-green-600 mt-0.5">{profile.faculty_department}</p>
+                  )}
+                  {profile.faculty_institute && (
+                    <p className="text-xs text-green-600 mt-0.5">{profile.faculty_institute}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!profile.current_work && !profile.company && !profile.position && !profile.work_experience &&
+             !profile.course && !profile.branch && !profile.passed_out_year && !profile.faculty_job_title &&
+             !(Array.isArray(profile.professional_skills) && profile.professional_skills.length > 0) && (
+              <div className="flex flex-col items-center justify-center h-32 sm:h-40">
+                <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-green-300 mb-2" />
+                <p className="text-sm sm:text-base text-green-600">No work details added</p>
+              </div>
+            )}
           </div>
         )
 
@@ -552,44 +784,106 @@ const ProfileScreen = () => {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-green-700 uppercase mb-1">Phone</p>
                 <p className="text-sm sm:text-base text-green-900">{profile.phone || "N/A"}</p>
+                {profile.home_phone_no && (
+                  <p className="text-xs text-green-600 mt-0.5">Home: {profile.home_phone_no}</p>
+                )}
+                {profile.office_phone_no && (
+                  <p className="text-xs text-green-600 mt-0.5">Office: {profile.office_phone_no}</p>
+                )}
               </div>
             </div>
+
+            {profile.secondary_email && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Secondary Email</p>
+                  <p className="text-sm sm:text-base text-green-900 break-all">{profile.secondary_email}</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
               <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-green-700 uppercase mb-1">Address</p>
-                <p className="text-sm sm:text-base text-green-900 line-clamp-3 break-words">
+                <p className="text-xs font-bold text-green-700 uppercase mb-1">Current Address</p>
+                <p className="text-sm sm:text-base text-green-900 break-words">
                   {[profile.Address, profile.city, profile.state, profile.country, profile.zip_code]
                     .filter(Boolean)
                     .join(", ") || "N/A"}
                 </p>
+                {profile.current_location && (
+                  <p className="text-xs text-green-600 mt-0.5">Location: {profile.current_location}</p>
+                )}
+                {profile.home_town && (
+                  <p className="text-xs text-green-600 mt-0.5">Home Town: {profile.home_town}</p>
+                )}
               </div>
             </div>
-          </div>
-        )
 
-      case 3: // Social
-        return (
-          <div className="space-y-3 sm:space-y-4">
-            {profile.social_links && Object.keys(profile.social_links).length > 0 ? (
-              Object.entries(profile.social_links).map(([key, value]) => (
-                <div key={key} className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
-                  <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-green-700 uppercase mb-1">{key.replace("_link", "")}</p>
-                    <p className="text-sm sm:text-base text-green-900 truncate">{String(value) || "N/A"}</p>
-                  </div>
+            {(profile.correspondence_address || profile.correspondence_city || profile.correspondence_country) && (
+              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Correspondence Address</p>
+                  <p className="text-sm sm:text-base text-green-900 break-words">
+                    {[
+                      profile.correspondence_address,
+                      profile.correspondence_city,
+                      profile.correspondence_state,
+                      profile.correspondence_country,
+                      profile.correspondence_pincode,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-32 sm:h-40">
-                <Globe className="w-8 h-8 sm:w-10 sm:h-10 text-green-300 mb-2" />
-                <p className="text-sm sm:text-base text-green-600">No social links added</p>
               </div>
             )}
           </div>
         )
+
+      case 3: // Social
+        {
+          // Merge individual fields with social_links JSON — individual fields take priority
+          const socialMap = {
+            ...(profile.social_links || {}),
+            ...(profile.linkedin_link ? { linkedin_link: profile.linkedin_link } : {}),
+            ...(profile.twitter_link ? { twitter_link: profile.twitter_link } : {}),
+            ...(profile.facebook_link ? { facebook_link: profile.facebook_link } : {}),
+            ...(profile.website_link ? { website_link: profile.website_link } : {}),
+          }
+          const socialEntries = Object.entries(socialMap).filter(([, v]) => v)
+          return (
+            <div className="space-y-3 sm:space-y-4">
+              {socialEntries.length > 0 ? (
+                socialEntries.map(([key, value]) => (
+                  <div key={key} className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+                    <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-green-700 uppercase mb-1">
+                        {key.replace(/_link$/, "").replace(/_/g, " ")}
+                      </p>
+                      <a
+                        href={String(value)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm sm:text-base text-green-700 underline truncate block hover:text-green-900"
+                      >
+                        {String(value)}
+                      </a>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-32 sm:h-40">
+                  <Globe className="w-8 h-8 sm:w-10 sm:h-10 text-green-300 mb-2" />
+                  <p className="text-sm sm:text-base text-green-600">No social links added</p>
+                </div>
+              )}
+            </div>
+          )
+        }
 
       default:
         return null
@@ -702,7 +996,7 @@ const ProfileScreen = () => {
                   debouncedFetch("usernames", { username: v });
                 }}
                 onFocus={() => {
-                   fetchSuggestions("usernames", { username: profile.username });
+                  fetchSuggestions("usernames", { username: profile.username });
                 }}
                 inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 suggestions={apiSuggestions.usernames}
@@ -732,44 +1026,443 @@ const ProfileScreen = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Birth Date</label>
-              <input
-                type="date"
-                value={profile.date_of_birth || ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    date_of_birth: e.target.value,
-                  }))
-                }
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Birth Date</label>
+                <input
+                  type="date"
+                  value={profile.date_of_birth || ""}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      date_of_birth: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Gender</label>
+                <select
+                  value={profile.gender || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, gender: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
             </div>
           </div>
         )
 
-      case 1: // Contact & Address
+      case 1: // Academic
+        return (
+          <div className="space-y-4">
+            <div className="border-t border-green-200 pt-4">
+              <h3 className="text-sm font-bold text-green-900 mb-3">Higher / Further Education</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Qualification</label>
+                  <SuggestionInput
+                    type="text"
+                    placeholder="e.g. M.Phil, Ph.D, MBA"
+                    value={profile.educational_course || ""}
+                    onChange={(v) => setProfile((prev) => ({ ...prev, educational_course: v }))}
+                    inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                    suggestions={ACADEMIC_COURSES}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Institute</label>
+                  <input
+                    type="text"
+                    placeholder="Institute Name"
+                    value={profile.educational_institute || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, educational_institute: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-green-200 pt-4 mt-2">
+              <h3 className="text-sm font-bold text-green-900 mb-3">Faculty / Teaching Experience</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Job Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Assistant Professor"
+                    value={profile.faculty_job_title || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, faculty_job_title: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Institute</label>
+                  <input
+                    type="text"
+                    placeholder="Faculty Institute"
+                    value={profile.faculty_institute || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, faculty_institute: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Department</label>
+                <input
+                  type="text"
+                  placeholder="Department"
+                  value={profile.faculty_department || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, faculty_department: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Start Year</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 2015"
+                    value={profile.faculty_start_year || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, faculty_start_year: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">End Year</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 2020"
+                    value={profile.faculty_end_year || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, faculty_end_year: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 2: // Contact & Address
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  placeholder="Mobile / Primary Phone"
+                  value={profile.phone || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Home Phone</label>
+                <input
+                  type="tel"
+                  placeholder="Home Phone Number"
+                  value={profile.home_phone_no || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, home_phone_no: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Office Phone</label>
+                <input
+                  type="tel"
+                  placeholder="Office Phone Number"
+                  value={profile.office_phone_no || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, office_phone_no: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Secondary Email</label>
+                <input
+                  type="email"
+                  placeholder="Alternative Email"
+                  value={profile.secondary_email || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, secondary_email: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+            </div>
+
+            <div className="border-t border-green-200 pt-4 mt-2">
+              <h3 className="text-sm font-bold text-green-900 mb-3">Current Address</h3>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Address</label>
+                <textarea
+                  placeholder="Full Address"
+                  value={profile.Address || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, Address: e.target.value }))}
+                  rows={2}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">City</label>
+                  <SuggestionInput
+                    type="text"
+                    placeholder="City"
+                    value={profile.city || ""}
+                    onChange={(v) => {
+                      setProfile((prev) => ({ ...prev, city: v }));
+                      debouncedFetch("cities", { country: profile.country, state: profile.state, city: v });
+                    }}
+                    onFocus={() => {
+                      fetchSuggestions("cities", { country: profile.country, state: profile.state, city: profile.city });
+                    }}
+                    inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                    suggestions={apiSuggestions.cities}
+                    loading={loadingSuggestions.cities}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">State</label>
+                  <SuggestionInput
+                    type="text"
+                    placeholder="State"
+                    value={profile.state || ""}
+                    onChange={(v) => {
+                      setProfile((prev) => ({ ...prev, state: v }));
+                      debouncedFetch("states", { country: profile.country, state: v });
+                    }}
+                    onFocus={() => {
+                      fetchSuggestions("states", { country: profile.country, state: profile.state });
+                    }}
+                    inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                    suggestions={apiSuggestions.states}
+                    loading={loadingSuggestions.states}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Country</label>
+                  <SuggestionInput
+                    type="text"
+                    placeholder="Country"
+                    value={profile.country || ""}
+                    onChange={(v) => {
+                      setProfile((prev) => ({ ...prev, country: v }));
+                      debouncedFetch("countries", { country: v });
+                    }}
+                    onFocus={() => {
+                      fetchSuggestions("countries", { country: profile.country });
+                    }}
+                    inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                    suggestions={apiSuggestions.countries}
+                    loading={loadingSuggestions.countries}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">ZIP Code</label>
+                  <SuggestionInput
+                    type="text"
+                    placeholder="ZIP"
+                    value={profile.zip_code || ""}
+                    onChange={(v) => {
+                      setProfile((prev) => ({ ...prev, zip_code: v }));
+                      debouncedFetch("zipcodes", { country: profile.country, state: profile.state, city: profile.city, zipcode: v });
+                    }}
+                    onFocus={() => {
+                      fetchSuggestions("zipcodes", { country: profile.country, state: profile.state, city: profile.city, zipcode: profile.zip_code });
+                    }}
+                    inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                    suggestions={apiSuggestions.zipcodes}
+                    loading={loadingSuggestions.zipcodes}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Current Location</label>
+                  <input
+                    type="text"
+                    placeholder="Current City / Region"
+                    value={profile.current_location || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, current_location: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Home Town</label>
+                  <input
+                    type="text"
+                    placeholder="Home Town"
+                    value={profile.home_town || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, home_town: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-green-200 pt-4 mt-2">
+              <h3 className="text-sm font-bold text-green-900 mb-3">Correspondence Address</h3>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Address</label>
+                <textarea
+                  placeholder="Correspondence Address"
+                  value={profile.correspondence_address || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, correspondence_address: e.target.value }))}
+                  rows={2}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">City</label>
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={profile.correspondence_city || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, correspondence_city: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">State</label>
+                  <input
+                    type="text"
+                    placeholder="State"
+                    value={profile.correspondence_state || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, correspondence_state: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Country</label>
+                  <input
+                    type="text"
+                    placeholder="Country"
+                    value={profile.correspondence_country || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, correspondence_country: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Pincode</label>
+                  <input
+                    type="text"
+                    placeholder="Pincode"
+                    value={profile.correspondence_pincode || ""}
+                    onChange={(e) => setProfile((prev) => ({ ...prev, correspondence_pincode: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 3: // Work & Experience & Social
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Phone</label>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Current Work / Employer</label>
               <input
-                type="tel"
-                placeholder="Phone Number"
-                value={profile.phone || ""}
-                onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))}
+                type="text"
+                placeholder="Current Work"
+                value={profile.current_work || ""}
+                onChange={(e) => setProfile((prev) => ({ ...prev, current_work: e.target.value }))}
                 className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
             </div>
 
-            {/* Add Address Field */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Company</label>
+                <input
+                  type="text"
+                  placeholder="Company Name"
+                  value={profile.company || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, company: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Position / Designation</label>
+                <input
+                  type="text"
+                  placeholder="Your Position"
+                  value={profile.position || ""}
+                  onChange={(e) => setProfile((prev) => ({ ...prev, position: e.target.value }))}
+                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Address</label>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Work Experience (years)</label>
+              <input
+                type="number"
+                placeholder="Years of experience"
+                min="0"
+                value={profile.work_experience || ""}
+                onChange={(e) => setProfile((prev) => ({ ...prev, work_experience: e.target.value }))}
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 py-2">
+              <input
+                type="checkbox"
+                id="is_entrepreneur"
+                checked={!!profile.is_entrepreneur}
+                onChange={(e) => setProfile((prev) => ({ ...prev, is_entrepreneur: e.target.checked }))}
+                className="w-4 h-4 text-green-600 border-green-300 rounded focus:ring-green-500"
+              />
+              <label htmlFor="is_entrepreneur" className="text-xs sm:text-sm font-bold text-green-900 cursor-pointer">
+                I am an Entrepreneur
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Professional Skills</label>
               <textarea
-                placeholder="Full Address"
-                value={profile.Address || ""}
-                onChange={(e) => setProfile((prev) => ({ ...prev, Address: e.target.value }))}
+                placeholder="Enter skills separated by commas (e.g., Python, React, Management)"
+                value={Array.isArray(profile.professional_skills) ? profile.professional_skills.join(", ") : ""}
+                onChange={(e) =>
+                  setProfile((prev) => ({
+                    ...prev,
+                    professional_skills: e.target.value.split(",").map(item => item.trim()).filter(item => item),
+                  }))
+                }
+                rows={2}
+                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Industries Worked In</label>
+              <textarea
+                placeholder="Enter industries separated by commas (e.g., IT, Finance, Healthcare)"
+                value={Array.isArray(profile.industries_worked_in) ? profile.industries_worked_in.join(", ") : ""}
+                onChange={(e) =>
+                  setProfile((prev) => ({
+                    ...prev,
+                    industries_worked_in: e.target.value.split(",").map(item => item.trim()).filter(item => item),
+                  }))
+                }
                 rows={2}
                 className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
               />
@@ -777,123 +1470,7 @@ const ProfileScreen = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">City</label>
-                <SuggestionInput
-                  type="text"
-                  placeholder="City"
-                  value={profile.city || ""}
-                  onChange={(v) => {
-                    setProfile((prev) => ({ ...prev, city: v }));
-                    debouncedFetch("cities", { country: profile.country, state: profile.state, city: v });
-                  }}
-                  onFocus={() => {
-                     fetchSuggestions("cities", { country: profile.country, state: profile.state, city: profile.city });
-                  }}
-                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                  suggestions={apiSuggestions.cities}
-                  loading={loadingSuggestions.cities}
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">State</label>
-                <SuggestionInput
-                  type="text"
-                  placeholder="State"
-                  value={profile.state || ""}
-                  onChange={(v) => {
-                    setProfile((prev) => ({ ...prev, state: v }));
-                    debouncedFetch("states", { country: profile.country, state: v });
-                  }}
-                  onFocus={() => {
-                     fetchSuggestions("states", { country: profile.country, state: profile.state });
-                  }}
-                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                  suggestions={apiSuggestions.states}
-                  loading={loadingSuggestions.states}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Country</label>
-                <SuggestionInput
-                  type="text"
-                  placeholder="Country"
-                  value={profile.country || ""}
-                  onChange={(v) => {
-                    setProfile((prev) => ({ ...prev, country: v }));
-                    debouncedFetch("countries", { country: v });
-                  }}
-                  onFocus={() => {
-                     fetchSuggestions("countries", { country: profile.country });
-                  }}
-                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                  suggestions={apiSuggestions.countries}
-                  loading={loadingSuggestions.countries}
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">ZIP Code</label>
-                <SuggestionInput
-                  type="text"
-                  placeholder="ZIP"
-                  value={profile.zip_code || ""}
-                  onChange={(v) => {
-                    setProfile((prev) => ({ ...prev, zip_code: v }));
-                    debouncedFetch("zipcodes", { country: profile.country, state: profile.state, city: profile.city, zipcode: v });
-                  }}
-                  onFocus={() => {
-                     fetchSuggestions("zipcodes", { country: profile.country, state: profile.state, city: profile.city, zipcode: profile.zip_code });
-                  }}
-                  inputClassName="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                  suggestions={apiSuggestions.zipcodes}
-                  loading={loadingSuggestions.zipcodes}
-                />
-              </div>
-            </div>
-          </div>
-        )
-
-      case 2: // Work & Experience & Social
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Current Work</label>
-              <input
-                type="text"
-                placeholder="Current Work"
-                value={profile.current_work || ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    current_work: e.target.value,
-                  }))
-                }
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Passed Out Year</label>
-              <input
-                type="number"
-                placeholder="Year"
-                value={profile.passed_out_year ? String(profile.passed_out_year) : ""}
-                onChange={(e) =>
-                  setProfile((prev) => ({
-                    ...prev,
-                    passed_out_year: e.target.value,
-                  }))
-                }
-                className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-              />
-            </div>
-
-            {/* Add Experience Role and Years */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Experience Role</label>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Experience Role</label>
                 <input
                   type="text"
                   placeholder="Job Role/Position"
@@ -901,17 +1478,14 @@ const ProfileScreen = () => {
                   onChange={(e) =>
                     setProfile((prev) => ({
                       ...prev,
-                      experience: {
-                        ...prev.experience,
-                        role: e.target.value,
-                      },
+                      experience: { ...prev.experience, role: e.target.value },
                     }))
                   }
                   className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Years of Experience</label>
+                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Years of Experience</label>
                 <input
                   type="number"
                   placeholder="Years"
@@ -919,10 +1493,7 @@ const ProfileScreen = () => {
                   onChange={(e) =>
                     setProfile((prev) => ({
                       ...prev,
-                      experience: {
-                        ...prev.experience,
-                        years: e.target.value,
-                      },
+                      experience: { ...prev.experience, years: e.target.value },
                     }))
                   }
                   className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
@@ -930,11 +1501,10 @@ const ProfileScreen = () => {
               </div>
             </div>
 
-            {/* Add Previous Work Companies - Make it editable */}
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Previous Companies</label>
+              <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">Previous Companies</label>
               <textarea
-                placeholder="Enter companies separated by commas (e.g., Company A, Company B, Company C)"
+                placeholder="Enter companies separated by commas (e.g., Company A, Company B)"
                 value={Array.isArray(profile.Worked_in) ? profile.Worked_in.join(", ") : ""}
                 onChange={(e) =>
                   setProfile((prev) => ({
@@ -947,105 +1517,34 @@ const ProfileScreen = () => {
               />
             </div>
 
-            {/* Social Links Section */}
+            {/* Social Links — write to both individual fields and social_links JSON */}
             <div className="border-t border-green-200 pt-4 mt-6">
               <h3 className="text-sm font-bold text-green-900 mb-3">Social Links</h3>
 
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">LinkedIn</label>
-                <input
-                  type="url"
-                  placeholder="LinkedIn URL"
-                  value={profile.social_links?.linkedin_link || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      social_links: {
-                        ...prev.social_links,
-                        linkedin_link: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Website</label>
-                <input
-                  type="url"
-                  placeholder="Website URL"
-                  value={profile.social_links?.website_link || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      social_links: {
-                        ...prev.social_links,
-                        website_link: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-
-              {/* Add more social links */}
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Twitter</label>
-                <input
-                  type="url"
-                  placeholder="Twitter URL"
-                  value={profile.social_links?.twitter_link || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      social_links: {
-                        ...prev.social_links,
-                        twitter_link: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Facebook</label>
-                <input
-                  type="url"
-                  placeholder="Facebook URL"
-                  value={profile.social_links?.facebook_link || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      social_links: {
-                        ...prev.social_links,
-                        facebook_link: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1 mt-3">Instagram</label>
-                <input
-                  type="url"
-                  placeholder="Instagram URL"
-                  value={profile.social_links?.instagram_link || ""}
-                  onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      social_links: {
-                        ...prev.social_links,
-                        instagram_link: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
-                />
-              </div>
+              {[
+                { key: "linkedin_link", label: "LinkedIn", placeholder: "https://linkedin.com/in/..." },
+                { key: "twitter_link", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+                { key: "facebook_link", label: "Facebook", placeholder: "https://facebook.com/..." },
+                { key: "website_link", label: "Website", placeholder: "https://yoursite.com" },
+                { key: "instagram_link", label: "Instagram", placeholder: "https://instagram.com/..." },
+              ].map(({ key, label, placeholder }, idx) => (
+                <div key={key} className={idx > 0 ? "mt-3" : ""}>
+                  <label className="block text-xs sm:text-sm font-bold text-green-900 mb-1">{label}</label>
+                  <input
+                    type="url"
+                    placeholder={placeholder}
+                    value={profile[key] || profile.social_links?.[key] || ""}
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        [key]: e.target.value,
+                        social_links: { ...prev.social_links, [key]: e.target.value },
+                      }))
+                    }
+                    className="w-full border border-green-300 rounded-lg p-2.5 sm:p-3 bg-white text-sm sm:text-base text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-shadow"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         )
@@ -1209,10 +1708,10 @@ const ProfileScreen = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 text-green-600 animate-spin mx-auto mb-3" />
-          <p className="text-green-600 text-lg">Loading profile...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm font-medium">Loading profile…</p>
         </div>
       </div>
     )
@@ -1233,107 +1732,113 @@ const ProfileScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-green-50 py-4 sm:py-6 lg:py-8">
-      <div className="max-w-full lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Profile Header */}
-        <div className="relative mb-3 sm:mb-4 overflow-hidden rounded-lg shadow-sm">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      <div className="max-w-2xl mx-auto">
+        {/* ── Instagram-style profile header ── */}
+        <div className="bg-white border-b border-gray-100">
+          {/* Cover photo */}
           <div
-            className="px-4 py-6 text-center sm:px-6 sm:py-8"
-            style={{
-              backgroundImage: `url(${profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE})`,
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-            }}
-          >
-            <div className="absolute inset-0 bg-black/45" />
-            <div className="relative z-10">
-              <div className="relative inline-block">
+            className="h-36 sm:h-44 bg-gray-200 bg-cover bg-center"
+            style={{ backgroundImage: `url(${profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE})` }}
+          />
+          {/* Avatar + actions row */}
+          <div className="px-4 pb-4">
+            <div className="flex items-end justify-between -mt-12 mb-3">
+              <div className="ring-4 ring-white rounded-full shadow-md">
                 <img
                   src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
                   alt="Profile"
-                  className="mx-auto mb-3 h-20 w-20 rounded-full border-4 border-white object-cover shadow-md sm:h-24 sm:w-24"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
                 />
               </div>
-              <h2 className="mb-1 text-lg font-bold text-white sm:text-xl">
-                {`${profile.first_name} ${profile.last_name}`}
-              </h2>
-              <p className="break-all px-4 text-xs text-green-50 sm:text-sm">{profile.username || "username"}</p>
-              {profile.current_work && (
-                <div className="mt-2 inline-flex items-center rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-green-800 sm:px-3">
-                  <Briefcase className="mr-1 h-3 w-3" />
-                  <span className="truncate max-w-xs">{profile.current_work}</span>
-                </div>
-              )}
+              <button
+                onClick={() => setModalVisible(true)}
+                className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+              >
+                <Edit className="w-4 h-4" />
+                Edit profile
+              </button>
             </div>
+            {/* Name + bio */}
+            <h2 className="text-base font-bold text-gray-900">{profile.first_name} {profile.last_name}</h2>
+            <p className="text-sm text-gray-400 mb-1">@{profile.username}</p>
+            {profile.current_work && (
+              <div className="flex items-center gap-1.5 text-sm text-emerald-700 font-medium mb-1">
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>{profile.current_work}</span>
+              </div>
+            )}
+            {profile.bio && <p className="text-sm text-gray-600 mt-1">{profile.bio}</p>}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex overflow-x-auto border-t border-gray-100 scrollbar-hide">
+            {tabs.map((tab, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveTab(index)}
+                className={`flex-shrink-0 px-4 py-3 text-xs sm:text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                  activeTab === index
+                    ? "border-emerald-600 text-emerald-700"
+                    : "border-transparent text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex bg-white mx-2 sm:mx-3 rounded-lg p-1 shadow-md mb-3 sm:mb-4 overflow-x-auto">
-          {tabs.map((tab, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveTab(index)}
-              className={`flex-1 min-w-0 py-2.5 sm:py-3 text-center rounded text-xs sm:text-sm font-medium whitespace-nowrap px-2 ${activeTab === index
-                ? "bg-green-600 text-white font-bold shadow-sm"
-                : "text-green-700 hover:bg-green-50 transition-colors"
-                }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        <div className="mx-2 sm:mx-3 mb-6">
-          <div className="bg-white rounded-lg p-4 sm:p-5 shadow-md min-h-[300px] sm:min-h-[400px]">{renderTabContent()}</div>
+        {/* Tab content */}
+        <div className="px-4 py-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 min-h-[300px]">
+            {renderTabContent()}
+          </div>
         </div>
 
         {/* Edit Modal */}
         {modalVisible && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
             <div
               role="dialog"
               aria-modal="true"
               aria-labelledby="edit-profile-title"
-              className="bg-green-50 rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
+              className="bg-white w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl"
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 bg-green-600 rounded-t-lg">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <button
                   onClick={() => setModalVisible(false)}
-                  className="p-1 hover:bg-green-700 rounded-full transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition"
                 >
-                  <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
-                <h2 id="edit-profile-title" className="text-base sm:text-lg font-bold text-white">Edit Profile</h2>
+                <h2 id="edit-profile-title" className="text-base font-bold text-gray-900">Edit Profile</h2>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-800 rounded-lg text-white font-medium text-sm disabled:opacity-50 hover:bg-green-900 transition-colors shadow-sm"
+                  className="px-4 py-1.5 bg-emerald-600 rounded-xl text-white font-semibold text-sm disabled:opacity-50 hover:bg-emerald-700 transition"
                 >
                   {saving ? (
                     <div className="flex items-center gap-2">
                       <Loader className="w-4 h-4 animate-spin" />
-                      <span className="hidden sm:inline">Saving...</span>
+                      <span>Saving…</span>
                     </div>
-                  ) : (
-                    "Save"
-                  )}
+                  ) : "Save"}
                 </button>
               </div>
 
               {/* Edit Tabs */}
-              <div className="flex bg-white mx-2 sm:mx-3 mt-2 sm:mt-3 rounded-lg p-1 shadow-sm overflow-x-auto">
+              <div className="flex overflow-x-auto border-b border-gray-100 scrollbar-hide">
                 {editTabs.map((tab, index) => (
                   <button
                     key={index}
                     onClick={() => setEditPage(index)}
-                    className={`flex-1 min-w-0 py-2 sm:py-3 text-center rounded text-xs font-medium whitespace-nowrap px-1 ${editPage === index
-                      ? "bg-green-600 text-white font-bold"
-                      : "text-green-700 hover:bg-green-50 transition-colors"
-                      }`}
+                    className={`flex-shrink-0 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                      editPage === index
+                        ? "border-emerald-600 text-emerald-700"
+                        : "border-transparent text-gray-400 hover:text-gray-600"
+                    }`}
                   >
                     {tab}
                   </button>
@@ -1341,8 +1846,8 @@ const ProfileScreen = () => {
               </div>
 
               {/* Edit Content */}
-              <div className="mx-2 sm:mx-3 mt-2 sm:mt-3 mb-2 sm:mb-3">
-                <div className="bg-white rounded-lg p-3 sm:p-5 shadow-md min-h-[400px] sm:min-h-[500px]">{renderEditContent()}</div>
+              <div className="p-4 sm:p-5">
+                <div className="min-h-[400px]">{renderEditContent()}</div>
               </div>
             </div>
           </div>
@@ -1351,20 +1856,25 @@ const ProfileScreen = () => {
         {/* Change Password Modal */}
         {renderChangePasswordModal()}
 
-        {/* Fixed floating action button */}
+        {/* FAB — hidden since edit is in header now, keep as fallback on mobile */}
         <button
-          onClick={() => {
-            setEditPage(0)
-            setModalVisible(true)
-          }}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-colors"
+          onClick={() => { setEditPage(0); setModalVisible(true); }}
+          className="lg:hidden fixed bottom-20 right-4 z-40 flex items-center justify-center w-12 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg transition-colors"
           aria-label="Edit Profile"
         >
-          <Edit className="w-5 h-5 sm:w-6 sm:h-6" />
+          <Edit className="w-5 h-5" />
         </button>
       </div>
     </div>
   )
+}
+
+// Inject scrollbar-hide once
+if (typeof document !== "undefined" && !document.getElementById("scrollbar-hide-style")) {
+  const s = document.createElement("style");
+  s.id = "scrollbar-hide-style";
+  s.textContent = ".scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}.scrollbar-hide::-webkit-scrollbar{display:none}";
+  document.head.appendChild(s);
 }
 
 export default ProfileScreen

@@ -9,10 +9,10 @@ const SingleEvents = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [canModerate, setCanModerate] = useState(false);
   const [postOwnerId, setPostOwnerId] = useState(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const token = localStorage.getItem('Token');
 
   useEffect(() => {
@@ -138,7 +138,7 @@ const SingleEvents = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 my-[50px]">
+    <div className="min-h-screen bg-gray-100">
       {/* Top Banner with Event Title */}
       <div className="bg-green-600 text-white shadow-md">
         <div className="container px-4 py-6 mx-auto">
