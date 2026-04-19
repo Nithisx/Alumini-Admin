@@ -201,7 +201,7 @@ const HomePage = () => {
               >
                 {event.images?.[0]?.image && (
                   <img src={`${MEDIA_BASE_URL}${event.images[0].image}`} alt={event.title}
-                    className="w-full h-44 object-cover" />
+                    className="w-full h-auto max-h-[32rem] object-contain bg-gray-50" />
                 )}
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">

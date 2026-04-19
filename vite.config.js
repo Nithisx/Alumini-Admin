@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         },
         manifest: {
+          id: '/',
           name: 'KAHE Alumini',
           short_name: 'KAHE Alumini',
           description: 'KAHE Alumni network and administration portal.',
@@ -30,14 +31,20 @@ export default defineConfig(({ mode }) => {
           theme_color: '#0f172a',
           icons: [
             {
-              src: '/pwa-icon.png',
-              sizes: '1024x997',
+              src: '/pwa-192x192.png',
+              sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-icon.png',
-              sizes: '1024x997',
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-maskable-512x512.png',
+              sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
             },
