@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faTrash, faSearch, faCalendarAlt, faMapMarkerAlt, faList, faThLarge
+  faTrash, faSearch, faCalendarAlt, faMapMarkerAlt, faList, faThLarge,
+  faEllipsisV, faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 
 // AuthorizedImage component fetches image with token
@@ -39,8 +40,10 @@ export default function Events() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
   const token = localStorage.getItem("Token");
-  const navigate = useNavigate(); // 👈 Add useNavigate hook
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsLoading(true);
@@ -57,7 +60,15 @@ export default function Events() {
       });
   }, [token]);
 
-  const handleDelete = (eventId) => setConfirmDeleteId(eventId);
+  const handleDelete = (eventId) => { setConfirmDeleteId(eventId); setOpenMenuId(null); };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuId(null);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const doDelete = async (eventId) => {
     setDeletingId(eventId);
@@ -188,18 +199,38 @@ export default function Events() {
                         <span className="truncate">{event.venue}</span>
                       </div>
                     )}
-                    {/* Delete button (top-right corner) */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(event.id);
-                      }}
-                      disabled={deletingId === event.id}
-                      className="absolute top-3 right-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition"
-                      title="Delete Event"
-                    >
-                      <FontAwesomeIcon icon={faTrash} spin={deletingId === event.id} />
-                    </button>
+                    {/* 3-dots menu */}
+                    <div className="absolute top-3 right-3" ref={openMenuId === event.id ? menuRef : null}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === event.id ? null : event.id); }}
+                        className="bg-white/80 hover:bg-white text-gray-700 rounded-full w-8 h-8 flex items-center justify-center shadow transition"
+                      >
+                        <FontAwesomeIcon icon={faEllipsisV} />
+                      </button>
+                      {openMenuId === event.id && (
+                        <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => { setOpenMenuId(null); navigate(`/admin/event/${event.id}/edit`); }}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                          >
+                            <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(event.id)}
+                            disabled={deletingId === event.id}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="text-xs" spin={deletingId === event.id} /> Delete
+                          </button>
+                          <button
+                            onClick={() => setOpenMenuId(null)}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -249,17 +280,37 @@ export default function Events() {
                       {event.venue || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(event.id);
-                        }}
-                        disabled={deletingId === event.id}
-                        className="bg-red-50 hover:bg-red-100 text-red-600 rounded-full p-2 shadow transition"
-                        title="Delete Event"
-                      >
-                        <FontAwesomeIcon icon={faTrash} spin={deletingId === event.id} />
-                      </button>
+                      <div className="relative inline-block" ref={openMenuId === event.id ? menuRef : null}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === event.id ? null : event.id); }}
+                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full w-8 h-8 flex items-center justify-center shadow transition"
+                        >
+                          <FontAwesomeIcon icon={faEllipsisV} />
+                        </button>
+                        {openMenuId === event.id && (
+                          <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => { setOpenMenuId(null); navigate(`/admin/event/${event.id}/edit`); }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                            >
+                              <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(event.id)}
+                              disabled={deletingId === event.id}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                            >
+                              <FontAwesomeIcon icon={faTrash} className="text-xs" spin={deletingId === event.id} /> Delete
+                            </button>
+                            <button
+                              onClick={() => setOpenMenuId(null)}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

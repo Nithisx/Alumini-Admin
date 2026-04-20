@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
-import { MoreHorizontal, Trash2, Edit, X, Calendar, Newspaper, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit, X, Upload, Calendar, Newspaper, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
@@ -31,12 +31,18 @@ const ImageSlider = ({ images }) => {
   );
 };
 
+const normalizeComparable = (value) =>
+  value === null || value === undefined ? "" : String(value);
+
 const EditNewsModal = ({ article, isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     category: "",
   });
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -46,14 +52,31 @@ const EditNewsModal = ({ article, isOpen, onClose, onSave }) => {
         content: article.content || article.description || "",
         category: article.category || "",
       });
+      setExistingImages(article.images || []);
+      setNewImages([]);
+      setImagesToDelete([]);
     }
   }, [article, isOpen]);
+
+  const removeExistingImage = (imageId) => {
+    setImagesToDelete((prev) => [...prev, imageId]);
+    setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+  };
+
+  const removeNewImage = (index) => {
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await onSave(article.id, formData, article);
+      await onSave(article.id, {
+        values: formData,
+        original: article,
+        newImages,
+        imagesToDelete,
+      });
       onClose();
     } finally {
       setSubmitting(false);
@@ -82,7 +105,6 @@ const EditNewsModal = ({ article, isOpen, onClose, onSave }) => {
             value={formData.title}
             onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            required
           />
 
           <input
@@ -99,8 +121,73 @@ const EditNewsModal = ({ article, isOpen, onClose, onSave }) => {
             value={formData.content}
             onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            required
           />
+
+          {existingImages.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Current Images</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {existingImages.map((img) => (
+                  <div key={img.id} className="relative group">
+                    <img
+                      src={`${MEDIA_BASE_URL}${img.image}`}
+                      alt="News"
+                      className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(img.id)}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {newImages.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">New Images</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {newImages.map((img, index) => (
+                  <div key={`${img.name}-${index}`} className="relative group">
+                    <img
+                      src={URL.createObjectURL(img)}
+                      alt="New"
+                      className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(index)}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <label className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg py-4 cursor-pointer hover:border-green-500 transition-colors text-sm text-gray-600">
+            <Upload size={16} />
+            Add or Replace Images
+            <input
+              type="file"
+              className="hidden"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                  setNewImages((prev) => [...prev, ...files]);
+                }
+                e.target.value = "";
+              }}
+            />
+          </label>
 
           <div className="flex gap-3 pt-2">
             <button
@@ -244,25 +331,51 @@ const NewsContribution = () => {
     } catch { toast.error("Failed to delete news article."); }
   };
 
-  const updateNews = async (newsId, formData, originalArticle) => {
+  const updateNews = async (newsId, payloadData) => {
     try {
       const token = localStorage.getItem("Token");
       if (!token) throw new Error("Token not found");
 
-      const payload = {
-        title: formData.title,
-        content: formData.content,
-        category: formData.category || originalArticle.category || "General",
-        featured: Boolean(originalArticle.featured),
-      };
+      const { values, original, newImages, imagesToDelete } = payloadData;
+      const payload = new FormData();
+
+      const nextTitle = normalizeComparable(values?.title);
+      const prevTitle = normalizeComparable(original?.title);
+      if (nextTitle !== prevTitle) {
+        payload.append("title", values.title ?? "");
+      }
+
+      const nextContent = normalizeComparable(values?.content);
+      const prevContent = normalizeComparable(original?.content ?? original?.description);
+      if (nextContent !== prevContent) {
+        payload.append("content", values.content ?? "");
+      }
+
+      const nextCategory = normalizeComparable(values?.category);
+      const prevCategory = normalizeComparable(original?.category);
+      if (nextCategory !== prevCategory) {
+        payload.append("category", values.category ?? "");
+      }
+
+      (newImages || []).forEach((image) => {
+        payload.append("images", image);
+      });
+
+      (imagesToDelete || []).forEach((imageId) => {
+        payload.append("delete_images", imageId);
+      });
+
+      if ([...payload.keys()].length === 0) {
+        toast.info("No changes to update");
+        return;
+      }
 
       const response = await fetch(`${BASE_URL}/news/${newsId}/`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       if (!response.ok) throw new Error(`Failed to update news: ${response.status}`);
@@ -270,7 +383,13 @@ const NewsContribution = () => {
       const updatedArticle = await response.json();
       setNews((prevNews) =>
         prevNews.map((article) =>
-          article.id === updatedArticle.id ? updatedArticle : article
+          article.id === newsId
+            ? {
+                ...article,
+                ...updatedArticle,
+                images: updatedArticle.images ?? article.images,
+              }
+            : article
         )
       );
       toast.success("News article updated successfully!");

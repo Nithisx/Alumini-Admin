@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -6,7 +6,7 @@ import ConfirmModal from "../../Shared/ConfirmModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFolderOpen, faPlus, faTimes, faTrash, faImage,
-  faCheck, faSpinner, faSearch,
+  faCheck, faSpinner, faSearch, faEllipsisV, faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumsPage = () => {
@@ -19,6 +19,8 @@ const AlbumsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -35,6 +37,14 @@ const AlbumsPage = () => {
         setLoading(false);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuId(null);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const doDeleteAlbum = async (id) => {
@@ -167,16 +177,44 @@ const AlbumsPage = () => {
                     <FontAwesomeIcon icon={faImage} className="text-gray-300 text-2xl" />
                   </div>
                 )}
-                {/* Hover overlay with title + delete */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
-                  <p className="text-white text-xs font-semibold text-center truncate w-full">{album.title}</p>
+                {/* Hover overlay with title */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-end justify-start p-2 pointer-events-none group-hover:pointer-events-auto">
+                  <p className="text-white text-xs font-semibold text-center truncate w-full absolute bottom-2 left-0 px-2">{album.title}</p>
+                </div>
+                {/* 3-dots menu */}
+                <div
+                  className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                  ref={openMenuId === album.id ? menuRef : null}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
-                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(album.id); }}
-                    className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center"
-                    title="Delete"
+                    onClick={() => setOpenMenuId(openMenuId === album.id ? null : album.id)}
+                    className="w-7 h-7 bg-white/80 hover:bg-white text-gray-700 rounded-full flex items-center justify-center shadow transition"
                   >
-                    <FontAwesomeIcon icon={faTrash} className="text-white text-xs" />
+                    <FontAwesomeIcon icon={faEllipsisV} className="text-xs" />
                   </button>
+                  {openMenuId === album.id && (
+                    <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
+                      <button
+                        onClick={() => { setOpenMenuId(null); navigate(`/admin/albums/${album.id}/edit`); }}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                      >
+                        <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
+                      </button>
+                      <button
+                        onClick={() => { setConfirmDelete(album.id); setOpenMenuId(null); }}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="text-xs" /> Delete
+                      </button>
+                      <button
+                        onClick={() => setOpenMenuId(null)}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -21,6 +21,8 @@ import {
   faTimes,
   faUpload,
   faSpinner,
+  faEllipsisV,
+  faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 
 const API_URL = "https://api.karpagamalumni.in/api/v1/jobs/";
@@ -128,10 +130,20 @@ const ImageGallery = ({ images }) => {
 const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
   const isOwn = post.user?.id === currentUserId;
   const canDelete = isOwn || canModerate;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Header with user info + delete */}
+      {/* Header with user info + 3-dots menu */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {post.user?.profile_photo ? (
@@ -156,13 +168,36 @@ const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
           </div>
         </div>
         {canDelete && (
-          <button
-            onClick={() => onRequestDelete(post.id)}
-            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
-            title="Delete post"
-          >
-            <FontAwesomeIcon icon={faTrash} className="text-xs" />
-          </button>
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-gray-400 hover:text-gray-700 transition-colors p-1 rounded w-8 h-8 flex items-center justify-center hover:bg-gray-100"
+            >
+              <FontAwesomeIcon icon={faEllipsisV} className="text-sm" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
+                <button
+                  onClick={() => { setMenuOpen(false); /* edit navigation if needed */ }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                >
+                  <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
+                </button>
+                <button
+                  onClick={() => { onRequestDelete(post.id); setMenuOpen(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                >
+                  <FontAwesomeIcon icon={faTrash} className="text-xs" /> Delete
+                </button>
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

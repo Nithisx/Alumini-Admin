@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
-  MoreHorizontal, MapPin, Trash2, Edit, X, Save, Calendar, DollarSign,
+  MoreHorizontal, MapPin, Trash2, Edit, X, Save, Upload, Calendar, DollarSign,
   Briefcase, ChevronLeft, ChevronRight, Image as ImageIcon, Users,
 } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
@@ -35,6 +35,9 @@ const ImageSlider = ({ images }) => {
   );
 };
 
+const normalizeComparable = (value) =>
+  value === null || value === undefined ? "" : String(value);
+
 const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     company_name: "",
@@ -44,6 +47,9 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
     job_type: "",
     description: "",
   });
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -56,14 +62,31 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
         job_type: job.job_type || "",
         description: job.description || "",
       });
+      setExistingImages(job.images || []);
+      setNewImages([]);
+      setImagesToDelete([]);
     }
   }, [job, isOpen]);
+
+  const removeExistingImage = (imageId) => {
+    setImagesToDelete((prev) => [...prev, imageId]);
+    setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+  };
+
+  const removeNewImage = (index) => {
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await onSave(job.id, formData);
+      await onSave(job.id, {
+        values: formData,
+        original: job,
+        newImages,
+        imagesToDelete,
+      });
       onClose();
     } finally {
       setSubmitting(false);
@@ -93,7 +116,6 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
               value={formData.company_name}
               onChange={(e) => setFormData((prev) => ({ ...prev, company_name: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              required
             />
             <input
               type="text"
@@ -101,7 +123,6 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
               value={formData.role}
               onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              required
             />
             <input
               type="text"
@@ -133,6 +154,72 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
             onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
+
+          {existingImages.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Current Images</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {existingImages.map((img) => (
+                  <div key={img.id} className="relative group">
+                    <img
+                      src={`${MEDIA_BASE_URL}${img.image}`}
+                      alt="Job"
+                      className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(img.id)}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {newImages.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">New Images</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {newImages.map((img, index) => (
+                  <div key={`${img.name}-${index}`} className="relative group">
+                    <img
+                      src={URL.createObjectURL(img)}
+                      alt="New"
+                      className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(index)}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <label className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg py-4 cursor-pointer hover:border-green-500 transition-colors text-sm text-gray-600">
+            <Upload size={16} />
+            Add or Replace Images
+            <input
+              type="file"
+              className="hidden"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                  setNewImages((prev) => [...prev, ...files]);
+                }
+                e.target.value = "";
+              }}
+            />
+          </label>
 
           <div className="flex gap-3 pt-2">
             <button
@@ -305,20 +392,60 @@ const Jobs = () => {
       const token = localStorage.getItem("Token");
       if (!token) throw new Error("Token not found");
 
+      const { values, original, newImages, imagesToDelete } = updatedFields;
+      const payload = new FormData();
+
+      const fieldKeys = [
+        "company_name",
+        "role",
+        "location",
+        "salary_range",
+        "job_type",
+        "description",
+      ];
+
+      fieldKeys.forEach((key) => {
+        const nextValue = normalizeComparable(values?.[key]);
+        const previousValue = normalizeComparable(original?.[key]);
+        if (nextValue !== previousValue) {
+          payload.append(key, values[key] ?? "");
+        }
+      });
+
+      (newImages || []).forEach((image) => {
+        payload.append("images", image);
+      });
+
+      (imagesToDelete || []).forEach((imageId) => {
+        payload.append("delete_images", imageId);
+      });
+
+      if ([...payload.keys()].length === 0) {
+        toast.info("No changes to update");
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/jobs/${jobId}/`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedFields),
+        body: payload,
       });
 
       if (!response.ok) throw new Error("Failed to update");
 
       const updatedJob = await response.json();
       setJobs((prevJobs) =>
-        prevJobs.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+        prevJobs.map((job) =>
+          job.id === jobId
+            ? {
+                ...job,
+                ...updatedJob,
+                images: updatedJob.images ?? job.images,
+              }
+            : job
+        )
       );
       toast.success("Job updated successfully");
     } catch (error) {

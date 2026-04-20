@@ -3,11 +3,11 @@ File: NewsList.js
 This component fetches and displays news posts with a completely redesigned UI
 Using a green-600 theme
 */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import AddNewsModal from './Addnewsmodel';
-import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader } from 'lucide-react';
+import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader, MoreVertical, Pencil } from 'lucide-react';
 
 const TOKEN = localStorage.getItem('Token');
 const API_URL = 'https://api.karpagamalumni.in/api/v1/news/';
@@ -22,6 +22,8 @@ export default function NewsList() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
 
   // Fetch news from API
   const fetchNews = async () => {
@@ -46,8 +48,16 @@ export default function NewsList() {
 
   useEffect(() => { fetchNews(); }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuId(null);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Delete a post
-  const handleDelete = (id) => setConfirmDeleteId(id);
+  const handleDelete = (id) => { setConfirmDeleteId(id); setOpenMenuId(null); };
 
   const doDelete = async (id) => {
     setDeletingId(id);
@@ -127,18 +137,36 @@ export default function NewsList() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {featuredPosts.slice(0, 2).map(post => (
                 <div key={`featured-${post.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg transition transform hover:scale-[1.02] relative group">
-                  {/* Delete Button for Featured Posts */}
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    disabled={deletingId === post.id}
-                    className="absolute top-4 right-4 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-lg"
-                  >
-                    {deletingId === post.id ? (
-                      <Loader size={16} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={16} />
+                  {/* 3-dots menu for Featured Posts */}
+                  <div className="absolute top-4 right-4 z-10" ref={openMenuId === `f-${post.id}` ? menuRef : null}>
+                    <button
+                      onClick={() => setOpenMenuId(openMenuId === `f-${post.id}` ? null : `f-${post.id}`)}
+                      className="w-8 h-8 bg-white/80 hover:bg-white text-gray-700 rounded-full flex items-center justify-center shadow transition"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+                    {openMenuId === `f-${post.id}` && (
+                      <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
+                        <a href={`/admin/news/${post.id}/edit`}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition">
+                          <Pencil size={13} /> Edit
+                        </a>
+                        <button
+                          onClick={() => handleDelete(post.id)}
+                          disabled={deletingId === post.id}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                        >
+                          {deletingId === post.id ? <Loader size={13} className="animate-spin" /> : <Trash2 size={13} />} Delete
+                        </button>
+                        <button
+                          onClick={() => setOpenMenuId(null)}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     )}
-                  </button>
+                  </div>
 
                   <div className="relative h-60">
                     <img
@@ -219,18 +247,36 @@ export default function NewsList() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {filteredPosts.map(post => (
               <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition relative group">
-                {/* Delete Button for Regular Posts */}
-                <button
-                  onClick={() => handleDelete(post.id)}
-                  disabled={deletingId === post.id}
-                  className="absolute top-4 right-4 z-10 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-200 opacity-0 group-hover:opacity-100 shadow-lg"
-                >
-                  {deletingId === post.id ? (
-                    <Loader size={16} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={16} />
+                {/* 3-dots menu for Regular Posts */}
+                <div className="absolute top-4 right-4 z-10" ref={openMenuId === post.id ? menuRef : null}>
+                  <button
+                    onClick={() => setOpenMenuId(openMenuId === post.id ? null : post.id)}
+                    className="w-8 h-8 bg-white/80 hover:bg-white text-gray-700 rounded-full flex items-center justify-center shadow transition opacity-0 group-hover:opacity-100"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  {openMenuId === post.id && (
+                    <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
+                      <a href={`/admin/news/${post.id}/edit`}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition">
+                        <Pencil size={13} /> Edit
+                      </a>
+                      <button
+                        onClick={() => handleDelete(post.id)}
+                        disabled={deletingId === post.id}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                      >
+                        {deletingId === post.id ? <Loader size={13} className="animate-spin" /> : <Trash2 size={13} />} Delete
+                      </button>
+                      <button
+                        onClick={() => setOpenMenuId(null)}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   )}
-                </button>
+                </div>
 
                 <div className="sm:flex">
                   <div className="sm:w-1/3 relative">
