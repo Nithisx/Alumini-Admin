@@ -32,10 +32,10 @@ const AlumniHeroSection = ({ data }) => {
         ></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-10 sm:py-20">
+      <div className="relative z-10 container mx-auto px-0 py-10 sm:py-20">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[70vh] sm:min-h-[80vh]">
           {/* Left Content */}
-          <div className="space-y-8">
+          <div className="space-y-8 px-4 sm:px-6 lg:pl-8">
             <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-100 rounded-full text-green-700 text-sm font-medium">
               <div className="w-2 h-2 bg-green-600 rounded-full mr-2 animate-pulse"></div>
               Alumni Network

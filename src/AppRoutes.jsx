@@ -24,13 +24,13 @@ import ProtectedRoute from './Components/Shared/ProtectedRoute';
 function AuthRedirect() {
   const token = localStorage.getItem('Token');
   const role = normalizeRoleForBase(localStorage.getItem('Role'));
-  if (!token) return <Navigate to="/home" replace />;
+  if (!token) return <Navigate to="/" replace />;
   switch (role) {
     case 'admin': return <Navigate to="/admin/dashboard" replace />;
     case 'staff': return <Navigate to="/staff/dashboard" replace />;
     case 'alumni':
       return <Navigate to="/alumni/dashboard" replace />;
-    default: return <Navigate to="/home" replace />;
+    default: return <Navigate to="/" replace />;
   }
 }
 
@@ -44,7 +44,7 @@ const AppRoutes = () => {
     <Router>
       <Routes>
         {/* Initial Route */}
-        <Route path="/" element={<AuthRedirect />} />
+        <Route path="/" element={<Home />} />
 
         {/* Public Routes */}
         <Route path="/home" element={<Home />} />
