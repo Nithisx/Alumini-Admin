@@ -22,6 +22,7 @@ import BusinessView from "./Business/BusinessView";
 import Myprofile from "./Myprofile/Myprofile";
 import Mycontribution from "./Mycontribution/Mycontributation";
 import Chat from "./Chat/Chat";
+import ChapterDetail from "../Shared/ChapterDetail";
 
 const StaffLayout = () => {
   return (
@@ -51,6 +52,7 @@ const StaffLayout = () => {
           <Route path="my-profile" element={<Myprofile />} />
           <Route path="my-contribution" element={<Mycontribution />} />
           <Route path="chat" element={<Chat />} />
+          <Route path="chapters/:type/:value" element={<ChapterDetail />} />
           {/* Add more routes as needed */}
         </Routes>
       </main>

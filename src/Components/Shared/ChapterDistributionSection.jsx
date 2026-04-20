@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const COUNTRY_INITIAL_VISIBLE = 4;
 const CITY_INITIAL_VISIBLE = 4;
@@ -80,8 +81,11 @@ const MembersIcon = () => (
   </svg>
 );
 
-const ChapterCard = ({ name, count }) => (
-  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100">
+const ChapterCard = ({ name, count, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100 ${onClick ? "cursor-pointer" : ""}`}
+  >
     <div className="flex items-center mb-4 sm:mb-6">
       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-300 to-green-400 rounded-full flex items-center justify-center mr-3 sm:mr-4">
         <LocationIcon />
@@ -100,8 +104,13 @@ const ChapterCard = ({ name, count }) => (
           {count} Members
         </span>
       </div>
-      <span className="text-green-700 text-xs sm:text-sm font-medium bg-green-100 px-2 py-1 rounded-full">
+      <span className="text-green-700 text-xs sm:text-sm font-medium bg-green-100 px-2 py-1 rounded-full flex items-center gap-1">
         Active
+        {onClick && (
+          <svg className="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        )}
       </span>
     </div>
   </div>
@@ -117,11 +126,13 @@ export default function ChapterDistributionSection({
   countryDistribution,
   cityStateDistribution,
   sectionClassName = "py-12 sm:py-16 lg:py-20",
+  chapterBasePath = null,
 }) {
   const [expandedSections, setExpandedSections] = useState({
     country: false,
     city: false,
   });
+  const navigate = useNavigate();
 
   return (
     <section className={sectionClassName} id="chapters-section">
@@ -177,13 +188,20 @@ export default function ChapterDistributionSection({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
                   {items.length > 0 ? (
-                    visibleItems.map((item, index) => (
-                      <ChapterCard
-                        key={`${config.key}-${config.getName(item)}-${index}`}
-                        name={config.getName(item)}
-                        count={item.count}
-                      />
-                    ))
+                    visibleItems.map((item, index) => {
+                      const name = config.getName(item);
+                      const handleClick = chapterBasePath
+                        ? () => navigate(`${chapterBasePath}/chapters/${config.key}/${encodeURIComponent(name)}`)
+                        : undefined;
+                      return (
+                        <ChapterCard
+                          key={`${config.key}-${name}-${index}`}
+                          name={name}
+                          count={item.count}
+                          onClick={handleClick}
+                        />
+                      );
+                    })
                   ) : (
                     <EmptyState label={config.emptyLabel} />
                   )}

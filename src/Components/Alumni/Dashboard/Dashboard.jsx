@@ -230,6 +230,7 @@ const HomePage = () => {
             <ChapterDistributionSection
               countryDistribution={countryDistribution}
               cityStateDistribution={cityStateDistribution}
+              chapterBasePath="/alumni"
             />
           </section>
 

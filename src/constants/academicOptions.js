@@ -31,6 +31,7 @@ export const COURSES = [
   "Master of Planning",
   "Master of Science",
   "Master of Social Work",
+  "Pharm. D",
   "Ph.D",
 ];
 
@@ -69,7 +70,7 @@ export const COURSE_BRANCH_MAPPING = {
     "Information Technology",
     "Mechanical Engineering",
   ],
-  "Bachelor of Pharmacy": ["B. Pharm", "Pharm. D"],
+  "Bachelor of Pharmacy": ["B. Pharm"],
   "Bachelor of Science": [
     "Artificial Intelligence / Data Science",
     "Bio Chemistry",

@@ -22,6 +22,7 @@ import Mycontribution from "./Mycontribution/Mycontributation";
 import StudentImageUpload from "./Albums/Albums";
 import BusinessView from "./Business/BusinessView";
 import Chat from "./Chat/Chat";
+import ChapterDetail from "../Shared/ChapterDetail";
 
 const AlumniLayout = () => {
   return (
@@ -51,6 +52,7 @@ const AlumniLayout = () => {
           <Route path="my-profile" element={<Myprofile />} />
           <Route path="my-contribution" element={<Mycontribution />} />
           <Route path="chat" element={<Chat/>} />
+          <Route path="chapters/:type/:value" element={<ChapterDetail />} />
           {/* Add more routes as needed */}
         </Routes>
       </main>
