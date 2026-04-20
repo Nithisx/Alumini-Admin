@@ -12,6 +12,7 @@ import TermsOfService from './Pages/TermsOfService';
 import ResetPassword from './Pages/ResetPassword';
 import ShareRedirect from './Pages/ShareRedirect';
 import { normalizeRoleForBase } from './lib/authRole';
+import InstallAppPrompt from './Components/Shared/InstallAppPrompt';
 
 // Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
@@ -42,6 +43,7 @@ function GuestOnly({ children }) {
 const AppRoutes = () => {
   return (
     <Router>
+      <InstallAppPrompt />
       <Routes>
         {/* Initial Route */}
         <Route path="/" element={<Home />} />

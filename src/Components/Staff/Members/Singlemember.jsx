@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 const TOKEN = localStorage.getItem('Token');
 const API_BASE = 'https://api.karpagamalumni.in/api/v1/profile/';
@@ -48,6 +48,15 @@ export default function SingleMember() {
       .finally(() => setLoading(false));
   }, [name]);
 
+  const handleBackToMembers = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/staff/members');
+  };
+
   const handlechat = async () => {
     const token = localStorage.getItem("Token");
 
@@ -90,12 +99,13 @@ export default function SingleMember() {
           <div className="text-red-500 text-4xl sm:text-6xl mb-4">⚠️</div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Member Not Found</h2>
           <p className="text-gray-600 text-sm sm:text-base">The requested member profile could not be found.</p>
-          <Link
-            to="/staff/members"
+          <button
+            type="button"
+            onClick={handleBackToMembers}
             className="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
             Back to Members
-          </Link>
+          </button>
         </div>
       </div>
     );
@@ -146,8 +156,9 @@ export default function SingleMember() {
       <div className="max-w-full lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button + Chat Now */}
         <div className="mb-4 sm:mb-6 flex items-center justify-between flex-wrap gap-2">
-          <Link
-            to="/staff/members"
+          <button
+            type="button"
+            onClick={handleBackToMembers}
             className="inline-flex items-center text-green-600 hover:text-green-800 font-medium transition-colors group"
           >
             <svg
@@ -159,7 +170,7 @@ export default function SingleMember() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span className="text-sm sm:text-base">Back to Members</span>
-          </Link>
+          </button>
 
           <button
             onClick={handlechat}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
-import { useParams, Link, useNavigate, href } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   COLLEGE_NAMES,
   COURSES,
@@ -87,6 +87,15 @@ export default function SingleMember() {
       })
       .finally(() => setLoading(false));
   }, [name]);
+
+  const handleBackToMembers = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/admin/members");
+  };
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -427,12 +436,13 @@ export default function SingleMember() {
           <p className="text-gray-600 text-sm sm:text-base">
             The requested member profile could not be found.
           </p>
-          <Link
-            to="/admin/members"
+          <button
+            type="button"
+            onClick={handleBackToMembers}
             className="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
             Back to Members
-          </Link>
+          </button>
         </div>
       </div>
     );
@@ -540,8 +550,9 @@ export default function SingleMember() {
       <div className="max-w-full lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <div className="mb-4 sm:mb-6">
-          <Link
-            to="/admin/members"
+          <button
+            type="button"
+            onClick={handleBackToMembers}
             className="inline-flex items-center text-green-600 hover:text-green-800 font-medium transition-colors group"
           >
             <svg
@@ -558,7 +569,7 @@ export default function SingleMember() {
               />
             </svg>
             <span className="text-sm sm:text-base">Back to Members</span>
-          </Link>
+          </button>
         </div>
 
         {/* Main Profile Card */}

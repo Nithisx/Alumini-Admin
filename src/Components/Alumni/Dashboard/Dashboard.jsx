@@ -3,6 +3,7 @@ import Herosection from "../../../Pages/Herosection";
 import { format } from "date-fns";
 import Footer from "../../../Pages/about_components/Footer";
 import ChapterDistributionSection from "../../Shared/ChapterDistributionSection";
+import { DASHBOARD_THEME } from "../../../constants/dashboardTheme";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -37,25 +38,25 @@ const HomePage = () => {
   }, [token]);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
-        <p className="text-gray-500 text-sm font-medium">Loading your feed…</p>
+    <div className={DASHBOARD_THEME.loadingPage}>
+      <div className={DASHBOARD_THEME.loadingWrap}>
+        <div className={DASHBOARD_THEME.loadingSpinner} />
+        <p className={DASHBOARD_THEME.loadingText}>Loading your feed...</p>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-2xl shadow-md max-w-sm w-full text-center border border-gray-100">
-        <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+    <div className={DASHBOARD_THEME.loadingPage}>
+      <div className={DASHBOARD_THEME.errorPanel}>
+        <div className={DASHBOARD_THEME.errorIconWrap}>
           <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Something went wrong</h3>
-        <p className="text-gray-500 text-sm mb-6">{error}</p>
-        <button onClick={() => window.location.reload()} className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-semibold hover:bg-emerald-700 transition">
+        <h3 className={DASHBOARD_THEME.errorTitle}>Something went wrong</h3>
+        <p className={DASHBOARD_THEME.errorBody}>{error}</p>
+        <button onClick={() => window.location.reload()} className={DASHBOARD_THEME.retryButton}>
           Try Again
         </button>
       </div>
@@ -72,30 +73,30 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
+    <div className={DASHBOARD_THEME.page}>
       {/* Hero */}
-      <div className="bg-white border-b border-gray-100">
+      <div className={DASHBOARD_THEME.hero}>
         <Herosection />
       </div>
 
-      <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-6 space-y-8">
+      <div className={DASHBOARD_THEME.content}>
 
         {/* ── Stats strip (Instagram Stories style) ── */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-4 pb-1">
+        <div className={DASHBOARD_THEME.statsGrid}>
           {stats.map((s) => (
             <button
               key={s.label}
               onClick={() => navigate(s.path)}
-              className="w-full flex flex-col items-center justify-start gap-2 group"
+              className={DASHBOARD_THEME.statButton}
             >
-              <div className={`w-16 h-16 ${s.color} rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform ring-2 ring-white ring-offset-2 ring-offset-gray-50`}>
+              <div className={`${DASHBOARD_THEME.statIcon} ${s.color}`}>
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d={s.icon} />
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-base font-bold text-gray-800 leading-none">{s.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                <p className={DASHBOARD_THEME.statCount}>{s.value}</p>
+                <p className={DASHBOARD_THEME.statLabel}>{s.label}</p>
               </div>
             </button>
           ))}
@@ -103,22 +104,22 @@ const HomePage = () => {
 
         {/* ── Latest Albums (Instagram grid) ── */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-gray-900">Photo Gallery</h2>
-            <button onClick={() => navigate("/alumni/albums/")} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+          <div className={DASHBOARD_THEME.sectionHeader}>
+            <h2 className={DASHBOARD_THEME.sectionTitle}>Photo Gallery</h2>
+            <button onClick={() => navigate("/alumni/albums/")} className={DASHBOARD_THEME.sectionAction}>
               See all
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden">
+          <div className={DASHBOARD_THEME.mediaGrid}>
             {data.latest_album_images?.slice(0, 6).map((album, i) => (
               <div
                 key={album.id}
                 onClick={() => navigate(`/alumni/albums/${album.id}/`)}
-                className="relative aspect-square cursor-pointer group overflow-hidden bg-gray-100"
+                className={DASHBOARD_THEME.mediaTile}
               >
                 {album.cover_image ? (
                   <img src={`${MEDIA_BASE_URL}${album.cover_image}`} alt={album.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    className={DASHBOARD_THEME.mediaImage} />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center">
                     <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,13 +138,13 @@ const HomePage = () => {
         {/* ── Featured News (Instagram post card style) ── */}
         {data.featured_news?.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-gray-900">Latest News</h2>
-              <button onClick={() => navigate("/alumni/news/")} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+            <div className={DASHBOARD_THEME.sectionHeader}>
+              <h2 className={DASHBOARD_THEME.sectionTitle}>Latest News</h2>
+              <button onClick={() => navigate("/alumni/news/")} className={DASHBOARD_THEME.sectionAction}>
                 See all
               </button>
             </div>
-            <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className={`relative overflow-hidden ${DASHBOARD_THEME.panelCard}`}>
               {data.featured_news.map((news, index) => (
                 <div key={news.id} style={{ display: index === newsSlide ? "block" : "none" }}>
                   {/* Post header */}
@@ -186,18 +187,18 @@ const HomePage = () => {
 
         {/* ── Upcoming Events ── */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-gray-900">Upcoming Events</h2>
-            <button onClick={() => navigate("/alumni/event/")} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+          <div className={DASHBOARD_THEME.sectionHeader}>
+            <h2 className={DASHBOARD_THEME.sectionTitle}>Upcoming Events</h2>
+            <button onClick={() => navigate("/alumni/event/")} className={DASHBOARD_THEME.sectionAction}>
               See all
             </button>
           </div>
-          <div className="space-y-3">
+          <div className={DASHBOARD_THEME.eventList}>
             {Array.isArray(data.upcoming_events) && data.upcoming_events.map((event) => (
               <div
                 key={event.id}
                 onClick={() => navigate(`/alumni/event/${event.id}`)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                className={DASHBOARD_THEME.eventCard}
               >
                 {event.images?.[0]?.image && (
                   <img src={`${MEDIA_BASE_URL}${event.images[0].image}`} alt={event.title}
@@ -236,22 +237,22 @@ const HomePage = () => {
 
           {/* New Members (Instagram suggest panel) */}
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-gray-900">New Members</h2>
-              <button onClick={() => navigate("/alumni/members/")} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+            <div className={DASHBOARD_THEME.sectionHeader}>
+              <h2 className={DASHBOARD_THEME.sectionTitle}>New Members</h2>
+              <button onClick={() => navigate("/alumni/members/")} className={DASHBOARD_THEME.sectionAction}>
                 See all
               </button>
             </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50">
+            <div className={DASHBOARD_THEME.memberList}>
               {data.latest_members.map((member) => (
                 <div
                   key={member.id}
                   onClick={() => navigate(`/alumni/members/${member.username}/`)}
-                  className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className={DASHBOARD_THEME.memberRow}
                 >
                   {member.profile_photo ? (
                     <img src={`${MEDIA_BASE_URL}${member.profile_photo}`} alt={member.first_name}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-100" />
+                      className={DASHBOARD_THEME.memberAvatar} />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
                       {member.first_name?.[0]}{member.last_name?.[0]}
