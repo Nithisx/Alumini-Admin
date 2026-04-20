@@ -4,6 +4,7 @@ import {
   MoreHorizontal, MapPin, Clock, Trash2, X, Heart, MessageCircle,
   Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus,
 } from "lucide-react";
+import { getMyPosts } from "../../../lib/mypostsCache";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -284,8 +285,7 @@ const Events = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("Token");
-        const res = await fetch(`${BASE_URL}/myposts/`, { headers: { Authorization: `Token ${token}` } });
-        const data = await res.json();
+        const data = await getMyPosts(token);
         setEvents(data.events || data.posts || []);
       } catch { toast.error("Failed to fetch events."); } finally { setLoading(false); }
     })();

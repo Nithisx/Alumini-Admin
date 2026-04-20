@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Building, Trash2, Eye, X, MapPin, Phone, Globe, Users, Calendar, Tag } from "lucide-react";
+import { getMyPosts } from "../../../lib/mypostsCache";
 
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
@@ -188,9 +189,7 @@ export default function BusinessContribution() {
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${BASE_URL}/myposts/`, { headers: { Authorization: `Token ${TOKEN}` } });
-        if (!res.ok) throw new Error();
-        const data = await res.json();
+        const data = await getMyPosts(TOKEN);
         setBusinesses(data.business || []);
       } catch { setError("Failed to load businesses."); } finally { setLoading(false); }
     })();

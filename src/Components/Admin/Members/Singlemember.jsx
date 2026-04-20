@@ -27,6 +27,7 @@ const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
 const API_DEACTIVATE_USER = "https://api.karpagamalumni.in/api/v1/deactivate-user/";
 const API_DELETE_USER = "https://api.karpagamalumni.in/api/v1/delete-user/";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
+const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
 
 const getMediaUrl = (uri) => {
   if (!uri) return "";
@@ -68,6 +69,11 @@ export default function SingleMember() {
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const navigateToMembersList = () => {
+    const returnUrl = sessionStorage.getItem(MEMBERS_RETURN_URL_KEY);
+    navigate(returnUrl || "/admin/members");
+  };
+
   useEffect(() => {
     fetch(`${API_BASE}${name}`, {
       headers: {
@@ -94,7 +100,7 @@ export default function SingleMember() {
       return;
     }
 
-    navigate("/admin/members");
+    navigateToMembersList();
   };
 
   const handleEditClick = () => {
@@ -366,7 +372,7 @@ export default function SingleMember() {
 
       if (response.status === 200) {
         toast.success(`User ${action}d successfully!`);
-        navigate("/admin/members");
+        navigateToMembersList();
         // Reload the page when response is 200
         window.location.reload();
       } else {
@@ -401,7 +407,7 @@ export default function SingleMember() {
 
       if (response.ok) {
         toast.success("User deleted successfully!");
-        navigate("/admin/members");
+        navigateToMembersList();
       } else {
         toast.error(`Failed to delete user: ${data.message || data.error || "Unknown error"}`);
       }

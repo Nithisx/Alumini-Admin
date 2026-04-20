@@ -539,16 +539,30 @@ const Chat = () => {
                   <p className="text-emerald-700 text-xs mt-1">All messages are monitored by Administrators for safety and compliance.</p>
                 </div>
               </div>
+              
+              {/* ── Updated Disclaimer Section ── */}
               <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-3">
                 <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-red-800">Data Disclaimer</p>
-                  <p className="text-red-700 text-xs mt-1">This organisation shall not be held responsible for your data or any consequences from using this chat service.</p>
+                  <p className="text-red-700 text-xs mt-1">
+                    In case any issues arise during the use of the portal’s chat feature, we are not responsible for your data, content, or any consequences arising from the use of this chat service.
+                  </p>
                 </div>
               </div>
-              <ul className="text-xs text-gray-500 space-y-1.5 px-1">
-                {["Your messages may be reviewed by administrators","You are responsible for content you share","The organisation is not liable for data-related issues","Use the chat responsibly and respectfully"].map((t) => (
-                  <li key={t} className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span>{t}</li>
+
+              {/* ── Updated Bullet Points ── */}
+              <ul className="text-xs text-gray-500 space-y-1.5 px-1 mt-2">
+                {[
+                  "Your messages may be reviewed by administrators",
+                  "You are responsible for the content you share",
+                  "We are not liable for data, content, or chat-related consequences",
+                  "Use the chat responsibly and respectfully"
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-2">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    {t}
+                  </li>
                 ))}
               </ul>
             </div>

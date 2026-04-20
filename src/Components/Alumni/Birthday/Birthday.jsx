@@ -8,6 +8,7 @@ const Birthday = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showTodayBirthdays, setShowTodayBirthdays] = useState(false);
   const token = localStorage.getItem("Token");
   const navigate = useNavigate();
 
@@ -109,13 +110,24 @@ const Birthday = () => {
         {/* ── Today's birthdays (Instagram Stories strip if any) ── */}
         {todayBirthdays.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <h2 className="text-sm font-bold text-gray-900">Today's Birthdays</h2>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <h2 className="text-sm font-bold text-gray-900">Today's Birthdays</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTodayBirthdays((prev) => !prev)}
+                className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-full transition-colors"
+              >
+                {showTodayBirthdays ? "Hide" : `Show (${todayBirthdays.length})`}
+              </button>
             </div>
-            <div className="space-y-2">
-              {todayBirthdays.map((u) => <BirthdayCard key={`today-${u.id}`} user={u} />)}
-            </div>
+            {showTodayBirthdays && (
+              <div className="space-y-2">
+                {todayBirthdays.map((u) => <BirthdayCard key={`today-${u.id}`} user={u} />)}
+              </div>
+            )}
           </section>
         )}
 

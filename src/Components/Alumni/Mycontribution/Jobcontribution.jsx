@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
-  MoreHorizontal, MapPin, Trash2, X, Calendar, DollarSign,
+  MoreHorizontal, MapPin, Trash2, Edit, X, Save, Calendar, DollarSign,
   Briefcase, ChevronLeft, ChevronRight, Image as ImageIcon, Users,
 } from "lucide-react";
+import { getMyPosts } from "../../../lib/mypostsCache";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -34,14 +35,153 @@ const ImageSlider = ({ images }) => {
   );
 };
 
-const JobCard = ({ item, onDelete }) => {
+const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    company_name: "",
+    role: "",
+    location: "",
+    salary_range: "",
+    job_type: "",
+    description: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (job && isOpen) {
+      setFormData({
+        company_name: job.company_name || "",
+        role: job.role || "",
+        location: job.location || "",
+        salary_range: job.salary_range || "",
+        job_type: job.job_type || "",
+        description: job.description || "",
+      });
+    }
+  }, [job, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await onSave(job.id, formData);
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Edit Job</h3>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Company name"
+              value={formData.company_name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, company_name: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Role"
+              value={formData.role}
+              onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Location"
+              value={formData.location}
+              onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <input
+              type="text"
+              placeholder="Salary range"
+              value={formData.salary_range}
+              onChange={(e) => setFormData((prev) => ({ ...prev, salary_range: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <input
+              type="text"
+              placeholder="Job type"
+              value={formData.job_type}
+              onChange={(e) => setFormData((prev) => ({ ...prev, job_type: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent md:col-span-2"
+            />
+          </div>
+
+          <textarea
+            rows={4}
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 px-4 rounded-lg bg-gray-100 text-gray-700 font-medium"
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-2.5 px-4 rounded-lg bg-green-600 text-white font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              disabled={submitting}
+            >
+              <Save size={16} />
+              {submitting ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const JobCard = ({ item, onDelete, onUpdate }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const doDelete = async () => {
     setDeleting(true);
     try { await onDelete(item.id); } finally { setDeleting(false); setConfirmDelete(false); }
+  };
+
+  const handleUpdate = async (jobId, updatedFields) => {
+    setIsUpdating(true);
+    try {
+      await onUpdate(jobId, updatedFields);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setShowMenu(false);
+    setShowEditModal(true);
   };
 
   return (
@@ -66,11 +206,18 @@ const JobCard = ({ item, onDelete }) => {
           </div>
         </div>
         <div className="relative">
+          {isUpdating && (
+            <div className="absolute -left-2 -top-2 w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          )}
           <button onClick={() => setShowMenu(!showMenu)} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
             <MoreHorizontal className="w-5 h-5 text-gray-500" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-9 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 w-36 overflow-hidden py-1">
+            <div className="absolute right-0 top-9 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 w-40 overflow-hidden py-1">
+              <button onClick={handleEdit}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 gap-2">
+                <Edit className="w-4 h-4" /> Edit
+              </button>
               <button onClick={() => { setShowMenu(false); setConfirmDelete(true); }}
                 className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 gap-2">
                 <Trash2 className="w-4 h-4" /> Delete
@@ -120,6 +267,13 @@ const JobCard = ({ item, onDelete }) => {
           </div>
         </div>
       )}
+
+      <EditJobModal
+        job={item}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleUpdate}
+      />
     </div>
   );
 };
@@ -132,8 +286,7 @@ const Jobs = () => {
     (async () => {
       try {
         const token = localStorage.getItem("Token");
-        const res = await fetch(`${BASE_URL}/myposts/`, { headers: { Authorization: `Token ${token}` } });
-        const data = await res.json();
+        const data = await getMyPosts(token);
         setJobs(data.jobs || []);
       } catch { } finally { setLoading(false); }
     })();
@@ -145,6 +298,33 @@ const Jobs = () => {
     if (!res.ok) { toast.error("Failed to delete job."); return; }
     setJobs((p) => p.filter((j) => j.id !== id));
     toast.success("Job deleted!");
+  };
+
+  const updateJob = async (jobId, updatedFields) => {
+    try {
+      const token = localStorage.getItem("Token");
+      if (!token) throw new Error("Token not found");
+
+      const response = await fetch(`${BASE_URL}/jobs/${jobId}/`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedFields),
+      });
+
+      if (!response.ok) throw new Error("Failed to update");
+
+      const updatedJob = await response.json();
+      setJobs((prevJobs) =>
+        prevJobs.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+      );
+      toast.success("Job updated successfully");
+    } catch (error) {
+      toast.error("Failed to update job. Please try again.");
+      throw error;
+    }
   };
 
   if (loading) return (
@@ -171,7 +351,9 @@ const Jobs = () => {
 
   return (
     <div className="space-y-3 p-4">
-      {jobs.map((job) => <JobCard key={job.id} item={job} onDelete={deleteJob} />)}
+      {jobs.map((job) => (
+        <JobCard key={job.id} item={job} onDelete={deleteJob} onUpdate={updateJob} />
+      ))}
     </div>
   );
 };

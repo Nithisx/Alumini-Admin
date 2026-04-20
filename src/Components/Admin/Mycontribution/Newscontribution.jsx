@@ -7,6 +7,7 @@ import {
   MoreVertical,
   Share2,
   Trash2,
+  Edit,
   X,
   Calendar,
   Eye,
@@ -15,6 +16,7 @@ import {
   RefreshCw,
   Image, // Add Image icon for placeholder
 } from "lucide-react";
+import { getMyPosts } from "../../../lib/mypostsCache";
 
 const COLORS = {
   primary: "#059669", // green-600
@@ -98,13 +100,114 @@ const ImageSlider = ({ images, baseUrl }) => {
   );
 };
 
+const EditNewsModal = ({ article, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    title: "",
+    content: "",
+    category: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (article && isOpen) {
+      setFormData({
+        title: article.title || "",
+        content: article.content || article.description || "",
+        category: article.category || "",
+      });
+    }
+  }, [article, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await onSave(article.id, formData, article);
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Edit News</h3>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <input
+            type="text"
+            placeholder="Title"
+            value={formData.title}
+            onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Category"
+            value={formData.category}
+            onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+
+          <textarea
+            rows={6}
+            placeholder="Content"
+            value={formData.content}
+            onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            required
+          />
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 px-4 rounded-lg bg-gray-100 text-gray-700 font-medium"
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-2.5 px-4 rounded-lg bg-green-600 text-white font-medium disabled:opacity-50"
+              disabled={submitting}
+            >
+              {submitting ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // NewsItem Component with menu
-const NewsItem = ({ item, onDelete }) => {
+const NewsItem = ({ item, onDelete, onUpdate }) => {
   const [showComments, setShowComments] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleEdit = () => {
+    setShowMenu(false);
+    setShowEditModal(true);
+  };
 
   const handleDelete = () => {
     setShowMenu(false);
@@ -118,6 +221,15 @@ const NewsItem = ({ item, onDelete }) => {
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleUpdate = async (newsId, formData, originalArticle) => {
+    setIsUpdating(true);
+    try {
+      await onUpdate(newsId, formData, originalArticle);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -157,6 +269,9 @@ const NewsItem = ({ item, onDelete }) => {
           </div>
         </div>
         <div className="relative">
+          {isUpdating && (
+            <div className="absolute -left-2 -top-2 w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          )}
           <button
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             onClick={() => setShowMenu(!showMenu)}
@@ -166,7 +281,14 @@ const NewsItem = ({ item, onDelete }) => {
 
           {/* Menu Popup */}
           {showMenu && (
-            <div className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-36 overflow-hidden">
+            <div className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-40 overflow-hidden">
+              <button
+                className="flex items-center w-full px-4 py-3 text-left hover:bg-green-50 text-green-700 transition-colors duration-200"
+                onClick={handleEdit}
+              >
+                <Edit size={16} className="mr-3" />
+                Edit
+              </button>
               <button
                 className="flex items-center w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors duration-200"
                 onClick={handleDelete}
@@ -248,6 +370,13 @@ const NewsItem = ({ item, onDelete }) => {
           </p>
         </div>
       </div>
+
+      <EditNewsModal
+        article={item}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleUpdate}
+      />
     </div>
   );
 };
@@ -264,18 +393,7 @@ const NewsContribution = () => {
       const token = localStorage.getItem("Token");
       if (!token) throw new Error("Token not found");
 
-      const response = await fetch(`${BASE_URL}/myposts/`, {
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch news: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await getMyPosts(token);
       const newsData = data.news || data.results || [];
       setNews(newsData);
     } catch (error) {
@@ -316,6 +434,42 @@ const NewsContribution = () => {
       toast.success("News article deleted successfully!");
     } catch (error) {
       toast.error(error.message || "Failed to delete news article");
+    }
+  };
+
+  const updateNews = async (newsId, formData, originalArticle) => {
+    try {
+      const token = localStorage.getItem("Token");
+      if (!token) throw new Error("Token not found");
+
+      const payload = {
+        title: formData.title,
+        content: formData.content,
+        category: formData.category || originalArticle.category || "General",
+        featured: Boolean(originalArticle.featured),
+      };
+
+      const response = await fetch(`${BASE_URL}/news/${newsId}/`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error(`Failed to update news: ${response.status}`);
+
+      const updatedArticle = await response.json();
+      setNews((prevNews) =>
+        prevNews.map((article) =>
+          article.id === updatedArticle.id ? updatedArticle : article
+        )
+      );
+      toast.success("News article updated successfully!");
+    } catch (error) {
+      toast.error(error.message || "Failed to update news article");
+      throw error;
     }
   };
 
@@ -363,7 +517,12 @@ const NewsContribution = () => {
         ) : (
           <div className="space-y-6">
             {news.map((article) => (
-              <NewsItem key={article.id} item={article} onDelete={deleteNews} />
+              <NewsItem
+                key={article.id}
+                item={article}
+                onDelete={deleteNews}
+                onUpdate={updateNews}
+              />
             ))}
           </div>
         )}

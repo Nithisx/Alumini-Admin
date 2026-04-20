@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import axios from "axios";
 import { Calendar, Image, Eye, Edit, Trash2, Save, X, Upload } from "lucide-react";
+import { getMyPosts } from "../../../lib/mypostsCache";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -23,8 +24,8 @@ const AlbumsContribution = () => {
     (async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${BASE_URL}/myposts/`, { headers: { Authorization: `Token ${token}` } });
-        setAlbums(res.data.albums || []);
+        const data = await getMyPosts(token);
+        setAlbums(data.albums || []);
         setError(null);
       } catch { setError("Failed to load albums."); } finally { setLoading(false); }
     })();

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Briefcase, Calendar, Newspaper, Building, Image } from "lucide-react";
 import Jobs from "./Jobcontribution";
 import Events from "./Eventcontributation";
 import News from "./Newscontribution";
 import Bussiness from "./Businesscontribution";
 import Albums from "./Albumscontribution";
+import { clearMyPostsCache } from "../../../lib/mypostsCache";
 
 const tabs = [
   { key: "jobs", label: "Jobs", icon: Briefcase },
@@ -16,6 +17,13 @@ const tabs = [
 
 const MyContributions = () => {
   const [activeTab, setActiveTab] = useState("jobs");
+  const [cacheReady, setCacheReady] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("Token");
+    clearMyPostsCache(token);
+    setCacheReady(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
@@ -44,11 +52,25 @@ const MyContributions = () => {
       </div>
 
       <div className="max-w-3xl mx-auto">
-        {activeTab === "jobs" && <Jobs />}
-        {activeTab === "events" && <Events />}
-        {activeTab === "news" && <News />}
-        {activeTab === "bussiness" && <Bussiness />}
-        {activeTab === "albums" && <Albums />}
+        {cacheReady && (
+          <>
+            <div className={activeTab === "jobs" ? "block" : "hidden"}>
+              <Jobs />
+            </div>
+            <div className={activeTab === "events" ? "block" : "hidden"}>
+              <Events />
+            </div>
+            <div className={activeTab === "news" ? "block" : "hidden"}>
+              <News />
+            </div>
+            <div className={activeTab === "bussiness" ? "block" : "hidden"}>
+              <Bussiness />
+            </div>
+            <div className={activeTab === "albums" ? "block" : "hidden"}>
+              <Albums />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

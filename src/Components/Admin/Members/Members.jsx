@@ -64,6 +64,19 @@ const getInitialsAvatar = (firstName, lastName) => {
 };
 
 const MAX_DROPDOWN_ITEMS = 50;
+const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
+
+const readQueryValue = (key, fallback = "") => {
+  if (typeof window === "undefined") return fallback;
+  const value = new URLSearchParams(window.location.search).get(key);
+  return value ?? fallback;
+};
+
+const readQueryNumber = (key, fallback) => {
+  const raw = readQueryValue(key, "");
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
 
 // Highlight matched text in suggestions
 const HighlightMatch = ({ text, query }) => {
@@ -293,25 +306,25 @@ export default function MembersPage() {
   const [filteredTotal, setFilteredTotal] = useState(0);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
-  const [roleFilter, setRoleFilter] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
-  const [workedInFilter, setWorkedInFilter] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [rolesPlayedFilter, setRolesPlayedFilter] = useState("");
-  const [genderFilter, setGenderFilter] = useState("");
-  const [courseEndYearFilter, setCourseEndYearFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
-  const [countryFilter, setCountryFilter] = useState("");
-  const [stateFilter, setStateFilter] = useState("");
-  const [passedOutYearFilter, setPassedOutYearFilter] = useState("");
-  const [courseFilter, setCourseFilter] = useState("");
-  const [collegeNameFilter, setCollegeNameFilter] = useState("");
-  const [currentWorkFilter, setCurrentWorkFilter] = useState("");
-  const [chapterFilter, setChapterFilter] = useState(""); // Add chapter filter state
-  const [branchFilter, setBranchFilter] = useState(""); // Add branch filter state
-  const [emailFilter, setEmailFilter] = useState(""); // Declare emailFilter state
-  const [rollNoFilter, setRollNoFilter] = useState(""); // Declare rollNoFilter state
-  const [showFilters, setShowFilters] = useState(false);
+  const [roleFilter, setRoleFilter] = useState(() => readQueryValue("role"));
+  const [cityFilter, setCityFilter] = useState(() => readQueryValue("city"));
+  const [workedInFilter, setWorkedInFilter] = useState(() => readQueryValue("worked_in"));
+  const [searchQuery, setSearchQuery] = useState(() => readQueryValue("search"));
+  const [rolesPlayedFilter, setRolesPlayedFilter] = useState(() => readQueryValue("roles_played"));
+  const [genderFilter, setGenderFilter] = useState(() => readQueryValue("gender"));
+  const [courseEndYearFilter, setCourseEndYearFilter] = useState(() => readQueryValue("course_end_year"));
+  const [companyFilter, setCompanyFilter] = useState(() => readQueryValue("company"));
+  const [countryFilter, setCountryFilter] = useState(() => readQueryValue("country"));
+  const [stateFilter, setStateFilter] = useState(() => readQueryValue("state"));
+  const [passedOutYearFilter, setPassedOutYearFilter] = useState(() => readQueryValue("passed_out_year"));
+  const [courseFilter, setCourseFilter] = useState(() => readQueryValue("course"));
+  const [collegeNameFilter, setCollegeNameFilter] = useState(() => readQueryValue("college_name"));
+  const [currentWorkFilter, setCurrentWorkFilter] = useState(() => readQueryValue("current_work"));
+  const [chapterFilter, setChapterFilter] = useState(() => readQueryValue("current_location")); // Add chapter filter state
+  const [branchFilter, setBranchFilter] = useState(() => readQueryValue("branch")); // Add branch filter state
+  const [emailFilter, setEmailFilter] = useState(() => readQueryValue("email")); // Declare emailFilter state
+  const [rollNoFilter, setRollNoFilter] = useState(() => readQueryValue("roll_no")); // Declare rollNoFilter state
+  const [showFilters, setShowFilters] = useState(() => readQueryValue("show_filters") === "1");
   // Add a new state to track manual search triggers
   const [manualSearchTrigger, setManualSearchTrigger] = useState(0);
 
@@ -337,13 +350,75 @@ export default function MembersPage() {
   const [exportLoading, setExportLoading] = useState(false);
 
   // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [currentPage, setCurrentPage] = useState(() => readQueryNumber("page", 1));
+  const [pageSize, setPageSize] = useState(() => readQueryNumber("page_size", 25));
   const [totalPages, setTotalPages] = useState(1);
 
   // Sorting states
-  const [sortField, setSortField] = useState("id");
-  const [sortDirection, setSortDirection] = useState("asc"); // 'asc' or 'desc'
+  const [sortField, setSortField] = useState(() => readQueryValue("sort_field", "id"));
+  const [sortDirection, setSortDirection] = useState(() => {
+    const direction = readQueryValue("sort_direction", "asc");
+    return direction === "desc" ? "desc" : "asc";
+  }); // 'asc' or 'desc'
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams();
+    if (roleFilter) params.set("role", roleFilter);
+    if (cityFilter) params.set("city", cityFilter);
+    if (workedInFilter) params.set("worked_in", workedInFilter);
+    if (searchQuery) params.set("search", searchQuery);
+    if (rolesPlayedFilter) params.set("roles_played", rolesPlayedFilter);
+    if (genderFilter) params.set("gender", genderFilter);
+    if (courseEndYearFilter) params.set("course_end_year", courseEndYearFilter);
+    if (companyFilter) params.set("company", companyFilter);
+    if (countryFilter) params.set("country", countryFilter);
+    if (stateFilter) params.set("state", stateFilter);
+    if (passedOutYearFilter) params.set("passed_out_year", passedOutYearFilter);
+    if (courseFilter) params.set("course", courseFilter);
+    if (collegeNameFilter) params.set("college_name", collegeNameFilter);
+    if (currentWorkFilter) params.set("current_work", currentWorkFilter);
+    if (chapterFilter) params.set("current_location", chapterFilter);
+    if (emailFilter) params.set("email", emailFilter);
+    if (branchFilter) params.set("branch", branchFilter);
+    if (rollNoFilter) params.set("roll_no", rollNoFilter);
+
+    params.set("page", currentPage.toString());
+    params.set("page_size", pageSize.toString());
+    params.set("sort_field", sortField);
+    params.set("sort_direction", sortDirection);
+
+    if (showFilters) params.set("show_filters", "1");
+
+    const nextQuery = params.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`;
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, [
+    currentPage,
+    pageSize,
+    sortField,
+    sortDirection,
+    roleFilter,
+    cityFilter,
+    workedInFilter,
+    searchQuery,
+    rolesPlayedFilter,
+    genderFilter,
+    courseEndYearFilter,
+    companyFilter,
+    countryFilter,
+    stateFilter,
+    passedOutYearFilter,
+    courseFilter,
+    collegeNameFilter,
+    currentWorkFilter,
+    chapterFilter,
+    emailFilter,
+    branchFilter,
+    rollNoFilter,
+    showFilters,
+  ]);
 
   // Fetch dropdown filter options
   const fetchDropdownFilters = async () => {
@@ -1361,7 +1436,13 @@ export default function MembersPage() {
             {members.map((member) => (
               <div
                 key={member.id}
-                onClick={() => { window.location.href = `/admin/members/${member.username}`; }}
+                onClick={() => {
+                  sessionStorage.setItem(
+                    MEMBERS_RETURN_URL_KEY,
+                    `${window.location.pathname}${window.location.search}`
+                  );
+                  window.location.href = `/admin/members/${member.username}`;
+                }}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer group hover:shadow-md transition-shadow"
               >
                 {/* Square photo */}

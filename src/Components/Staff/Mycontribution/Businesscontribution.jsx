@@ -25,6 +25,7 @@ import {
   faBusinessTime,
   faMoneyBillWave,
 } from "@fortawesome/free-solid-svg-icons";
+import { getMyPosts } from "../../../lib/mypostsCache";
 
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
@@ -82,18 +83,9 @@ export default function BusinessContribution() {
   const fetchBusinesses = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/myposts/`, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
+      if (!TOKEN) throw new Error("Token not found");
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch businesses");
-      }
-
-      const data = await response.json();
+      const data = await getMyPosts(TOKEN);
       // Extract business array from the response
       setBusinesses(data.business || []);
     } catch (err) {

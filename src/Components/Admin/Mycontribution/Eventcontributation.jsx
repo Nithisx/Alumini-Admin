@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify";
 import { MoreVertical, MapPin, Clock, User, Share2, Trash2, X, Heart, MessageCircle, Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus } from "lucide-react"
+import { getMyPosts } from "../../../lib/mypostsCache"
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1"
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in"
@@ -711,13 +712,7 @@ const Events = () => {
       const token = localStorage.getItem("Token")
       if (!token) throw new Error("Token not found")
 
-      const response = await fetch(`${BASE_URL}/myposts/`, {
-        headers: { Authorization: `Token ${token}` },
-      })
-
-      if (!response.ok) throw new Error("Failed to fetch")
-
-      const data = await response.json()
+      const data = await getMyPosts(token)
       const eventsData = data.events || data.posts || []
       setEvents(eventsData)
     } catch (error) {

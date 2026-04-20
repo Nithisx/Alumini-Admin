@@ -7,7 +7,9 @@ import {
   MapPin,
   Share2,
   Trash2,
+  Edit,
   X,
+  Save,
   Calendar,
   DollarSign,
   Users,
@@ -16,6 +18,7 @@ import {
   RefreshCw,
   Image, // Add Image icon for placeholder
 } from "lucide-react";
+import { getMyPosts } from "../../../lib/mypostsCache";
 
 const COLORS = {
   primary: "#059669", // green-600
@@ -99,12 +102,142 @@ const PlaceholderImage = () => {
   );
 };
 
+const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    company_name: "",
+    role: "",
+    location: "",
+    salary_range: "",
+    job_type: "",
+    description: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (job && isOpen) {
+      setFormData({
+        company_name: job.company_name || "",
+        role: job.role || "",
+        location: job.location || "",
+        salary_range: job.salary_range || "",
+        job_type: job.job_type || "",
+        description: job.description || "",
+      });
+    }
+  }, [job, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await onSave(job.id, formData);
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Edit Job</h3>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-600"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Company name"
+              value={formData.company_name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, company_name: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Role"
+              value={formData.role}
+              onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Location"
+              value={formData.location}
+              onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <input
+              type="text"
+              placeholder="Salary range"
+              value={formData.salary_range}
+              onChange={(e) => setFormData((prev) => ({ ...prev, salary_range: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <input
+              type="text"
+              placeholder="Job type"
+              value={formData.job_type}
+              onChange={(e) => setFormData((prev) => ({ ...prev, job_type: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent md:col-span-2"
+            />
+          </div>
+
+          <textarea
+            rows={4}
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 px-4 rounded-lg bg-gray-100 text-gray-700 font-medium"
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-2.5 px-4 rounded-lg bg-green-600 text-white font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              disabled={submitting}
+            >
+              <Save size={16} />
+              {submitting ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // JobItem Component with menu
-const JobItem = ({ item, onDelete }) => {
+const JobItem = ({ item, onDelete, onUpdate }) => {
   const [showComments, setShowComments] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleEdit = () => {
+    setShowMenu(false);
+    setShowEditModal(true);
+  };
 
   const handleDelete = () => {
     setShowMenu(false);
@@ -118,6 +251,15 @@ const JobItem = ({ item, onDelete }) => {
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleUpdate = async (jobId, updatedFields) => {
+    setIsUpdating(true);
+    try {
+      await onUpdate(jobId, updatedFields);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -152,6 +294,9 @@ const JobItem = ({ item, onDelete }) => {
           </div>
         </div>
         <div className="relative">
+          {isUpdating && (
+            <div className="absolute -left-2 -top-2 w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          )}
           <button
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             onClick={() => setShowMenu(!showMenu)}
@@ -161,7 +306,14 @@ const JobItem = ({ item, onDelete }) => {
 
           {/* Menu Popup */}
           {showMenu && (
-            <div className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-36 overflow-hidden">
+            <div className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-40 overflow-hidden">
+              <button
+                className="flex items-center w-full px-4 py-3 text-left hover:bg-green-50 text-green-700 transition-colors duration-200"
+                onClick={handleEdit}
+              >
+                <Edit size={16} className="mr-3" />
+                Edit
+              </button>
               <button
                 className="flex items-center w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors duration-200"
                 onClick={handleDelete}
@@ -269,6 +421,13 @@ const JobItem = ({ item, onDelete }) => {
           </div>
         </div>
       </div>
+
+      <EditJobModal
+        job={item}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleUpdate}
+      />
     </div>
   );
 };
@@ -284,13 +443,7 @@ const Jobs = () => {
       const token = localStorage.getItem("Token");
       if (!token) throw new Error("Token not found");
 
-      const response = await fetch(`${BASE_URL}/myposts/`, {
-        headers: { Authorization: `Token ${token}` },
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch");
-
-      const data = await response.json();
+      const data = await getMyPosts(token);
       setJobs(data.jobs || []);
     } catch (error) {
     } finally {
@@ -323,6 +476,33 @@ const Jobs = () => {
       setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
     } catch (error) {
       toast.error("Failed to delete job. Please try again.");
+    }
+  };
+
+  const updateJob = async (jobId, updatedFields) => {
+    try {
+      const token = localStorage.getItem("Token");
+      if (!token) throw new Error("Token not found");
+
+      const response = await fetch(`${BASE_URL}/jobs/${jobId}/`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedFields),
+      });
+
+      if (!response.ok) throw new Error("Failed to update");
+
+      const updatedJob = await response.json();
+      setJobs((prevJobs) =>
+        prevJobs.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+      );
+      toast.success("Job updated successfully");
+    } catch (error) {
+      toast.error("Failed to update job. Please try again.");
+      throw error;
     }
   };
 
@@ -359,7 +539,12 @@ const Jobs = () => {
         ) : (
           <div className="space-y-6">
             {jobs.map((job) => (
-              <JobItem key={job.id} item={job} onDelete={deleteJob} />
+              <JobItem
+                key={job.id}
+                item={job}
+                onDelete={deleteJob}
+                onUpdate={updateJob}
+              />
             ))}
           </div>
         )}
