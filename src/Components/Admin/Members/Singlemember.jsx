@@ -457,50 +457,6 @@ export default function SingleMember() {
                 <span>{gender || "—"}</span>
               )}
             </FieldRow>
-
-            {/* Role & Chapter */}
-            <FieldRow icon={Icons.tag} label="Role">
-              {isEditing ? (
-                <EditSelect value={editedMember.role || ""} onChange={(v) => handleInputChange("role", v)}>
-                  <option value="">Select Role</option>
-                  {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-                </EditSelect>
-              ) : (
-                <span>{role || "—"}</span>
-              )}
-            </FieldRow>
-
-            <FieldRow icon={Icons.tag} label="Chapter">
-              {isEditing ? (
-                <EditSelect value={editedMember.chapter || ""} onChange={(v) => handleInputChange("chapter", v)}>
-                  <option value="">Select Chapter</option>
-                  {CHAPTERS.map((c) => <option key={c} value={c}>{c}</option>)}
-                </EditSelect>
-              ) : (
-                <span>{chapter || "—"}</span>
-              )}
-            </FieldRow>
-
-            {/* Password management — always shown in Personal tab (view-only; edit redirects) */}
-            {!isEditing && (
-              <FieldRow icon={Icons.lock} label="Password Management">
-                <p className="text-green-600 text-sm mb-2">Manage your account security settings</p>
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    onClick={() => navigate("/admin/change-password")}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    {Icons.lock} Change Password
-                  </button>
-                  <button
-                    onClick={() => navigate("/admin/reset-password")}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    {Icons.check} Reset Password
-                  </button>
-                </div>
-              </FieldRow>
-            )}
           </div>
         );
 

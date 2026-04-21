@@ -188,25 +188,6 @@ export default function SingleMember() {
             <FieldRow icon={Icons.tag} label="Chapter">
               <span>{chapter || "—"}</span>
             </FieldRow>
-
-            {/* Password management */}
-            <FieldRow icon={Icons.lock} label="Password Management">
-              <p className="text-green-600 text-sm mb-2">Manage your account security settings</p>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => navigate("/admin/change-password")}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                >
-                  {Icons.lock} Change Password
-                </button>
-                <button
-                  onClick={() => navigate("/admin/reset-password")}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                >
-                  {Icons.check} Reset Password
-                </button>
-              </div>
-            </FieldRow>
           </div>
         );
 
