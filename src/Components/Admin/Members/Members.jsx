@@ -358,7 +358,8 @@ export default function MembersPage() {
   // Sorting states
   const [sortField, setSortField] = useState(() => readQueryValue("sort_field", "date_joined"));
   const [sortDirection, setSortDirection] = useState(() => {
-    const direction = readQueryValue("sort_direction", "desc");
+    const direction = readQueryValue("sort_direction", "asc");
+
     return direction === "asc" ? "asc" : "desc";
   }); // 'asc' or 'desc'
 
