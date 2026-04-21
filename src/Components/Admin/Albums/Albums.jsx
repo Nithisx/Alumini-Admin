@@ -5,8 +5,8 @@ import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faFolderOpen, faPlus, faTimes, faTrash, faImage,
-  faCheck, faSpinner, faSearch, faEllipsisV, faEdit,
+  faFolder, faFolderOpen, faPlus, faTimes, faTrash, faImage,
+  faCheck, faSpinner, faSearch, faEllipsisV, faEdit, faCalendarAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumsPage = () => {
@@ -22,7 +22,6 @@ const AlbumsPage = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
 
-  // Edit modal state
   const [editingAlbum, setEditingAlbum] = useState(null);
   const [editFormData, setEditFormData] = useState({ title: "", description: "" });
   const [editUploadedFile, setEditUploadedFile] = useState(null);
@@ -134,6 +133,8 @@ const AlbumsPage = () => {
     setUploadedFile(null);
   };
 
+  const fmt = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+
   const filtered = searchTerm
     ? albums.filter(
         (a) =>
@@ -155,7 +156,7 @@ const AlbumsPage = () => {
 
       {/* ── Sticky header ── */}
       <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
-        <div className="max-w-2xl mx-auto px-4 py-3">
+        <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Albums</h1>
             <div className="relative flex-1">
@@ -178,12 +179,17 @@ const AlbumsPage = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="max-w-3xl mx-auto px-4 py-4">
         {loading ? (
-          /* Skeleton grid */
-          <div className="grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="aspect-square bg-gray-200 animate-pulse" />
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
+                <div className="aspect-[4/3] bg-gray-200" />
+                <div className="p-3 space-y-1.5">
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                  <div className="h-2 bg-gray-100 rounded w-1/2" />
+                </div>
+              </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -200,17 +206,16 @@ const AlbumsPage = () => {
             )}
           </div>
         ) : (
-          /* Instagram-style square grid */
-          <div className="grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {filtered.map((album) => (
               <div
                 key={album.id}
-                className="relative cursor-pointer group overflow-hidden bg-gray-100 rounded-sm"
+                className="relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-visible hover:shadow-md transition-shadow"
               >
-                {/* Album image - navigate on click */}
+                {/* Folder thumbnail */}
                 <div
                   onClick={() => navigate(`/admin/albums/${album.id}`)}
-                  className="aspect-square overflow-hidden"
+                  className="relative aspect-[4/3] rounded-t-2xl cursor-pointer group overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100"
                 >
                   {album.cover_image ? (
                     <img
@@ -219,33 +224,41 @@ const AlbumsPage = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <FontAwesomeIcon icon={faImage} className="text-gray-300 text-2xl" />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FontAwesomeIcon icon={faFolder} className="text-5xl text-amber-300" />
                     </div>
                   )}
+                  {/* Folder tab overlay */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
 
-                {/* Always-visible album name + 3-dots row */}
-                <div className="flex items-center justify-between px-1.5 py-1 bg-white border-t border-gray-100">
-                  <p
-                    onClick={() => navigate(`/admin/albums/${album.id}`)}
-                    className="text-xs font-semibold text-gray-700 truncate flex-1 cursor-pointer hover:text-emerald-700"
-                  >
-                    {album.title}
-                  </p>
+                {/* Folder label row */}
+                <div className="flex items-center justify-between px-3 py-2">
                   <div
-                    className="relative flex-shrink-0"
+                    onClick={() => navigate(`/admin/albums/${album.id}`)}
+                    className="flex-1 min-w-0 cursor-pointer"
+                  >
+                    <p className="text-sm font-semibold text-gray-800 truncate">{album.title}</p>
+                    {album.posted_on && (
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                        <FontAwesomeIcon icon={faCalendarAlt} className="text-[10px]" />
+                        {fmt(album.posted_on)}
+                      </p>
+                    )}
+                  </div>
+                  <div
+                    className="relative z-30 flex-shrink-0 ml-1"
                     ref={openMenuId === album.id ? menuRef : null}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       onClick={() => setOpenMenuId(openMenuId === album.id ? null : album.id)}
-                      className="w-6 h-6 text-gray-500 hover:text-gray-800 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
+                      className="w-7 h-7 text-gray-400 hover:text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
                     >
                       <FontAwesomeIcon icon={faEllipsisV} className="text-xs" />
                     </button>
                     {openMenuId === album.id && (
-                      <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
+                      <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-40 py-1 pointer-events-auto">
                         <button
                           onClick={() => openEditModal(album)}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
@@ -354,7 +367,6 @@ const AlbumsPage = () => {
             className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="text-base font-bold text-gray-900">New Album</h3>
               <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
@@ -382,7 +394,6 @@ const AlbumsPage = () => {
                 disabled={isCreating}
               />
 
-              {/* Cover image upload */}
               {uploadedFile ? (
                 <div className="relative rounded-xl overflow-hidden">
                   <img src={uploadedFile.preview} alt="Preview" className="w-full h-40 object-cover" />

@@ -141,7 +141,7 @@ const HomePage = () => {
           ))}
         </div>
 
-        {/* ── Latest Albums (Instagram grid) ── */}
+        {/* ── Latest Albums (folder grid) ── */}
         <section>
           <div className={DASHBOARD_THEME.sectionHeader}>
             <h2 className={DASHBOARD_THEME.sectionTitle}>Photo Gallery</h2>
@@ -149,25 +149,28 @@ const HomePage = () => {
               See all
             </button>
           </div>
-          <div className={DASHBOARD_THEME.mediaGrid}>
-            {data.latest_album_images?.slice(0, 6).map((album, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {data.latest_album_images?.slice(0, 6).map((album) => (
               <div
                 key={album.id}
                 onClick={() => navigate(`/alumni/albums/${album.id}/`)}
-                className={DASHBOARD_THEME.mediaTile}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
               >
-                {album.cover_image ? (
-                  <img src={`${MEDIA_BASE_URL}${album.cover_image}`} alt={album.title}
-                    className={DASHBOARD_THEME.mediaImage} />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    </svg>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                  <p className="text-white text-xs font-semibold truncate">{album.title}</p>
+                <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100">
+                  {album.cover_image ? (
+                    <img src={`${MEDIA_BASE_URL}${album.cover_image}`} alt={album.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg className="w-10 h-10 text-amber-300" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="px-3 py-2">
+                  <p className="text-sm font-semibold text-gray-800 truncate">{album.title}</p>
                 </div>
               </div>
             ))}
@@ -207,7 +210,7 @@ const HomePage = () => {
                   <img
                     src={`${MEDIA_BASE_URL}${news.thumbnail}`}
                     alt={news.title}
-                    className="w-full aspect-video object-cover"
+                    className="w-full h-auto max-h-[80vh] object-contain bg-gray-50"
                   />
                   {/* Caption */}
                   <div className="p-4">
@@ -257,7 +260,8 @@ const HomePage = () => {
               >
                 {event.images?.[0]?.image && (
                   <img src={`${MEDIA_BASE_URL}${event.images[0].image}`} alt={event.title}
-                    className="w-full h-auto max-h-[32rem] object-contain bg-gray-50" />
+                    className="w-full h-auto max-h-[80vh] object-contain bg-gray-50"
+                  />
                 )}
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">

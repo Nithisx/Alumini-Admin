@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import logoSrc from "../images/logo.png"
+import logoSrc from "../assets/KAHEAA.svg"
 
 const Loader = () => {
   // Floating bubbles animation

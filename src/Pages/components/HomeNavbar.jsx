@@ -9,6 +9,7 @@ import {
   faUser,
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import logo from "../../assets/KAHEAA.svg";
 import "../../App.css";
 
 export default function HomeNavbar() {
@@ -51,13 +52,10 @@ export default function HomeNavbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img
-                src="/src/assets/kahelogo.png"
+                src={logo}
                 alt="KAHE Logo"
-                className="h-10 w-10 mr-3"
+                className="h-10 sm:h-12 w-auto max-w-[170px] sm:max-w-[210px] object-contain"
               />
-              <span className="text-xl font-bold text-blue-600">
-                Alumni Network
-              </span>
             </Link>
           </div>
           {/* Desktop Navigation */}

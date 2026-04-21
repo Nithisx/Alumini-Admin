@@ -17,7 +17,7 @@ import {
   faBars,
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
-import Logo from "../../images/logo.png";
+import Logo from "../../assets/KAHEAA.svg";
 
 export default function StaffHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
@@ -58,11 +58,8 @@ export default function StaffHeader() {
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 h-14 flex items-center justify-between">
-          <a href="/staff/dashboard" className="flex items-center gap-2">
-            <img src={Logo} alt="KAHEAA" className="h-8 w-8 rounded-full ring-2 ring-emerald-300 object-cover" />
-            <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-emerald-700 to-emerald-500 bg-clip-text text-transparent hidden sm:block">
-              KAHEAA
-            </span>
+          <a href="/staff/dashboard" className="flex items-center">
+            <img src={Logo} alt="KAHEAA" className="h-10 sm:h-12 w-auto max-w-[170px] sm:max-w-[210px] object-contain" />
           </a>
 
           <div className="hidden lg:flex items-center gap-1 overflow-x-auto">

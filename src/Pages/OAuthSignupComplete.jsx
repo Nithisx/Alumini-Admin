@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import kahelogo from "../assets/kahelogo.png";
+import kahelogo from "../assets/KAHEAA.svg";
 import SuggestionInput from "../Components/Shared/SuggestionInput";
 import { supabase } from "../lib/supabase";
 import {
@@ -255,7 +255,7 @@ export default function OAuthSignupComplete() {
 
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <img src={kahelogo} alt="Logo" className="mx-auto h-16 mb-3" />
+          <img src={kahelogo} alt="Logo" className="mx-auto h-20 sm:h-24 w-auto max-w-[260px] object-contain mb-3" />
           <h2 className="text-2xl font-bold text-gray-900">Complete your registration</h2>
           <p className="text-sm text-gray-500 mt-1">
             Signed in as <span className="font-medium text-green-600">{form.email}</span> via Google

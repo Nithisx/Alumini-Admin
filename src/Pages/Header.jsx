@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from "../images/logo.png"; // Adjust the path as necessary
+import logo from "../assets/KAHEAA.svg";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -143,14 +143,8 @@ const Header = () => {
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         {/* Logo */}
-        <button onClick={() => navigate("/home")} className="flex items-center space-x-3 bg-transparent p-0">
-          <img src={logo} alt="KAHEAA Logo" className="h-10 sm:h-12 w-auto" />
-          <div className="leading-tight text-left">
-            <h1 className="text-base sm:text-xl font-bold text-green-700">KAHEAA</h1>
-            <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">
-              Karpagam Academy of Higher Education Alumni Association
-            </p>
-          </div>
+        <button onClick={() => navigate("/home")} className="flex items-center bg-transparent p-0">
+          <img src={logo} alt="KAHEAA Logo" className="h-12 sm:h-14 w-auto max-w-[190px] sm:max-w-[240px] object-contain" />
         </button>
 
         {/* Desktop nav */}

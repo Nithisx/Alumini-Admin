@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import kahelogo from "../assets/kahelogo.png";
+import kahelogo from "../assets/KAHEAA.svg";
 import { supabase } from "../lib/supabase";
 
 const api = axios.create({
@@ -154,7 +154,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <img src={kahelogo} alt="Logo" className="mx-auto h-16 mb-4" />
+          <img src={kahelogo} alt="Logo" className="mx-auto h-20 sm:h-24 w-auto max-w-[260px] object-contain mb-4" />
           <p className="text-green-600 font-semibold text-lg">Signing you in with Google...</p>
           <p className="text-gray-500 text-sm mt-2">Please wait</p>
         </div>
@@ -167,11 +167,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-6">
         {/* Header */}
         <div className="text-center">
-          <img src={kahelogo} alt="Logo" className="mx-auto h-16 sm:h-20 drop-shadow-md" />
-          <h1 className="mt-3 text-2xl sm:text-3xl font-bold text-green-700">
-            Karpagam Alumni
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">Connect with your college community</p>
+          <img src={kahelogo} alt="Logo" className="mx-auto h-20 sm:h-24 w-auto max-w-[260px] object-contain drop-shadow-md" />
         </div>
 
         {/* Form */}

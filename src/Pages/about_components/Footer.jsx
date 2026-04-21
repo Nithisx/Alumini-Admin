@@ -1,14 +1,13 @@
 import React from 'react';
-import logo from "../../images/logo.png";
+import logo from "../../assets/KAHEAA.svg";
 const Footer = () => (
   <footer className="bg-gray-800 text-white py-8">
     <div className="container mx-auto px-4">
       <div className="grid md:grid-cols-3 gap-8">
         <div>
-          <h3 className="text-xl font-bold mb-4 flex items-center">
-            <img src={logo} alt="KAHE Alumni Logo" className="w-10 h-10 mr-2 rounded-full bg-white p-1" />
-            KAHE Alumni
-          </h3>
+          <div className="mb-4">
+            <img src={logo} alt="KAHE Alumni Logo" className="h-16 sm:h-20 w-auto max-w-[260px] object-contain" />
+          </div>
           <p className="text-gray-400">Connecting graduates and building opportunities together.</p>
         </div>
         <div>

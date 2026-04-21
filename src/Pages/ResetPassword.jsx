@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import kahelogo from "../assets/kahelogo.png";
+import kahelogo from "../assets/KAHEAA.svg";
 
 const api = axios.create({
   baseURL: "https://api.karpagamalumni.in/api/v1",
@@ -96,9 +96,7 @@ export default function ResetPassword() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <img src={kahelogo} alt="Logo" className="mx-auto h-16 sm:h-20 drop-shadow-md" />
-          <h1 className="mt-3 text-2xl sm:text-3xl font-bold text-green-700">Karpagam Alumni</h1>
-          <p className="text-gray-500 text-sm mt-1">Reset your password</p>
+          <img src={kahelogo} alt="Logo" className="mx-auto h-20 sm:h-24 w-auto max-w-[260px] object-contain drop-shadow-md" />
         </div>
 
         <div className="bg-white shadow-lg rounded-2xl px-6 sm:px-8 py-6 space-y-5 border border-gray-100">
