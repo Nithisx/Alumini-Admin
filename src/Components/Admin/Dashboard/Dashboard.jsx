@@ -12,9 +12,12 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newsSlide, setNewsSlide] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchStartY, setTouchStartY] = useState(null);
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
   const token = localStorage.getItem("Token");
+  const newsCount = data?.featured_news?.length || 0;
 
   const navigate = useCallback((path) => { window.location.href = path; }, []);
 
@@ -36,6 +39,42 @@ const HomePage = () => {
     };
     fetchData();
   }, [token]);
+
+  const goToNextNews = useCallback(() => {
+    if (newsCount < 2) return;
+    setNewsSlide((prev) => (prev + 1) % newsCount);
+  }, [newsCount]);
+
+  const goToPrevNews = useCallback(() => {
+    if (newsCount < 2) return;
+    setNewsSlide((prev) => (prev - 1 + newsCount) % newsCount);
+  }, [newsCount]);
+
+  const handleNewsTouchStart = (e) => {
+    const touch = e.touches[0];
+    setTouchStartX(touch.clientX);
+    setTouchStartY(touch.clientY);
+  };
+
+  const handleNewsTouchEnd = (e) => {
+    if (touchStartX === null || touchStartY === null) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(deltaX) > minSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) {
+        goToNextNews();
+      } else {
+        goToPrevNews();
+      }
+    }
+
+    setTouchStartX(null);
+    setTouchStartY(null);
+  };
 
   if (loading) return (
     <div className={DASHBOARD_THEME.loadingPage}>
@@ -144,7 +183,11 @@ const HomePage = () => {
                 See all
               </button>
             </div>
-            <div className={`relative overflow-hidden ${DASHBOARD_THEME.panelCard}`}>
+            <div
+              className={`relative overflow-hidden ${DASHBOARD_THEME.panelCard}`}
+              onTouchStart={handleNewsTouchStart}
+              onTouchEnd={handleNewsTouchEnd}
+            >
               {data.featured_news.map((news, index) => (
                 <div key={news.id} style={{ display: index === newsSlide ? "block" : "none" }}>
                   {/* Post header */}
@@ -173,6 +216,18 @@ const HomePage = () => {
                   </div>
                 </div>
               ))}
+              {newsCount > 1 && (
+                <button
+                  type="button"
+                  aria-label="Next news"
+                  onClick={goToNextNews}
+                  className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
               {/* Dot indicators */}
               <div className="flex justify-center gap-1.5 pb-4">
                 {data.featured_news.map((_, i) => (
