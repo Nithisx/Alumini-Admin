@@ -4,9 +4,11 @@ This component fetches and displays news posts with a completely redesigned UI
 Using a green-600 theme
 */
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import AddNewsModal from './Addnewsmodel';
+import EditNewsModal from './Editnewsmodal';
 import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader, MoreVertical, Pencil } from 'lucide-react';
 
 const TOKEN = localStorage.getItem('Token');
@@ -14,6 +16,7 @@ const API_URL = 'https://api.karpagamalumni.in/api/v1/news/';
 const BASE_URL = 'https://api.karpagamalumni.in';
 
 export default function NewsList() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,6 +24,8 @@ export default function NewsList() {
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingNewsId, setEditingNewsId] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
@@ -92,6 +97,18 @@ export default function NewsList() {
     fetchNews();
   };
 
+  const openEditNews = (id) => {
+    setEditingNewsId(id);
+    setShowEditModal(true);
+    setOpenMenuId(null);
+  };
+
+  const onNewsEdited = (updatedPost) => {
+    setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
+    setShowEditModal(false);
+    setEditingNewsId(null);
+  };
+
   // Get unique categories
   const categories = ['All', ...new Set(posts.map(post => post.category))];
 
@@ -147,10 +164,11 @@ export default function NewsList() {
                     </button>
                     {openMenuId === `f-${post.id}` && (
                       <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
-                        <a href={`/admin/news/${post.id}/edit`}
+                        <button
+                          onClick={() => openEditNews(post.id)}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition">
                           <Pencil size={13} /> Edit
-                        </a>
+                        </button>
                         <button
                           onClick={() => handleDelete(post.id)}
                           disabled={deletingId === post.id}
@@ -318,6 +336,13 @@ export default function NewsList() {
 
       {/* Add News Modal */}
       <AddNewsModal show={showModal} onClose={() => setShowModal(false)} onSuccess={onNewsAdded} />
+      {/* Edit News Modal */}
+      <EditNewsModal
+        show={showEditModal}
+        onClose={() => { setShowEditModal(false); setEditingNewsId(null); }}
+        onSuccess={onNewsEdited}
+        newsId={editingNewsId}
+      />
     </div>
   );
 }

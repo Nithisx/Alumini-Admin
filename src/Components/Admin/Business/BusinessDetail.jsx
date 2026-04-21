@@ -22,7 +22,7 @@ import {
 const BusinessDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const isNewBusiness = id === 'add';
+  const isNewBusiness = !id || id === 'add';
 
   const [business, setBusiness] = useState({
     business_name: '',
@@ -161,7 +161,7 @@ const BusinessDetail = () => {
 
   const doDeleteImage = async (imageId) => {
     try {
-      await axios.delete(`${BASE_URL}/businesses/${imageId}/images/`, {
+      await axios.delete(`${BASE_URL}/businesses/${id}/images/${imageId}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setImages(images.filter(image => image.id !== imageId));
@@ -247,7 +247,7 @@ const BusinessDetail = () => {
         }
 
         toast.success("Business created successfully!");
-        navigate(`/staff/business/${response.data.id}`);
+        navigate(`/admin/business/view/${response.data.id}`);
       } else {
         // Update existing business
         response = await axios.put(
@@ -285,6 +285,7 @@ const BusinessDetail = () => {
         }
 
         toast.success("Business updated successfully!");
+        navigate(`/admin/business/view/${id}`);
       }
     } catch (error) {
       toast.error("Error saving business. Please try again.");
@@ -315,7 +316,7 @@ const BusinessDetail = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button
-            onClick={() => navigate('/admin/business')}
+            onClick={() => navigate(-1)}
             className="mr-4 text-gray-600 hover:text-gray-800"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
@@ -801,7 +802,7 @@ const BusinessDetail = () => {
         <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => navigate('/staff/business')}
+            onClick={() => navigate('/admin/business')}
             className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
           >
             Cancel

@@ -345,6 +345,14 @@ export default function BusinessContribution() {
             </button>
 
             <button
+              onClick={() => openEditModal(business)}
+              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              title="Edit Business"
+            >
+              <FontAwesomeIcon icon={faEdit} />
+            </button>
+
+            <button
               onClick={() => setDeleteConfirm(business.id)}
               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               title="Delete Business"
@@ -734,6 +742,107 @@ export default function BusinessContribution() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Business Modal */}
+      {showEditModal && selectedBusiness && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div role="dialog" aria-modal="true" aria-labelledby="edit-biz-title"
+            className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 id="edit-biz-title" className="text-xl font-bold text-gray-900">Edit Business</h2>
+              <button onClick={() => { setShowEditModal(false); setSelectedBusiness(null); resetForm(); }}
+                className="text-gray-400 hover:text-gray-600">
+                <FontAwesomeIcon icon={faTimes} className="text-xl" />
+              </button>
+            </div>
+            <form onSubmit={handleEditBusiness} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
+                  <input name="business_name" value={formData.business_name} onChange={handleInputChange} required
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="Business name" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select name="category" value={formData.category} onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                    <option value="">Select category</option>
+                    {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea name="description" value={formData.description} onChange={handleInputChange} rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="Business description" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input name="phone" value={formData.phone} onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="+1 234 567 8900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input name="email" type="email" value={formData.email} onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="contact@business.com" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                  <input name="website" value={formData.website} onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="https://example.com" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input name="city" value={formData.city} onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="City" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <input name="state" value={formData.state} onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="State" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <input name="country" value={formData.country} onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500"
+                    placeholder="Country" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+                  <input name="logo" type="file" accept="image/*" onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                  {selectedBusiness?.logo && !formData.logo && (
+                    <img src={`${MEDIA_BASE_URL}${selectedBusiness.logo}`} alt="Current logo"
+                      className="mt-2 h-12 w-12 rounded-lg object-cover" />
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button"
+                  onClick={() => { setShowEditModal(false); setSelectedBusiness(null); resetForm(); }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  disabled={submitting}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={submitting}
+                  className={`px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 ${submitting ? "opacity-75 cursor-not-allowed" : ""}`}>
+                  {submitting ? (
+                    <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Saving...</>
+                  ) : (
+                    <><FontAwesomeIcon icon={faCheck} /> Save Changes</>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

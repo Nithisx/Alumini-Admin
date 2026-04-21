@@ -127,7 +127,7 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component — social feed style (full-width, like Facebook/Instagram)
-const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
+const JobCard = ({ post, onRequestDelete, onRequestEdit, currentUserId, canModerate }) => {
   const isOwn = post.user?.id === currentUserId;
   const canDelete = isOwn || canModerate;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -178,7 +178,7 @@ const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
             {menuOpen && (
               <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
                 <button
-                  onClick={() => { setMenuOpen(false); /* edit navigation if needed */ }}
+                  onClick={() => { setMenuOpen(false); onRequestEdit(post); }}
                   className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
                 >
                   <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
@@ -260,6 +260,18 @@ const JobFeed = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+  const editFileInputRef = useRef(null);
+
+  // Edit modal state
+  const [editingJob, setEditingJob] = useState(null);
+  const [editUploadedFile, setEditUploadedFile] = useState(null);
+  const [editDescription, setEditDescription] = useState("");
+  const [editCompanyName, setEditCompanyName] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editSalaryRange, setEditSalaryRange] = useState("");
+  const [editJobType, setEditJobType] = useState("");
+  const [editError, setEditError] = useState("");
 
   // Form field states
   const [description, setDescription] = useState("");
@@ -306,6 +318,69 @@ const JobFeed = () => {
         .catch(() => {});
     }
   }, []);
+
+  // Open edit modal
+  const openEditModal = (job) => {
+    setEditingJob(job);
+    setEditDescription(job.description || "");
+    setEditCompanyName(job.company_name || "");
+    setEditRole(job.role || "");
+    setEditLocation(job.location || "");
+    setEditSalaryRange(job.salary_range || "");
+    setEditJobType(job.job_type || "");
+    setEditUploadedFile(null);
+    setEditError("");
+  };
+
+  const closeEditModal = () => {
+    if (editUploadedFile?.preview) URL.revokeObjectURL(editUploadedFile.preview);
+    setEditingJob(null);
+    setEditUploadedFile(null);
+    setEditError("");
+  };
+
+  const handleEditFileSelect = (e) => {
+    if (e.target.files?.[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith("image/")) return;
+      if (editUploadedFile?.preview) URL.revokeObjectURL(editUploadedFile.preview);
+      setEditUploadedFile({ file, name: file.name, preview: URL.createObjectURL(file) });
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editCompanyName || !editRole || !editLocation) {
+      setEditError("Company name, role, and location are required.");
+      return;
+    }
+    setIsSubmitting(true);
+    setEditError("");
+    try {
+      const token = await getAuthToken();
+      const formData = new FormData();
+      formData.append("description", editDescription);
+      formData.append("company_name", editCompanyName);
+      formData.append("role", editRole);
+      formData.append("location", editLocation);
+      formData.append("salary_range", editSalaryRange);
+      formData.append("job_type", editJobType);
+      if (editUploadedFile) formData.append("images", editUploadedFile.file);
+
+      const response = await fetch(`${API_URL}${editingJob.id}/`, {
+        method: "PUT",
+        headers: { Authorization: `Token ${token}` },
+        body: formData,
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      setPosts((prev) => prev.map((p) => (p.id === editingJob.id ? data : p)));
+      closeEditModal();
+    } catch (err) {
+      setEditError(err.message || "Failed to update. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Delete a post
   const deletePost = async (postId) => {
@@ -503,6 +578,7 @@ const JobFeed = () => {
                   key={post.id}
                   post={post}
                   onRequestDelete={setConfirmDeleteId}
+                  onRequestEdit={openEditModal}
                   currentUserId={currentUserId}
                   canModerate={canModerate}
                 />
@@ -789,6 +865,94 @@ const JobFeed = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Job Modal */}
+      {editingJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-blue-100">
+              <h3 className="text-2xl font-bold text-blue-700">Edit Job Post</h3>
+              <button onClick={closeEditModal} className="text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full hover:bg-gray-200 flex items-center justify-center">
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6">
+              {editError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4 text-sm">{editError}</div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Name *</label>
+                  <input type="text" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={editCompanyName} onChange={(e) => setEditCompanyName(e.target.value)} placeholder="Company name" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Role/Position *</label>
+                  <input type="text" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={editRole} onChange={(e) => setEditRole(e.target.value)} placeholder="Job role" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Location *</label>
+                  <input type="text" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={editLocation} onChange={(e) => setEditLocation(e.target.value)} placeholder="Location" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Salary Range</label>
+                  <input type="text" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={editSalaryRange} onChange={(e) => setEditSalaryRange(e.target.value)} placeholder="E.g., 25K-30K" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Job Type</label>
+                  <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={editJobType} onChange={(e) => setEditJobType(e.target.value)}>
+                    <option value="">Select a job type</option>
+                    <option value="fulltime">Full Time</option>
+                    <option value="parttime">Part Time</option>
+                    <option value="contract">Contract</option>
+                    <option value="internship">Internship</option>
+                    <option value="remote">Remote</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                  <textarea className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"
+                    value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="Job description" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Replace Image (optional)</label>
+                  {editUploadedFile ? (
+                    <div className="border rounded-lg p-3 bg-gray-50 flex items-center gap-3">
+                      <img src={editUploadedFile.preview} alt="Preview" className="w-16 h-16 object-cover rounded-lg" />
+                      <span className="text-sm text-gray-700 flex-1 truncate">{editUploadedFile.name}</span>
+                      <button type="button" onClick={() => { URL.revokeObjectURL(editUploadedFile.preview); setEditUploadedFile(null); }}
+                        className="text-red-500 hover:text-red-700">
+                        <FontAwesomeIcon icon={faTimesCircle} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div onClick={() => editFileInputRef.current.click()}
+                      className="border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-lg p-4 text-center cursor-pointer">
+                      <FontAwesomeIcon icon={faUpload} className="text-xl text-gray-400 mb-1" />
+                      <p className="text-sm text-gray-500">Click to upload new image</p>
+                      <input type="file" className="hidden" ref={editFileInputRef}
+                        onChange={handleEditFileSelect} accept="image/*" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 sm:p-6 border-t bg-gray-50 flex justify-end gap-4">
+              <button onClick={closeEditModal} className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50" disabled={isSubmitting}>
+                Cancel
+              </button>
+              <button onClick={handleEditSubmit} disabled={isSubmitting}
+                className={`px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2 ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""}`}>
+                {isSubmitting ? <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Saving...</> : "Save Changes"}
+              </button>
             </div>
           </div>
         </div>
