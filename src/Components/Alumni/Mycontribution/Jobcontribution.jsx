@@ -12,8 +12,15 @@ const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 const ImageSlider = ({ images }) => {
   const [idx, setIdx] = useState(0);
   return (
-    <div className="relative w-full aspect-video bg-gray-100">
-      <img src={`${MEDIA_BASE_URL}${images[idx].image}`} alt="Job" className="w-full h-full object-cover" />
+    // Removed 'aspect-video', added 'max-h-[80vh]' and flexbox centering
+    <div className="relative w-full bg-gray-100 max-h-[70vh] flex items-center justify-center overflow-hidden">
+      <img 
+        src={`${MEDIA_BASE_URL}${images[idx].image}`} 
+        alt="Job" 
+        // Changed 'h-full object-cover' to 'max-h-[80vh] object-contain'
+        className="w-full max-h-[80vh] object-contain" 
+      />
+      
       {images.length > 1 && (
         <>
           <button onClick={() => setIdx((i) => (i - 1 + images.length) % images.length)}
@@ -272,7 +279,7 @@ const JobCard = ({ item, onDelete, onUpdate }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white border border-gray-100 h rounded-2xl shadow-sm overflow-hidden">
       {/* Post header */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
@@ -477,7 +484,7 @@ const Jobs = () => {
   );
 
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-3 p-0">
       {jobs.map((job) => (
         <JobCard key={job.id} item={job} onDelete={deleteJob} onUpdate={updateJob} />
       ))}

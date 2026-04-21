@@ -30,62 +30,34 @@ const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
 // ImageSlider component
-const ImageSlider = ({ images, baseUrl }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const nextImage = () => {
-    setActiveIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = () => {
-    setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
+const ImageSlider = ({ images }) => {
+  const [idx, setIdx] = useState(0);
   return (
-    <div className="relative mb-6">
-      <div className="relative overflow-hidden rounded-xl shadow-sm">
-        <img
-          src={`${baseUrl}${images[activeIndex].image}`}
-          alt="Job"
-          className="w-full h-80 object-cover"
-        />
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={prevImage}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black/80 transition-all duration-200 backdrop-blur-sm"
-            >
-              ←
-            </button>
-            <button
-              onClick={nextImage}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black/80 transition-all duration-200 backdrop-blur-sm"
-            >
-              →
-            </button>
-          </>
-        )}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="bg-black/40 backdrop-blur-sm rounded-full px-3 py-1">
-            <span className="text-white text-sm font-medium">
-              {activeIndex + 1} / {images.length}
-            </span>
-          </div>
-        </div>
-      </div>
+    // Removed 'aspect-video', added 'max-h-[80vh]' and flexbox centering
+    <div className="relative w-full bg-gray-100 max-h-[80vh] flex items-center justify-center overflow-hidden">
+      <img 
+        src={`${MEDIA_BASE_URL}${images[idx].image}`} 
+        alt="Job" 
+        // Changed 'h-full object-cover' to 'max-h-[80vh] object-contain'
+        className="w-full max-h-[80vh] object-contain" 
+      />
+      
       {images.length > 1 && (
-        <div className="flex justify-center mt-4 space-x-2">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${activeIndex === index
-                ? "bg-green-600 scale-110"
-                : "bg-gray-300 hover:bg-gray-400"
-                }`}
-            />
-          ))}
-        </div>
+        <>
+          <button onClick={() => setIdx((i) => (i - 1 + images.length) % images.length)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-sm">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button onClick={() => setIdx((i) => (i + 1) % images.length)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-sm">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+            {images.map((_, i) => (
+              <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === idx ? "bg-white" : "bg-white/50"}`} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
