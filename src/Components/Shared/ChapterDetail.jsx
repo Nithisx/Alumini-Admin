@@ -1,29 +1,18 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import Pagination from "./Pagination";
+import { getProfilePlaceholderByGender } from "../../lib/profilePlaceholders";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 const PAGE_SIZE = 24;
 
-const PROFILE_PLACEHOLDER =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
 
 const CHAPTER_TYPE_LABELS = {
   country: "Country",
   city: "City",
   state: "State",
   chapter: "Chapter",
-};
-
-const getInitialsAvatar = (firstName, lastName) => {
-  if (!firstName && !lastName) return PROFILE_PLACEHOLDER;
-  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
-  const colors = ["#4299E1", "#48BB78", "#ED8936", "#9F7AEA", "#F56565", "#38B2AC", "#ECC94B", "#667EEA", "#ED64A6"];
-  const hashCode = (str) => { let h = 0; for (let i = 0; i < str.length; i++) { h = (h << 5) - h + str.charCodeAt(i); h = h & h; } return h; };
-  const bg = colors[Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="${bg}" /><text x="50%" y="50%" dy=".3em" font-family="Arial, sans-serif" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
 const getMediaUrl = (uri) => {
@@ -33,8 +22,8 @@ const getMediaUrl = (uri) => {
 };
 
 function MemberCard({ member, memberPath }) {
-  const { first_name, last_name, username, profile_photo, company, position, city, state, country, chapter, passed_out_year } = member;
-  const avatar = profile_photo ? getMediaUrl(profile_photo) : getInitialsAvatar(first_name, last_name);
+  const { first_name, last_name, username, profile_photo, gender, company, position, city, state, country, chapter, passed_out_year } = member;
+  const avatar = profile_photo ? getMediaUrl(profile_photo) : getProfilePlaceholderByGender(gender);
   const location = [city, state, country].filter(Boolean).join(", ");
 
   return (
@@ -48,7 +37,7 @@ function MemberCard({ member, memberPath }) {
         className="w-20 h-20 rounded-full object-cover border-4 border-green-100 group-hover:border-green-300 transition-colors"
         onError={(e) => {
           e.currentTarget.onerror = null;
-          e.currentTarget.src = getInitialsAvatar(first_name, last_name);
+          e.currentTarget.src = getProfilePlaceholderByGender(gender);
         }}
       />
       <div>
