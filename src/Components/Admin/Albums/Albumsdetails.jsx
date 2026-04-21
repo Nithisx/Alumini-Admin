@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const AlbumDetailPage = () => {
   const { albumId } = useParams();
+  const navigate = useNavigate();
   const [eventImages, setEventImages] = useState([]);
   const [formData, setFormData] = useState({ title: "", images: [] });
   const [showForm, setShowForm] = useState(false);
@@ -274,6 +275,15 @@ const AlbumDetailPage = () => {
     setImageLoading(false);
   };
 
+  const handleGoBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/admin/albums');
+  };
+
   return (
     <div className="p-4">
       <ConfirmModal
@@ -285,6 +295,17 @@ const AlbumDetailPage = () => {
         onConfirm={() => { doDeleteImage(confirmDeleteId); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
+      <div className="mb-4">
+        <button
+          onClick={handleGoBack}
+          className="inline-flex items-center gap-2 font-medium text-green-700 hover:text-green-900 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Go back
+        </button>
+      </div>
       {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
       ) : (

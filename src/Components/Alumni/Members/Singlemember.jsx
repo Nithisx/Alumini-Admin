@@ -106,7 +106,7 @@ export default function SingleMember() {
             onClick={handleBackToMembers}
             className="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
-            Back to Members
+            Go back
           </button>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function SingleMember() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="text-sm sm:text-base">Back to Members</span>
+            <span className="text-sm sm:text-base">Go back</span>
           </button>
 
           <button

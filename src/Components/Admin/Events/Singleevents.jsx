@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Tag, User } from 'lucide-react';
 import EngagementPanel from '../../Shared/EngagementPanel';
 
 const SingleEvents = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -137,11 +138,27 @@ const SingleEvents = () => {
     });
   };
 
+  const handleGoBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/admin/event');
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 pb-20 lg:pb-6">
       {/* Top Banner with Event Title */}
       <div className="bg-green-600 text-white shadow-md">
         <div className="container px-4 py-6 mx-auto">
+          <button
+            onClick={handleGoBack}
+            className="inline-flex items-center mb-4 px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25 transition-colors"
+          >
+            <ChevronLeft size={16} className="mr-1" />
+            Go back
+          </button>
           <h1 className="text-3xl font-bold">{event.title}</h1>
           <div className="flex flex-wrap items-center gap-4 mt-2 text-green-50">
             <div className="flex items-center">

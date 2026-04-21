@@ -22,6 +22,7 @@ import {
 const BusinessDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const businessListPath = '/admin/business';
   const isNewBusiness = !id || id === 'add';
 
   const [business, setBusiness] = useState({
@@ -294,6 +295,15 @@ const BusinessDetail = () => {
     }
   };
 
+  const handleGoBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate(businessListPath);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -316,11 +326,11 @@ const BusinessDetail = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleGoBack}
             className="mr-4 text-gray-600 hover:text-gray-800"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-            Back to Directory
+            Go back
           </button>
           <h1 className="text-2xl font-bold text-gray-800">
             {isNewBusiness ? 'Add New Business' : 'Edit Business'}

@@ -149,6 +149,15 @@ export default function ChapterDetail() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleGoBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate(backPath);
+  };
+
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   return (
@@ -158,13 +167,13 @@ export default function ChapterDetail() {
         {/* Back + Header */}
         <div className="mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleGoBack}
             className="inline-flex items-center text-green-600 hover:text-green-800 font-medium transition-colors group mb-4"
           >
             <svg className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Back
+            Go back
           </button>
 
           <div className="bg-gradient-to-r from-green-600 to-emerald-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">

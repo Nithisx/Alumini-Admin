@@ -19,6 +19,7 @@ import {
 const BusinessView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const businessListPath = '/alumni/business';
   const [business, setBusiness] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +77,15 @@ const BusinessView = () => {
     fetchBusinessDetails();
   }, [id, token, API_BASE_URL]);
 
+  const handleGoBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate(businessListPath);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -89,10 +99,10 @@ const BusinessView = () => {
       <div className="text-center py-16">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Business Not Found</h2>
         <button
-          onClick={() => navigate('/alumni/business')}
+          onClick={handleGoBack}
           className="text-blue-600 hover:text-blue-800"
         >
-          Back to Directory
+          Go back
         </button>
       </div>
     );
@@ -104,11 +114,11 @@ const BusinessView = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <button
-          onClick={() => navigate('/alumni/business')}
+          onClick={handleGoBack}
           className="inline-flex items-center text-emerald-600 hover:text-emerald-800 font-medium transition-colors"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-          Back to Directory
+          Go back
         </button>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Business Details</h1>
       </div>

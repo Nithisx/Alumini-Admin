@@ -9,6 +9,7 @@ const SERVER_BASE = "https://api.karpagamalumni.in";
 export default function SingleNews() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const newsListPath = "/admin/news";
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,6 +76,15 @@ export default function SingleNews() {
     navigate(`/admin/news/${Number(id) + 1}`);
   };
 
+  const handleGoBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    navigate(newsListPath);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -130,7 +140,7 @@ export default function SingleNews() {
       {/* Simple Header */}
       <div className="bg-white shadow">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/admin/news" className="flex items-center text-blue-600">
+          <button onClick={handleGoBack} className="flex items-center text-blue-600">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 mr-1"
@@ -143,8 +153,8 @@ export default function SingleNews() {
                 clipRule="evenodd"
               />
             </svg>
-            Back to News
-          </Link>
+            Go back
+          </button>
         </div>
       </div>
 
