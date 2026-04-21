@@ -15,7 +15,7 @@ const getMediaUrl = (uri) => {
   return uri.startsWith("/") ? `${MEDIA_BASE_URL}${uri}` : `${MEDIA_BASE_URL}/${uri}`;
 };
 
-const TABS = ["Personal", "Work", "Contact", "Social"];
+const TABS = ["Personal", "Work", "Contact/Info", "Social"];
 
 /* ─── small helpers ──────────────────────────────────────────────────────── */
 
@@ -258,8 +258,8 @@ export default function SingleMember() {
           </div>
         );
 
-      /* ── Contact ── */
-      case "Contact":
+      /* ── Contact/Info ── */
+      case "Contact/Info":
         return (
           <div>
             <FieldRow icon={Icons.phone} label="Phone">

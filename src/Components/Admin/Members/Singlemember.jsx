@@ -26,7 +26,7 @@ const getMediaUrl = (uri) => {
 
 const ROLES = ["Student", "Alumni", "Staff"];
 const CHAPTERS = ["KAHE CHAPTER CHENNAI","KAHE CHAPTER COIMBATORE","KAHE CHAPTER TRICHY"];
-const TABS = ["Personal", "Work", "Contact", "Social"];
+const TABS = ["Personal", "Work", "Contact/Info/Info", "Social"];
 
 /* ─── small helpers ──────────────────────────────────────────────────────── */
 
@@ -635,8 +635,8 @@ export default function SingleMember() {
           </div>
         );
 
-      /* ── Contact ── */
-      case "Contact":
+      /* ── Contact/Info/Info ── */
+      case "Contact/Info/Info":
         return (
           <div>
             <FieldRow icon={Icons.phone} label="Phone">
