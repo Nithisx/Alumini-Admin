@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import Pagination from "../../Shared/Pagination";
+import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
 
 const TOKEN =
   typeof window !== "undefined" ? localStorage.getItem("Token") : null;
@@ -12,56 +13,6 @@ const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dynamic-dropdown-filters/`;
 
-const placeholder =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
-
-// Placeholder image service
-const getInitialsAvatar = (firstName, lastName) => {
-  if (!firstName && !lastName) return placeholder;
-
-  // Get initials from name
-  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""
-    }`.toUpperCase();
-
-  // Generate a deterministic color based on name
-  const colors = [
-    "#4299E1", // blue-500
-    "#48BB78", // green-500
-    "#ED8936", // orange-500
-    "#9F7AEA", // purple-500
-    "#F56565", // red-500
-    "#38B2AC", // teal-500
-    "#ECC94B", // yellow-500
-    "#667EEA", // indigo-500
-    "#ED64A6", // pink-500
-  ];
-
-  // Simple hash function to get consistent color
-  const hashCode = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash;
-  };
-
-  const colorIndex =
-    Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length;
-  const backgroundColor = colors[colorIndex];
-
-  // Create SVG for avatar
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-      <rect width="200" height="200" fill="${backgroundColor}" />
-      <text x="50%" y="50%" dy=".3em" fontFamily="Arial, sans-serif" fontSize="80" 
-        fill="white" textAnchor="middle" dominantBaseline="middle">${initials}</text>
-    </svg>
-  `;
-
-  // Convert SVG to data URL
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
-};
 
 const MAX_DROPDOWN_ITEMS = 50;
 const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
@@ -1459,10 +1410,10 @@ export default function MembersPage() {
                 {/* Square photo */}
                 <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
                   <img
-                    src={member.profile_photo ? `https://api.karpagamalumni.in${member.profile_photo}` : placeholder}
+                    src={member.profile_photo ? `https://api.karpagamalumni.in${member.profile_photo}` : getProfilePlaceholderByGender(member.gender)}
                     alt={`${member.first_name} ${member.last_name}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => { e.target.onerror = null; e.target.src = getInitialsAvatar(member.first_name, member.last_name); }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(member.gender); }}
                   />
                   <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadgeColor(member.role)}`}>
                     {member.role}

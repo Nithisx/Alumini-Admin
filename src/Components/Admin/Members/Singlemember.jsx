@@ -7,20 +7,9 @@ import {
   COURSES,
   COURSE_BRANCH_MAPPING,
 } from "../../../constants/academicOptions";
+import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
 
-const PROFILE_PLACEHOLDER =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NS4wMDAwIDgxLjcxNTcgODUuMDAwMCA5MEM4NS4wMDAwIDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUM5Qzk5Ii8+CjxwYXRoIGQ9Ik0xMDAgMTEwQzg2LjE5MjkgMTEwIDc1IDEyMS4xOTMgNzUgMTM1VjE0MEg3NVYxNDBIMTI1VjE0MFYxMzVDMTI1IDEyMS4xOTMgMTEzLjgwNyAxMTAgMTAwIDExMFoiIGZpbGw9IiM5QzlDOTkiLz4KPC9zdmc+";
-
-// Generate initials-based avatar for profile photos
-const getProfileAvatar = (firstName, lastName) => {
-  if (!firstName && !lastName) return PROFILE_PLACEHOLDER;
-  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
-  const colors = ["#4299E1", "#48BB78", "#ED8936", "#9F7AEA", "#F56565", "#38B2AC", "#ECC94B", "#667EEA", "#ED64A6"];
-  const hashCode = (str) => { let h = 0; for (let i = 0; i < str.length; i++) { h = (h << 5) - h + str.charCodeAt(i); h = h & h; } return h; };
-  const bg = colors[Math.abs(hashCode(`${firstName}${lastName}`)) % colors.length];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="${bg}" /><text x="50%" y="50%" dy=".3em" font-family="Arial, sans-serif" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
-};
+/* ─── constants ─────────────────────────────────────────────────────────── */
 
 const TOKEN = localStorage.getItem("Token");
 const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
@@ -31,30 +20,95 @@ const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
 
 const getMediaUrl = (uri) => {
   if (!uri) return "";
-  if (
-    uri.startsWith("http://") ||
-    uri.startsWith("https://") ||
-    uri.startsWith("file://") ||
-    uri.startsWith("data:") ||
-    uri.startsWith("blob:")
-  ) return uri;
+  if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || uri.startsWith("data:") || uri.startsWith("blob:")) return uri;
   return uri.startsWith("/") ? `${MEDIA_BASE_URL}${uri}` : `${MEDIA_BASE_URL}/${uri}`;
 };
 
-// Dropdown data from Signup page
 const ROLES = ["Student", "Alumni", "Staff"];
+const CHAPTERS = ["KAHE CHAPTER CHENNAI","KAHE CHAPTER COIMBATORE","KAHE CHAPTER TRICHY"];
+const TABS = ["Personal", "Work", "Contact", "Social"];
 
-const CHAPTERS = [
-  "KAHE CHAPTER CHENNAI",
-  "KAHE CHAPTER COIMBATORE",
-  "KAHE CHAPTER TRICHY",
-];
+/* ─── small helpers ──────────────────────────────────────────────────────── */
+
+const FieldRow = ({ icon, label, children }) => (
+  <div className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-0">
+    <div className="flex-shrink-0 w-5 h-5 mt-0.5 text-green-600">{icon}</div>
+    <div className="flex-1 min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-wider text-green-600 mb-0.5">{label}</p>
+      <div className="text-sm text-gray-800">{children}</div>
+    </div>
+  </div>
+);
+
+const EditInput = ({ value, onChange, type = "text", placeholder = "", className = "" }) => (
+  <input
+    type={type}
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    placeholder={placeholder}
+    className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white ${className}`}
+  />
+);
+
+const EditSelect = ({ value, onChange, children }) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+  >
+    {children}
+  </select>
+);
+
+const TagList = ({ items, colorClass }) =>
+  items && items.length > 0 ? (
+    <div className="flex flex-wrap gap-1.5 mt-1">
+      {items.map((item, i) => (
+        <span key={i} className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>{item}</span>
+      ))}
+    </div>
+  ) : (
+    <span className="text-gray-400 italic">Not provided</span>
+  );
+
+/* ─── SVG icons ──────────────────────────────────────────────────────────── */
+const Icons = {
+  person: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>,
+  at: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M14.243 5.757a6 6 0 10-.986 9.284 1 1 0 111.087 1.678A8 8 0 1118 10a3 3 0 01-4.8 2.401A4 4 0 1114 10a1 1 0 102 0c0-1.537-.586-3.07-1.757-4.243zM12 10a2 2 0 10-4 0 2 2 0 004 0z" clipRule="evenodd"/></svg>,
+  email: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>,
+  info: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/></svg>,
+  calendar: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/></svg>,
+  gender: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>,
+  lock: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>,
+  briefcase: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/></svg>,
+  building: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd"/></svg>,
+  chart: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>,
+  tag: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/></svg>,
+  pin: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/></svg>,
+  home: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>,
+  phone: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>,
+  link: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd"/></svg>,
+  pencil: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>,
+  chat: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd"/></svg>,
+  back: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>,
+  check: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>,
+  x: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>,
+  trash: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/></svg>,
+  ban: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd"/></svg>,
+  activate: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>,
+  camera: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/></svg>,
+  education: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg>,
+};
+
+/* ─── main component ─────────────────────────────────────────────────────── */
 
 export default function SingleMember() {
   const { name } = useParams();
   const navigate = useNavigate();
+
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("Personal");
   const [isEditing, setIsEditing] = useState(false);
   const [editedMember, setEditedMember] = useState({});
   const [changedFields, setChangedFields] = useState(new Set());
@@ -63,30 +117,31 @@ export default function SingleMember() {
   const [availableBranches, setAvailableBranches] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  // New state for user actions
   const [deactivating, setDeactivating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  /* ── helpers ── */
   const navigateToMembersList = () => {
     const returnUrl = sessionStorage.getItem(MEMBERS_RETURN_URL_KEY);
     navigate(returnUrl || "/admin/members");
   };
 
+  const handleBackToMembers = () => {
+    if (window.history.state?.idx > 0) { navigate(-1); return; }
+    navigateToMembersList();
+  };
+
+  /* ── fetch ── */
   useEffect(() => {
     fetch(`${API_BASE}${name}`, {
-      headers: {
-        Authorization: `Token ${TOKEN}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
     })
       .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
       .then((data) => {
         setMember(data);
-        setEditedMember(data); // Initialize edited member with original data
-
-        // Set available branches based on current course
+        setEditedMember(data);
         if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
           setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
         }
@@ -94,21 +149,11 @@ export default function SingleMember() {
       .finally(() => setLoading(false));
   }, [name]);
 
-  const handleBackToMembers = () => {
-    if (window.history.state?.idx > 0) {
-      navigate(-1);
-      return;
-    }
-
-    navigateToMembersList();
-  };
-
+  /* ── edit helpers ── */
   const handleEditClick = () => {
     setIsEditing(true);
-    setEditedMember({ ...member }); // Reset edited data to current member data
-    setChangedFields(new Set()); // Clear the changed fields set when starting edit mode
-
-    // Set available branches based on current course
+    setEditedMember({ ...member });
+    setChangedFields(new Set());
     if (member.course && COURSE_BRANCH_MAPPING[member.course]) {
       setAvailableBranches(COURSE_BRANCH_MAPPING[member.course]);
     } else {
@@ -118,143 +163,74 @@ export default function SingleMember() {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditedMember({ ...member }); // Reset to original data
-    resetImageSelection(); // Reset image selection
-    setChangedFields(new Set()); // Clear the changed fields set
+    setEditedMember({ ...member });
+    resetImageSelection();
+    setChangedFields(new Set());
   };
 
   const handleSaveEdit = async () => {
-    // Check for errors before saving
-    if (usernameError) {
-      toast.error(`Cannot save: ${usernameError}`);
-      return;
-    }
-
-    // Check if username is being changed and is empty
-    if (
-      changedFields.has("username") &&
-      (!editedMember.username || editedMember.username.trim() === "")
-    ) {
+    if (usernameError) { toast.error(`Cannot save: ${usernameError}`); return; }
+    if (changedFields.has("username") && (!editedMember.username || editedMember.username.trim() === "")) {
       setUsernameError("Username cannot be empty");
       toast.error("Username cannot be empty");
       return;
     }
-
     setSaving(true);
     try {
-      // Prepare FormData for multipart/form-data submission
       const formData = new FormData();
-
-      // Add the profile image if one was selected (profile image is always considered changed if selected)
       if (selectedImage) {
         formData.append("profile_photo", selectedImage);
-        // Mark profile_photo as changed
-        setChangedFields((current) => new Set([...current, "profile_photo"]));
+        setChangedFields((cur) => new Set([...cur, "profile_photo"]));
       }
-
-      // Add only edited fields to formData
       Object.entries(editedMember).forEach(([key, value]) => {
-        // Skip these fields to avoid validation errors
         if (key === "profile_photo" || key === "experience") return;
-
-        // Only process fields that were actually changed
-        if (changedFields.has(key)) {
-          // Handle array fields by converting to JSON strings (as expected by the API)
-          if (
-            key === "professional_skills" ||
-            key === "industries_worked_in" ||
-            key === "roles_played"
-          ) {
-            const arrayValue = Array.isArray(value)
-              ? value
-              : value
-                ? [value]
-                : [];
-            formData.append(key, JSON.stringify(arrayValue));
-          }
-          // Handle social_links object - convert to JSON string
-          else if (key === "social_links") {
-            const socialLinksValue =
-              value && typeof value === "object" ? value : {};
-            formData.append(key, JSON.stringify(socialLinksValue));
-          }
-          // Handle work_experience field - map to experience and send as JSON number
-          else if (key === "work_experience" && value) {
-            formData.append(
-              "work_experience",
-              JSON.stringify(parseInt(value) || 0)
-            );
-            formData.append("experience", JSON.stringify(parseInt(value) || 0));
-          }
-          // Handle worked_in field with special care for capitalization (backend expects Worked_in with capital W)
-          else if (key === "worked_in") {
-            const valueToSend = value || "";
-            // Use the correct field name expected by backend (Worked_in with capital W)
-            formData.append("Worked_in", JSON.stringify(valueToSend)); // Send as proper JSON string
-            // Also send lowercase version for backward compatibility
-            formData.append("worked_in", JSON.stringify(valueToSend));
-          }
-          // Handle current_work field - send as plain string to avoid double quotes in UI
-          else if (key === "current_work") {
-            formData.append(key, (value || "").toString()); // Send as plain string to avoid JSON quotes
-          }
-          // Handle other fields - send only changed fields
-          else {
-            // Use empty string for null/undefined values
-            formData.append(
-              key,
-              value !== null && value !== undefined ? value : ""
-            );
-          }
+        if (!changedFields.has(key)) return;
+        if (["professional_skills", "industries_worked_in", "roles_played"].includes(key)) {
+          const arr = Array.isArray(value) ? value : value ? [value] : [];
+          formData.append(key, JSON.stringify(arr));
+        } else if (key === "social_links") {
+          formData.append(key, JSON.stringify(value && typeof value === "object" ? value : {}));
+        } else if (key === "work_experience" && value) {
+          formData.append("work_experience", JSON.stringify(parseInt(value) || 0));
+          formData.append("experience", JSON.stringify(parseInt(value) || 0));
+        } else if (key === "worked_in") {
+          formData.append("Worked_in", JSON.stringify(value || ""));
+          formData.append("worked_in", JSON.stringify(value || ""));
+        } else if (key === "current_work") {
+          formData.append(key, (value || "").toString());
+        } else {
+          formData.append(key, value !== null && value !== undefined ? value : "");
         }
       });
 
-      // Make the API request with user ID instead of name
       const response = await fetch(`${API_BASE}${member.id}/update/`, {
         method: "PUT",
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          // Don't set Content-Type header - let the browser set it with boundary for FormData
-        },
+        headers: { Authorization: `Token ${TOKEN}` },
         body: formData,
       });
-
       const data = await response.json();
-
       if (response.ok && data.success) {
-        // Update the member state with the returned user data
-        // Handle the capitalization differences and JSON parsing
         const updatedUser = {
           ...data.user,
-          // Make sure worked_in (lowercase) is available for display
           worked_in: data.user.worked_in || data.user.Worked_in || "",
-          // Also ensure Worked_in (uppercase) is set for consistency
           Worked_in: data.user.worked_in || data.user.Worked_in || "",
-          // Parse current_work if it's a stringified JSON
           current_work: data.user.current_work
-            ? typeof data.user.current_work === "string" &&
-              data.user.current_work.startsWith('"')
+            ? typeof data.user.current_work === "string" && data.user.current_work.startsWith('"')
               ? JSON.parse(data.user.current_work)
               : data.user.current_work
             : "",
         };
-
         setMember(updatedUser);
         setEditedMember(updatedUser);
         setIsEditing(false);
-        resetImageSelection(); // Reset image selection after successful save
-        setChangedFields(new Set()); // Clear the changed fields set after successful save
-
-        // Show success notification (you could implement a toast notification here)
-
-        // You could add a toast notification here:
-        // toast.success(data.message);
+        resetImageSelection();
+        setChangedFields(new Set());
+        toast.success("Profile updated successfully!");
       } else {
-        // Handle error case
-        // toast.error(data.message || 'Failed to update profile');
+        toast.error(data.message || "Failed to update profile");
       }
-    } catch (error) {
-      // toast.error('Network error while updating profile');
+    } catch {
+      toast.error("Network error while updating profile");
     } finally {
       setSaving(false);
     }
@@ -262,67 +238,28 @@ export default function SingleMember() {
 
   const handleInputChange = (field, value) => {
     setEditedMember((prev) => {
-      const updated = {
-        ...prev,
-        [field]: value,
-      };
-
-      // Special handling for username (prevent special characters)
+      const updated = { ...prev, [field]: value };
       if (field === "username") {
-        // Remove @ symbol and special characters from username
-        const sanitizedUsername = value.replace(
-          /[@\s#$%^&*()+=[\]\\';,./{}|":<>?~]/g,
-          ""
-        );
-
-        // Only proceed if username actually changed
-        if (sanitizedUsername !== member.username) {
-          updated[field] = sanitizedUsername;
-          setChangedFields((current) => new Set([...current, field]));
-
-          // Clear previous errors
+        const sanitized = value.replace(/[@\s#$%^&*()+=[\]\\';,./{}|":<>?~]/g, "");
+        if (sanitized !== member.username) {
+          updated[field] = sanitized;
+          setChangedFields((cur) => new Set([...cur, field]));
           setUsernameError("");
-
-          // Check if username is not empty
-          if (sanitizedUsername.trim() === "") {
-            setUsernameError("Username cannot be empty");
-          }
-          // Don't need to check availability since the backend will handle this
-          // We're only doing basic validation on the frontend
+          if (sanitized.trim() === "") setUsernameError("Username cannot be empty");
         } else {
-          // Username unchanged, remove from changedFields
-          setChangedFields((current) => {
-            const newSet = new Set([...current]);
-            newSet.delete(field);
-            return newSet;
-          });
+          setChangedFields((cur) => { const s = new Set([...cur]); s.delete(field); return s; });
         }
-      }
-      // If course is changed, reset the stream/branch and update available branches
-      else if (field === "course") {
+      } else if (field === "course") {
         updated.stream = "";
-        setAvailableBranches(
-          value && COURSE_BRANCH_MAPPING[value]
-            ? COURSE_BRANCH_MAPPING[value]
-            : []
-        );
-        // Mark stream as changed too since we're resetting it
-        setChangedFields((current) => new Set([...current, field, "stream"]));
+        setAvailableBranches(value && COURSE_BRANCH_MAPPING[value] ? COURSE_BRANCH_MAPPING[value] : []);
+        setChangedFields((cur) => new Set([...cur, field, "stream"]));
       } else {
-        // Mark field as changed
-        setChangedFields((current) => new Set([...current, field]));
+        setChangedFields((cur) => new Set([...cur, field]));
       }
-
-      // Special handling for worked_in field to handle capitalization issues
       if (field === "worked_in") {
-        // Update both lowercase and capitalized versions to ensure consistency
         updated.Worked_in = value;
-        // Mark Worked_in as changed too
-        setChangedFields(
-          (current) => new Set([...current, field, "Worked_in"])
-        );
+        setChangedFields((cur) => new Set([...cur, field, "Worked_in"]));
       }
-
       return updated;
     });
   };
@@ -331,101 +268,73 @@ export default function SingleMember() {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
-
-      // Mark profile_photo as changed
-      setChangedFields((current) => new Set([...current, "profile_photo"]));
-
-      // Create preview URL
+      setChangedFields((cur) => new Set([...cur, "profile_photo"]));
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
+      reader.onload = (e) => setImagePreview(e.target.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const resetImageSelection = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-  };
+  const resetImageSelection = () => { setSelectedImage(null); setImagePreview(null); };
 
-  // Deactivate/Activate User Function
+  /* ── deactivate / delete ── */
   const handleDeactivateUser = () => setShowDeactivateConfirm(true);
-
   const doDeactivateUser = async () => {
     const action = member.is_active ? "deactivate" : "activate";
-
     setDeactivating(true);
     try {
-      const response = await fetch(API_DEACTIVATE_USER, {
+      const res = await fetch(API_DEACTIVATE_USER, {
         method: "POST",
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: member.id,
-        }),
+        headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: member.id }),
       });
-
-      const data = await response.json();
-
-      if (response.status === 200) {
+      const data = await res.json();
+      if (res.status === 200) {
         toast.success(`User ${action}d successfully!`);
         navigateToMembersList();
-        // Reload the page when response is 200
         window.location.reload();
       } else {
         toast.error(`Failed to ${action} user: ${data.message || "Unknown error"}`);
       }
-    } catch (error) {
-      toast.error(`Network error while ${action}ing user`);
-    } finally {
-      setDeactivating(false);
-    }
+    } catch { toast.error(`Network error while ${action}ing user`); }
+    finally { setDeactivating(false); }
   };
 
-  // Delete User Function
   const handleDeleteUser = () => setShowDeleteConfirm(true);
-
   const doDeleteUser = async () => {
-
     setDeleting(true);
     try {
-      const response = await fetch(API_DELETE_USER, {
+      const res = await fetch(API_DELETE_USER, {
         method: "POST",
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: member.id,
-        }),
+        headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: member.id }),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("User deleted successfully!");
-        navigateToMembersList();
-      } else {
-        toast.error(`Failed to delete user: ${data.message || data.error || "Unknown error"}`);
-      }
-    } catch (error) {
-      toast.error("Network error while deleting user");
-    } finally {
-      setDeleting(false);
-    }
+      const data = await res.json();
+      if (res.ok) { toast.success("User deleted successfully!"); navigateToMembersList(); }
+      else toast.error(`Failed to delete user: ${data.message || data.error || "Unknown error"}`);
+    } catch { toast.error("Network error while deleting user"); }
+    finally { setDeleting(false); }
   };
 
+  const handlechat = async () => {
+    const token = localStorage.getItem("Token");
+    try {
+      const res = await fetch("https://api.karpagamalumni.in/chat/rooms/", {
+        method: "POST",
+        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ target_user_id: member.id }),
+      });
+      if (res.ok) navigate("/admin/chat");
+    } catch {}
+  };
+
+  /* ── loading / not found ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-4 border-green-600 border-t-transparent mb-4"></div>
-          <p className="text-green-700 text-base sm:text-lg font-medium">
-            Loading member profile...
-          </p>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent mb-4"></div>
+          <p className="text-gray-500 font-medium">Loading member profile…</p>
         </div>
       </div>
     );
@@ -433,20 +342,12 @@ export default function SingleMember() {
 
   if (!member) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
-        <div className="text-center bg-white p-6 sm:p-8 rounded-xl shadow-lg border-l-4 border-red-500 max-w-md w-full">
-          <div className="text-red-500 text-4xl sm:text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
-            Member Not Found
-          </h2>
-          <p className="text-gray-600 text-sm sm:text-base">
-            The requested member profile could not be found.
-          </p>
-          <button
-            type="button"
-            onClick={handleBackToMembers}
-            className="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center bg-white p-8 rounded-2xl shadow border-l-4 border-red-500 max-w-sm w-full">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Member Not Found</h2>
+          <p className="text-gray-500 text-sm">The requested member profile could not be found.</p>
+          <button onClick={handleBackToMembers} className="mt-5 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
             Go back
           </button>
         </div>
@@ -455,88 +356,422 @@ export default function SingleMember() {
   }
 
   const {
-    username,
-    first_name,
-    last_name,
-    salutation,
-    gender,
-    date_of_birth,
-    email,
-    secondary_email,
-    phone,
-    profile_photo,
-    cover_photo,
-    current_location,
-    home_town,
-    city,
-    state,
-    country,
-    branch,
-    course,
-    stream,
-    start_year,
-    end_year,
-    college_name,
-    chapter,
-    role,
-    bio,
-    current_work,
-    worked_in,
-    passed_out_year,
-    roll_no,
-    social_links = {},
-    is_active = true,
-    // Add the new professional fields
-    company,
-    position,
-    work_experience,
-    professional_skills = [],
-    industries_worked_in = [],
-    roles_played = [],
+    username, first_name, last_name, salutation, gender, date_of_birth,
+    email, secondary_email, phone, cover_photo, current_location,
+    home_town, city, state, country, branch, course, stream, start_year,
+    end_year, college_name, chapter, role, bio, current_work, worked_in,
+    passed_out_year, roll_no, social_links = {}, is_active = true,
+    company, position, work_experience,
+    professional_skills = [], industries_worked_in = [], roles_played = [],
   } = member;
 
-  //  const handlechat = () => {
+  const displayName = [salutation, first_name, last_name].filter(Boolean).join(" ");
+  const currentData = isEditing ? editedMember : member;
 
+  /* ── tab content renderer ── */
+  const renderTabContent = () => {
+    switch (activeTab) {
+      /* ── Personal ── */
+      case "Personal":
+        return (
+          <div>
+            <FieldRow icon={Icons.person} label="Full Name">
+              {isEditing ? (
+                <div className="flex gap-2 flex-wrap">
+                  <EditInput
+                    value={editedMember.first_name || ""}
+                    onChange={(v) => handleInputChange("first_name", v)}
+                    placeholder="First Name"
+                    className="flex-1 min-w-[120px]"
+                  />
+                  <EditInput
+                    value={editedMember.last_name || ""}
+                    onChange={(v) => handleInputChange("last_name", v)}
+                    placeholder="Last Name"
+                    className="flex-1 min-w-[120px]"
+                  />
+                </div>
+              ) : (
+                <span>{displayName || "—"}</span>
+              )}
+            </FieldRow>
 
-  //   navigate(`/admin/chat/${member.id}`);
+            <FieldRow icon={Icons.at} label="Username">
+              {isEditing ? (
+                <div>
+                  <div className="flex items-center">
+                    <span className="text-gray-400 mr-1 text-sm">@</span>
+                    <EditInput
+                      value={editedMember.username || ""}
+                      onChange={(v) => handleInputChange("username", v)}
+                      placeholder="username"
+                      className={usernameError ? "border-red-400" : ""}
+                    />
+                  </div>
+                  {usernameError && <p className="text-red-500 text-xs mt-1">{usernameError}</p>}
+                </div>
+              ) : (
+                <span className="text-gray-500">@{username}</span>
+              )}
+            </FieldRow>
 
-  //   }
+            <FieldRow icon={Icons.email} label="Email">
+              {isEditing ? (
+                <EditInput type="email" value={editedMember.email || ""} onChange={(v) => handleInputChange("email", v)} />
+              ) : (
+                <span>{email || "—"}</span>
+              )}
+            </FieldRow>
 
-  const handlechat = async () => {
-    const token = localStorage.getItem("Token");
+            <FieldRow icon={Icons.info} label="Bio">
+              {isEditing ? (
+                <textarea
+                  value={editedMember.bio || ""}
+                  onChange={(e) => handleInputChange("bio", e.target.value)}
+                  placeholder="Enter bio…"
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                />
+              ) : (
+                <span className="whitespace-pre-line">{bio || <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
 
+            <FieldRow icon={Icons.calendar} label="Date of Birth">
+              {isEditing ? (
+                <EditInput type="date" value={editedMember.date_of_birth || ""} onChange={(v) => handleInputChange("date_of_birth", v)} />
+              ) : (
+                <span>{date_of_birth || "—"}</span>
+              )}
+            </FieldRow>
 
-    try {
-      const response = await fetch('https://api.karpagamalumni.in/chat/rooms/', {
-        method: 'POST',
-        headers: {
-          Authorization: `Token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ target_user_id: member.id })
-      });
+            <FieldRow icon={Icons.gender} label="Gender">
+              {isEditing ? (
+                <EditSelect value={editedMember.gender || ""} onChange={(v) => handleInputChange("gender", v)}>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </EditSelect>
+              ) : (
+                <span>{gender || "—"}</span>
+              )}
+            </FieldRow>
 
-      if (response.ok) {
+            {/* Role & Chapter */}
+            <FieldRow icon={Icons.tag} label="Role">
+              {isEditing ? (
+                <EditSelect value={editedMember.role || ""} onChange={(v) => handleInputChange("role", v)}>
+                  <option value="">Select Role</option>
+                  {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                </EditSelect>
+              ) : (
+                <span>{role || "—"}</span>
+              )}
+            </FieldRow>
 
+            <FieldRow icon={Icons.tag} label="Chapter">
+              {isEditing ? (
+                <EditSelect value={editedMember.chapter || ""} onChange={(v) => handleInputChange("chapter", v)}>
+                  <option value="">Select Chapter</option>
+                  {CHAPTERS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </EditSelect>
+              ) : (
+                <span>{chapter || "—"}</span>
+              )}
+            </FieldRow>
 
-        navigate(`/admin/chat`);
+            {/* Password management — always shown in Personal tab (view-only; edit redirects) */}
+            {!isEditing && (
+              <FieldRow icon={Icons.lock} label="Password Management">
+                <p className="text-green-600 text-sm mb-2">Manage your account security settings</p>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => navigate("/admin/change-password")}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    {Icons.lock} Change Password
+                  </button>
+                  <button
+                    onClick={() => navigate("/admin/reset-password")}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    {Icons.check} Reset Password
+                  </button>
+                </div>
+              </FieldRow>
+            )}
+          </div>
+        );
+
+      /* ── Work ── */
+      case "Work":
+        return (
+          <div>
+            <FieldRow icon={Icons.education} label="College">
+              {isEditing ? (
+                <EditSelect value={editedMember.college_name || ""} onChange={(v) => handleInputChange("college_name", v)}>
+                  <option value="">Select College</option>
+                  {COLLEGE_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </EditSelect>
+              ) : (
+                <span>{college_name || "—"}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.education} label="Course & Branch">
+              {isEditing ? (
+                <div className="space-y-2">
+                  <EditSelect value={editedMember.course || ""} onChange={(v) => handleInputChange("course", v)}>
+                    <option value="">Select Course</option>
+                    {COURSES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </EditSelect>
+                  {editedMember.course && COURSE_BRANCH_MAPPING[editedMember.course] && (
+                    <EditSelect value={editedMember.stream || ""} onChange={(v) => handleInputChange("stream", v)}>
+                      <option value="">Select Branch/Stream</option>
+                      {COURSE_BRANCH_MAPPING[editedMember.course].map((b) => <option key={b} value={b}>{b}</option>)}
+                    </EditSelect>
+                  )}
+                </div>
+              ) : (
+                <span>{[course, stream].filter(Boolean).join(", ") || "—"}</span>
+              )}
+            </FieldRow>
+
+            {(start_year || end_year || isEditing) && (
+              <FieldRow icon={Icons.calendar} label="Study Duration">
+                {isEditing ? (
+                  <div className="flex items-center gap-2">
+                    <EditInput type="number" placeholder="Start Year" value={editedMember.start_year || ""} onChange={(v) => handleInputChange("start_year", v)} className="w-28" />
+                    <span className="text-gray-400">–</span>
+                    <EditInput type="number" placeholder="End Year" value={editedMember.end_year || ""} onChange={(v) => handleInputChange("end_year", v)} className="w-28" />
+                  </div>
+                ) : (
+                  <span>{[start_year, end_year].filter(Boolean).join(" – ") || "—"}</span>
+                )}
+              </FieldRow>
+            )}
+
+            <FieldRow icon={Icons.calendar} label="Passed Out Year">
+              {isEditing ? (
+                <EditInput type="number" value={editedMember.passed_out_year || ""} onChange={(v) => handleInputChange("passed_out_year", v)} className="w-36" />
+              ) : (
+                <span>{passed_out_year || "—"}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.tag} label="Roll No">
+              {isEditing ? (
+                <EditInput value={editedMember.roll_no || ""} onChange={(v) => handleInputChange("roll_no", v)} />
+              ) : (
+                <span>{roll_no || "—"}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.building} label="Company">
+              {isEditing ? (
+                <EditInput value={editedMember.company || ""} onChange={(v) => handleInputChange("company", v)} placeholder="Company name" />
+              ) : (
+                <span>{company || <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.briefcase} label="Position">
+              {isEditing ? (
+                <EditInput value={editedMember.position || ""} onChange={(v) => handleInputChange("position", v)} placeholder="Job title / position" />
+              ) : (
+                <span>{position || <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.chart} label="Work Experience">
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <EditInput type="number" value={editedMember.work_experience || ""} onChange={(v) => handleInputChange("work_experience", v)} className="w-24" />
+                  <span className="text-gray-500 text-sm">years</span>
+                </div>
+              ) : (
+                <span>{work_experience > 0 ? `${work_experience} ${work_experience === 1 ? "year" : "years"}` : <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.briefcase} label="Current Work">
+              {isEditing ? (
+                <EditInput
+                  value={typeof editedMember.current_work === "string" && editedMember.current_work.startsWith('"') ? JSON.parse(editedMember.current_work) : editedMember.current_work || ""}
+                  onChange={(v) => handleInputChange("current_work", v)}
+                  placeholder="Current workplace"
+                />
+              ) : (
+                <span>{(() => {
+                  if (!current_work) return <em className="text-gray-400">Not provided</em>;
+                  if (typeof current_work === "string" && current_work.startsWith('"') && current_work.endsWith('"')) {
+                    try { return JSON.parse(current_work); } catch {}
+                  }
+                  return current_work;
+                })()}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.building} label="Worked In">
+              {isEditing ? (
+                <EditInput value={editedMember.worked_in === undefined ? "" : editedMember.worked_in} onChange={(v) => handleInputChange("worked_in", v)} placeholder="Previous workplaces" />
+              ) : (
+                <span>{worked_in || member.Worked_in
+                  ? (worked_in || (Array.isArray(member.Worked_in) ? member.Worked_in.join(", ") : member.Worked_in))
+                  : <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.tag} label="Professional Skills">
+              {isEditing ? (
+                <div>
+                  <EditInput
+                    placeholder="Skills separated by commas"
+                    value={editedMember.professional_skills_text || (Array.isArray(editedMember.professional_skills) ? editedMember.professional_skills.join(", ") : "")}
+                    onChange={(v) => {
+                      handleInputChange("professional_skills_text", v);
+                      handleInputChange("professional_skills", v.split(",").map((s) => s.trim()).filter(Boolean));
+                    }}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">e.g. React, Node.js, UI Design</p>
+                </div>
+              ) : (
+                <TagList items={professional_skills} colorClass="bg-blue-100 text-blue-700" />
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.building} label="Industries Worked In">
+              {isEditing ? (
+                <div>
+                  <EditInput
+                    placeholder="Industries separated by commas"
+                    value={editedMember.industries_worked_in_text || (Array.isArray(editedMember.industries_worked_in) ? editedMember.industries_worked_in.join(", ") : "")}
+                    onChange={(v) => {
+                      handleInputChange("industries_worked_in_text", v);
+                      handleInputChange("industries_worked_in", v.split(",").map((s) => s.trim()).filter(Boolean));
+                    }}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">e.g. IT, Healthcare, Education</p>
+                </div>
+              ) : (
+                <TagList items={industries_worked_in} colorClass="bg-purple-100 text-purple-700" />
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.briefcase} label="Roles Played">
+              {isEditing ? (
+                <div>
+                  <EditInput
+                    placeholder="Roles separated by commas"
+                    value={editedMember.roles_played_text || (Array.isArray(editedMember.roles_played) ? editedMember.roles_played.join(", ") : "")}
+                    onChange={(v) => {
+                      handleInputChange("roles_played_text", v);
+                      handleInputChange("roles_played", v.split(",").map((s) => s.trim()).filter(Boolean));
+                    }}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">e.g. Developer, Team Lead, Product Manager</p>
+                </div>
+              ) : (
+                <TagList items={roles_played} colorClass="bg-orange-100 text-orange-700" />
+              )}
+            </FieldRow>
+          </div>
+        );
+
+      /* ── Contact ── */
+      case "Contact":
+        return (
+          <div>
+            <FieldRow icon={Icons.phone} label="Phone">
+              {isEditing ? (
+                <EditInput type="tel" value={editedMember.phone || ""} onChange={(v) => handleInputChange("phone", v)} />
+              ) : (
+                <span>{phone || <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.email} label="Secondary Email">
+              {isEditing ? (
+                <EditInput type="email" value={editedMember.secondary_email || ""} onChange={(v) => handleInputChange("secondary_email", v)} />
+              ) : (
+                <span>{secondary_email || <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.pin} label="Current Location">
+              {isEditing ? (
+                <div className="space-y-2">
+                  <EditInput placeholder="Current Location" value={editedMember.current_location || ""} onChange={(v) => handleInputChange("current_location", v)} />
+                  <div className="grid grid-cols-3 gap-2">
+                    <EditInput placeholder="City" value={editedMember.city || ""} onChange={(v) => handleInputChange("city", v)} />
+                    <EditInput placeholder="State" value={editedMember.state || ""} onChange={(v) => handleInputChange("state", v)} />
+                    <EditInput placeholder="Country" value={editedMember.country || ""} onChange={(v) => handleInputChange("country", v)} />
+                  </div>
+                </div>
+              ) : (
+                <span>{current_location || [city, state, country].filter(Boolean).join(", ") || <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+
+            <FieldRow icon={Icons.home} label="Home Town">
+              {isEditing ? (
+                <EditInput value={editedMember.home_town || ""} onChange={(v) => handleInputChange("home_town", v)} placeholder="Home town" />
+              ) : (
+                <span>{home_town || <em className="text-gray-400">Not provided</em>}</span>
+              )}
+            </FieldRow>
+          </div>
+        );
+
+      /* ── Social ── */
+      case "Social": {
+        const sl = isEditing ? (editedMember.social_links || {}) : social_links;
+        const socialFields = [
+          { key: "linkedin_link", label: "LinkedIn" },
+          { key: "twitter_link", label: "Twitter / X" },
+          { key: "facebook_link", label: "Facebook" },
+          { key: "instagram_link", label: "Instagram" },
+          { key: "github_link", label: "GitHub" },
+          { key: "website_link", label: "Website" },
+        ];
+        return (
+          <div>
+            {socialFields.map(({ key, label }) => (
+              <FieldRow key={key} icon={Icons.link} label={label}>
+                {isEditing ? (
+                  <EditInput
+                    type="text"
+                    value={editedMember.social_links?.[key] || ""}
+                    onChange={(v) => handleInputChange("social_links", { ...editedMember.social_links, [key]: v })}
+                    placeholder={`${label} URL`}
+                  />
+                ) : sl[key] ? (
+                  <a href={sl[key]} target="_blank" rel="noreferrer" className="text-green-600 hover:underline break-all">{sl[key]}</a>
+                ) : (
+                  <em className="text-gray-400">Not provided</em>
+                )}
+              </FieldRow>
+            ))}
+          </div>
+        );
       }
-    } catch (error) {
-    }
 
+      default:
+        return null;
+    }
   };
 
-
+  /* ── render ── */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-4 sm:py-6 lg:py-8 pb-20 lg:pb-8">
+    <div className="min-h-screen bg-gray-50 pb-16">
+      {/* ── confirm modals ── */}
       <ConfirmModal
         isOpen={showDeactivateConfirm}
         title={member?.is_active ? "Deactivate User" : "Activate User"}
-        message={
-          member?.is_active
-            ? `${member.first_name} ${member.last_name} will no longer be able to access their account.`
-            : `Reactivate ${member?.first_name} ${member?.last_name}'s account?`
-        }
+        message={member?.is_active
+          ? `${member.first_name} ${member.last_name} will no longer be able to access their account.`
+          : `Reactivate ${member?.first_name} ${member?.last_name}'s account?`}
         danger={!!member?.is_active}
         confirmText={member?.is_active ? "Deactivate" : "Activate"}
         onConfirm={() => { doDeactivateUser(); setShowDeactivateConfirm(false); }}
@@ -553,1421 +788,154 @@ export default function SingleMember() {
         onConfirm={() => { doDeleteUser(); setShowDeleteConfirm(false); }}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-      <div className="max-w-full lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
-        <div className="mb-4 sm:mb-6">
-          <button
-            type="button"
-            onClick={handleBackToMembers}
-            className="inline-flex items-center text-green-600 hover:text-green-800 font-medium transition-colors group"
-          >
-            <svg
-              className="w-4 h-4 sm:w-5 sm:h-5 mr-2 transform group-hover:-translate-x-1 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            <span className="text-sm sm:text-base">Go back</span>
-          </button>
+
+      {/* ── cover banner ── */}
+      <div
+        className="relative h-40 sm:h-52 bg-green-700"
+        style={cover_photo ? {
+          backgroundImage: `url(${getMediaUrl(cover_photo)})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        } : {}}
+      >
+        {cover_photo && <div className="absolute inset-0 bg-black/25" />}
+      </div>
+
+      {/* ── profile identity strip ── */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="relative -mt-14 sm:-mt-16 flex items-end justify-between pb-3 border-b border-gray-200">
+          {/* avatar */}
+          <div className="relative">
+            <img
+              src={imagePreview || (member.profile_photo ? getMediaUrl(member.profile_photo) : getProfilePlaceholderByGender(gender))}
+              alt={username}
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-md object-cover bg-white"
+              onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(gender); }}
+            />
+            {/* active dot */}
+            <span className={`absolute bottom-1.5 right-1.5 w-4 h-4 rounded-full border-2 border-white ${is_active ? "bg-green-500" : "bg-red-400"}`} />
+            {/* camera overlay in edit mode */}
+            {isEditing && (
+              <label htmlFor="profile-image-input" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer">
+                <span className="text-white">{Icons.camera}</span>
+                <input id="profile-image-input" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+            )}
+          </div>
+
+          {/* edit / action buttons — top right */}
+          <div className="pb-2">
+            {!isEditing ? (
+              <div className="flex flex-wrap gap-2 justify-end">
+                <button
+                  onClick={handlechat}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm"
+                >
+                  {Icons.chat} Chat
+                </button>
+                <button
+                  onClick={handleEditClick}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-green-600 text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  {Icons.pencil} Edit profile
+                </button>
+                <button
+                  onClick={handleDeactivateUser}
+                  disabled={deactivating}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-colors shadow-sm disabled:opacity-60 ${is_active ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"}`}
+                >
+                  {deactivating
+                    ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : is_active ? Icons.ban : Icons.activate}
+                  {is_active ? "Deactivate" : "Activate"}
+                </button>
+                <button
+                  onClick={handleDeleteUser}
+                  disabled={deleting}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-60"
+                >
+                  {deleting
+                    ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : Icons.trash}
+                  Delete
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button onClick={handleCancelEdit} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                  {Icons.x} Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-60"
+                >
+                  {saving
+                    ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving…</>
+                    : <>{Icons.check} Save Changes</>}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Main Profile Card */}
-        <div className="bg-white shadow-lg sm:shadow-2xl rounded-xl sm:rounded-2xl overflow-hidden border border-green-100">
-          {/* Action Buttons */}
-          <div className="bg-gray-50 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-gray-200">
-            <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-3">
-              {/* User Status Indicator */}
-              <div className="flex items-center">
-                <div
-                  className={`w-3 h-3 rounded-full mr-2 ${is_active ? "bg-green-500" : "bg-red-500"
-                    }`}
-                ></div>
-                <span
-                  className={`text-sm font-medium ${is_active ? "text-green-700" : "text-red-700"
-                    }`}
-                >
-                  {is_active ? "Active User" : "Inactive User"}
-                </span>
-              </div>
+        {/* new-image hint */}
+        {isEditing && selectedImage && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+            <span className="font-medium">New photo selected:</span> {selectedImage.name}
+            <button onClick={resetImageSelection} className="ml-auto text-red-500 hover:text-red-700 font-medium">Remove</button>
+          </div>
+        )}
 
+        {/* name, username, badges */}
+        <div className="mt-3 mb-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">{displayName}</h1>
+          <p className="text-sm text-gray-400 mt-0.5">@{username}</p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {role && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2.5 py-0.5 rounded-full">
+                {Icons.briefcase} {role}
+              </span>
+            )}
+            {chapter && (
+              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full">{chapter}</span>
+            )}
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+              {is_active ? "● Active" : "● Inactive"}
+            </span>
+          </div>
+        </div>
+
+        {/* back link */}
+        <button
+          onClick={handleBackToMembers}
+          className="mt-2 mb-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 transition-colors"
+        >
+          {Icons.back} Back to members
+        </button>
+
+        {/* ── tab nav ── */}
+        <div className="border-b border-gray-200 mb-0">
+          <nav className="flex gap-0 -mb-px">
+            {TABS.map((tab) => (
               <button
-                onClick={handlechat}
-                className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab
+                    ? "border-green-600 text-green-700"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
               >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 0H7a2 2 0 01-2-2V6a2 2 0 012-2h9a2 2 0 012 2v9m-4 4l4 4m0 0l-4 4m4-4H7"
-                  />
-                </svg>
-                Chat
+                {tab}
               </button>
+            ))}
+          </nav>
+        </div>
 
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-                {!isEditing ? (
-                  <>
-                    <button
-                      onClick={handleEditClick}
-                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-                    >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      Edit Profile
-                    </button>
-
-                    <button
-                      onClick={handleDeactivateUser}
-                      disabled={deactivating}
-                      className={`inline-flex items-center px-3 sm:px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed ${is_active
-                        ? "bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400"
-                        : "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400"
-                        }`}
-                    >
-                      {deactivating ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                          {is_active ? "Deactivating..." : "Activating..."}
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            {is_active ? (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"
-                              />
-                            ) : (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            )}
-                          </svg>
-                          {is_active ? "Deactivate User" : "Activate User"}
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={handleDeleteUser}
-                      disabled={deleting}
-                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
-                    >
-                      {deleting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                          Deleting...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                          Delete User
-                        </>
-                      )}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-                    >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={saving}
-                      className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
-                    >
-                      {saving ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          Save Changes
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
-
-            </div>
-          </div>
-
-          {/* Header Section with Gradient */}
-          <div
-            className="relative px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12"
-            style={{
-              backgroundImage: `url(${cover_photo ? getMediaUrl(cover_photo) : ""})`,
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-              backgroundColor: "#059669",
-            }}
-          >
-            <div className="absolute inset-0 bg-black/35"></div>
-            <div className="relative flex flex-col items-center gap-4 sm:gap-6">
-              <div className="relative">
-                <img
-                  src={
-                    imagePreview ||
-                    (member.profile_photo
-                      ? getMediaUrl(member.profile_photo)
-                      : getProfileAvatar(first_name, last_name))
-                  }
-                  alt={username}
-                  className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-4 border-white shadow-xl"
-                />
-                <div
-                  className={`absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 ${is_active ? "bg-green-500" : "bg-red-500"
-                    } text-white rounded-full p-1.5 sm:p-2 shadow-lg`}
-                >
-                  <svg
-                    className="w-3 h-3 sm:w-4 sm:h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    {is_active ? (
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    ) : (
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    )}
-                  </svg>
-                </div>
-
-                {/* Edit Image Button */}
-                {isEditing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
-                    <label
-                      htmlFor="profile-image-input"
-                      className="cursor-pointer text-white hover:text-green-200 transition-colors"
-                    >
-                      <svg
-                        className="w-6 h-6 sm:w-8 sm:h-8"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </label>
-                    <input
-                      id="profile-image-input"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Image Change Status */}
-              {isEditing && selectedImage && (
-                <div className="text-center text-white text-sm">
-                  <p className="bg-green-500 px-3 py-1 rounded-full">
-                    New image selected: {selectedImage.name}
-                  </p>
-                  <button
-                    onClick={resetImageSelection}
-                    className="mt-2 text-green-200 hover:text-white underline text-xs"
-                  >
-                    Remove new image
-                  </button>
-                </div>
-              )}
-              <div className="text-center text-white">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-1 sm:mb-2">
-                  {salutation} {first_name} {last_name}
-                </h1>
-                {isEditing ? (
-                  <div className="flex flex-col items-center justify-center mb-2 sm:mb-3">
-                    <div className="flex items-center">
-                      <span className="text-green-100 text-base sm:text-lg lg:text-xl mr-1">
-                        @
-                      </span>
-                      <input
-                        type="text"
-                        value={editedMember.username || ""}
-                        onChange={(e) =>
-                          handleInputChange("username", e.target.value)
-                        }
-                        className={`bg-green-700 text-green-100 text-base sm:text-lg lg:text-xl border ${usernameError ? "border-red-400" : "border-green-300"
-                          } rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-300`}
-                        placeholder="username"
-                      />
-                    </div>
-                    {usernameError && (
-                      <p className="text-red-300 text-xs mt-1">
-                        {usernameError}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-green-100 text-base sm:text-lg lg:text-xl mb-2 sm:mb-3">
-                    @{username}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {role && (
-                    <span className="bg-white text-green-600 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg">
-                      {role}
-                    </span>
-                  )}
-                  {chapter && (
-                    <span className="bg-white text-green-600 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg">
-                      {chapter}
-                    </span>
-                  )}
-                  <span
-                    className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg ${is_active
-                      ? "bg-green-500 text-white"
-                      : "bg-red-500 text-white"
-                      }`}
-                  >
-                    {is_active ? "Active" : "Inactive"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Content Grid */}
-          <div className="p-4 sm:p-6 lg:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-              {/* Personal Information */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="bg-green-600 text-white p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-green-800">
-                    Personal Information
-                  </h2>
-                </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      First Name:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.first_name || ""}
-                        onChange={(e) =>
-                          handleInputChange("first_name", e.target.value)
-                        }
-                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">
-                        {first_name}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Last Name:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.last_name || ""}
-                        onChange={(e) =>
-                          handleInputChange("last_name", e.target.value)
-                        }
-                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">
-                        {last_name}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Gender:
-                    </span>
-                    {isEditing ? (
-                      <select
-                        value={editedMember.gender || ""}
-                        onChange={(e) =>
-                          handleInputChange("gender", e.target.value)
-                        }
-                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    ) : (
-                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">
-                        {gender}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Date of Birth:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        value={editedMember.date_of_birth || ""}
-                        onChange={(e) =>
-                          handleInputChange("date_of_birth", e.target.value)
-                        }
-                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">
-                        {date_of_birth}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-green-200">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Role:
-                    </span>
-                    {isEditing ? (
-                      <select
-                        value={editedMember.role || ""}
-                        onChange={(e) =>
-                          handleInputChange("role", e.target.value)
-                        }
-                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="">Select Role</option>
-                        {ROLES.map((roleOption) => (
-                          <option key={roleOption} value={roleOption}>
-                            {roleOption}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">
-                        {role}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Chapter:
-                    </span>
-                    {isEditing ? (
-                      <select
-                        value={editedMember.chapter || ""}
-                        onChange={(e) =>
-                          handleInputChange("chapter", e.target.value)
-                        }
-                        className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="">Select Chapter</option>
-                        {CHAPTERS.map((chapterOption) => (
-                          <option key={chapterOption} value={chapterOption}>
-                            {chapterOption}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-gray-700 text-sm sm:text-base mt-1 sm:mt-0">
-                        {chapter}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Details */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="bg-green-600 text-white p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-green-800">
-                    Contact Details
-                  </h2>
-                </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Email:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        value={editedMember.email || ""}
-                        onChange={(e) =>
-                          handleInputChange("email", e.target.value)
-                        }
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {email}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Secondary Email:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        value={editedMember.secondary_email || ""}
-                        onChange={(e) =>
-                          handleInputChange("secondary_email", e.target.value)
-                        }
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : secondary_email ? (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {secondary_email}
-                      </span>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        Not provided
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Phone:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={editedMember.phone || ""}
-                        onChange={(e) =>
-                          handleInputChange("phone", e.target.value)
-                        }
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {phone}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Location:
-                    </span>
-                    {isEditing ? (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          placeholder="Current Location"
-                          value={editedMember.current_location || ""}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "current_location",
-                              e.target.value
-                            )
-                          }
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                        />
-                        <div className="grid grid-cols-3 gap-2">
-                          <input
-                            type="text"
-                            placeholder="City"
-                            value={editedMember.city || ""}
-                            onChange={(e) =>
-                              handleInputChange("city", e.target.value)
-                            }
-                            className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                          <input
-                            type="text"
-                            placeholder="State"
-                            value={editedMember.state || ""}
-                            onChange={(e) =>
-                              handleInputChange("state", e.target.value)
-                            }
-                            className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Country"
-                            value={editedMember.country || ""}
-                            onChange={(e) =>
-                              handleInputChange("country", e.target.value)
-                            }
-                            className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {current_location || `${city}, ${state}, ${country}`}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Home Town:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.home_town || ""}
-                        onChange={(e) =>
-                          handleInputChange("home_town", e.target.value)
-                        }
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    ) : home_town ? (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {home_town}
-                      </span>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        Not provided
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Education */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="bg-green-600 text-white p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-green-800">
-                    Education
-                  </h2>
-                </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      College:
-                    </span>
-                    {isEditing ? (
-                      <select
-                        value={editedMember.college_name || ""}
-                        onChange={(e) =>
-                          handleInputChange("college_name", e.target.value)
-                        }
-                        className="text-gray-700 text-sm mt-1 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="">Select College</option>
-                        {COLLEGE_NAMES.map((college) => (
-                          <option key={college} value={college}>
-                            {college}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {college_name || "Not specified"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Course:
-                    </span>
-                    {isEditing ? (
-                      <div className="space-y-2">
-                        <select
-                          value={editedMember.course || ""}
-                          onChange={(e) =>
-                            handleInputChange("course", e.target.value)
-                          }
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                        >
-                          <option value="">Select Course</option>
-                          {COURSES.map((courseOption) => (
-                            <option key={courseOption} value={courseOption}>
-                              {courseOption}
-                            </option>
-                          ))}
-                        </select>
-                        {editedMember.course &&
-                          COURSE_BRANCH_MAPPING[editedMember.course] && (
-                            <select
-                              value={editedMember.stream || ""}
-                              onChange={(e) =>
-                                handleInputChange("stream", e.target.value)
-                              }
-                              className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                            >
-                              <option value="">Select Branch/Stream</option>
-                              {COURSE_BRANCH_MAPPING[editedMember.course].map(
-                                (branchOption) => (
-                                  <option
-                                    key={branchOption}
-                                    value={branchOption}
-                                  >
-                                    {branchOption}
-                                  </option>
-                                )
-                              )}
-                            </select>
-                          )}
-                      </div>
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {[course, stream].filter(Boolean).join(", ") ||
-                          "Not specified"}
-                      </span>
-                    )}
-                  </div>
-                  {(start_year || end_year) && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">
-                        Duration:
-                      </span>
-                      {isEditing ? (
-                        <div className="flex gap-2 items-center">
-                          <input
-                            type="number"
-                            placeholder="Start Year"
-                            value={editedMember.start_year || ""}
-                            onChange={(e) =>
-                              handleInputChange("start_year", e.target.value)
-                            }
-                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                          <span className="text-gray-500">–</span>
-                          <input
-                            type="number"
-                            placeholder="End Year"
-                            value={editedMember.end_year || ""}
-                            onChange={(e) =>
-                              handleInputChange("end_year", e.target.value)
-                            }
-                            className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                        </div>
-                      ) : (
-                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                          {start_year} – {end_year}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {passed_out_year && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">
-                        Passed Out:
-                      </span>
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={editedMember.passed_out_year || ""}
-                          onChange={(e) =>
-                            handleInputChange("passed_out_year", e.target.value)
-                          }
-                          className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        />
-                      ) : (
-                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                          {passed_out_year}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {passed_out_year && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">
-                        Roll No:
-                      </span>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editedMember.roll_no || ""}
-                          onChange={(e) =>
-                            handleInputChange("roll_no", e.target.value)
-                          }
-                          className="text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        />
-                      ) : (
-                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                          {roll_no}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Professional */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="bg-green-600 text-white p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-green-800">
-                    Professional
-                  </h2>
-                </div>
-                <div className="space-y-2 sm:space-y-3">
-                  {/* Company */}
-                  {company && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">
-                        Company:
-                      </span>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editedMember.company || ""}
-                          onChange={(e) =>
-                            handleInputChange("company", e.target.value)
-                          }
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        />
-                      ) : company ? (
-                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                          {company}
-                        </span>
-                      ) : (
-                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                          Not provided
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Position */}
-                  {position && (
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium text-green-700 text-sm sm:text-base">
-                        Position:
-                      </span>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editedMember.position || ""}
-                          onChange={(e) =>
-                            handleInputChange("position", e.target.value)
-                          }
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        />
-                      ) : position ? (
-                        <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                          {position}
-                        </span>
-                      ) : (
-                        <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                          Not provided
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Work Experience */}
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Work Experience:
-                    </span>
-                    {isEditing ? (
-                      <div className="flex items-center">
-                        <input
-                          type="number"
-                          min="0"
-                          value={editedMember.work_experience || ""}
-                          onChange={(e) =>
-                            handleInputChange("work_experience", e.target.value)
-                          }
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-20"
-                        />
-                        <span className="ml-2 text-gray-600">years</span>
-                      </div>
-                    ) : work_experience && work_experience > 0 ? (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {work_experience}{" "}
-                        {work_experience === 1 ? "year" : "years"}
-                      </span>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        Not provided
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Professional Skills */}
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Professional Skills:
-                    </span>
-                    {isEditing ? (
-                      <div className="space-y-1">
-                        <input
-                          type="text"
-                          placeholder="Enter skills, separated by commas"
-                          value={
-                            editedMember.professional_skills_text ||
-                            (Array.isArray(editedMember.professional_skills)
-                              ? editedMember.professional_skills.join(", ")
-                              : "")
-                          }
-                          onChange={(e) => {
-                            handleInputChange(
-                              "professional_skills_text",
-                              e.target.value
-                            );
-                            const skillsArray = e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean);
-                            handleInputChange(
-                              "professional_skills",
-                              skillsArray
-                            );
-                          }}
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                        />
-                        <p className="text-xs text-gray-500">
-                          Enter skills separated by commas (e.g. "React,
-                          Node.js, UI Design")
-                        </p>
-                      </div>
-                    ) : professional_skills &&
-                      professional_skills.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        {professional_skills.map((skill, index) => (
-                          <span
-                            key={index}
-                            className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        No skills listed
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Industries Worked In */}
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Industries Worked In:
-                    </span>
-                    {isEditing ? (
-                      <div className="space-y-1">
-                        <input
-                          type="text"
-                          placeholder="Enter industries, separated by commas"
-                          value={
-                            editedMember.industries_worked_in_text ||
-                            (Array.isArray(editedMember.industries_worked_in)
-                              ? editedMember.industries_worked_in.join(", ")
-                              : "")
-                          }
-                          onChange={(e) => {
-                            handleInputChange(
-                              "industries_worked_in_text",
-                              e.target.value
-                            );
-                            const industriesArray = e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean);
-                            handleInputChange(
-                              "industries_worked_in",
-                              industriesArray
-                            );
-                          }}
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                        />
-                        <p className="text-xs text-gray-500">
-                          Enter industries separated by commas (e.g. "IT,
-                          Healthcare, Education")
-                        </p>
-                      </div>
-                    ) : industries_worked_in &&
-                      industries_worked_in.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        {industries_worked_in.map((industry, index) => (
-                          <span
-                            key={index}
-                            className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium"
-                          >
-                            {industry}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        No industries listed
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Roles Played */}
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Roles Played:
-                    </span>
-                    {isEditing ? (
-                      <div className="space-y-1">
-                        <input
-                          type="text"
-                          placeholder="Enter roles, separated by commas"
-                          value={
-                            editedMember.roles_played_text ||
-                            (Array.isArray(editedMember.roles_played)
-                              ? editedMember.roles_played.join(", ")
-                              : "")
-                          }
-                          onChange={(e) => {
-                            handleInputChange(
-                              "roles_played_text",
-                              e.target.value
-                            );
-                            const rolesArray = e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean);
-                            handleInputChange("roles_played", rolesArray);
-                          }}
-                          className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                        />
-                        <p className="text-xs text-gray-500">
-                          Enter roles separated by commas (e.g. "Developer, Team
-                          Lead, Product Manager")
-                        </p>
-                      </div>
-                    ) : roles_played && roles_played.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 sm:gap-2">
-                        {roles_played.map((role_played, index) => (
-                          <span
-                            key={index}
-                            className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium"
-                          >
-                            {role_played}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        No roles listed
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Legacy fields - show if new fields are not available */}
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Worked In:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={
-                          editedMember.worked_in === undefined
-                            ? ""
-                            : editedMember.worked_in
-                        }
-                        onChange={(e) =>
-                          handleInputChange("worked_in", e.target.value)
-                        }
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    ) : worked_in || member.Worked_in ? (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {worked_in ||
-                          (Array.isArray(member.Worked_in)
-                            ? member.Worked_in.join(", ")
-                            : member.Worked_in)}
-                      </span>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        Not provided
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col space-y-1">
-                    <span className="font-medium text-green-700 text-sm sm:text-base">
-                      Current Work:
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={
-                          typeof editedMember.current_work === "string" &&
-                            editedMember.current_work.startsWith('"')
-                            ? JSON.parse(editedMember.current_work)
-                            : editedMember.current_work || ""
-                        }
-                        onChange={(e) =>
-                          handleInputChange("current_work", e.target.value)
-                        }
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    ) : current_work ? (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-sm">
-                        {(() => {
-                          if (typeof current_work === "string") {
-                            try {
-                              // Try to parse if it looks like JSON (starts and ends with quotes)
-                              if (
-                                current_work.startsWith('"') &&
-                                current_work.endsWith('"')
-                              ) {
-                                return JSON.parse(current_work);
-                              }
-                            } catch (e) {
-                              // If parsing fails, just use the original string
-                            }
-                          }
-                          return current_work;
-                        })()}
-                      </span>
-                    ) : (
-                      <span className="text-gray-500 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm italic">
-                        Not provided
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bio Section */}
-            {bio && (
-              <div className="mt-6 sm:mt-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="bg-green-600 text-white p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-green-800">
-                    About
-                  </h2>
-                </div>
-                {isEditing ? (
-                  <textarea
-                    value={editedMember.bio || ""}
-                    onChange={(e) => handleInputChange("bio", e.target.value)}
-                    placeholder="Enter your bio here..."
-                    className="text-gray-700 text-sm sm:text-base w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[120px]"
-                  ></textarea>
-                ) : (
-                  <div className="bg-white rounded-lg p-3 sm:p-4">
-                    {bio ? (
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                        {bio}
-                      </p>
-                    ) : (
-                      <p className="text-gray-500 italic text-sm">
-                        No bio provided
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Social Links Section */}
-            {Object.keys(social_links).length > 0 && (
-              <div className="mt-6 sm:mt-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-green-100">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="bg-green-600 text-white p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3a4 4 0 00-1.414-1.414l-3 3z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-green-800">
-                    Social Links
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-sm text-gray-600">LinkedIn</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.social_links?.linkedin_link || ""}
-                        onChange={(e) =>
-                          handleInputChange("social_links", {
-                            ...editedMember.social_links,
-                            linkedin_link: e.target.value,
-                          })
-                        }
-                        placeholder="LinkedIn URL"
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {social_links.linkedin_link}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-sm text-gray-600">Twitter</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.social_links?.twitter_link || ""}
-                        onChange={(e) =>
-                          handleInputChange("social_links", {
-                            ...editedMember.social_links,
-                            twitter_link: e.target.value,
-                          })
-                        }
-                        placeholder="Twitter URL"
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {social_links.twitter_link}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-sm text-gray-600">Facebook</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.social_links?.facebook_link || ""}
-                        onChange={(e) =>
-                          handleInputChange("social_links", {
-                            ...editedMember.social_links,
-                            facebook_link: e.target.value,
-                          })
-                        }
-                        placeholder="Facebook URL"
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {social_links.facebook_link}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-sm text-gray-600">Instagram</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.social_links?.instagram_link || ""}
-                        onChange={(e) =>
-                          handleInputChange("social_links", {
-                            ...editedMember.social_links,
-                            instagram_link: e.target.value,
-                          })
-                        }
-                        placeholder="Instagram URL"
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {social_links.instagram_link}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-sm text-gray-600">GitHub</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.social_links?.github_link || ""}
-                        onChange={(e) =>
-                          handleInputChange("social_links", {
-                            ...editedMember.social_links,
-                            github_link: e.target.value,
-                          })
-                        }
-                        placeholder="GitHub URL"
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {social_links.github_link}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-sm text-gray-600">Website</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedMember.social_links?.website_link || ""}
-                        onChange={(e) =>
-                          handleInputChange("social_links", {
-                            ...editedMember.social_links,
-                            website_link: e.target.value,
-                          })
-                        }
-                        placeholder="Personal Website URL"
-                        className="text-gray-700 text-sm px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-700 bg-white px-3 py-2 rounded-lg text-xs sm:text-sm break-all">
-                        {social_links.website_link}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+        {/* ── tab body ── */}
+        <div className="bg-white rounded-b-xl shadow-sm border border-t-0 border-gray-100 px-4 sm:px-6 py-2 mb-8">
+          {renderTabContent()}
         </div>
       </div>
     </div>
