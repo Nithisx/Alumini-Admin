@@ -4,7 +4,8 @@ import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders"
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
 
-const PLACEHOLDER_IMAGE = "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png";
+const COVER_PLACEHOLDER_IMAGE =
+  "https://images.unsplash.com/photo-1556888335-95371827d5fb?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 const TOKEN = localStorage.getItem("Token");
 const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
@@ -17,7 +18,7 @@ const getMediaUrl = (uri) => {
   return uri.startsWith("/") ? `${MEDIA_BASE_URL}${uri}` : `${MEDIA_BASE_URL}/${uri}`;
 };
 
-const TABS = ["Personal", "Work", "Contact/Info/Info", "Social"];
+const TABS = ["Personal", "Professional Summary", "Contact Info", "Social"];
 
 /* ─── small helpers ──────────────────────────────────────────────────────── */
 
@@ -191,8 +192,8 @@ export default function SingleMember() {
           </div>
         );
 
-      /* ── Work ── */
-      case "Work":
+      /* ── Professional Summary ── */
+      case "Professional Summary":
         return (
           <div>
             <FieldRow icon={Icons.education} label="College">
@@ -259,8 +260,8 @@ export default function SingleMember() {
           </div>
         );
 
-      /* ── Contact/Info/Info ── */
-      case "Contact/Info/Info":
+      /* ── Contact Info ── */
+      case "Contact Info":
         return (
           <div>
             <FieldRow icon={Icons.phone} label="Phone">
@@ -319,7 +320,9 @@ export default function SingleMember() {
       <div
         className="relative h-40 sm:h-52 bg-gray-200"
         style={{
-          backgroundImage: `url(${cover_photo ? getMediaUrl(cover_photo) : PLACEHOLDER_IMAGE})`,
+          backgroundImage: cover_photo
+            ? `url(${getMediaUrl(cover_photo)}), url(${COVER_PLACEHOLDER_IMAGE})`
+            : `url(${COVER_PLACEHOLDER_IMAGE})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

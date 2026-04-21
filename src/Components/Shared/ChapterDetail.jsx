@@ -46,6 +46,10 @@ function MemberCard({ member, memberPath }) {
         src={avatar}
         alt={username}
         className="w-20 h-20 rounded-full object-cover border-4 border-green-100 group-hover:border-green-300 transition-colors"
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = getInitialsAvatar(first_name, last_name);
+        }}
       />
       <div>
         <p className="font-bold text-green-800 text-base leading-tight">
