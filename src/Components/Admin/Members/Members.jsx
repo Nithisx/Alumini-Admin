@@ -310,6 +310,7 @@ export default function MembersPage() {
   const [cityFilter, setCityFilter] = useState(() => readQueryValue("city"));
   const [workedInFilter, setWorkedInFilter] = useState(() => readQueryValue("worked_in"));
   const [searchQuery, setSearchQuery] = useState(() => readQueryValue("search"));
+  const [nameSearchQuery, setNameSearchQuery] = useState(() => readQueryValue("name_search"));
   const [rolesPlayedFilter, setRolesPlayedFilter] = useState(() => readQueryValue("roles_played"));
   const [genderFilter, setGenderFilter] = useState(() => readQueryValue("gender"));
   const [courseEndYearFilter, setCourseEndYearFilter] = useState(() => readQueryValue("course_end_year"));
@@ -369,6 +370,7 @@ export default function MembersPage() {
     if (cityFilter) params.set("city", cityFilter);
     if (workedInFilter) params.set("worked_in", workedInFilter);
     if (searchQuery) params.set("search", searchQuery);
+    if (nameSearchQuery) params.set("name_search", nameSearchQuery);
     if (rolesPlayedFilter) params.set("roles_played", rolesPlayedFilter);
     if (genderFilter) params.set("gender", genderFilter);
     if (courseEndYearFilter) params.set("course_end_year", courseEndYearFilter);
@@ -403,6 +405,7 @@ export default function MembersPage() {
     cityFilter,
     workedInFilter,
     searchQuery,
+    nameSearchQuery,
     rolesPlayedFilter,
     genderFilter,
     courseEndYearFilter,
@@ -432,6 +435,7 @@ export default function MembersPage() {
       if (workedInFilter) params.append("worked_in", workedInFilter);
       if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
       if (searchQuery) params.append("search", searchQuery);
+      if (nameSearchQuery) params.append("name_search", nameSearchQuery);
       if (genderFilter) params.append("gender", genderFilter);
       if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
       if (companyFilter) params.append("company", companyFilter);
@@ -487,6 +491,7 @@ export default function MembersPage() {
     if (workedInFilter) params.append("worked_in", workedInFilter);
     if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
     if (searchQuery) params.append("search", searchQuery);
+    if (nameSearchQuery) params.append("name_search", nameSearchQuery);
     if (genderFilter) params.append("gender", genderFilter);
     if (courseEndYearFilter)
       params.append("course_end_year", courseEndYearFilter);
@@ -573,6 +578,7 @@ export default function MembersPage() {
     if (workedInFilter) baseParams.append("worked_in", workedInFilter);
     if (rolesPlayedFilter) baseParams.append("roles_played", rolesPlayedFilter);
     if (searchQuery) baseParams.append("search", searchQuery);
+    if (nameSearchQuery) baseParams.append("name_search", nameSearchQuery);
     if (genderFilter) baseParams.append("gender", genderFilter);
     if (courseEndYearFilter)
       baseParams.append("course_end_year", courseEndYearFilter);
@@ -795,6 +801,24 @@ export default function MembersPage() {
     setManualSearchTrigger(prev => prev + 1);
   };
 
+  // Handle Enter key press for name-only filter search
+  const handleNameSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setManualSearchTrigger(prev => prev + 1);
+    }
+  };
+
+  // Handle name-only filter search input change
+  const handleNameSearchChange = (e) => {
+    setNameSearchQuery(e.target.value);
+  };
+
+  // Handle name-only filter search button click
+  const handleNameSearchClick = () => {
+    setManualSearchTrigger(prev => prev + 1);
+  };
+
   // Update the useEffect for fetching members
   useEffect(() => {
     fetchMembers();
@@ -929,6 +953,7 @@ export default function MembersPage() {
     setWorkedInFilter("");
     setRolesPlayedFilter("");
     setSearchQuery("");
+    setNameSearchQuery("");
     setGenderFilter("");
     setCourseEndYearFilter("");
     setCompanyFilter("");
@@ -974,10 +999,10 @@ export default function MembersPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
-                id="search-box"
+                id="global-search-box"
                 type="text"
                 className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                placeholder="Search name, email, roll no…"
+                placeholder="Global search: name, email, roll no, and more…"
                 value={searchQuery}
                 onChange={handleSearchChange}
                 onKeyDown={handleSearchKeyPress}
@@ -1325,24 +1350,24 @@ export default function MembersPage() {
                 {/* Search Input - triggers on Enter or Search button click */}
                 <div className="sm:col-span-2 lg:col-span-1 space-y-1.5">
                   <label
-                    htmlFor="search-box"
+                    htmlFor="name-search-box"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Search
+                    Name Search
                   </label>
                   <div className="relative flex gap-2">
                     <div className="relative flex-1">
                       <input
-                        id="search-box"
+                        id="name-search-box"
                         type="text"
-                        className={`w-full border rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm ${searchQuery
+                        className={`w-full border rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm ${nameSearchQuery
                           ? "border-blue-400 bg-blue-50/30 shadow-sm shadow-blue-100"
                           : "border-gray-300"
                           }`}
-                        placeholder="Search by name, email, or roll no..."
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        onKeyDown={handleSearchKeyPress}
+                        placeholder="Search by member name only..."
+                        value={nameSearchQuery}
+                        onChange={handleNameSearchChange}
+                        onKeyDown={handleNameSearchKeyPress}
                       />
                       <svg
                         className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
@@ -1357,11 +1382,11 @@ export default function MembersPage() {
                           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                         />
                       </svg>
-                      {searchQuery && (
+                      {nameSearchQuery && (
                         <button
                           type="button"
                           onClick={() => {
-                            setSearchQuery("");
+                            setNameSearchQuery("");
                             setManualSearchTrigger(prev => prev + 1);
                           }}
                           className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors"
@@ -1375,7 +1400,7 @@ export default function MembersPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={handleSearchClick}
+                      onClick={handleNameSearchClick}
                       className="px-3 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors flex items-center justify-center shrink-0"
                       title="Search"
                     >
@@ -1395,7 +1420,7 @@ export default function MembersPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500 font-medium">
             <span className="font-bold text-gray-800">{filteredTotal}</span> {filteredTotal === 1 ? "member" : "members"}
-            {(roleFilter || cityFilter || searchQuery || countryFilter || stateFilter || passedOutYearFilter || courseFilter || collegeNameFilter || currentWorkFilter || chapterFilter || emailFilter) && (
+            {(roleFilter || cityFilter || searchQuery || nameSearchQuery || countryFilter || stateFilter || passedOutYearFilter || courseFilter || collegeNameFilter || currentWorkFilter || chapterFilter || emailFilter) && (
               <span className="ml-2 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">filtered</span>
             )}
           </p>
