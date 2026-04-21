@@ -355,11 +355,29 @@ export default function MembersPage() {
   const [totalPages, setTotalPages] = useState(1);
 
   // Sorting states
-  const [sortField, setSortField] = useState(() => readQueryValue("sort_field", "id"));
+  const [sortField, setSortField] = useState(() => readQueryValue("sort_field", "date_joined"));
   const [sortDirection, setSortDirection] = useState(() => {
-    const direction = readQueryValue("sort_direction", "asc");
-    return direction === "desc" ? "desc" : "asc";
+    const direction = readQueryValue("sort_direction", "desc");
+    return direction === "asc" ? "asc" : "desc";
   }); // 'asc' or 'desc'
+
+  // Group by state
+  const [groupBy, setGroupBy] = useState(() => readQueryValue("group_by", ""));
+  const [currentUserYear, setCurrentUserYear] = useState(null);
+  const [currentUserRole, setCurrentUserRole] = useState("");
+
+  // Fetch current user's profile to get passed_out_year and role
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("Token") : null;
+    if (!token) return;
+    fetch(`${BASE_URL}/profile/`, { headers: { Authorization: `Token ${token}` } })
+      .then((r) => r.json())
+      .then((profile) => {
+        setCurrentUserYear(profile?.passed_out_year || null);
+        setCurrentUserRole((profile?.role || "").toLowerCase());
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -388,6 +406,7 @@ export default function MembersPage() {
     params.set("page_size", pageSize.toString());
     params.set("sort_field", sortField);
     params.set("sort_direction", sortDirection);
+    if (groupBy) params.set("group_by", groupBy);
 
     if (showFilters) params.set("show_filters", "1");
 
@@ -417,6 +436,7 @@ export default function MembersPage() {
     emailFilter,
     branchFilter,
     rollNoFilter,
+    groupBy,
     showFilters,
   ]);
 
@@ -478,8 +498,8 @@ export default function MembersPage() {
       page_size: pageSize,
     });
 
-    // Add sorting parameter
-    const orderingValue = sortDirection === "asc" ? `-${sortField}` : sortField;
+    // Add sorting parameter — desc = newest/largest first (no prefix), asc = oldest/smallest first (- prefix)
+    const orderingValue = sortDirection === "desc" ? sortField : `-${sortField}`;
     params.append("ordering", orderingValue);
 
     if (roleFilter) params.append("role", roleFilter);
@@ -493,8 +513,11 @@ export default function MembersPage() {
     if (companyFilter) params.append("company", companyFilter);
     if (countryFilter) params.append("country", countryFilter);
     if (stateFilter) params.append("state", stateFilter);
-    if (passedOutYearFilter)
-      params.append("passed_out_year", passedOutYearFilter);
+    // "Your Batchmates" group by overrides passed_out_year filter with current user's year
+    const effectiveYear = groupBy === "batchmates" && currentUserYear
+      ? currentUserYear
+      : passedOutYearFilter;
+    if (effectiveYear) params.append("passed_out_year", effectiveYear);
     if (courseFilter) params.append("course", courseFilter);
     if (collegeNameFilter) params.append("college_name", collegeNameFilter);
     if (currentWorkFilter) params.append("current_work", currentWorkFilter);
@@ -820,6 +843,8 @@ export default function MembersPage() {
     rollNoFilter,
     sortField,
     sortDirection,
+    groupBy,
+    currentUserYear,
     manualSearchTrigger, // Only trigger on manual search
   ]);
 
@@ -910,16 +935,12 @@ export default function MembersPage() {
 
   // Handle sorting changes
   const handleSortChange = (field) => {
-    // If clicking the same field, toggle direction
     if (field === sortField) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // New field, default to ascending
       setSortField(field);
-      setSortDirection("asc");
+      setSortDirection("desc");
     }
-
-    // Reset to first page when sorting changes
     setCurrentPage(1);
   };
 
@@ -942,6 +963,7 @@ export default function MembersPage() {
     setChapterFilter("");
     setBranchFilter("");
     setRollNoFilter("");
+    setGroupBy("");
     setCurrentPage(1);
     // Reset manual search trigger to ensure search is cleared
     setManualSearchTrigger(prev => prev + 1);
@@ -1391,21 +1413,113 @@ export default function MembersPage() {
           </div>
         </div>
 
-        {/* Results summary bar */}
-        <div className="flex items-center justify-between">
+        {/* Results summary + sort/group bar */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500 font-medium">
             <span className="font-bold text-gray-800">{filteredTotal}</span> {filteredTotal === 1 ? "member" : "members"}
-            {(roleFilter || cityFilter || searchQuery || countryFilter || stateFilter || passedOutYearFilter || courseFilter || collegeNameFilter || currentWorkFilter || chapterFilter || emailFilter) && (
+            {(roleFilter || cityFilter || searchQuery || countryFilter || stateFilter || passedOutYearFilter || courseFilter || collegeNameFilter || currentWorkFilter || chapterFilter || emailFilter || groupBy) && (
               <span className="ml-2 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">filtered</span>
             )}
+            {groupBy === "batchmates" && currentUserYear && (
+              <span className="ml-1 text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Batch {currentUserYear}</span>
+            )}
           </p>
-          <button
-            onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
-            className="flex items-center gap-1 text-xs font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 transition"
-          >
-            {sortDirection === "asc" ? "↑ Ascending" : "↓ Descending"}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Sort by */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Sort by</span>
+              <select
+                value={sortField}
+                onChange={(e) => { setSortField(e.target.value); setCurrentPage(1); }}
+                className="text-xs border border-gray-200 rounded-xl px-2.5 py-1.5 bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-300 cursor-pointer"
+              >
+                <option value="date_joined">Date Joined</option>
+                <option value="first_name">Name</option>
+                <option value="passed_out_year">Passout Year</option>
+              </select>
+            </div>
+            {/* Direction toggle */}
+            <button
+              onClick={() => { setSortDirection(sortDirection === "asc" ? "desc" : "asc"); setCurrentPage(1); }}
+              className="flex items-center gap-1 text-xs font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 transition"
+            >
+              {sortDirection === "desc" ? "↓ Descending" : "↑ Ascending"}
+            </button>
+            {/* Group by — only for alumni/student roles */}
+            {(currentUserRole === "alumni" || currentUserRole === "student" || currentUserRole === "") && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Group by</span>
+                <select
+                  value={groupBy}
+                  onChange={(e) => { setGroupBy(e.target.value); setCurrentPage(1); }}
+                  className="text-xs border border-gray-200 rounded-xl px-2.5 py-1.5 bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-300 cursor-pointer"
+                >
+                  <option value="">None</option>
+                  {currentUserYear && (
+                    <option value="batchmates">Your Batchmates</option>
+                  )}
+                  <option value="batch">Group by Batch</option>
+                </select>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Group by batch: render batch sections */}
+        {groupBy === "batch" && !loading && members.length > 0 && (() => {
+          const byYear = {};
+          members.forEach((m) => {
+            const yr = m.passed_out_year || "Unknown";
+            if (!byYear[yr]) byYear[yr] = [];
+            byYear[yr].push(m);
+          });
+          const sortedYears = Object.keys(byYear).sort((a, b) => {
+            if (a === "Unknown") return 1;
+            if (b === "Unknown") return -1;
+            return sortDirection === "desc" ? Number(b) - Number(a) : Number(a) - Number(b);
+          });
+          return (
+            <div className="space-y-6">
+              {sortedYears.map((yr) => (
+                <div key={yr}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-bold text-gray-700">Batch {yr}</span>
+                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{byYear[yr].length} members</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {byYear[yr].map((member) => (
+                      <div
+                        key={member.id}
+                        onClick={() => {
+                          sessionStorage.setItem(MEMBERS_RETURN_URL_KEY, `${window.location.pathname}${window.location.search}`);
+                          window.location.href = `/alumni/members/${member.username}`;
+                        }}
+                        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer group hover:shadow-md transition-shadow"
+                      >
+                        <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                          <img
+                            src={member.profile_photo ? `https://api.karpagamalumni.in${member.profile_photo}` : placeholder}
+                            alt={`${member.first_name} ${member.last_name}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => { e.target.onerror = null; e.target.src = getInitialsAvatar(member.first_name, member.last_name); }}
+                          />
+                          <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadgeColor(member.role)}`}>
+                            {member.role}
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <p className="text-sm font-bold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
+                          {member.city && <p className="text-xs text-gray-400 truncate mt-0.5">{member.city}</p>}
+                          {member.current_work && <p className="text-xs text-emerald-600 truncate mt-0.5">{member.current_work}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Members content */}
         {loading ? (
@@ -1430,7 +1544,7 @@ export default function MembersPage() {
             <p className="text-gray-500 font-medium">No members found</p>
             <p className="text-gray-400 text-sm mt-1">Try adjusting your filters</p>
           </div>
-        ) : (
+        ) : groupBy !== "batch" ? (
           /* ── Instagram-style profile grid ── */
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {members.map((member) => (
@@ -1466,7 +1580,7 @@ export default function MembersPage() {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
 
         {members.length > 0 && (
           <Pagination

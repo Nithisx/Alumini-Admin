@@ -356,10 +356,10 @@ export default function MembersPage() {
   const [totalPages, setTotalPages] = useState(1);
 
   // Sorting states
-  const [sortField, setSortField] = useState(() => readQueryValue("sort_field", "id"));
+  const [sortField, setSortField] = useState(() => readQueryValue("sort_field", "date_joined"));
   const [sortDirection, setSortDirection] = useState(() => {
-    const direction = readQueryValue("sort_direction", "asc");
-    return direction === "desc" ? "desc" : "asc";
+    const direction = readQueryValue("sort_direction", "desc");
+    return direction === "asc" ? "asc" : "desc";
   }); // 'asc' or 'desc'
 
   useEffect(() => {
@@ -483,7 +483,7 @@ export default function MembersPage() {
     });
 
     // Add sorting parameter
-    const orderingValue = sortDirection === "asc" ? `-${sortField}` : sortField;
+    const orderingValue = sortDirection === "desc" ? sortField : `-${sortField}`;
     params.append("ordering", orderingValue);
 
     if (roleFilter) params.append("role", roleFilter);
@@ -934,16 +934,12 @@ export default function MembersPage() {
 
   // Handle sorting changes
   const handleSortChange = (field) => {
-    // If clicking the same field, toggle direction
     if (field === sortField) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // New field, default to ascending
       setSortField(field);
-      setSortDirection("asc");
+      setSortDirection("desc");
     }
-
-    // Reset to first page when sorting changes
     setCurrentPage(1);
   };
 
@@ -1416,20 +1412,34 @@ export default function MembersPage() {
           </div>
         </div>
 
-        {/* Results summary bar */}
-        <div className="flex items-center justify-between">
+        {/* Results summary + sort bar */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500 font-medium">
             <span className="font-bold text-gray-800">{filteredTotal}</span> {filteredTotal === 1 ? "member" : "members"}
             {(roleFilter || cityFilter || searchQuery || nameSearchQuery || countryFilter || stateFilter || passedOutYearFilter || courseFilter || collegeNameFilter || currentWorkFilter || chapterFilter || emailFilter) && (
               <span className="ml-2 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">filtered</span>
             )}
           </p>
-          <button
-            onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
-            className="flex items-center gap-1 text-xs font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 transition"
-          >
-            {sortDirection === "asc" ? "↑ Ascending" : "↓ Descending"}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Sort by</span>
+              <select
+                value={sortField}
+                onChange={(e) => { setSortField(e.target.value); setCurrentPage(1); }}
+                className="text-xs border border-gray-200 rounded-xl px-2.5 py-1.5 bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-300 cursor-pointer"
+              >
+                <option value="date_joined">Date Joined</option>
+                <option value="first_name">Name</option>
+                <option value="passed_out_year">Passout Year</option>
+              </select>
+            </div>
+            <button
+              onClick={() => { setSortDirection(sortDirection === "asc" ? "desc" : "asc"); setCurrentPage(1); }}
+              className="flex items-center gap-1 text-xs font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 transition"
+            >
+              {sortDirection === "desc" ? "↓ Descending" : "↑ Ascending"}
+            </button>
+          </div>
         </div>
 
         {/* Members content */}
