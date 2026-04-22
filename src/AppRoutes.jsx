@@ -7,6 +7,7 @@ import Signup from './Pages/Signup';
 import OAuthSignupComplete from './Pages/OAuthSignupComplete';
 import Home from './Pages/home';
 import About from './Pages/about';
+import Contact from './Pages/Contact';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import TermsOfService from './Pages/TermsOfService';
 import ResetPassword from './Pages/ResetPassword';
@@ -53,6 +54,7 @@ const AppRoutes = () => {
         {/* Public Routes */}
         <Route path="/home" element={<GuestOnly><Home /></GuestOnly>} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/share/:token" element={<ShareRedirect />} />

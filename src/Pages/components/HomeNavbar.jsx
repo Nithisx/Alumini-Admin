@@ -66,7 +66,7 @@ export default function HomeNavbar() {
             <a href="/#features" className="text-gray-600 hover:text-blue-600">
               Features
             </a>
-            <a href="/#contact" className="text-gray-600 hover:text-blue-600">
+            <a href="/contact" className="text-gray-600 hover:text-blue-600">
               Contact
             </a>
             <div className="flex items-center space-x-2 ml-4">
@@ -137,7 +137,7 @@ export default function HomeNavbar() {
               Features
             </a>
             <a
-              href="/#contact"
+              href="/contact"
               className="block py-2 px-4 text-gray-600 hover:bg-blue-50 rounded"
             >
               Contact

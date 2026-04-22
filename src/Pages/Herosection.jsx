@@ -12,6 +12,11 @@ const AlumniHeroSection = ({ data }) => {
   const isAuthorized = Boolean(token && roleBase);
   const primaryCtaLabel = isAuthorized ? "View Members" : "Join Our Community";
   const primaryCtaPath = isAuthorized ? `/${roleBase}/members` : "/signup";
+  const heroHeadingPrefix = isAuthorized ? "Welcome to" : "Welcome to";
+  const heroHeadingAccent = isAuthorized ? "KAHE Alumni" : "KAHE Alumni";
+  const heroDescription = isAuthorized
+    ? "Join a distinguished community of accomplished alumni. Build meaningful connections, advance your career, and contribute to our legacy of excellence."
+    : "Join a distinguished community of accomplished alumni. Build meaningful connections, advance your career, and contribute to our legacy of excellence.";
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -50,16 +55,14 @@ const AlumniHeroSection = ({ data }) => {
 
             <div className="space-y-6">
               <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-slate-900 leading-tight">
-                Welcome to
+                {heroHeadingPrefix}
                 <span className="block bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500 bg-clip-text text-transparent mt-2">
-                  KAHE Alumni
+                  {heroHeadingAccent}
                 </span>
               </h1>
 
               <p className="text-base sm:text-xl lg:text-2xl text-slate-600 leading-relaxed max-w-2xl">
-                Join a distinguished community of accomplished alumni. Build
-                meaningful connections, advance your career, and contribute to
-                our legacy of excellence.
+                {heroDescription}
               </p>
             </div>
 

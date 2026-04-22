@@ -20,10 +20,24 @@ import Registrar from "./about_components/RegistrarSection";
 import Logo from "../assets/KAHEAA.svg";
 import RegisterRequest from "../Components/Admin/Auth/LoginRequest";
 import RegistrationCertificate from "./about_components/RegistrstionCertificate";
+import AdminHeader from "../Components/Admin/AdminHeader";
+import StaffHeader from "../Components/Staff/StaffHeader";
+import AlumniHeader from "../Components/Alumni/AluminiHeader";
+import { normalizeRoleForBase } from "../lib/authRole";
 const About = () => {
   // Track the active section based on URL hash
   const [activeSection, setActiveSection] = useState("overview");
   const [activeAdminSection, setActiveAdminSection] = useState(null);
+  const token = localStorage.getItem("Token");
+  const roleBase = normalizeRoleForBase(localStorage.getItem("Role"));
+  const isAuthorized = Boolean(token && roleBase);
+
+  const renderHeader = () => {
+    if (!isAuthorized) return <Header />;
+    if (roleBase === "admin") return <AdminHeader />;
+    if (roleBase === "staff") return <StaffHeader />;
+    return <AlumniHeader />;
+  };
 
   // Handle URL hash changes
   useEffect(() => {
@@ -53,7 +67,7 @@ const About = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-green-100">
-      <Header />
+      {renderHeader()}
       <div className="flex-grow py-12">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex flex-col items-center justify-center mb-12 text-center">

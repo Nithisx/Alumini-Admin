@@ -298,7 +298,7 @@ const HomePage = () => {
 
         {/* ── Chapter Distribution + New Members ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="member-section">
-          <section className="lg:col-span-2">
+          <section className="order-2 lg:order-1 lg:col-span-2">
             <ChapterDistributionSection
               countryDistribution={countryDistribution}
               cityStateDistribution={cityStateDistribution}
@@ -307,7 +307,7 @@ const HomePage = () => {
           </section>
 
           {/* New Members (Instagram suggest panel) */}
-          <section>
+          <section className="order-1 lg:order-2">
             <div className={DASHBOARD_THEME.sectionHeader}>
               <h2 className={DASHBOARD_THEME.sectionTitle}>New Members</h2>
               <button onClick={() => navigate("/staff/members/")} className={DASHBOARD_THEME.sectionAction}>

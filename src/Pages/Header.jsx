@@ -169,7 +169,7 @@ const Header = () => {
               { label: "Members", path: "/#member-section" },
               { label: "Events", path: "/#events-section" },
               { label: "Chapters", path: "/#chapters-section" },
-              { label: "Contact Us", path: "/#contact-section" },
+              { label: "Contact Us", path: "/contact" },
             ].map(({ label, path }) => (
               <button key={label} onClick={() => handleNavigation(path)} className="hover:text-green-700 bg-transparent font-medium transition-colors">
                 {label}
@@ -225,7 +225,7 @@ const Header = () => {
               { label: "Members", path: "/#member-section" },
               { label: "Events", path: "/#events-section" },
               { label: "Chapters", path: "/#chapters-section" },
-              { label: "Contact Us", path: "/#contact-section" },
+              { label: "Contact Us", path: "/contact" },
             ].map(({ label, path }) => (
               <button key={label} onClick={() => { handleNavigation(path); setMenuOpen(false); }}
                 className="text-left py-3 px-2 text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg text-base font-medium bg-transparent border-b border-gray-50 last:border-0 transition-colors">

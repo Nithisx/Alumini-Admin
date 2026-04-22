@@ -1,11 +1,26 @@
 import React from "react";
 import Header from "./Header";
 import Footer from "./about_components/Footer";
+import AdminHeader from "../Components/Admin/AdminHeader";
+import StaffHeader from "../Components/Staff/StaffHeader";
+import AlumniHeader from "../Components/Alumni/AluminiHeader";
+import { normalizeRoleForBase } from "../lib/authRole";
 
 const PrivacyPolicy = () => {
+  const token = localStorage.getItem("Token");
+  const roleBase = normalizeRoleForBase(localStorage.getItem("Role"));
+  const isAuthorized = Boolean(token && roleBase);
+
+  const renderHeader = () => {
+    if (!isAuthorized) return <Header />;
+    if (roleBase === "admin") return <AdminHeader />;
+    if (roleBase === "staff") return <StaffHeader />;
+    return <AlumniHeader />;
+  };
+
   return (
     <>
-      <Header />
+      {renderHeader()}
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-70">
         <div className="container mx-auto px-4 py-16 max-w-4xl">
           <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12">
