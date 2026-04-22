@@ -252,9 +252,9 @@ export default function SingleMember() {
           setChangedFields((cur) => { const s = new Set([...cur]); s.delete(field); return s; });
         }
       } else if (field === "course") {
-        updated.stream = "";
+        updated.branch = "";
         setAvailableBranches(value && COURSE_BRANCH_MAPPING[value] ? COURSE_BRANCH_MAPPING[value] : []);
-        setChangedFields((cur) => new Set([...cur, field, "stream"]));
+        setChangedFields((cur) => new Set([...cur, field, "branch"]));
       } else {
         setChangedFields((cur) => new Set([...cur, field]));
       }
@@ -360,7 +360,7 @@ export default function SingleMember() {
   const {
     username, first_name, last_name, salutation, gender, date_of_birth,
     email, secondary_email, phone, cover_photo, current_location,
-    home_town, city, state, country, branch, course, stream, start_year,
+    home_town, city, state, country, branch, course, start_year,
     end_year, college_name, chapter, role, bio, current_work, worked_in,
     passed_out_year, roll_no, social_links = {}, is_active = true,
     company, position, work_experience,
@@ -485,14 +485,14 @@ export default function SingleMember() {
                     {COURSES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </EditSelect>
                   {editedMember.course && COURSE_BRANCH_MAPPING[editedMember.course] && (
-                    <EditSelect value={editedMember.stream || ""} onChange={(v) => handleInputChange("stream", v)}>
+                    <EditSelect value={editedMember.branch || ""} onChange={(v) => handleInputChange("branch", v)}>
                       <option value="">Select Branch/Stream</option>
                       {COURSE_BRANCH_MAPPING[editedMember.course].map((b) => <option key={b} value={b}>{b}</option>)}
                     </EditSelect>
                   )}
                 </div>
               ) : (
-                <span>{[course, stream].filter(Boolean).join(", ") || "—"}</span>
+                <span>{[course, branch].filter(Boolean).join(", ") || "—"}</span>
               )}
             </FieldRow>
 

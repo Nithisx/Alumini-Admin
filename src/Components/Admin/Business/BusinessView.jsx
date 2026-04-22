@@ -264,7 +264,7 @@ const BusinessView = () => {
         <div className="border-t border-gray-100 -mx-4 sm:-mx-6 mt-4">
           <EngagementPanel
             contentType="businesses"
-            contentId={Number(id)}
+            contentId={id}
             postOwnerId={postOwnerId}
             canModerate={canModerate}
             currentUserId={currentUserId}

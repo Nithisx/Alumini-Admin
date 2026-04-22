@@ -168,7 +168,7 @@ const AlbumsPage = () => {
       />
 
       {/* ── Sticky header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Albums</h1>
@@ -229,16 +229,16 @@ const AlbumsPage = () => {
                 >
                   <div
                     onClick={() => navigate(`/alumni/albums/${album.id}`)}
-                    className="relative aspect-[4/3] cursor-pointer group overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100"
+                    className="relative aspect-[4/3] cursor-pointer group overflow-hidden bg-gray-50 border-b border-gray-100"
                   >
                     {album.cover_image ? (
                       <img
                         src={`https://api.karpagamalumni.in${album.cover_image}`}
                         alt={album.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100">
                         <FontAwesomeIcon icon={faFolder} className="text-5xl text-amber-300" />
                       </div>
                     )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Pages
 import LoginPage from './Pages/Login';
@@ -23,14 +23,16 @@ import AlumniLayout from './Components/Alumni/AlumniLayout';
 import ProtectedRoute from './Components/Shared/ProtectedRoute';
 
 function AuthRedirect() {
+  const location = useLocation();
   const token = localStorage.getItem('Token');
   const role = normalizeRoleForBase(localStorage.getItem('Role'));
+  const suffix = `${location.search || ''}${location.hash || ''}`;
   if (!token) return <Navigate to="/" replace />;
   switch (role) {
-    case 'admin': return <Navigate to="/admin/dashboard" replace />;
-    case 'staff': return <Navigate to="/staff/dashboard" replace />;
+    case 'admin': return <Navigate to={`/admin/dashboard${suffix}`} replace />;
+    case 'staff': return <Navigate to={`/staff/dashboard${suffix}`} replace />;
     case 'alumni':
-      return <Navigate to="/alumni/dashboard" replace />;
+      return <Navigate to={`/alumni/dashboard${suffix}`} replace />;
     default: return <Navigate to="/" replace />;
   }
 }
@@ -45,11 +47,11 @@ const AppRoutes = () => {
     <Router>
       <InstallAppPrompt />
       <Routes>
-        {/* Initial Route */}
-        <Route path="/" element={<Home />} />
+        {/* Initial Route — redirect authenticated users to their dashboard */}
+        <Route path="/" element={<GuestOnly><Home /></GuestOnly>} />
 
         {/* Public Routes */}
-        <Route path="/home" element={<Home />} />
+        <Route path="/home" element={<GuestOnly><Home /></GuestOnly>} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />

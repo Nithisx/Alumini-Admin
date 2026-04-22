@@ -30,7 +30,7 @@ const MyContributions = () => {
       {/* Sticky header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-3xl mx-auto px-4 py-3">
-          <h1 className="text-base font-bold text-gray-900 mb-3">My Contributions</h1>
+          <h1 className="text-base font-bold text-gray-900 mb-3">My Uploads</h1>
           {/* Tab bar */}
           <div className="flex overflow-x-auto scrollbar-hide gap-1 pb-0.5">
             {tabs.map(({ key, label, icon: Icon }) => (

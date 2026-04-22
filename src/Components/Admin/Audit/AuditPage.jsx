@@ -869,7 +869,7 @@ function AuditLogsTab() {
     <div className="max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Audit Logs</h1>
+          <h1 className="text-2xl font-bold text-gray-800 top-0">Audit Logs</h1>
           <p className="text-sm text-gray-500">Every API call across the portal — authorized or not. Auto-refreshes every 30s.</p>
         </div>
         <div className="flex items-center gap-2">

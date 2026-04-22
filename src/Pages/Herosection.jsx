@@ -3,9 +3,16 @@ import Image1 from "../images/image1.jpeg";
 import Image2 from "../images/image2.jpg";
 import Image3 from "../images/image3.jpg";
 import { useNavigate } from "react-router-dom";
+import { normalizeRoleForBase } from "../lib/authRole";
 const AlumniHeroSection = ({ data }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
+  const token = localStorage.getItem("Token");
+  const roleBase = normalizeRoleForBase(localStorage.getItem("Role"));
+  const isAuthorized = Boolean(token && roleBase);
+  const primaryCtaLabel = isAuthorized ? "View Members" : "Join Our Community";
+  const primaryCtaPath = isAuthorized ? `/${roleBase}/members` : "/signup";
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % 3);
@@ -59,9 +66,9 @@ const AlumniHeroSection = ({ data }) => {
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button
                 className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate(primaryCtaPath)}
               >
-                <span>Join Our Community</span>
+                <span>{primaryCtaLabel}</span>
                 <svg
                   className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
                   fill="none"

@@ -140,7 +140,7 @@ export default function SingleMember() {
   const {
     username, first_name, last_name, salutation, gender, date_of_birth,
     email, secondary_email, phone, cover_photo, current_location,
-    home_town, city, state, country, course, stream, start_year,
+    home_town, city, state, country, course, branch, start_year,
     end_year, college_name, chapter, role, bio, current_work, worked_in,
     passed_out_year, roll_no, social_links = {}, is_active = true,
     company, position, work_experience,
@@ -201,7 +201,7 @@ export default function SingleMember() {
             </FieldRow>
 
             <FieldRow icon={Icons.education} label="Course & Branch">
-              <span>{[course, stream].filter(Boolean).join(", ") || "—"}</span>
+              <span>{[course, branch].filter(Boolean).join(", ") || "—"}</span>
             </FieldRow>
 
             {(start_year || end_year) && (

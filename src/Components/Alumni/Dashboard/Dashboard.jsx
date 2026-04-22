@@ -40,6 +40,19 @@ const HomePage = () => {
     fetchData();
   }, [token]);
 
+  useEffect(() => {
+    if (loading) return;
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    }
+  }, [loading]);
+
   const goToNextNews = useCallback(() => {
     if (newsCount < 2) return;
     setNewsSlide((prev) => (prev + 1) % newsCount);
@@ -179,7 +192,7 @@ const HomePage = () => {
 
         {/* ── Featured News (Instagram post card style) ── */}
         {data.featured_news?.length > 0 && (
-          <section>
+          <section id="news-section">
             <div className={DASHBOARD_THEME.sectionHeader}>
               <h2 className={DASHBOARD_THEME.sectionTitle}>Latest News</h2>
               <button onClick={() => navigate("/alumni/news/")} className={DASHBOARD_THEME.sectionAction}>
@@ -244,7 +257,7 @@ const HomePage = () => {
         )}
 
         {/* ── Upcoming Events ── */}
-        <section>
+        <section id="events-section">
           <div className={DASHBOARD_THEME.sectionHeader}>
             <h2 className={DASHBOARD_THEME.sectionTitle}>Upcoming Events</h2>
             <button onClick={() => navigate("/alumni/event/")} className={DASHBOARD_THEME.sectionAction}>
@@ -285,7 +298,7 @@ const HomePage = () => {
         </section>
 
         {/* ── Chapter Distribution + Sidebar Panels ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="member-section">
           <section className="lg:col-span-2">
             <ChapterDistributionSection
               countryDistribution={countryDistribution}
@@ -372,6 +385,27 @@ const HomePage = () => {
 
           </div>
         </div>
+
+        <section className="bg-gradient-to-r from-emerald-700 to-green-700 rounded-2xl p-6 sm:p-8 text-white" id="contact-section">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Ready to connect with the network?</h2>
+          <p className="text-emerald-50 mb-6 max-w-2xl">
+            Explore member profiles, continue conversations, and stay updated from your dashboard.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="px-5 py-2.5 bg-white text-emerald-700 font-semibold rounded-xl hover:bg-emerald-50 transition"
+              onClick={() => navigate("/alumni/members/")}
+            >
+              Browse Members
+            </button>
+            <button
+              className="px-5 py-2.5 border border-emerald-200 text-white font-semibold rounded-xl hover:bg-emerald-600 transition"
+              onClick={() => navigate("/alumni/chat")}
+            >
+              Open Chat
+            </button>
+          </div>
+        </section>
       </div>
 
       <Footer />

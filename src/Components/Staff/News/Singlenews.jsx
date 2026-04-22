@@ -16,6 +16,8 @@ export default function SingleNews() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [canModerate, setCanModerate] = useState(false);
   const [postOwnerId, setPostOwnerId] = useState(null);
+  const [hasPreviousNews, setHasPreviousNews] = useState(false);
+  const [hasNextNews, setHasNextNews] = useState(false);
 
   useEffect(() => {
     if (!TOKEN) return;
@@ -50,6 +52,47 @@ export default function SingleNews() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    const currentId = Number(id);
+
+    if (!Number.isInteger(currentId) || currentId <= 0) {
+      setHasPreviousNews(false);
+      setHasNextNews(false);
+      return;
+    }
+
+    const checkNewsExists = async (newsId) => {
+      if (!Number.isInteger(newsId) || newsId <= 0) {
+        return false;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}${newsId}/`, {
+          headers: {
+            ...(TOKEN && { Authorization: `Token ${TOKEN}` }),
+            "Content-Type": "application/json",
+          },
+        });
+
+        return response.ok;
+      } catch {
+        return false;
+      }
+    };
+
+    const checkAdjacentNews = async () => {
+      const [previousExists, nextExists] = await Promise.all([
+        checkNewsExists(currentId - 1),
+        checkNewsExists(currentId + 1),
+      ]);
+
+      setHasPreviousNews(previousExists);
+      setHasNextNews(nextExists);
+    };
+
+    checkAdjacentNews();
+  }, [id]);
+
   const getFullImageUrl = (path) => {
     if (!path) return "";
     return path.startsWith("http") ? path : `${SERVER_BASE}${path}`;
@@ -66,6 +109,7 @@ export default function SingleNews() {
   };
 
   const handlePrevious = () => {
+    if (!hasPreviousNews) return;
     const prevId = Number(id) - 1;
     if (prevId > 0) {
       navigate(`/staff/news/${prevId}`);
@@ -73,6 +117,7 @@ export default function SingleNews() {
   };
 
   const handleNext = () => {
+    if (!hasNextNews) return;
     navigate(`/staff/news/${Number(id) + 1}`);
   };
 
@@ -243,7 +288,7 @@ export default function SingleNews() {
           <div className="bg-white rounded shadow mb-6">
             <EngagementPanel
               contentType="news"
-              contentId={Number(id)}
+              contentId={id}
               postOwnerId={postOwnerId}
               canModerate={canModerate}
               currentUserId={currentUserId}
@@ -260,8 +305,8 @@ export default function SingleNews() {
           <div className="flex space-x-3">
             <button
               onClick={handlePrevious}
-              disabled={Number(id) <= 1}
-              className={`px-4 py-2 ${Number(id) <= 1
+              disabled={!hasPreviousNews}
+              className={`px-4 py-2 ${!hasPreviousNews
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                 : "bg-blue-600 text-white"
                 }`}
@@ -271,7 +316,11 @@ export default function SingleNews() {
 
             <button
               onClick={handleNext}
-              className="px-4 py-2 bg-blue-600 text-white"
+              disabled={!hasNextNews}
+              className={`px-4 py-2 ${!hasNextNews
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-blue-600 text-white"
+                }`}
             >
               Next
             </button>

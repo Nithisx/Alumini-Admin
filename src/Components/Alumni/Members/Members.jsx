@@ -938,7 +938,7 @@ export default function MembersPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
       {/* ── Instagram-style sticky header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Members</h1>

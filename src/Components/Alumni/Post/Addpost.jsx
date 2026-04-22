@@ -86,7 +86,7 @@ const ImageGallery = ({ images }) => {
   };
 
   return (
-    <div className="relative w-full bg-black overflow-hidden" style={{ maxHeight: "500px" }}>
+    <div className="relative w-full bg-gray-200 overflow-hidden" style={{ maxHeight: "500px" }}>
       <img
         src={getImageUrl(images[currentIndex].image)}
         alt={`Job image ${currentIndex + 1}`}
@@ -416,7 +416,7 @@ const JobFeed = () => {
       />
 
       {/* Two-column layout: feed + sidebar */}
-      <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6 items-start">
+      <div className="max-w-5xl mx-auto px-4 py-0 flex flex-col lg:flex-row gap-6 items-start">
         {/* Main feed column */}
         <div className="w-full lg:flex-1 min-w-0">
           {/* Create post prompt */}

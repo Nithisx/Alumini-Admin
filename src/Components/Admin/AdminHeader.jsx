@@ -149,7 +149,7 @@ export default function AdminHeader() {
     {
       path: "/admin/my-contribution",
       icon: faHandHoldingHeart,
-      label: "Contribute",
+      label: "My Uploads",
     },
     {
       path: "/admin/register-request",

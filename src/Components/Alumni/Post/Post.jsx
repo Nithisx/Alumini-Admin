@@ -158,18 +158,8 @@ const AdminFeed = () => {
 
         if (selectedImage) {
             formData.append("images", selectedImage, selectedImage.name);
-        } else {
         }
-
-            description: newPostDescription,
-            company_name: newPostCompany,
-            role: newPostRole,
-            location: newPostLocation,
-            salary_range: newPostSalary,
-            job_type: newPostType,
-            image: selectedImage ? selectedImage.name : "No image",
-        });
-
+        
         try {
             const response = await axios.post(API_URL, formData, {
                 headers: {

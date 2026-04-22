@@ -40,6 +40,19 @@ const HomePage = () => {
     fetchData();
   }, [token]);
 
+  useEffect(() => {
+    if (loading) return;
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    }
+  }, [loading]);
+
   const goToNextNews = useCallback(() => {
     if (newsCount < 2) return;
     setNewsSlide((prev) => (prev + 1) % newsCount);
@@ -179,7 +192,7 @@ const HomePage = () => {
 
         {/* ── Featured News (Instagram post card style) ── */}
         {data.featured_news?.length > 0 && (
-          <section>
+          <section id="news-section">
             <div className={DASHBOARD_THEME.sectionHeader}>
               <h2 className={DASHBOARD_THEME.sectionTitle}>Latest News</h2>
               <button onClick={() => navigate("/admin/news/")} className={DASHBOARD_THEME.sectionAction}>
@@ -244,7 +257,7 @@ const HomePage = () => {
         )}
 
         {/* ── Upcoming Events ── */}
-        <section>
+        <section id="events-section">
           <div className={DASHBOARD_THEME.sectionHeader}>
             <h2 className={DASHBOARD_THEME.sectionTitle}>Upcoming Events</h2>
             <button onClick={() => navigate("/admin/event/")} className={DASHBOARD_THEME.sectionAction}>
@@ -284,8 +297,8 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── Chapter Distribution + New Members ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── Chapter Distribution + Sidebar Panels ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="member-section">
           <section className="lg:col-span-2">
             <ChapterDistributionSection
               countryDistribution={countryDistribution}
@@ -294,41 +307,101 @@ const HomePage = () => {
             />
           </section>
 
-          {/* New Members (Instagram suggest panel) */}
-          <section>
-            <div className={DASHBOARD_THEME.sectionHeader}>
-              <h2 className={DASHBOARD_THEME.sectionTitle}>New Members</h2>
-              <button onClick={() => navigate("/admin/members/")} className={DASHBOARD_THEME.sectionAction}>
-                See all
-              </button>
-            </div>
-            <div className={DASHBOARD_THEME.memberList}>
-              {data.latest_members.map((member) => (
-                <div
-                  key={member.id}
-                  onClick={() => navigate(`/admin/members/${member.username}/`)}
-                  className={DASHBOARD_THEME.memberRow}
-                >
-                  {member.profile_photo ? (
-                    <img src={`${MEDIA_BASE_URL}${member.profile_photo}`} alt={member.first_name}
-                      className={DASHBOARD_THEME.memberAvatar} />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
-                      {member.first_name?.[0]}{member.last_name?.[0]}
+          <div className="flex flex-col gap-6">
+            {/* New Members */}
+            <section className="order-2 lg:order-1">
+              <div className={DASHBOARD_THEME.sectionHeader}>
+                <h2 className={DASHBOARD_THEME.sectionTitle}>New Members</h2>
+                <button onClick={() => navigate("/admin/members/")} className={DASHBOARD_THEME.sectionAction}>
+                  See all
+                </button>
+              </div>
+              <div className={DASHBOARD_THEME.memberList}>
+                {data.latest_members.map((member) => (
+                  <div
+                    key={member.id}
+                    onClick={() => navigate(`/admin/members/${member.username}/`)}
+                    className={DASHBOARD_THEME.memberRow}
+                  >
+                    {member.profile_photo ? (
+                      <img src={`${MEDIA_BASE_URL}${member.profile_photo}`} alt={member.first_name}
+                        className={DASHBOARD_THEME.memberAvatar} />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                        {member.first_name?.[0]}{member.last_name?.[0]}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
+                      <p className="text-xs text-gray-400 truncate">{member.role || "Alumni"}</p>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
-                    <p className="text-xs text-gray-400 truncate">{member.role || "Alumni"}</p>
+                    <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                  <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
+                ))}
+              </div>
+            </section>
+
+            {/* Batch Mates */}
+            {data.batch_mates?.length > 0 && (
+              <section className="order-1 lg:order-2">
+                <div className={DASHBOARD_THEME.sectionHeader}>
+                  <h2 className={DASHBOARD_THEME.sectionTitle}>Batch Mates</h2>
+                  <button onClick={() => navigate("/admin/members/")} className={DASHBOARD_THEME.sectionAction}>
+                    See all
+                  </button>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className={DASHBOARD_THEME.memberList}>
+                  {data.batch_mates.map((mate) => (
+                    <div
+                      key={mate.id}
+                      onClick={() => navigate(`/admin/members/${mate.username}/`)}
+                      className={DASHBOARD_THEME.memberRow}
+                    >
+                      {mate.profile_photo ? (
+                        <img src={`${MEDIA_BASE_URL}${mate.profile_photo}`} alt={mate.first_name}
+                          className={DASHBOARD_THEME.memberAvatar} />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white font-bold text-sm">
+                          {mate.first_name?.[0]}{mate.last_name?.[0]}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{mate.first_name} {mate.last_name}</p>
+                        <p className="text-xs text-gray-400 truncate">{mate.course || "Alumni"}</p>
+                      </div>
+                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
         </div>
+
+        <section className="bg-gradient-to-r from-emerald-700 to-green-700 rounded-2xl p-6 sm:p-8 text-white" id="contact-section">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Ready to connect with the network?</h2>
+          <p className="text-emerald-50 mb-6 max-w-2xl">
+            Explore member profiles, continue conversations, and stay updated from your dashboard.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="px-5 py-2.5 bg-white text-emerald-700 font-semibold rounded-xl hover:bg-emerald-50 transition"
+              onClick={() => navigate("/admin/members/")}
+            >
+              Browse Members
+            </button>
+            <button
+              className="px-5 py-2.5 border border-emerald-200 text-white font-semibold rounded-xl hover:bg-emerald-600 transition"
+              onClick={() => navigate("/admin/chat")}
+            >
+              Open Chat
+            </button>
+          </div>
+        </section>
       </div>
 
       <Footer />

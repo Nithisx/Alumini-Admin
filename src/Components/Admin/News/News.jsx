@@ -1,57 +1,76 @@
-/*
-File: NewsList.js
-This component fetches and displays news posts with a completely redesigned UI
-Using a green-600 theme
-*/
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Loader, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch, faNewspaper, faTag } from "@fortawesome/free-solid-svg-icons";
 import ConfirmModal from "../../Shared/ConfirmModal";
-import AddNewsModal from './Addnewsmodel';
-import EditNewsModal from './Editnewsmodal';
-import { Calendar, Tag, Bookmark, Trash2, Plus, ChevronRight, Loader, MoreVertical, Pencil } from 'lucide-react';
+import AddNewsModal from "./Addnewsmodel";
+import EditNewsModal from "./Editnewsmodal";
+import EngagementPanel from "../../Shared/EngagementPanel";
 
-const TOKEN = localStorage.getItem('Token');
-const API_URL = 'https://api.karpagamalumni.in/api/v1/news/';
-const BASE_URL = 'https://api.karpagamalumni.in';
+const BASE_URL = "https://api.karpagamalumni.in";
+const TOKEN = () => localStorage.getItem("Token");
+
+const AuthorizedImage = ({ url, alt, className }) => {
+  const [imageUrl, setImageUrl] = useState(null);
+  useEffect(() => {
+    let isMounted = true;
+    const token = TOKEN();
+    fetch(url, { headers: { Authorization: token ? `Token ${token}` : "" } })
+      .then((r) => r.blob())
+      .then((blob) => { if (isMounted) setImageUrl(URL.createObjectURL(blob)); })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [url]);
+  return imageUrl ? (
+    <img src={imageUrl} alt={alt} className={className} />
+  ) : (
+    <div className="bg-gray-100 animate-pulse w-full h-48" />
+  );
+};
 
 export default function NewsList() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingNewsId, setEditingNewsId] = useState(null);
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const menuRef = useRef(null);
 
-  // Fetch news from API
   const fetchNews = async () => {
     setIsLoading(true);
-    setError(null);
     try {
-      const response = await fetch(API_URL, {
-        headers: {
-          'Authorization': `Token ${TOKEN}`,
-          'Content-Type': 'application/json'
-        }
+      const token = TOKEN();
+      const res = await fetch(`${BASE_URL}/api/v1/news/`, {
+        headers: { Authorization: `Token ${token}` },
       });
-      if (!response.ok) throw new Error(`Error: ${response.status}`);
-      const data = await response.json();
-      setPosts(Array.isArray(data) ? data : data.results || []);
-    } catch (err) {
-      setError(err.message);
+      const data = await res.json();
+      setPosts(Array.isArray(data) ? data : data?.results || []);
+    } catch {
+      setPosts([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => { fetchNews(); }, []);
+
+  useEffect(() => {
+    const token = TOKEN();
+    if (!token) return;
+    fetch(`${BASE_URL}/api/v1/profile/`, { headers: { Authorization: `Token ${token}` } })
+      .then((r) => r.json())
+      .then((d) => setCurrentUserId(d?.id ?? null))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -61,116 +80,180 @@ export default function NewsList() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Delete a post
-  const handleDelete = (id) => { setConfirmDeleteId(id); setOpenMenuId(null); };
-
   const doDelete = async (id) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`${API_URL}${id}/`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Token ${TOKEN}` }
+      const res = await fetch(`${BASE_URL}/api/v1/news/${id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Token ${TOKEN()}` },
       });
-      if (!res.ok) throw new Error(`Error: ${res.status}`);
-      setPosts(posts.filter(post => post.id !== id));
-    } catch (err) {
-      toast.error(`Failed to delete: ${err.message}`);
+      if (!res.ok) throw new Error();
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+      toast.success("News deleted.");
+    } catch {
+      toast.error("Failed to delete news.");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const getFullImageUrl = (path) => {
+  const formatDate = (iso) =>
+    new Date(iso).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+
+  const getImageUrl = (path) => {
     if (!path) return null;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    return `${BASE_URL}${path}`;
+    return path.startsWith("http") ? path : `${BASE_URL}${path}`;
   };
 
-  const formatDate = (iso) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
+  const categories = ["All", ...new Set(posts.map((p) => p.category).filter(Boolean))];
 
-  // Callback when a new post is successfully added
-  const onNewsAdded = () => {
-    setShowModal(false);
-    fetchNews();
-  };
-
-  const openEditNews = (id) => {
-    setEditingNewsId(id);
-    setShowEditModal(true);
-    setOpenMenuId(null);
-  };
-
-  const onNewsEdited = (updatedPost) => {
-    setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
-    setShowEditModal(false);
-    setEditingNewsId(null);
-  };
-
-  // Get unique categories
-  const categories = ['All', ...new Set(posts.map(post => post.category))];
-
-  // Filter posts by category
-  const filteredPosts = activeCategory === 'All'
-    ? posts
-    : posts.filter(post => post.category === activeCategory);
-
-  // Get featured posts
-  const featuredPosts = posts.filter(post => post.featured);
+  const filtered = posts.filter((p) => {
+    const matchCat = activeCategory === "All" || p.category === activeCategory;
+    const term = searchTerm.toLowerCase();
+    const matchSearch =
+      !term ||
+      (p.title || "").toLowerCase().includes(term) ||
+      (p.content || "").toLowerCase().includes(term);
+    return matchCat && matchSearch;
+  });
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-20 lg:pb-6">
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
       <ConfirmModal
         isOpen={!!confirmDeleteId}
-        title="Delete News Item"
+        title="Delete News"
         message="This will permanently delete this news item."
         danger
         confirmText="Delete"
         onConfirm={() => { doDelete(confirmDeleteId); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-gray-200">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-800">Newsroom</h1>
-            <p className="text-gray-500 mt-2">Stay updated with our latest announcements</p>
-          </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition shadow-md"
-          >
-            <Plus size={18} className="mr-2" />
-            Post News
-          </button>
-        </div>
 
-        {/* Featured Posts - Only show if we have featured posts */}
-        {featuredPosts.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Featured</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {featuredPosts.slice(0, 2).map(post => (
-                <div key={`featured-${post.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg transition transform hover:scale-[1.02] relative group">
-                  {/* 3-dots menu for Featured Posts */}
-                  <div className="absolute top-4 right-4 z-10" ref={openMenuId === `f-${post.id}` ? menuRef : null}>
+      {/* Sticky header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">News</h1>
+            <div className="relative flex-1">
+              <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search news…"
+                className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all"
+              />
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex-shrink-0 w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition text-base font-bold"
+              title="Add news"
+            >
+              +
+            </button>
+          </div>
+
+          {categories.length > 1 && (
+            <div className="flex gap-2 mt-2 overflow-x-auto pb-0.5 no-scrollbar">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-3 py-1 rounded-full whitespace-nowrap text-xs font-medium transition-colors flex-shrink-0 ${
+                    activeCategory === cat
+                      ? "bg-emerald-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Feed */}
+      <div className="max-w-2xl mx-auto px-0 sm:px-4 py-4 space-y-6">
+        {isLoading ? (
+          [1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+              <div className="h-64 bg-gray-200" />
+              <div className="p-4 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-100 rounded w-1/2" />
+              </div>
+            </div>
+          ))
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 mx-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FontAwesomeIcon icon={faNewspaper} className="text-gray-300 text-2xl" />
+            </div>
+            <p className="text-gray-500 font-medium">No news found</p>
+            <p className="text-gray-400 text-sm mt-1">
+              {searchTerm ? "Try a different search term" : "No articles in this category yet"}
+            </p>
+          </div>
+        ) : (
+          filtered.map((post) => {
+            const imgUrl = getImageUrl(post.thumbnail);
+            return (
+              <div
+                key={post.id}
+                className="bg-white sm:rounded-2xl border-y sm:border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              >
+                {/* Post header with 3-dot menu */}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div
+                    onClick={() => navigate(`/admin/news/${post.id}/`)}
+                    className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 border border-emerald-200">
+                      <FontAwesomeIcon icon={faNewspaper} className="text-emerald-600 text-sm" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate uppercase tracking-tight">
+                        {post.title}
+                      </p>
+                      <p className="text-xs text-gray-400">{formatDate(post.published_on)}</p>
+                    </div>
+                  </div>
+
+                  {post.category && (
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-1 rounded-md flex-shrink-0 border border-emerald-100 flex items-center gap-1">
+                      <FontAwesomeIcon icon={faTag} className="text-[9px]" />
+                      {post.category}
+                    </span>
+                  )}
+                  {post.featured && (
+                    <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-1 rounded-md flex-shrink-0 border border-amber-100">
+                      Featured
+                    </span>
+                  )}
+
+                  {/* 3-dot menu */}
+                  <div
+                    className="relative flex-shrink-0"
+                    ref={openMenuId === post.id ? menuRef : null}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
-                      onClick={() => setOpenMenuId(openMenuId === `f-${post.id}` ? null : `f-${post.id}`)}
-                      className="w-8 h-8 bg-white/80 hover:bg-white text-gray-700 rounded-full flex items-center justify-center shadow transition"
+                      onClick={() => setOpenMenuId(openMenuId === post.id ? null : post.id)}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
                     >
                       <MoreVertical size={16} />
                     </button>
-                    {openMenuId === `f-${post.id}` && (
+                    {openMenuId === post.id && (
                       <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
                         <button
-                          onClick={() => openEditNews(post.id)}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition">
+                          onClick={() => { setEditingNewsId(post.id); setShowEditModal(true); setOpenMenuId(null); }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                        >
                           <Pencil size={13} /> Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(post.id)}
+                          onClick={() => { setConfirmDeleteId(post.id); setOpenMenuId(null); }}
                           disabled={deletingId === post.id}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
                         >
@@ -185,162 +268,62 @@ export default function NewsList() {
                       </div>
                     )}
                   </div>
-
-                  <div className="relative h-60">
-                    <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/600x400'}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                      onError={e => e.target.src = 'https://via.placeholder.com/600x400'}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <span className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-full">
-                        <Tag size={14} className="mr-1" />
-                        {post.category}
-                      </span>
-                      <h3 className="text-xl font-bold text-white mt-2">{post.title}</h3>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center text-gray-500 text-sm mb-4">
-                      <Calendar size={16} className="mr-2" />
-                      {formatDate(post.published_on)}
-                      <span className="mx-2">•</span>
-                      <Bookmark size={16} className="mr-2" />
-                      Featured
-                    </div>
-                    <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
-                    <div className="flex justify-between items-center">
-                      <a
-                        href={`/admin/news/${post.id}/`}
-                        className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
-                      >
-                        Read Full Story
-                        <ChevronRight size={16} className="ml-1" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Category Filter */}
-        <div className="mb-8 overflow-x-auto">
-          <div className="flex space-x-2 pb-2">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap ${activeCategory === category
-                  ? 'bg-green-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                  }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* News List */}
-        {isLoading ? (
-          <div className="flex flex-col items-center py-16">
-            <div className="text-green-600">
-              <Loader size={40} className="animate-spin" />
-            </div>
-            <p className="mt-4 text-gray-600">Loading news...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
-            <p className="text-red-700">Failed to load news: {error}</p>
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow-md">
-            <p className="text-gray-600">No news articles found in this category</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {filteredPosts.map(post => (
-              <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition relative group">
-                {/* 3-dots menu for Regular Posts */}
-                <div className="absolute top-4 right-4 z-10" ref={openMenuId === post.id ? menuRef : null}>
-                  <button
-                    onClick={() => setOpenMenuId(openMenuId === post.id ? null : post.id)}
-                    className="w-8 h-8 bg-white/80 hover:bg-white text-gray-700 rounded-full flex items-center justify-center shadow transition opacity-0 group-hover:opacity-100"
-                  >
-                    <MoreVertical size={16} />
-                  </button>
-                  {openMenuId === post.id && (
-                    <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
-                      <a href={`/admin/news/${post.id}/edit`}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition">
-                        <Pencil size={13} /> Edit
-                      </a>
-                      <button
-                        onClick={() => handleDelete(post.id)}
-                        disabled={deletingId === post.id}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-                      >
-                        {deletingId === post.id ? <Loader size={13} className="animate-spin" /> : <Trash2 size={13} />} Delete
-                      </button>
-                      <button
-                        onClick={() => setOpenMenuId(null)}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
                 </div>
 
-                <div className="sm:flex">
-                  <div className="sm:w-1/3 relative">
-                    <img
-                      src={post.thumbnail ? getFullImageUrl(post.thumbnail) : 'https://via.placeholder.com/400x300'}
-                      alt={post.title}
-                      className="w-full h-48 sm:h-full object-cover"
-                      onError={e => e.target.src = 'https://via.placeholder.com/400x300'}
-                    />
-                  </div>
-                  <div className="p-6 sm:w-2/3">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                        {post.category}
-                      </span>
-                      <div className="flex items-center text-gray-500 text-sm">
-                        <Calendar size={14} className="mr-1" />
-                        {formatDate(post.published_on)}
+                {/* Image */}
+                <div onClick={() => navigate(`/admin/news/${post.id}/`)} className="cursor-pointer">
+                  {imgUrl ? (
+                    <div className="w-full bg-gray-50 border-y border-gray-100 overflow-hidden">
+                      <div className="w-full p-1 sm:p-2">
+                        <AuthorizedImage
+                          url={imgUrl}
+                          alt={post.title}
+                          className="w-full h-auto max-h-[60vh] object-contain rounded-sm"
+                        />
                       </div>
                     </div>
-                    <h2 className="text-xl font-bold mb-3 text-gray-800">{post.title}</h2>
-                    <p className="text-gray-600 line-clamp-2 mb-4">{post.content}</p>
-                    <div className="flex justify-between items-center">
-                      <a
-                        href={`/admin/news/${post.id}/`}
-                        className="inline-flex items-center text-green-600 font-medium hover:text-green-700"
-                      >
-                        Read More
-                        <ChevronRight size={16} className="ml-1" />
-                      </a>
+                  ) : (
+                    <div className="w-full h-40 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
+                      <FontAwesomeIcon icon={faNewspaper} className="text-emerald-200 text-5xl opacity-50" />
                     </div>
+                  )}
+
+                  {/* Body */}
+                  <div className="px-4 py-4">
+                    <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{post.content}</p>
+                    <p className="text-xs text-emerald-600 font-medium mt-2">Read more →</p>
                   </div>
                 </div>
+
+                {/* Engagement */}
+                <div className="border-t border-gray-50" onClick={(e) => e.stopPropagation()}>
+                  <EngagementPanel
+                    contentType="news"
+                    contentId={post.id}
+                    postOwnerId={post?.user ?? null}
+                    canModerate={true}
+                    currentUserId={currentUserId}
+                  />
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })
         )}
       </div>
 
-      {/* Add News Modal */}
-      <AddNewsModal show={showModal} onClose={() => setShowModal(false)} onSuccess={onNewsAdded} />
-      {/* Edit News Modal */}
+      <AddNewsModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={() => { setShowModal(false); fetchNews(); }}
+      />
       <EditNewsModal
         show={showEditModal}
         onClose={() => { setShowEditModal(false); setEditingNewsId(null); }}
-        onSuccess={onNewsEdited}
+        onSuccess={(updated) => {
+          setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+          setShowEditModal(false);
+          setEditingNewsId(null);
+        }}
         newsId={editingNewsId}
       />
     </div>

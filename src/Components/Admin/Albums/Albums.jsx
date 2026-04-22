@@ -155,7 +155,7 @@ const AlbumsPage = () => {
       />
 
       {/* ── Sticky header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Albums</h1>

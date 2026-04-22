@@ -158,17 +158,7 @@ const AdminFeed = () => {
 
         if (selectedImage) {
             formData.append("images", selectedImage, selectedImage.name);
-        } else {
         }
-
-            description: newPostDescription,
-            company_name: newPostCompany,
-            role: newPostRole,
-            location: newPostLocation,
-            salary_range: newPostSalary,
-            job_type: newPostType,
-            image: selectedImage ? selectedImage.name : "No image",
-        });
 
         try {
             const response = await axios.post(API_URL, formData, {
@@ -323,8 +313,8 @@ const AdminFeed = () => {
             <button
                 onClick={() => setIsModalOpen(true)}
                 className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg
-                   hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                   flex items-center justify-center transition-all duration-300 hover:scale-110"
+                hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                flex items-center justify-center transition-all duration-300 hover:scale-110"
             >
                 <FontAwesomeIcon icon={faPlus} className="text-xl" />
             </button>

@@ -266,7 +266,7 @@ const SingleEvents = () => {
               </div>
               <EngagementPanel
                 contentType="events"
-                contentId={Number(id)}
+                contentId={id}
                 postOwnerId={postOwnerId}
                 canModerate={canModerate}
                 currentUserId={currentUserId}
