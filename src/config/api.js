@@ -48,6 +48,7 @@ export const API_COUNTRY_DIST   = `${API_BASE}/country-distribution/`;
 
 // Public share resolver (no auth needed)
 export const API_SHARE_RESOLVE   = (token) => `${API_BASE}/share/${token}/`;
+export const API_SHARE_TARGETS   = (token) => `${API_BASE}/share/${token}/targets/`;
 
 // Events
 export const API_EVENT_SHARE     = (id) => `${API_BASE}/events/${id}/share/`;

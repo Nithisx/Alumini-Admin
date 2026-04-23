@@ -18,6 +18,9 @@ const API_ROOT = "https://api.karpagamalumni.in/api/v1";
 const getToken = () => localStorage.getItem("Token");
 const authHeaders = () => ({ Authorization: `Token ${getToken()}`, "Content-Type": "application/json" });
 
+const ALLOWED_SHARE_MODES = ["link", "status", "story", "post"];
+const ALLOWED_SHARE_PLATFORMS = ["generic", "native", "whatsapp", "instagram", "facebook", "x", "linkedin", "telegram"];
+
 // ── tiny helpers ─────────────────────────────────────────────────────────────
 
 const getPhotoUrl = (p) => {
@@ -38,6 +41,80 @@ const timeAgo = (iso) => {
 const wasEdited = (created_at, updated_at) => {
   if (!created_at || !updated_at) return false;
   return Math.floor(new Date(created_at) / 1000) !== Math.floor(new Date(updated_at) / 1000);
+};
+
+const normalizeShareTargets = (rawTargets) => {
+  if (!rawTargets) return [];
+
+  const inferPlatformAndMode = (id, value = {}) => {
+    const key = String(id || "").toLowerCase();
+    const type = String(value.type || value.mode || "").toLowerCase();
+
+    if (key === "copy_link") return { platform: "generic", mode: "link" };
+    if (key === "native_share") return { platform: "native", mode: "link" };
+
+    if (key.includes("whatsapp")) {
+      return { platform: "whatsapp", mode: type || (key.includes("status") ? "status" : "post") };
+    }
+    if (key.includes("instagram")) {
+      return { platform: "instagram", mode: type || (key.includes("story") ? "story" : "post") };
+    }
+    if (key.includes("facebook")) return { platform: "facebook", mode: type || "post" };
+    if (key.startsWith("x_")) return { platform: "x", mode: type || "post" };
+    if (key.includes("linkedin")) return { platform: "linkedin", mode: type || "post" };
+    if (key.includes("telegram")) return { platform: "telegram", mode: type || "post" };
+
+    return { platform: value.platform || "generic", mode: type || "link" };
+  };
+
+  if (Array.isArray(rawTargets)) {
+    return rawTargets
+      .filter((item) => item && typeof item === "object")
+      .map((item, index) => {
+        const id = item.id || item.key || `${item.platform || "target"}-${item.mode || "link"}-${index}`;
+        const inferred = inferPlatformAndMode(id, item);
+        return {
+          id,
+          label: item.label || item.title || item.name || "Share",
+          platform: inferred.platform,
+          mode: inferred.mode,
+          type: item.type || inferred.mode,
+          url: item.url || item.href || item.deep_link || item.intent_url || "",
+          appUrl: item.app_url || "",
+          text: item.text || "",
+          note: item.note || "",
+          payload: item.payload || item.share_payload || {},
+        };
+      });
+  }
+
+  return Object.entries(rawTargets)
+    .filter(([, value]) => value && typeof value === "object")
+    .map(([key, value], index) => {
+      const id = key || `${value.platform || "target"}-${index}`;
+      const inferred = inferPlatformAndMode(id, value);
+      return {
+        id,
+        label: value.label || value.title || key,
+        platform: inferred.platform,
+        mode: inferred.mode,
+        type: value.type || inferred.mode,
+        url: value.url || value.href || value.deep_link || value.intent_url || "",
+        appUrl: value.app_url || "",
+        text: value.text || "",
+        note: value.note || "",
+        payload: value.payload || value.share_payload || {},
+      };
+    });
+};
+
+const isExternalUrl = (value) => typeof value === "string" && /^(https?:|whatsapp:|instagram:|tg:|fb:|x:)/i.test(value);
+
+const normalizePlatformLabel = (platform) => {
+  if (!platform) return "Share";
+  const cleaned = String(platform).trim().toLowerCase();
+  if (cleaned === "x") return "X";
+  return `${cleaned.charAt(0).toUpperCase()}${cleaned.slice(1)}`;
 };
 
 const Avatar = ({ user, size = 8 }) => {
@@ -337,6 +414,10 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
   const [copied, setCopied] = useState(false);
   const [totalShares, setTotalShares] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  const [shareMode, setShareMode] = useState("link");
+  const [sharePlatform, setSharePlatform] = useState("generic");
+  const [shareMessage, setShareMessage] = useState("Check this post");
+  const [shareTargets, setShareTargets] = useState([]);
 
   const commentInputRef = useRef(null);
 
@@ -458,64 +539,121 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
     }
   }, [shareUrl]);
 
-  const openShareTarget = useCallback(async (platform) => {
-    if (!shareUrl) return;
+  const openShareTarget = useCallback(async (target) => {
+    if (!target) return;
 
-    if (platform === "copy") {
-      await copyShareLink(shareUrl);
+    const payload = target.payload && typeof target.payload === "object" ? target.payload : {};
+    const payloadUrl = payload.url || payload.link || payload.deep_link || payload.app_url || "";
+    const targetUrl = target.appUrl || target.url || payloadUrl;
+
+    if (target.platform === "native") {
+      if (!navigator.share) {
+        if (shareUrl) {
+          await copyShareLink(shareUrl);
+          toast.info("Native share unavailable. Link copied instead.");
+        }
+        return;
+      }
+      try {
+        await navigator.share({
+          title: payload.title || "Karpagam Alumni",
+          text: target.text || payload.text || shareMessage || "Check this post",
+          url: payload.url || shareUrl || "",
+        });
+      } catch {
+        // User canceled native share or API is blocked.
+      }
       return;
     }
 
-    if (platform === "instagram") {
-      await copyShareLink(shareUrl);
-      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-      toast.info("Link copied. Paste it in Instagram.");
+    if (target.platform === "generic" || target.id === "copy" || target.id === "copy_link" || target.mode === "copy") {
+      await copyShareLink(targetUrl || shareUrl);
       return;
     }
 
-    const encoded = encodeURIComponent(shareUrl);
-    const targetMap = {
-      whatsapp: `https://wa.me/?text=${encoded}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
-    };
-    const target = targetMap[platform];
-    if (target) {
-      window.open(target, "_blank", "noopener,noreferrer");
+    if ((target.platform === "instagram" || target.id === "whatsapp_status") && shareUrl) {
+      await copyShareLink(shareUrl);
     }
-  }, [copyShareLink, shareUrl]);
 
-  // ── share ────────────────────────────────────────────────────────────────
-  const handleShare = async () => {
+    if (isExternalUrl(targetUrl)) {
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
+      if (target.note) {
+        toast.info(target.note);
+      } else if (target.platform === "instagram" || target.platform === "whatsapp") {
+        toast.info("Use the opened app/site to complete your story/status posting.");
+      }
+      return;
+    }
+
+    if (shareUrl) {
+      await copyShareLink(shareUrl);
+      toast.info(`${normalizePlatformLabel(target.platform)} handoff prepared. Paste the copied link to publish.`);
+    }
+  }, [copyShareLink, shareMessage, shareUrl]);
+
+  const fetchTargetsByToken = useCallback(async (token) => {
+    if (!token) return [];
+    try {
+      const res = await fetch(`${API_ROOT}/share/${token}/targets/`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return normalizeShareTargets(data?.share_links?.targets || data?.targets || data);
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const requestShareLinks = useCallback(async ({ mode, platform, message, openNativeIfAvailable = false } = {}) => {
     if (shareLoading) return;
+    const nextMode = ALLOWED_SHARE_MODES.includes(mode) ? mode : shareMode;
+    const nextPlatform = ALLOWED_SHARE_PLATFORMS.includes(platform) ? platform : sharePlatform;
+
     setShareLoading(true);
     try {
+      const body = {
+        message: typeof message === "string" ? message : shareMessage,
+        share_mode: nextMode,
+        share_platform: nextPlatform,
+      };
+
       const res = await fetch(`${API_ROOT}/${contentType}/${contentId}/share/`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ message: "" }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error();
-      const data = await res.json();
-      const url = `${window.location.origin}/share/${data.token}`;
-      setShareUrl(url);
-      setTotalShares((n) => n + 1);
 
-      if (navigator.share) {
-        try {
-          await navigator.share({ title: "Karpagam Alumni", text: "Check this out", url });
-          setShowShareActions(false);
-          return;
-        } catch {
-          // User cancelled or native share unavailable
-        }
+      const data = await res.json();
+      const token = data?.share?.token || data?.token;
+      const url = token ? `${window.location.origin}/share/${token}` : shareUrl;
+      const canonicalUrl = data?.share_links?.canonical_url || url;
+      if (canonicalUrl) setShareUrl(canonicalUrl);
+
+      let normalizedTargets = normalizeShareTargets(data?.share_links?.targets || data?.targets);
+      if (!normalizedTargets.length && token) {
+        normalizedTargets = await fetchTargetsByToken(token);
       }
 
+      setShareTargets(normalizedTargets);
+      setTotalShares((prev) => (typeof data?.total_shares === "number" ? data.total_shares : prev + 1));
       setShowShareActions(true);
+
+      if (openNativeIfAvailable && normalizedTargets.length) {
+        const nativeTarget = normalizedTargets.find((item) => item.platform === "native");
+        if (nativeTarget) {
+          await openShareTarget(nativeTarget);
+        }
+      }
     } catch {
       toast.error("Failed to generate share link.");
     } finally {
       setShareLoading(false);
     }
+  }, [contentId, contentType, fetchTargetsByToken, openShareTarget, shareLoading, shareMessage, shareMode, sharePlatform, shareUrl]);
+
+  // ── share ────────────────────────────────────────────────────────────────
+  const handleShare = async () => {
+    await requestShareLinks({ mode: shareMode, platform: sharePlatform, message: shareMessage, openNativeIfAvailable: true });
   };
 
   return (
@@ -557,31 +695,55 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
       {/* Share actions */}
       {showShareActions && shareUrl && (
         <div className="border-t border-gray-100 px-4 py-3">
-          <p className="text-xs text-gray-500 mb-2">Share this link</p>
+          <p className="text-xs text-gray-500 mb-2">Share this content</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+            <select
+              value={shareMode}
+              onChange={(e) => setShareMode(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white"
+            >
+              {ALLOWED_SHARE_MODES.map((mode) => (
+                <option key={mode} value={mode}>{normalizePlatformLabel(mode)}</option>
+              ))}
+            </select>
+            <select
+              value={sharePlatform}
+              onChange={(e) => setSharePlatform(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white"
+            >
+              {ALLOWED_SHARE_PLATFORMS.map((platform) => (
+                <option key={platform} value={platform}>{normalizePlatformLabel(platform)}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => requestShareLinks({ mode: shareMode, platform: sharePlatform, message: shareMessage })}
+              disabled={shareLoading}
+              className="px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:bg-gray-300"
+            >
+              {shareLoading ? "Loading..." : "Refresh targets"}
+            </button>
+          </div>
+          <input
+            value={shareMessage}
+            onChange={(e) => setShareMessage(e.target.value)}
+            placeholder="Optional share message"
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3"
+          />
           <div className="flex flex-wrap gap-2">
+            {shareTargets.map((target) => (
+              <button
+                key={target.id}
+                onClick={() => openShareTarget(target)}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
+              >
+                {target.platform === "linkedin" ? <Linkedin size={14} /> : null}
+                {target.platform === "instagram" ? <Instagram size={14} /> : null}
+                {target.platform === "generic" ? <Copy size={14} /> : null}
+                {target.label || `${normalizePlatformLabel(target.platform)} ${normalizePlatformLabel(target.mode)}`}
+              </button>
+            ))}
             <button
-              onClick={() => openShareTarget("whatsapp")}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-green-50 text-green-700 hover:bg-green-100 text-sm"
-            >
-              <span className="font-semibold">WA</span>
-              WhatsApp
-            </button>
-            <button
-              onClick={() => openShareTarget("linkedin")}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm"
-            >
-              <Linkedin size={14} />
-              LinkedIn
-            </button>
-            <button
-              onClick={() => openShareTarget("instagram")}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-pink-50 text-pink-700 hover:bg-pink-100 text-sm"
-            >
-              <Instagram size={14} />
-              Instagram
-            </button>
-            <button
-              onClick={() => openShareTarget("copy")}
+              onClick={() => openShareTarget({ id: "copy", platform: "generic", mode: "copy", label: "Copy link", url: shareUrl })}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
