@@ -87,7 +87,7 @@ const Birthday = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
-        <p className="text-gray-400 text-sm">Loading birthdays...</p>
+        <p className="text-gray-400 text-sm">Loading birthdays…</p>
       </div>
     </div>
   );
@@ -106,51 +106,52 @@ const Birthday = () => {
     const genderBadge = getGenderBadge(user?.gender);
 
     return (
-      <div
-        onClick={() => navigate(`/admin/members/${user.username}`)}
-        className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-      >
-        <div className="relative w-11 h-11 flex-shrink-0">
-          {user.profile_photo ? (
-            <img
-              src={`https://api.karpagamalumni.in${user.profile_photo}`}
-              alt={displayName}
-              className="w-11 h-11 rounded-full object-cover ring-2 ring-emerald-200"
-            />
-          ) : (
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-              <span className="text-white font-bold text-base">{displayName?.[0]?.toUpperCase()}</span>
-            </div>
-          )}
+    <div
+      onClick={() => navigate(`/admin/members/${user.username}`)}
+      className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+    >
+      <div className="relative w-11 h-11 flex-shrink-0">
+        {user.profile_photo ? (
           <img
-            src={genderBadge.iconUrl}
-            alt={genderBadge.label}
-            title={genderBadge.label}
-            className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-white bg-white shadow-sm"
+            src={`https://api.karpagamalumni.in${user.profile_photo}`}
+            alt={displayName}
+            className="w-11 h-11 rounded-full object-cover ring-2 ring-emerald-200"
           />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900 truncate">{displayName}</p>
+        ) : (
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+            <span className="text-white font-bold text-base">{displayName?.[0]?.toUpperCase()}</span>
           </div>
-          {hasNameParts && user.username && (
-            <p className="text-xs text-gray-500 truncate mt-0.5">@{user.username}</p>
-          )}
-          {showDays && (
-            <p className="text-xs text-emerald-600 font-medium mt-0.5">
-              {user.days_until_birthday === 0 ? "Today!" : `in ${user.days_until_birthday} day${user.days_until_birthday !== 1 ? "s" : ""}`}
-            </p>
-          )}
-        </div>
-        <span className="text-xs bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-full flex-shrink-0">
-          {new Date(user.date_of_birth).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-        </span>
+        )}
+        <img
+          src={genderBadge.iconUrl}
+          alt={genderBadge.label}
+          title={genderBadge.label}
+          className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-white bg-white shadow-sm"
+        />
       </div>
+      <div className="flex-1 min-w-0">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-gray-900 truncate">{displayName}</p>
+        </div>
+        {hasNameParts && user.username && (
+          <p className="text-xs text-gray-500 truncate mt-0.5">@{user.username}</p>
+        )}
+        {showDays && (
+          <p className="text-xs text-emerald-600 font-medium mt-0.5">
+            {user.days_until_birthday === 0 ? "🎂 Today!" : `in ${user.days_until_birthday} day${user.days_until_birthday !== 1 ? "s" : ""}`}
+          </p>
+        )}
+      </div>
+      <span className="text-xs bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-full flex-shrink-0">
+        {new Date(user.date_of_birth).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+      </span>
+    </div>
     );
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      {/* ── Sticky header ── */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-2">
           <span className="text-xl">🎂</span>
@@ -159,6 +160,7 @@ const Birthday = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        {/* ── Calendar + selected date ── */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-50">
             <h2 className="text-sm font-bold text-gray-700">Calendar</h2>
@@ -199,6 +201,7 @@ const Birthday = () => {
           </div>
         </section>
 
+        {/* ── Upcoming birthdays feed ── */}
         <section>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-2 h-2 bg-gray-300 rounded-full" />

@@ -1,40 +1,19 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
-  MoreVertical,
-  MapPin,
-  Share2,
-  Trash2,
-  Edit,
-  X,
-  Save,
-  Upload,
-  Calendar,
-  DollarSign,
-  Users,
-  MessageCircle,
-  Heart,
-  RefreshCw,
-  Image, // Add Image icon for placeholder
+  MoreHorizontal, MapPin, Trash2, Edit, X, Save, Upload, Calendar, DollarSign,
+  Briefcase, ChevronLeft, ChevronRight, Image as ImageIcon, Users,
 } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
-
-const COLORS = {
-  primary: "#059669", // green-600
-  text: "#1f2937",
-};
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
-// ImageSlider component
 const ImageSlider = ({ images }) => {
   const [idx, setIdx] = useState(0);
   return (
     // Removed 'aspect-video', added 'max-h-[80vh]' and flexbox centering
-    <div className="relative w-full bg-gray-100 max-h-[80vh] flex items-center justify-center overflow-hidden">
+    <div className="relative w-full bg-gray-100 max-h-[70vh] flex items-center justify-center overflow-hidden">
       <img 
         src={`${MEDIA_BASE_URL}${images[idx].image}`} 
         alt="Job" 
@@ -59,18 +38,6 @@ const ImageSlider = ({ images }) => {
           </div>
         </>
       )}
-    </div>
-  );
-};
-
-// Add PlaceholderImage component
-const PlaceholderImage = () => {
-  return (
-    <div className="relative w-full h-80 bg-gray-100 rounded-xl overflow-hidden mb-6 flex items-center justify-center">
-      <div className="text-center">
-        <Image size={48} className="text-gray-300 mx-auto mb-2" />
-        <p className="text-gray-400 text-sm font-medium">No Image Available</p>
-      </div>
     </div>
   );
 };
@@ -285,33 +252,16 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
   );
 };
 
-// JobItem Component with menu
-const JobItem = ({ item, onDelete, onUpdate }) => {
-  const [showComments, setShowComments] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+const JobCard = ({ item, onDelete, onUpdate }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleEdit = () => {
-    setShowMenu(false);
-    setShowEditModal(true);
-  };
-
-  const handleDelete = () => {
-    setShowMenu(false);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await onDelete(item.id);
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-    }
+  const doDelete = async () => {
+    setDeleting(true);
+    try { await onDelete(item.id); } finally { setDeleting(false); setConfirmDelete(false); }
   };
 
   const handleUpdate = async (jobId, updatedFields) => {
@@ -323,33 +273,29 @@ const JobItem = ({ item, onDelete, onUpdate }) => {
     }
   };
 
+  const handleEdit = () => {
+    setShowMenu(false);
+    setShowEditModal(true);
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden hover:shadow-xl transition-all duration-300">
-      {/* Post Header */}
-      <div className="flex items-center justify-between p-6 pb-4">
-        <div className="flex items-center space-x-4">
-          {item.user.profile_photo && (
-            <img
-              src={
-                item.user.profile_photo.startsWith("http")
-                  ? item.user.profile_photo
-                  : `${MEDIA_BASE_URL}${item.user.profile_photo}`
-              }
-              alt="Profile"
-              className="w-12 h-12 rounded-full bg-gray-200 ring-2 ring-green-100"
-            />
+    <div className="bg-white border border-gray-100 h rounded-2xl shadow-sm overflow-hidden">
+      {/* Post header */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          {item.user?.profile_photo ? (
+            <img src={item.user.profile_photo.startsWith("http") ? item.user.profile_photo : `${MEDIA_BASE_URL}${item.user.profile_photo}`}
+              alt="" className="w-9 h-9 rounded-full object-cover ring-2 ring-emerald-100" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center">
+              <span className="text-emerald-700 font-bold text-sm">{item.user?.first_name?.[0]}</span>
+            </div>
           )}
           <div>
-            <p className="font-semibold text-gray-900 text-lg">
-              {item.user.first_name} {item.user.last_name}
-            </p>
-            <p className="text-gray-500 text-sm flex items-center">
-              <Calendar size={14} className="mr-1" />
-              {new Date(item.posted_on).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+            <p className="text-sm font-bold text-gray-900">{item.user?.first_name} {item.user?.last_name}</p>
+            <p className="text-xs text-gray-400 flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {new Date(item.posted_on).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </p>
           </div>
         </div>
@@ -357,130 +303,64 @@ const JobItem = ({ item, onDelete, onUpdate }) => {
           {isUpdating && (
             <div className="absolute -left-2 -top-2 w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
           )}
-          <button
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
-            onClick={() => setShowMenu(!showMenu)}
-          >
-            <MoreVertical size={20} className="text-gray-600" />
+          <button onClick={() => setShowMenu(!showMenu)} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
+            <MoreHorizontal className="w-5 h-5 text-gray-500" />
           </button>
-
-          {/* Menu Popup */}
           {showMenu && (
-            <div className="absolute right-0 top-12 bg-white border border-gray-200 rounded-xl shadow-lg z-20 w-40 overflow-hidden">
-              <button
-                className="flex items-center w-full px-4 py-3 text-left hover:bg-green-50 text-green-700 transition-colors duration-200"
-                onClick={handleEdit}
-              >
-                <Edit size={16} className="mr-3" />
-                Edit
+            <div className="absolute right-0 top-9 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 w-40 overflow-hidden py-1">
+              <button onClick={handleEdit}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 gap-2">
+                <Edit className="w-4 h-4" /> Edit
               </button>
-              <button
-                className="flex items-center w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 transition-colors duration-200"
-                onClick={handleDelete}
-              >
-                <Trash2 size={16} className="mr-3" />
-                Delete
+              <button onClick={() => { setShowMenu(false); setConfirmDelete(true); }}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 gap-2">
+                <Trash2 className="w-4 h-4" /> Delete
               </button>
-              <button
-                className="flex items-center w-full px-4 py-3 text-left hover:bg-gray-50 text-gray-600 transition-colors duration-200"
-                onClick={() => setShowMenu(false)}
-              >
-                <X size={16} className="mr-3" />
-                Cancel
+              <button onClick={() => setShowMenu(false)}
+                className="flex items-center w-full px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 gap-2">
+                <X className="w-4 h-4" /> Cancel
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Delete Confirmation */}
-      {showDeleteConfirm && (
-        <div className="mx-6 mb-4 bg-red-50 border border-red-200 rounded-xl p-6">
-          <h4 className="text-red-800 font-semibold mb-2">Delete Job Post</h4>
-          <p className="text-red-700 mb-4">
-            Are you sure you want to delete this job post? This action cannot be
-            undone.
-          </p>
-          <div className="flex space-x-3">
-            <button
-              className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
-              onClick={() => setShowDeleteConfirm(false)}
-              disabled={isDeleting}
-            >
-              Cancel
-            </button>
-            <button
-              className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors duration-200 font-medium"
-              onClick={confirmDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
+      {/* Image */}
+      {item.images && item.images.length > 0 ? (
+        <ImageSlider images={item.images} />
+      ) : (
+        <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
+          <ImageIcon className="w-12 h-12 text-gray-300" />
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="px-4 py-3 space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="text-sm font-bold text-gray-900">{item.company_name}</h3>
+          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">{item.role}</span>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
+          {item.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-emerald-500" />{item.location}</span>}
+          {item.salary_range && <span className="flex items-center gap-1"><DollarSign className="w-3 h-3 text-emerald-500" />{item.salary_range}</span>}
+          {item.job_type && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3 text-emerald-500" />{item.job_type}</span>}
+        </div>
+        {item.description && <p className="text-xs text-gray-600 line-clamp-3">{item.description}</p>}
+      </div>
+
+      {/* Delete confirm */}
+      {confirmDelete && (
+        <div className="mx-4 mb-4 p-4 bg-red-50 border border-red-100 rounded-xl">
+          <p className="text-sm font-semibold text-red-800 mb-1">Delete this job post?</p>
+          <p className="text-xs text-red-600 mb-3">This action cannot be undone.</p>
+          <div className="flex gap-2">
+            <button onClick={() => setConfirmDelete(false)} className="flex-1 py-1.5 text-sm bg-white border border-gray-200 rounded-xl text-gray-600 font-medium">Cancel</button>
+            <button onClick={doDelete} disabled={deleting} className="flex-1 py-1.5 text-sm bg-red-600 text-white rounded-xl font-medium disabled:opacity-50">
+              {deleting ? "Deleting…" : "Delete"}
             </button>
           </div>
         </div>
       )}
-
-      {/* Job Content */}
-      <div className="px-6">
-        {/* Company Name & Role */}
-        <div className="mb-4">
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            {item.company_name}
-          </h3>
-          <div className="flex items-center text-green-600 mb-2">
-            <div className="bg-green-100 px-3 py-1 rounded-full">
-              <span className="font-medium">{item.role}</span>
-            </div>
-            <span className="mx-3 text-gray-400">•</span>
-            <div className="flex items-center text-gray-600">
-              <MapPin size={16} className="mr-1" />
-              <span>{item.location}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Job Images - Always show either images or placeholder */}
-        {item.images && item.images.length > 0 ? (
-          item.images.length === 1 ? (
-            <div className="mb-6">
-              <img
-                src={`${MEDIA_BASE_URL}${item.images[0].image}`}
-                alt="Job"
-                className="w-full h-80 object-cover rounded-xl shadow-sm"
-              />
-            </div>
-          ) : (
-            <ImageSlider images={item.images} baseUrl={BASE_URL} />
-          )
-        ) : (
-          <PlaceholderImage />
-        )}
-
-        {/* Description */}
-        <div className="mb-6">
-          <p className="text-gray-700 leading-relaxed text-base">
-            {item.description}
-          </p>
-        </div>
-
-        {/* Job Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="flex items-center bg-green-50 p-4 rounded-xl">
-            <DollarSign size={20} className="text-green-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Salary Range</p>
-              <p className="font-semibold text-gray-900">{item.salary_range}</p>
-            </div>
-          </div>
-          <div className="flex items-center bg-blue-50 p-4 rounded-xl">
-            <Users size={20} className="text-blue-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Job Type</p>
-              <p className="font-semibold text-gray-900">{item.job_type}</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <EditJobModal
         job={item}
@@ -495,48 +375,23 @@ const JobItem = ({ item, onDelete, onUpdate }) => {
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchJobs = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("Token");
-      if (!token) throw new Error("Token not found");
-
-      const data = await getMyPosts(token);
-      setJobs(data.jobs || []);
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchJobs();
+    (async () => {
+      try {
+        const token = localStorage.getItem("Token");
+        const data = await getMyPosts(token);
+        setJobs(data.jobs || []);
+      } catch { } finally { setLoading(false); }
+    })();
   }, []);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchJobs();
-    setRefreshing(false);
-  };
-
-  const deleteJob = async (jobId) => {
-    try {
-      const token = localStorage.getItem("Token");
-      if (!token) throw new Error("Token not found");
-
-      const response = await fetch(`${BASE_URL}/jobs/${jobId}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
-
-      setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
-    } catch (error) {
-      toast.error("Failed to delete job. Please try again.");
-    }
+  const deleteJob = async (id) => {
+    const token = localStorage.getItem("Token");
+    const res = await fetch(`${BASE_URL}/jobs/${id}/`, { method: "DELETE", headers: { Authorization: `Token ${token}` } });
+    if (!res.ok) { toast.error("Failed to delete job."); return; }
+    setJobs((p) => p.filter((j) => j.id !== id));
+    toast.success("Job deleted!");
   };
 
   const updateJob = async (jobId, updatedFields) => {
@@ -606,49 +461,33 @@ const Jobs = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-96 bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading your job posts...</p>
+  if (loading) return (
+    <div className="space-y-3 p-4">
+      {[1, 2].map((i) => (
+        <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm animate-pulse">
+          <div className="flex items-center gap-3 p-4"><div className="w-9 h-9 bg-gray-200 rounded-full" /><div className="flex-1 space-y-1"><div className="h-3 bg-gray-200 rounded w-1/3" /><div className="h-2 bg-gray-100 rounded w-1/4" /></div></div>
+          <div className="w-full aspect-video bg-gray-200" />
+          <div className="p-4 space-y-2"><div className="h-3 bg-gray-200 rounded w-1/2" /><div className="h-2 bg-gray-100 rounded w-3/4" /></div>
         </div>
+      ))}
+    </div>
+  );
+
+  if (jobs.length === 0) return (
+    <div className="flex flex-col items-center justify-center py-20 px-4">
+      <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+        <Users className="w-8 h-8 text-emerald-300" />
       </div>
-    );
-  }
+      <p className="text-gray-500 font-medium">No job posts yet</p>
+      <p className="text-gray-400 text-sm mt-1 text-center">Your job contributions will appear here.</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {jobs.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="bg-white rounded-2xl shadow-lg p-12 max-w-md mx-auto">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users size={32} className="text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No Job Posts Yet
-              </h3>
-              <p className="text-gray-600">
-                You haven't created any job posts yet. Start contributing to
-                help others find opportunities!
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {jobs.map((job) => (
-              <JobItem
-                key={job.id}
-                item={job}
-                onDelete={deleteJob}
-                onUpdate={updateJob}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="space-y-3 p-0">
+      {jobs.map((job) => (
+        <JobCard key={job.id} item={job} onDelete={deleteJob} onUpdate={updateJob} />
+      ))}
     </div>
   );
 };

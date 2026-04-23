@@ -138,7 +138,7 @@ const Birthday = () => {
         )}
         {showDays && (
           <p className="text-xs text-emerald-600 font-medium mt-0.5">
-            {user.days_until_birthday === 0 ? "Today!" : `in ${user.days_until_birthday} day${user.days_until_birthday !== 1 ? "s" : ""}`}
+            {user.days_until_birthday === 0 ? "🎂 Today!" : `in ${user.days_until_birthday} day${user.days_until_birthday !== 1 ? "s" : ""}`}
           </p>
         )}
       </div>
@@ -160,6 +160,7 @@ const Birthday = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        {/* ── Calendar + selected date ── */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-50">
             <h2 className="text-sm font-bold text-gray-700">Calendar</h2>

@@ -35,7 +35,7 @@ export default function AlumniHeader() {
     { path: "/alumni/birthday", icon: faBirthdayCake, label: "Birthdays" },
     { path: "/alumni/business", icon: faBuilding, label: "Business" },
     { path: "/alumni/my-profile", icon: faUser, label: "Profile" },
-    { path: "/alumni/my-contribution", icon: faHandHoldingHeart, label: "Contribute" },
+    { path: "/alumni/my-contribution", icon: faHandHoldingHeart, label: "My Uploads" },
     { path: "/alumni/chat", icon: faComments, label: "Chat" },
   ];
 

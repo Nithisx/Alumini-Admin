@@ -5,20 +5,20 @@ import { faSearch, faNewspaper, faTag } from "@fortawesome/free-solid-svg-icons"
 import AddNewsModal from "./Addnewsmodel";
 import EngagementPanel from "../../Shared/EngagementPanel";
 
-const BASE_URL = "https://api.karpagamalumni.in";
 const TOKEN = () => localStorage.getItem("Token");
+const BASE_URL = "https://api.karpagamalumni.in";
 
 const AuthorizedImage = ({ url, alt, className }) => {
   const [imageUrl, setImageUrl] = useState(null);
+  const token = TOKEN();
   useEffect(() => {
     let isMounted = true;
-    const token = TOKEN();
     fetch(url, { headers: { Authorization: token ? `Token ${token}` : "" } })
       .then((r) => r.blob())
       .then((blob) => { if (isMounted) setImageUrl(URL.createObjectURL(blob)); })
       .catch(() => {});
     return () => { isMounted = false; };
-  }, [url]);
+  }, [url, token]);
   return imageUrl ? (
     <img src={imageUrl} alt={alt} className={className} />
   ) : (
@@ -57,7 +57,9 @@ export default function NewsList() {
   useEffect(() => {
     const token = TOKEN();
     if (!token) return;
-    fetch(`${BASE_URL}/api/v1/profile/`, { headers: { Authorization: `Token ${token}` } })
+    fetch(`${BASE_URL}/api/v1/profile/`, {
+      headers: { Authorization: `Token ${token}` },
+    })
       .then((r) => r.json())
       .then((d) => {
         setCurrentUserId(d?.id ?? null);
@@ -113,6 +115,7 @@ export default function NewsList() {
             </button>
           </div>
 
+          {/* Category pills */}
           {categories.length > 1 && (
             <div className="flex gap-2 mt-2 overflow-x-auto pb-0.5 no-scrollbar">
               {categories.map((cat) => (

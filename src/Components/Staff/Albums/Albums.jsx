@@ -27,14 +27,22 @@ const AlbumsPage = () => {
   const [editUploadedFile, setEditUploadedFile] = useState(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
+  const [currentUserId, setCurrentUserId] = useState(null);
+
   useEffect(() => {
     (async () => {
       try {
         const token = localStorage.getItem("Token");
-        const r = await axios.get("https://api.karpagamalumni.in/api/v1/albums/", {
-          headers: { Authorization: `Token ${token}` },
-        });
-        setAlbums(Array.isArray(r.data) ? r.data : []);
+        const [albumsRes, profileRes] = await Promise.all([
+          axios.get("https://api.karpagamalumni.in/api/v1/albums/", {
+            headers: { Authorization: `Token ${token}` },
+          }),
+          axios.get("https://api.karpagamalumni.in/api/v1/profile/", {
+            headers: { Authorization: `Token ${token}` },
+          }),
+        ]);
+        setAlbums(Array.isArray(albumsRes.data) ? albumsRes.data : []);
+        if (profileRes.data?.id) setCurrentUserId(profileRes.data.id);
       } catch {
         toast.error("Could not load albums.");
         setAlbums([]);
@@ -51,6 +59,11 @@ const AlbumsPage = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const isOwner = (album) => {
+    const ownerId = album.created_by ?? album.owner ?? album.user?.id ?? album.user_id;
+    return currentUserId && ownerId && currentUserId === parseInt(ownerId, 10);
+  };
 
   const doDeleteAlbum = async (id) => {
     try {
@@ -155,7 +168,7 @@ const AlbumsPage = () => {
       />
 
       {/* ── Sticky header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-14 z-30">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Albums</h1>
@@ -207,79 +220,84 @@ const AlbumsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {filtered.map((album) => (
-              <div
-                key={album.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-              >
+            {filtered.map((album) => {
+              const canManage = isOwner(album);
+              return (
                 <div
-                  onClick={() => navigate(`/staff/albums/${album.id}`)}
-                  className="relative aspect-[4/3] cursor-pointer group overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100"
+                  key={album.id}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
-                  {album.cover_image ? (
-                    <img
-                      src={`https://api.karpagamalumni.in${album.cover_image}`}
-                      alt={album.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FontAwesomeIcon icon={faFolder} className="text-5xl text-amber-300" />
-                    </div>
-                  )}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-
-                <div className="flex items-center justify-between px-3 py-2">
                   <div
                     onClick={() => navigate(`/staff/albums/${album.id}`)}
-                    className="flex-1 min-w-0 cursor-pointer"
+                    className="relative aspect-[4/3] cursor-pointer group overflow-hidden bg-gray-50 border-b border-gray-100"
                   >
-                    <p className="text-sm font-semibold text-gray-800 truncate">{album.title}</p>
-                    {album.posted_on && (
-                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="text-[10px]" />
-                        {fmt(album.posted_on)}
-                      </p>
+                    {album.cover_image ? (
+                      <img
+                        src={`https://api.karpagamalumni.in${album.cover_image}`}
+                        alt={album.title}
+                        className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100">
+                        <FontAwesomeIcon icon={faFolder} className="text-5xl text-amber-300" />
+                      </div>
                     )}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <div
-                    className="relative flex-shrink-0 ml-1"
-                    ref={openMenuId === album.id ? menuRef : null}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => setOpenMenuId(openMenuId === album.id ? null : album.id)}
-                      className="w-7 h-7 text-gray-400 hover:text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
+
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div
+                      onClick={() => navigate(`/staff/albums/${album.id}`)}
+                      className="flex-1 min-w-0 cursor-pointer"
                     >
-                      <FontAwesomeIcon icon={faEllipsisV} className="text-xs" />
-                    </button>
-                    {openMenuId === album.id && (
-                      <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{album.title}</p>
+                      {album.posted_on && (
+                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                          <FontAwesomeIcon icon={faCalendarAlt} className="text-[10px]" />
+                          {fmt(album.posted_on)}
+                        </p>
+                      )}
+                    </div>
+                    {canManage && (
+                      <div
+                        className="relative flex-shrink-0 ml-1"
+                        ref={openMenuId === album.id ? menuRef : null}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
-                          onClick={() => openEditModal(album)}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                          onClick={() => setOpenMenuId(openMenuId === album.id ? null : album.id)}
+                          className="w-7 h-7 text-gray-400 hover:text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
                         >
-                          <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
+                          <FontAwesomeIcon icon={faEllipsisV} className="text-xs" />
                         </button>
-                        <button
-                          onClick={() => { setConfirmDelete(album.id); setOpenMenuId(null); }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-                        >
-                          <FontAwesomeIcon icon={faTrash} className="text-xs" /> Delete
-                        </button>
-                        <button
-                          onClick={() => setOpenMenuId(null)}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
-                        >
-                          Cancel
-                        </button>
+                        {openMenuId === album.id && (
+                          <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
+                            <button
+                              onClick={() => openEditModal(album)}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                            >
+                              <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
+                            </button>
+                            <button
+                              onClick={() => { setConfirmDelete(album.id); setOpenMenuId(null); }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                            >
+                              <FontAwesomeIcon icon={faTrash} className="text-xs" /> Delete
+                            </button>
+                            <button
+                              onClick={() => setOpenMenuId(null)}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

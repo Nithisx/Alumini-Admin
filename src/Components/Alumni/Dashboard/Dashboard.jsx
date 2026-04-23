@@ -116,6 +116,36 @@ const HomePage = () => {
   );
 
   const formatDate = (d) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(d));
+  const formatDateTime = (d) => {
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return "TBA";
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  };
+
+  const getGoogleCalendarUrl = (event) => {
+    const startDate = new Date(event.from_date_time);
+    if (Number.isNaN(startDate.getTime())) return null;
+
+    const endCandidate = event.end_date_time ? new Date(event.end_date_time) : null;
+    const endDate = endCandidate && !Number.isNaN(endCandidate.getTime()) ? endCandidate : startDate;
+    const toGoogleDate = (date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: event.title || "Alumni Event",
+      dates: `${toGoogleDate(startDate)}/${toGoogleDate(endDate)}`,
+      details: event.description || "",
+      location: event.venue || "",
+    });
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
 
   const stats = [
     { label: "Members", value: data.total_users, color: "bg-emerald-500", path: "/alumni/members/", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
@@ -265,35 +295,58 @@ const HomePage = () => {
             </button>
           </div>
           <div className={DASHBOARD_THEME.eventList}>
-            {Array.isArray(data.upcoming_events) && data.upcoming_events.map((event) => (
-              <div
-                key={event.id}
-                onClick={() => navigate(`/alumni/event/${event.id}`)}
-                className={DASHBOARD_THEME.eventCard}
-              >
-                {event.images?.[0]?.image && (
-                  <img src={`${MEDIA_BASE_URL}${event.images[0].image}`} alt={event.title}
-                    className="w-full h-auto max-h-[80vh] object-contain bg-gray-50"
-                  />
-                )}
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-bold text-gray-900 line-clamp-2 flex-1">{event.title}</h3>
-                    <span className="text-xs bg-violet-50 text-violet-700 font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
-                      {formatDate(event.from_date_time)}
-                    </span>
-                  </div>
-                  {event.venue && (
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <p className="text-xs text-gray-500 truncate">{event.venue}</p>
-                    </div>
+            {Array.isArray(data.upcoming_events) && data.upcoming_events.map((event) => {
+              const calendarUrl = getGoogleCalendarUrl(event);
+
+              return (
+                <div
+                  key={event.id}
+                  onClick={() => navigate(`/alumni/event/${event.id}`)}
+                  className={DASHBOARD_THEME.eventCard}
+                >
+                  {event.images?.[0]?.image && (
+                    <img src={`${MEDIA_BASE_URL}${event.images[0].image}`} alt={event.title}
+                      className="w-full h-auto max-h-[80vh] object-contain bg-gray-50"
+                    />
                   )}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-bold text-gray-900 line-clamp-2 flex-1">{event.title}</h3>
+                      <span className="text-xs bg-violet-50 text-violet-700 font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
+                        {formatDate(event.from_date_time)}
+                      </span>
+                    </div>
+                    {event.venue && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <p className="text-xs text-gray-500 truncate">{event.venue}</p>
+                      </div>
+                    )}
+                    <div className="mt-3 flex flex-col gap-1 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+                      <p>
+                        From: <span className="font-medium text-gray-700">{formatDateTime(event.from_date_time)}</span>
+                      </p>
+                      <p>
+                        To: <span className="font-medium text-gray-700">{formatDateTime(event.end_date_time)}</span>
+                      </p>
+                    </div>
+                    {calendarUrl && (
+                      <a
+                        href={calendarUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-3 inline-flex items-center rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                      >
+                        Add to Google Calendar
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

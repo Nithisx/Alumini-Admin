@@ -477,7 +477,7 @@ const JobFeed = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="hidden lg:block w-72 flex-shrink-0 space-y-4 sticky top-20">
+        <div className="hidden lg:block w-72 flex-shrink-0 space-y-4 sticky top-20 self-start">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-semibold text-gray-800 mb-1 text-sm">Job Feed</h3>
             <p className="text-xs text-gray-500">Browse and share career opportunities with the alumni community.</p>
@@ -497,16 +497,16 @@ const JobFeed = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="add-job-title"
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[92vh] overflow-y-auto"
           >
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-green-100">
-              <h3 id="add-job-title" className="text-2xl font-bold text-green-700">
+            <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-green-100">
+              <h3 id="add-job-title" className="text-lg sm:text-2xl font-bold text-green-700">
                 Create New Job Post
               </h3>
               <button
@@ -518,7 +518,7 @@ const JobFeed = () => {
             </div>
 
             <div>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 text-sm">
                     {error}
@@ -720,7 +720,7 @@ const JobFeed = () => {
                 </div>
               </div>
 
-              <div className="p-6 border-t bg-gray-50 flex justify-end gap-4">
+              <div className="p-4 sm:p-6 border-t bg-gray-50 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={closeModal}

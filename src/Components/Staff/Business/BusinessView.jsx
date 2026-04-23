@@ -261,7 +261,7 @@ const BusinessView = () => {
         )}
 
         {/* Engagement: like / comment / share */}
-        <div className="border-t border-gray-100 -mx-4 sm:-mx-6 mt-4">
+        <div className="border-t border-gray-100 -mx-6 mt-4">
           <EngagementPanel
             contentType="businesses"
             contentId={id}

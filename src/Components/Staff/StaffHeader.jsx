@@ -48,7 +48,7 @@ export default function StaffHeader() {
     { path: "/staff/birthday", icon: faBirthdayCake, label: "Birthdays" },
     { path: "/staff/business", icon: faBuilding, label: "Business" },
     { path: "/staff/my-profile", icon: faUser, label: "Profile" },
-    { path: "/staff/my-contribution", icon: faHandHoldingHeart, label: "Contribute" },
+    { path: "/staff/my-contribution", icon: faHandHoldingHeart, label: "My Uploads" },
     { path: "/staff/chat", icon: faComments, label: "Chat" },
   ];
 

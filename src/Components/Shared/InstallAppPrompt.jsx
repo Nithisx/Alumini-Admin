@@ -4,6 +4,103 @@ import { toast } from "react-toastify";
 
 const INSTALL_TOAST_ID = "install-app-notification";
 
+const INSTALL_TOAST_STYLES = `
+  .install-toast {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+  .install-toast-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .install-toast-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 6px 0;
+    line-height: 1.3;
+  }
+  .install-toast-subtitle {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .install-toast-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    width: 100%;
+  }
+  .install-toast-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+    line-height: 1;
+    flex: 1;
+  }
+  .install-toast-btn:active {
+    transform: scale(0.97);
+  }
+  .install-toast-btn-primary {
+    background-color: #1e7e34;
+    color: #ffffff;
+  }
+  .install-toast-btn-primary:hover {
+    background-color: #166228;
+  }
+  .install-toast-btn-secondary {
+    background-color: #ffffff;
+    color: #1e7e34;
+    border: 1.5px solid #1e7e34;
+  }
+  .install-toast-btn-secondary:hover {
+    background-color: #f0faf3;
+  }
+  .Toastify__toast-container--top-right {
+    top: 20px;
+    right: 20px;
+  }
+  .Toastify__toast {
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 16px;
+    min-width: 320px;
+    max-width: 400px;
+    background: #ffffff !important;
+  }
+  .Toastify__toast--info {
+    background: #ffffff !important;
+    color: #1a1a1a;
+    border-left: 6px solid #1e7e34 !important;
+  }
+  .Toastify__toast-body {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+  .Toastify__close-button {
+    color: #999;
+    opacity: 0.6;
+    align-self: flex-start;
+    margin-top: -4px;
+    margin-right: -4px;
+  }
+  .Toastify__close-button:hover {
+    opacity: 1;
+  }
+`;
+
 const isStandaloneDisplay = () =>
   window.matchMedia("(display-mode: standalone)").matches ||
   window.navigator.standalone === true ||
@@ -21,6 +118,17 @@ export default function InstallAppPrompt() {
     () => isInstallRoute(pathname) && !isInstalled && Boolean(deferredInstallPrompt),
     [pathname, isInstalled, deferredInstallPrompt]
   );
+
+  // Inject styles once on mount
+  useEffect(() => {
+    const styleId = "install-toast-styles";
+    if (document.getElementById(styleId)) return;
+    const styleEl = document.createElement("style");
+    styleEl.id = styleId;
+    styleEl.textContent = INSTALL_TOAST_STYLES;
+    document.head.appendChild(styleEl);
+    return () => document.getElementById(styleId)?.remove();
+  }, []);
 
   useEffect(() => {
     const displayModeQuery = window.matchMedia("(display-mode: standalone)");
@@ -107,6 +215,7 @@ export default function InstallAppPrompt() {
         autoClose: false,
         closeOnClick: false,
         draggable: false,
+        icon: false,
       }
     );
   }, [shouldShowPrompt, deferredInstallPrompt]);

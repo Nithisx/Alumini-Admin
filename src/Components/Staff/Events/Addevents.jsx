@@ -156,22 +156,24 @@ const AddEvent = () => {
     <div className="relative min-h-screen bg-gray-50">
       <Events />
 
-      {/* Add button */}
+      {/* Add button — positioned above mobile bottom nav */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 h-14 w-14 lg:h-16 lg:w-16 rounded-full bg-green-600 text-white shadow-xl hover:bg-green-700 transform hover:scale-105 transition-all duration-200 flex items-center justify-center z-40"
+        className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 h-14 w-14 lg:h-16 lg:w-16 rounded-full bg-green-600 text-white shadow-xl
+                   hover:bg-green-700 transform hover:scale-105 transition-all duration-200
+                   flex items-center justify-center z-40"
         aria-label="Add new event"
       >
         <FontAwesomeIcon icon={faPlus} className="text-2xl" />
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="add-event-title"
-            className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
           >
             {/* Header */}
             <div className="px-4 sm:px-8 py-4 sm:py-6 bg-green-600 text-white flex justify-between items-center">
@@ -418,7 +420,7 @@ const AddEvent = () => {
             </div>
 
             {/* Footer */}
-            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-4">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}

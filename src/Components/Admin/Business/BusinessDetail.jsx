@@ -23,7 +23,7 @@ const BusinessDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const businessListPath = '/admin/business';
-  const isNewBusiness = !id || id === 'add';
+  const isNewBusiness = id === 'add';
 
   const [business, setBusiness] = useState({
     business_name: '',
@@ -162,7 +162,7 @@ const BusinessDetail = () => {
 
   const doDeleteImage = async (imageId) => {
     try {
-      await axios.delete(`${BASE_URL}/businesses/${id}/images/${imageId}/`, {
+      await axios.delete(`${BASE_URL}/businesses/${imageId}/images/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setImages(images.filter(image => image.id !== imageId));
@@ -248,7 +248,7 @@ const BusinessDetail = () => {
         }
 
         toast.success("Business created successfully!");
-        navigate(`/admin/business/view/${response.data.id}`);
+        navigate(`/staff/business/${response.data.id}`);
       } else {
         // Update existing business
         response = await axios.put(
@@ -286,7 +286,6 @@ const BusinessDetail = () => {
         }
 
         toast.success("Business updated successfully!");
-        navigate(`/admin/business/view/${id}`);
       }
     } catch (error) {
       toast.error("Error saving business. Please try again.");
@@ -812,7 +811,7 @@ const BusinessDetail = () => {
         <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => navigate('/admin/business')}
+            onClick={() => navigate('/staff/business')}
             className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
           >
             Cancel

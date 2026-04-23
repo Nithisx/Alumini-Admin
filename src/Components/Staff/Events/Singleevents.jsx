@@ -138,6 +138,25 @@ const SingleEvents = () => {
     });
   };
 
+  const getGoogleCalendarUrl = (eventData) => {
+    const startDate = new Date(eventData?.from_date_time);
+    if (Number.isNaN(startDate.getTime())) return null;
+
+    const endCandidate = eventData?.end_date_time ? new Date(eventData.end_date_time) : null;
+    const endDate = endCandidate && !Number.isNaN(endCandidate.getTime()) ? endCandidate : startDate;
+    const toGoogleDate = (date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: eventData?.title || "Alumni Event",
+      dates: `${toGoogleDate(startDate)}/${toGoogleDate(endDate)}`,
+      details: eventData?.description || "",
+      location: eventData?.venue || "",
+    });
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
+
   const handleGoBack = () => {
     if (window.history.state?.idx > 0) {
       navigate(-1);
@@ -146,6 +165,8 @@ const SingleEvents = () => {
 
     navigate('/staff/event');
   };
+
+  const calendarUrl = getGoogleCalendarUrl(event);
 
   return (
     <div className="min-h-screen bg-gray-100 pb-20 lg:pb-6">
@@ -296,6 +317,16 @@ const SingleEvents = () => {
                     </div>
                   </div>
                 </div>
+                {calendarUrl && (
+                  <a
+                    href={calendarUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="mt-4 inline-flex items-center rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    Add to Google Calendar
+                  </a>
+                )}
               </div>
 
               {/* Location */}

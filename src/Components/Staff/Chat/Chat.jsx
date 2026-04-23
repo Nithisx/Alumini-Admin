@@ -522,62 +522,61 @@ const Chat = () => {
 
   return (
     <div className="bg-gray-50 h-[calc(100vh-56px-56px)] lg:h-[calc(100vh-56px)]">
-      {/* ── Agreement modal ── */}
-      {showAgreement && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-          <div role="dialog" aria-modal="true" aria-labelledby="chat-agree-title"
-            className="bg-white w-full sm:max-w-lg rounded-3xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-100">
-              <h2 id="chat-agree-title" className="text-base font-bold text-gray-900">Chat Usage Agreement</h2>
-              <p className="text-gray-400 text-sm mt-0.5">Please read before continuing</p>
+    {/* ── Agreement modal ── */}
+    {showAgreement && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="chat-agree-title"
+          className="bg-white w-full sm:max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100">
+            <h2 id="chat-agree-title" className="text-base font-bold text-gray-900">Chat Usage Agreement</h2>
+            <p className="text-gray-400 text-sm mt-0.5">Please read before continuing</p>
+          </div>
+          <div className="px-6 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+            <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
+              <Eye className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-800">Messages Are Monitored</p>
+                <p className="text-emerald-700 text-xs mt-1">All messages are monitored by Administrators for safety and compliance.</p>
+              </div>
             </div>
-            <div className="px-6 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
-              <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
-                <Eye className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-emerald-800">Messages Are Monitored</p>
-                  <p className="text-emerald-700 text-xs mt-1">All messages are monitored by Administrators for safety and compliance.</p>
-                </div>
+            
+            {/* ── Updated Disclaimer Section ── */}
+            <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-3">
+              <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-red-800">Data Disclaimer</p>
+                <p className="text-red-700 text-xs mt-1">
+                  In case any issues arise during the use of the portal’s chat feature, we are not responsible for your data, content, or any consequences arising from the use of this chat service.
+                </p>
               </div>
-              
-              {/* ── Updated Disclaimer Section ── */}
-              <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-3">
-                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-red-800">Data Disclaimer</p>
-                  <p className="text-red-700 text-xs mt-1">
-                    In case any issues arise during the use of the portal’s chat feature, we are not responsible for your data, content, or any consequences arising from the use of this chat service.
-                  </p>
-                </div>
-              </div>
+            </div>
 
-              {/* ── Updated Bullet Points ── */}
-              <ul className="text-xs text-gray-500 space-y-1.5 px-1 mt-2">
-                {[
-                  "Your messages may be reviewed by administrators",
-                  "You are responsible for the content you share",
-                  "We are not liable for data, content, or chat-related consequences",
-                  "Use the chat responsibly and respectfully"
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-2">
-                    <span className="text-emerald-500 font-bold">✓</span>
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
-              <button onClick={handleDeclineAgreement} className="px-4 py-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-semibold">
-                Decline
-              </button>
-              <button onClick={handleAcceptAgreement} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition text-sm font-semibold shadow-sm">
-                I Agree & Continue
-              </button>
-            </div>
+            {/* ── Updated Bullet Points ── */}
+            <ul className="text-xs text-gray-500 space-y-1.5 px-1 mt-2">
+              {[
+                "Your messages may be reviewed by administrators",
+                "You are responsible for the content you share",
+                "We are not liable for data, content, or chat-related consequences",
+                "Use the chat responsibly and respectfully"
+              ].map((t) => (
+                <li key={t} className="flex items-start gap-2">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+            <button onClick={handleDeclineAgreement} className="px-4 py-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-semibold">
+              Decline
+            </button>
+            <button onClick={handleAcceptAgreement} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition text-sm font-semibold shadow-sm">
+              I Agree & Continue
+            </button>
           </div>
         </div>
-      )}
-
+      </div>
+    )}
       {/* ── Instagram DM layout ── */}
       <div className="flex h-full max-w-5xl mx-auto border-x border-gray-200 bg-white">
 

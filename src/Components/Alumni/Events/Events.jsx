@@ -87,6 +87,25 @@ export default function Events() {
     });
   };
 
+  const getGoogleCalendarUrl = (event) => {
+    const startDate = new Date(event?.from_date_time);
+    if (Number.isNaN(startDate.getTime())) return null;
+
+    const endCandidate = event?.end_date_time ? new Date(event.end_date_time) : null;
+    const endDate = endCandidate && !Number.isNaN(endCandidate.getTime()) ? endCandidate : startDate;
+    const toGoogleDate = (date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: event?.title || "Alumni Event",
+      dates: `${toGoogleDate(startDate)}/${toGoogleDate(endDate)}`,
+      details: event?.description || "",
+      location: event?.venue || "",
+    });
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
+
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const resolveEventId = (event) => {
@@ -149,6 +168,7 @@ export default function Events() {
             const imgPath = event.images?.[0]?.image;
             const imgUrl = imgPath ? `https://api.karpagamalumni.in${imgPath}` : null;
             const resolvedId = resolveEventId(event);
+            const calendarUrl = getGoogleCalendarUrl(event);
             
             return (
               <div
@@ -210,6 +230,18 @@ export default function Events() {
                         </div>
                       )}
                     </div>
+
+                    {calendarUrl && (
+                      <a
+                        href={calendarUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-3 inline-flex items-center rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                      >
+                        Add to Google Calendar
+                      </a>
+                    )}
                   </div>
                 </div>
 
