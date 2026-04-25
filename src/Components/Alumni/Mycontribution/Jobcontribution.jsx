@@ -295,7 +295,7 @@ const JobCard = ({ item, onDelete, onUpdate }) => {
             <p className="text-sm font-bold text-gray-900">{item.user?.first_name} {item.user?.last_name}</p>
             <p className="text-xs text-gray-400 flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              {new Date(item.posted_on).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              {new Date(item.posted_on).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
             </p>
           </div>
         </div>

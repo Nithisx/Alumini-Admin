@@ -146,7 +146,7 @@ const AlbumsPage = () => {
     setUploadedFile(null);
   };
 
-  const fmt = (d) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+  const fmt = (d) => d ? new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
 
   const filtered = searchTerm
     ? albums.filter(

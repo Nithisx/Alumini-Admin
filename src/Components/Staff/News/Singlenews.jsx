@@ -101,7 +101,7 @@ export default function SingleNews() {
   const formatDate = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
-    return d.toLocaleDateString("en-US", {
+    return d.toLocaleDateString(undefined, {
       day: "numeric",
       month: "long",
       year: "numeric",

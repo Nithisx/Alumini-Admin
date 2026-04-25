@@ -115,11 +115,11 @@ const HomePage = () => {
     </div>
   );
 
-  const formatDate = (d) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(d));
+  const formatDate = (d) => new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(d));
   const formatDateTime = (d) => {
     const date = new Date(d);
     if (Number.isNaN(date.getTime())) return "TBA";
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(undefined, {
       month: "short",
       day: "numeric",
       year: "numeric",

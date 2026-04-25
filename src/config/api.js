@@ -79,17 +79,47 @@ export const API_BUSINESS_COMMENT   = (id) => `${API_BASE}/businesses/comments/$
 export const API_BUSINESS_COMMENT_REPLIES = (commentId) => `${API_BASE}/businesses/comments/${commentId}/replies/`;
 export const API_BUSINESS_COMMENT_REPLY   = (id) => `${API_BASE}/businesses/comments/replies/${id}/`;
 
+// ── Chat ──────────────────────────────────────────────────────────────────────
+
+const CHAT_HOST = 'https://api.karpagamalumni.in';
+
+export const API_CHAT_ROOMS          = `${CHAT_HOST}/chat/rooms/`;
+export const API_CHAT_ROOM_MESSAGES  = (roomId) => `${CHAT_HOST}/chat/rooms/${roomId}/messages/`;
+export const API_CHAT_ROOM_MESSAGE   = (roomId, msgId) => `${CHAT_HOST}/chat/rooms/${roomId}/messages/${msgId}/`;
+export const API_CHAT_MARK_SEEN      = (roomId) => `${CHAT_HOST}/chat/rooms/${roomId}/seen/`;
+export const API_CHAT_SEARCH         = `${CHAT_HOST}/chat/search/`;
+export const API_CHAT_COMMUNITY      = `${CHAT_HOST}/chat/community/`;
+export const API_CHAT_ME             = `${CHAT_HOST}/chat/user/me/`;
+export const API_CHAT_PRESENCE       = (userId) => `${CHAT_HOST}/chat/presence/${userId}/`;
+export const API_CHAT_PRESENCE_BULK  = `${CHAT_HOST}/chat/presence/bulk/`;
+export const API_PORTAL_SHARE        = `${API_BASE}/share/portal/`;
+
+export const WS_CHAT_URL = (roomId, token) =>
+  `wss://api.karpagamalumni.in/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(token)}`;
+export const WS_COMMUNITY_URL = (token) =>
+  `wss://api.karpagamalumni.in/ws/community-chat/?token=${encodeURIComponent(token)}`;
+
 // Media helper — resolves a relative media path to a full URL
 export const getMediaUrl = (uri) => {
   if (!uri) return '';
+  const input = String(uri).trim();
+  if (!input) return '';
   if (
-    uri.startsWith('http://') ||
-    uri.startsWith('https://') ||
-    uri.startsWith('file://') ||
-    uri.startsWith('data:') ||
-    uri.startsWith('blob:')
-  ) return uri;
-  if (uri.startsWith('//')) return `http:${uri}`;
-  const base = API_BASE.replace('/api/v1', ''); // strip the API path to get origin
-  return uri.startsWith('/') ? `${base}${uri}` : `${base}/${uri}`;
+    input.startsWith('http://') ||
+    input.startsWith('https://') ||
+    input.startsWith('file://') ||
+    input.startsWith('data:') ||
+    input.startsWith('blob:')
+  ) return input;
+
+  const origin = API_BASE.replace(/\/api\/v1\/?$/, '');
+  if (input.startsWith('//')) return `${window.location.protocol}${input}`;
+  if (input.startsWith('/api/')) return `${origin}${input}`;
+  if (input.startsWith('/media/')) return `${origin}/api/v1${input}`;
+  if (input.startsWith('/')) return `${origin}${input}`;
+
+  // Most profile and cover image fields are returned as media-relative paths.
+  if (input.startsWith('media/')) return `${origin}/api/v1/${input}`;
+  return `${origin}/api/v1/media/${input}`;
 };
+

@@ -11,15 +11,15 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Heart, MessageCircle, Share2, Send, Reply, Pencil, Trash2, X, Check, Copy, ChevronDown, ChevronUp, Linkedin, Instagram } from "lucide-react";
+import { Heart, MessageCircle, Share2, Send, Reply, Pencil, Trash2, X, Check, Copy, ChevronDown, ChevronUp, Link2, ArrowLeft, Search, Users } from "lucide-react";
 import { toast } from "react-toastify";
 
 const API_ROOT = "https://api.karpagamalumni.in/api/v1";
 const getToken = () => localStorage.getItem("Token");
 const authHeaders = () => ({ Authorization: `Token ${getToken()}`, "Content-Type": "application/json" });
 
-const ALLOWED_SHARE_MODES = ["link", "status", "story", "post"];
-const ALLOWED_SHARE_PLATFORMS = ["generic", "native", "whatsapp", "instagram", "facebook", "x", "linkedin", "telegram"];
+const ALLOWED_SHARE_MODES = ["link", "status", "story", "post", "portal"];
+const ALLOWED_SHARE_PLATFORMS = ["generic", "native", "whatsapp", "instagram", "facebook", "x", "linkedin", "telegram", "portal"];
 
 // ── tiny helpers ─────────────────────────────────────────────────────────────
 
@@ -34,7 +34,7 @@ const timeAgo = (iso) => {
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
 
 // Compare timestamps at second-level precision to avoid false "edited" from sub-second diffs
@@ -395,6 +395,524 @@ const CommentItem = ({ comment, contentType, canModerate, isPostOwner, currentUs
   );
 };
 
+// ── Platform icon SVGs (inline, no extra deps) ───────────────────────────────
+
+const WhatsAppIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.374 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.826L.057 23.859c-.073.262.148.494.413.437l6.226-1.437A11.935 11.935 0 0012 24c6.626 0 12-5.373 12-12S18.626 0 12 0zm0 21.818a9.82 9.82 0 01-5.002-1.369l-.358-.213-3.714.857.899-3.593-.236-.374A9.82 9.82 0 012.182 12C2.182 6.578 6.578 2.182 12 2.182S21.818 6.578 21.818 12 17.422 21.818 12 21.818z"/>
+  </svg>
+);
+
+const InstagramIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+  </svg>
+);
+
+const FacebookIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+  </svg>
+);
+
+const XIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.732-8.857L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
+
+const LinkedInIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+);
+
+const TelegramIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+  </svg>
+);
+
+const NativeShareIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </svg>
+);
+
+const PortalIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+    <path d="M16 8v8h-2V8h2zM10 8v8H8V8h2z" fill="none"/>
+    <circle cx="9" cy="7" r="1.5"/>
+    <circle cx="15" cy="7" r="1.5"/>
+    <path d="M12 13a3 3 0 100-6 3 3 0 000 6zm0-4.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+    <path d="M17.5 17c0-1.93-2.46-3.5-5.5-3.5S6.5 15.07 6.5 17h11z"/>
+  </svg>
+);
+
+// ── Portal Share Modal ────────────────────────────────────────────────────────
+
+const PortalShareModal = ({ open, onClose, shareUrl, shareMessage, shareToken, contentType, contentId }) => {
+  const [query, setQuery]             = useState("");
+  const [results, setResults]         = useState([]);
+  const [searching, setSearching]     = useState(false);
+  const [sending, setSending]         = useState(null); // userId being sent to
+  const [sent, setSent]               = useState({});   // userId → true
+  const [shareToAll, setShareToAll]   = useState(false);
+  const [sendingAll, setSendingAll]   = useState(false);
+  const overlayRef = useRef(null);
+
+  useEffect(() => { if (!open) { setQuery(""); setResults([]); setSent({}); setShareToAll(false); } }, [open]);
+
+  const searchUsers = useCallback(async (q) => {
+    if (!q.trim()) { setResults([]); return; }
+    setSearching(true);
+    try {
+      const token = localStorage.getItem("Token");
+      const r = await fetch(
+        `https://api.karpagamalumni.in/chat/search/?q=${encodeURIComponent(q)}`,
+        { headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" } }
+      );
+      if (r.ok) setResults(await r.json());
+    } catch (_) {} finally { setSearching(false); }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => searchUsers(query), 300);
+    return () => clearTimeout(t);
+  }, [query, searchUsers]);
+
+  const sendToUser = async (userId) => {
+    if (sent[userId] || sending === userId) return;
+    setSending(userId);
+    try {
+      const token = localStorage.getItem("Token");
+      const r = await fetch("https://api.karpagamalumni.in/api/v1/share/portal/", {
+        method: "POST",
+        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ token: shareToken, target: "chat", target_user_id: userId }),
+      });
+      if (r.ok) {
+        setSent((prev) => ({ ...prev, [userId]: true }));
+        toast.success("Shared via chat!");
+      } else {
+        toast.error("Failed to send.");
+      }
+    } catch (_) { toast.error("Failed to send."); } finally { setSending(null); }
+  };
+
+  const sendToCommunity = async () => {
+    if (sendingAll) return;
+    setSendingAll(true);
+    try {
+      const token = localStorage.getItem("Token");
+      const r = await fetch("https://api.karpagamalumni.in/api/v1/share/portal/", {
+        method: "POST",
+        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ token: shareToken, target: "community" }),
+      });
+      if (r.ok) { setShareToAll(true); toast.success("Shared to Community Chat!"); }
+      else toast.error("Failed to share to community.");
+    } catch (_) { toast.error("Failed to share to community."); } finally { setSendingAll(false); }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }}>
+      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden"
+        style={{ maxHeight: "85vh" }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
+              <Users size={16} className="text-emerald-600" />
+            </div>
+            <span className="text-base font-semibold text-gray-900">Share with Members</span>
+          </div>
+          <button onClick={onClose}
+            className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto" style={{ maxHeight: "calc(85vh - 70px)" }}>
+          {/* Community broadcast */}
+          <div className="px-5 pt-4 pb-3">
+            <button onClick={sendToCommunity} disabled={shareToAll || sendingAll}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition text-sm font-medium
+                ${shareToAll ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 text-gray-700"}`}>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center flex-shrink-0">
+                <Users size={17} className="text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <p className={shareToAll ? "text-emerald-700 font-semibold" : "text-gray-900 font-semibold"}>
+                  {shareToAll ? "Posted to Community Chat ✓" : "Post to Community Chat"}
+                </p>
+                <p className="text-xs text-gray-400">Visible to all portal members</p>
+              </div>
+              {sendingAll && <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />}
+            </button>
+          </div>
+
+          <div className="px-5 pb-2">
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Or send to a specific member</p>
+            {/* Search */}
+            <div className="relative mb-3">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text" value={query} onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name or username…"
+                className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              />
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="px-5 pb-5 space-y-2">
+            {searching && (
+              <div className="flex justify-center py-4">
+                <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {!searching && query && results.length === 0 && (
+              <p className="text-center text-gray-400 text-sm py-4">No members found</p>
+            )}
+            {!searching && !query && (
+              <p className="text-center text-gray-400 text-sm py-4">Type a name to search</p>
+            )}
+            {results.map((u) => {
+              const isSent = sent[u.id];
+              const isSending = sending === u.id;
+              const initials = ((u.first_name?.[0] || "") + (u.last_name?.[0] || "")).toUpperCase() || "?";
+              return (
+                <div key={u.id} className="flex items-center gap-3 py-2 px-1">
+                  {u.profile_photo ? (
+                    <img src={u.profile_photo.startsWith("http") ? u.profile_photo : `https://api.karpagamalumni.in${u.profile_photo}`}
+                      alt={initials} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-700 font-semibold text-sm">
+                      {initials}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{u.first_name} {u.last_name}</p>
+                    <p className="text-xs text-gray-400 truncate">@{u.username}</p>
+                  </div>
+                  <button onClick={() => sendToUser(u.id)} disabled={isSent || isSending}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1
+                      ${isSent ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>
+                    {isSending ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      : isSent ? <><Check size={11} /> Sent</>
+                      : "Send"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Share Sheet Modal ─────────────────────────────────────────────────────────
+
+const PLATFORM_META = {
+  whatsapp: {
+    label: "WhatsApp",
+    icon: WhatsAppIcon,
+    color: "#25D366",
+    bg: "#E8F9EE",
+    modes: [
+      { id: "whatsapp_post", mode: "post", label: "Message" },
+      { id: "whatsapp_status", mode: "status", label: "Status" },
+    ],
+  },
+  instagram: {
+    label: "Instagram",
+    icon: InstagramIcon,
+    color: "#E1306C",
+    bg: "#FDE8F0",
+    modes: [
+      { id: "instagram_story", mode: "story", label: "Story" },
+      { id: "instagram_post", mode: "post", label: "Post" },
+    ],
+  },
+  facebook: {
+    label: "Facebook",
+    icon: FacebookIcon,
+    color: "#1877F2",
+    bg: "#E8F0FE",
+    modes: [{ id: "facebook_post", mode: "post", label: "Share" }],
+  },
+  x: {
+    label: "X",
+    icon: XIcon,
+    color: "#000000",
+    bg: "#F0F0F0",
+    modes: [{ id: "x_post", mode: "post", label: "Post" }],
+  },
+  linkedin: {
+    label: "LinkedIn",
+    icon: LinkedInIcon,
+    color: "#0A66C2",
+    bg: "#E8F0FE",
+    modes: [{ id: "linkedin_post", mode: "post", label: "Share" }],
+  },
+  telegram: {
+    label: "Telegram",
+    icon: TelegramIcon,
+    color: "#0088cc",
+    bg: "#E5F4FC",
+    modes: [{ id: "telegram_post", mode: "post", label: "Send" }],
+  },
+  native: {
+    label: "More",
+    icon: NativeShareIcon,
+    color: "#6B7280",
+    bg: "#F3F4F6",
+    modes: [{ id: "native_share", mode: "link", label: "Share" }],
+  },
+  portal: {
+    label: "Members",
+    icon: PortalIcon,
+    color: "#059669",
+    bg: "#ECFDF5",
+    modes: [
+      { id: "portal_chat", mode: "portal", label: "Send to Member" },
+      { id: "portal_community", mode: "portal", label: "Community Chat" },
+    ],
+  },
+};
+
+const PLATFORM_ORDER = ["portal", "whatsapp", "instagram", "facebook", "x", "linkedin", "telegram", "native"];
+
+const ShareSheet = ({
+  open,
+  onClose,
+  shareUrl,
+  shareTargets,
+  shareMessage,
+  onMessageChange,
+  shareLoading,
+  onOpenTarget,
+  onCopyLink,
+  copied,
+  onRefresh,
+  onOpenPortal,
+}) => {
+  const overlayRef = useRef(null);
+  const sheetRef = useRef(null);
+  const [activePlatform, setActivePlatform] = useState(null);
+
+  useEffect(() => {
+    if (!open) {
+      setActivePlatform(null);
+    }
+  }, [open]);
+
+  // close on outside click
+  const handleOverlayClick = (e) => {
+    if (e.target === overlayRef.current) onClose();
+  };
+
+  // Find targets per platform+mode
+  const findTarget = useCallback((targetId) => {
+    return shareTargets.find((t) => t.id === targetId) || null;
+  }, [shareTargets]);
+
+  const handlePlatformClick = (platform) => {
+    if (platform === "portal") {
+      onOpenPortal?.();
+      return;
+    }
+    const meta = PLATFORM_META[platform];
+    if (!meta) return;
+    if (meta.modes.length === 1) {
+      const target = findTarget(meta.modes[0].id);
+      if (target) {
+        onOpenTarget(target);
+      } else {
+        onRefresh({ platform, mode: meta.modes[0].mode });
+        toast.info(`Opening ${meta.label}…`);
+      }
+    } else {
+      setActivePlatform(platform === activePlatform ? null : platform);
+    }
+  };
+
+  const handleModeClick = (platform, modeEntry) => {
+    const target = findTarget(modeEntry.id);
+    if (target) {
+      onOpenTarget(target);
+    } else {
+      onRefresh({ platform, mode: modeEntry.mode });
+      toast.info(`Opening ${PLATFORM_META[platform]?.label} ${modeEntry.label}…`);
+    }
+    setActivePlatform(null);
+  };
+
+  if (!open) return null;
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={handleOverlayClick}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(2px)" }}
+    >
+      <div
+        ref={sheetRef}
+        className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden"
+        style={{ maxHeight: "92vh" }}
+      >
+        {/* Handle bar */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-gray-200" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+          {activePlatform ? (
+            <button
+              onClick={() => setActivePlatform(null)}
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
+          ) : (
+            <span className="text-base font-semibold text-gray-900">Share</span>
+          )}
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"
+          >
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto" style={{ maxHeight: "calc(92vh - 110px)" }}>
+          {/* Sub-mode picker */}
+          {activePlatform && PLATFORM_META[activePlatform] ? (
+            <div className="px-5 py-6">
+              {(() => {
+                const meta = PLATFORM_META[activePlatform];
+                const Icon = meta.icon;
+                return (
+                  <>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: meta.bg, color: meta.color }}>
+                        <Icon size={26} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{meta.label}</p>
+                        <p className="text-xs text-gray-400">Choose where to share</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {meta.modes.map((modeEntry) => (
+                        <button
+                          key={modeEntry.id}
+                          onClick={() => handleModeClick(activePlatform, modeEntry)}
+                          className="flex flex-col items-center justify-center gap-2 py-5 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
+                        >
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: meta.bg, color: meta.color }}>
+                            <Icon size={22} />
+                          </div>
+                          <span className="text-sm font-medium text-gray-800">{modeEntry.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          ) : (
+            <>
+              {/* Share message input */}
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Add a message (optional)</p>
+                <textarea
+                  value={shareMessage}
+                  onChange={(e) => onMessageChange(e.target.value)}
+                  placeholder="Say something about this post…"
+                  rows={2}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50"
+                />
+              </div>
+
+              {/* Copy link row */}
+              {shareUrl && (
+                <div className="px-5 pb-3">
+                  <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                    <Link2 size={15} className="text-gray-400 flex-shrink-0" />
+                    <span className="flex-1 text-xs text-gray-500 truncate">{shareUrl}</span>
+                    <button
+                      onClick={() => onCopyLink()}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors flex-shrink-0"
+                    >
+                      {copied ? <Check size={13} /> : <Copy size={13} />}
+                      {copied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Platform grid */}
+              <div className="px-5 pb-6">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Share to</p>
+                <div className="grid grid-cols-4 gap-3">
+                  {PLATFORM_ORDER.map((platform) => {
+                    const meta = PLATFORM_META[platform];
+                    if (!meta) return null;
+                    const Icon = meta.icon;
+                    const hasMultipleModes = meta.modes.length > 1;
+                    return (
+                      <button
+                        key={platform}
+                        onClick={() => handlePlatformClick(platform)}
+                        className="flex flex-col items-center gap-2 group"
+                      >
+                        <div
+                          className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-active:scale-95 group-hover:scale-105"
+                          style={{ background: meta.bg, color: meta.color }}
+                        >
+                          <Icon size={28} />
+                        </div>
+                        <span className="text-[11px] font-medium text-gray-600 text-center leading-tight">
+                          {meta.label}
+                          {hasMultipleModes && <span className="block text-[10px] text-gray-400">Tap to choose</span>}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Loading state */}
+              {shareLoading && (
+                <div className="flex items-center justify-center gap-2 pb-4 text-sm text-gray-400">
+                  <svg className="animate-spin h-4 w-4 text-green-500" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Preparing share links…
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Main EngagementPanel ──────────────────────────────────────────────────────
 
 const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModerate = false, currentUserId = null }) => {
@@ -418,6 +936,8 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
   const [sharePlatform, setSharePlatform] = useState("generic");
   const [shareMessage, setShareMessage] = useState("Check this post");
   const [shareTargets, setShareTargets] = useState([]);
+  const [shareToken, setShareToken]     = useState(null);
+  const [showPortalModal, setShowPortalModal] = useState(false);
 
   const commentInputRef = useRef(null);
 
@@ -628,6 +1148,7 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
       const url = token ? `${window.location.origin}/share/${token}` : shareUrl;
       const canonicalUrl = data?.share_links?.canonical_url || url;
       if (canonicalUrl) setShareUrl(canonicalUrl);
+      if (token) setShareToken(token);
 
       let normalizedTargets = normalizeShareTargets(data?.share_links?.targets || data?.targets);
       if (!normalizedTargets.length && token) {
@@ -653,8 +1174,21 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
 
   // ── share ────────────────────────────────────────────────────────────────
   const handleShare = async () => {
-    await requestShareLinks({ mode: shareMode, platform: sharePlatform, message: shareMessage, openNativeIfAvailable: true });
+    // Open sheet immediately if we already have a URL, otherwise fetch first
+    if (shareUrl && shareTargets.length > 0) {
+      setShowShareActions(true);
+      return;
+    }
+    await requestShareLinks({ mode: shareMode, platform: sharePlatform, message: shareMessage });
   };
+
+  const handleSheetRefresh = useCallback(({ platform, mode } = {}) => {
+    requestShareLinks({
+      mode: mode || shareMode,
+      platform: platform || sharePlatform,
+      message: shareMessage,
+    });
+  }, [requestShareLinks, shareMode, sharePlatform, shareMessage]);
 
   return (
     <div className="border-t border-gray-100 mt-2">
@@ -685,74 +1219,46 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
         <button
           onClick={handleShare}
           disabled={shareLoading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-gray-500 hover:bg-gray-100 transition-all duration-200 ml-auto"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-gray-500 hover:bg-gray-100 transition-all duration-200 ml-auto disabled:opacity-50"
         >
-          <Share2 size={16} />
+          {shareLoading ? (
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          ) : (
+            <Share2 size={16} />
+          )}
           <span>{totalShares > 0 ? totalShares : ""} Share</span>
         </button>
       </div>
 
-      {/* Share actions */}
-      {showShareActions && shareUrl && (
-        <div className="border-t border-gray-100 px-4 py-3">
-          <p className="text-xs text-gray-500 mb-2">Share this content</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
-            <select
-              value={shareMode}
-              onChange={(e) => setShareMode(e.target.value)}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white"
-            >
-              {ALLOWED_SHARE_MODES.map((mode) => (
-                <option key={mode} value={mode}>{normalizePlatformLabel(mode)}</option>
-              ))}
-            </select>
-            <select
-              value={sharePlatform}
-              onChange={(e) => setSharePlatform(e.target.value)}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white"
-            >
-              {ALLOWED_SHARE_PLATFORMS.map((platform) => (
-                <option key={platform} value={platform}>{normalizePlatformLabel(platform)}</option>
-              ))}
-            </select>
-            <button
-              onClick={() => requestShareLinks({ mode: shareMode, platform: sharePlatform, message: shareMessage })}
-              disabled={shareLoading}
-              className="px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:bg-gray-300"
-            >
-              {shareLoading ? "Loading..." : "Refresh targets"}
-            </button>
-          </div>
-          <input
-            value={shareMessage}
-            onChange={(e) => setShareMessage(e.target.value)}
-            placeholder="Optional share message"
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 mb-3"
-          />
-          <div className="flex flex-wrap gap-2">
-            {shareTargets.map((target) => (
-              <button
-                key={target.id}
-                onClick={() => openShareTarget(target)}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
-              >
-                {target.platform === "linkedin" ? <Linkedin size={14} /> : null}
-                {target.platform === "instagram" ? <Instagram size={14} /> : null}
-                {target.platform === "generic" ? <Copy size={14} /> : null}
-                {target.label || `${normalizePlatformLabel(target.platform)} ${normalizePlatformLabel(target.mode)}`}
-              </button>
-            ))}
-            <button
-              onClick={() => openShareTarget({ id: "copy", platform: "generic", mode: "copy", label: "Copy link", url: shareUrl })}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm"
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "Copied" : "Copy link"}
-            </button>
-          </div>
-          <p className="text-[11px] text-gray-400 mt-2 break-all">{shareUrl}</p>
-        </div>
-      )}
+      {/* Share Sheet */}
+      <ShareSheet
+        open={showShareActions}
+        onClose={() => setShowShareActions(false)}
+        shareUrl={shareUrl}
+        shareTargets={shareTargets}
+        shareMessage={shareMessage}
+        onMessageChange={setShareMessage}
+        shareLoading={shareLoading}
+        onOpenTarget={openShareTarget}
+        onCopyLink={() => copyShareLink(shareUrl)}
+        copied={copied}
+        onRefresh={handleSheetRefresh}
+        onOpenPortal={() => { setShowShareActions(false); setShowPortalModal(true); }}
+      />
+
+      {/* Portal Members Share Modal */}
+      <PortalShareModal
+        open={showPortalModal}
+        onClose={() => setShowPortalModal(false)}
+        shareUrl={shareUrl}
+        shareMessage={shareMessage}
+        shareToken={shareToken}
+        contentType={contentType}
+        contentId={contentId}
+      />
 
       {/* Comment section */}
       {showComments && (

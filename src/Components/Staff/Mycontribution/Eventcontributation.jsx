@@ -151,7 +151,7 @@ const EventCard = ({ item, onDelete, onUpdate }) => {
   const [showEdit, setShowEdit] = useState(false);
   const [showComments, setShowComments] = useState(false);
 
-  const fmt = (d) => new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const fmt = (d) => new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const rel = (d) => { const h = Math.floor((Date.now() - new Date(d)) / 3600000); return h < 1 ? "Just now" : h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago`; };
 
   const doDelete = async () => {

@@ -70,7 +70,7 @@ export default function NewsList() {
   }, []);
 
   const formatDate = (iso) =>
-    new Date(iso).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+    new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
   const getImageUrl = (path) => {
     if (!path) return null;

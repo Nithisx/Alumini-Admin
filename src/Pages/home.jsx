@@ -50,7 +50,7 @@ export default function Home() {
   const formatDate = (dateValue) => {
     const date = new Date(dateValue);
     if (Number.isNaN(date.getTime())) return "TBA";
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(undefined, {
       month: "short",
       day: "numeric",
       year: "numeric",

@@ -60,7 +60,7 @@ const AlbumsContribution = () => {
     } catch { toast.error("Failed to update album."); } finally { setEditLoading(false); }
   };
 
-  const fmt = (d) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  const fmt = (d) => new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 
   if (loading) return (
     <div className="grid grid-cols-2 gap-3 p-4">

@@ -1,520 +1,541 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Search,
-  Send,
-  Phone,
-  Video,
-  MoreVertical,
-  ArrowLeft,
-  Smile,
-  Plus,
-  Users,
-  MessageSquare,
-  Trash2,
-  Globe,
-  Shield,
-  Eye,
-  AlertTriangle,
+  Search, Send, ArrowLeft, Plus, Users, MessageSquare,
+  Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
+  Clock, Pencil, X, MoreVertical, Info,
 } from "lucide-react";
+import { getMediaUrl } from "../../../config/api";
+import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
+
+const API_HOST = "https://api.karpagamalumni.in";
+const WS_HOST  = "api.karpagamalumni.in";
+
+const getToken = () => localStorage.getItem("Token");
+const authH    = () => ({ Authorization: `Token ${getToken()}`, "Content-Type": "application/json" });
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const fmtTime = (ts) => {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  } catch { return ""; }
+};
+
+const fmtDateTime = (ts) => {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString(undefined, {
+      month: "short", day: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch { return ""; }
+};
+
+const fmtLastSeen = (ts) => {
+  if (!ts) return "";
+  const d = new Date(ts);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1)  return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24)   return `${diffH}h ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+const photoUrl = (photoPath) => getMediaUrl(photoPath);
+
+// ── Message Status Icon ───────────────────────────────────────────────────────
+
+const StatusIcon = ({ status, isCommunity }) => {
+  if (isCommunity) return null;
+  if (status === "seen")
+    return <CheckCheck className="w-3.5 h-3.5 text-sky-300 inline-block ml-1" aria-label="Seen" />;
+  if (status === "delivered")
+    return <CheckCheck className="w-3.5 h-3.5 text-white/50 inline-block ml-1" aria-label="Delivered" />;
+  if (status === "sent")
+    return <Check className="w-3.5 h-3.5 text-white/50 inline-block ml-1" aria-label="Sent" />;
+  return <Clock className="w-3 h-3 text-white/40 inline-block ml-1" aria-label="Pending" />;
+};
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+const Avatar = ({ src, name, gender, size = 10, isCommunity = false }) => {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [src]);
+
+  const cls = `w-${size} h-${size} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
+  if (isCommunity)
+    return (
+      <div className={`${cls} bg-gradient-to-br from-indigo-500 to-violet-600`}>
+        <Globe className="w-5 h-5 text-white" />
+      </div>
+    );
+
+  const resolvedSrc = !imgError && src ? photoUrl(src) : getProfilePlaceholderByGender(gender);
+  return (
+    <img
+      src={resolvedSrc}
+      alt={name || "User"}
+      className={`${cls} object-cover`}
+      onError={() => setImgError(true)}
+    />
+  );
+};
+
+// ── Message Info Panel ────────────────────────────────────────────────────────
+
+const MessageInfoPanel = ({ msg, onClose }) => {
+  if (!msg) return null;
+  return (
+    <div
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-bold text-gray-900">Message Info</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <div className="bg-gray-50 rounded-xl px-4 py-2.5 text-sm text-gray-700 break-words">
+            {msg.text}
+          </div>
+          <div className="space-y-2 text-sm">
+            <Row icon={<Clock className="w-3.5 h-3.5 text-gray-400" />} label="Sent" value={fmtDateTime(msg.timestamp)} />
+            <Row
+              icon={<CheckCheck className="w-3.5 h-3.5 text-gray-400" />}
+              label="Delivered"
+              value={msg.delivered_at ? fmtDateTime(msg.delivered_at) : "—"}
+            />
+            <Row
+              icon={<CheckCheck className="w-3.5 h-3.5 text-sky-400" />}
+              label="Seen"
+              value={msg.seen_at ? fmtDateTime(msg.seen_at) : "—"}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Row = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3">
+    <span className="flex-shrink-0">{icon}</span>
+    <span className="text-gray-500 w-20 flex-shrink-0">{label}</span>
+    <span className="text-gray-800 font-medium">{value}</span>
+  </div>
+);
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 const Chat = () => {
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [showSearch, setShowSearch] = useState(false);
-  const [socket, setSocket] = useState(null);
-  const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [selectedChat, setSelectedChat]       = useState(null);
+  const [message, setMessage]                 = useState("");
+  const [messages, setMessages]               = useState([]);
+  const [searchQuery, setSearchQuery]         = useState("");
+  const [searchResults, setSearchResults]     = useState([]);
+  const [showSearch, setShowSearch]           = useState(false);
+  const [rooms, setRooms]                     = useState([]);
+  const [loading, setLoading]                 = useState(false);
+  const [currentUser, setCurrentUser]         = useState(null);
+  const [isConnected, setIsConnected]         = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [roomToDelete, setRoomToDelete] = useState(null);
-  const [communityRoom, setCommunityRoom] = useState(null);
-  const [loadingCommunity, setLoadingCommunity] = useState(false);
-  const [showAgreement, setShowAgreement] = useState(() => {
-    return !localStorage.getItem("chat_agreement_accepted");
-  });
-  const messagesEndRef = useRef(null);
+  const [roomToDelete, setRoomToDelete]       = useState(null);
+  const [communityRoom, setCommunityRoom]     = useState(null);
+  const [showAgreement, setShowAgreement]     = useState(
+    () => !localStorage.getItem("chat_agreement_accepted")
+  );
 
+  // Presence: map of userId → { is_online, last_seen }
+  const [presenceMap, setPresenceMap]   = useState({});
+
+  // Edit state
+  const [editingId, setEditingId]       = useState(null);
+  const [editText, setEditText]         = useState("");
+
+  // Message context menu
+  const [menuMsgId, setMenuMsgId]       = useState(null);
+
+  // Message info modal
+  const [infoMsg, setInfoMsg]           = useState(null);
+
+  const messagesEndRef = useRef(null);
+  const socketRef      = useRef(null);
+  const inputRef       = useRef(null);
+
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useEffect(() => { scrollToBottom(); }, [messages]);
+
+  // ── Agreement ──────────────────────────────────────────────────────────────
   const handleAcceptAgreement = () => {
     localStorage.setItem("chat_agreement_accepted", "true");
     setShowAgreement(false);
   };
 
-  const handleDeclineAgreement = () => {
-    window.history.back();
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Token utilities: use a single key 'auth_token' in localStorage
-  const getToken = () => localStorage.getItem("Token");
-  const setToken = (t) => localStorage.setItem("auth_token", t);
-
-  // Load initial data
+  // ── Init ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     loadRooms();
     getCurrentUser();
-    loadCommunityChat(); // Load community chat
-
-    return () => {
-      if (socket) {
-        try {
-          socket.onopen =
-            socket.onmessage =
-            socket.onerror =
-            socket.onclose =
-            null;
-          socket.close();
-        } catch (e) {
-          // ignore
-        }
-      }
-    };
+    loadCommunityChat();
+    return () => closeSocket();
   }, []);
 
-  // Get current user info
+  const closeSocket = () => {
+    const ws = socketRef.current;
+    if (ws) {
+      try {
+        ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null;
+        ws.close();
+      } catch (_) {}
+      socketRef.current = null;
+    }
+  };
+
+  // ── API helpers ────────────────────────────────────────────────────────────
   const getCurrentUser = async () => {
     const token = getToken();
     if (!token) return;
-
     try {
-      const endpoints = [
-        "https://api.karpagamalumni.in/chat/user/me/",
-        "https://api.karpagamalumni.in/auth/user/",
-        "https://api.karpagamalumni.in/api/v1/user/me/",
-        "https://api.karpagamalumni.in/user/profile/",
-      ];
-
-      for (const endpoint of endpoints) {
-        try {
-          const res = await fetch(endpoint, {
-            headers: {
-              Authorization: `Token ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (res.ok) {
-            const userData = await res.json();
-            setCurrentUser(userData);
-            return;
-          }
-        } catch (err) {
-          continue;
-        }
-      }
-    } catch (error) {
-    }
+      const r = await fetch(`${API_HOST}/chat/user/me/`, { headers: authH() });
+      if (r.ok) { setCurrentUser(await r.json()); return; }
+    } catch (_) {}
+    // fallback to alumni profile endpoint
+    try {
+      const r = await fetch(`${API_HOST}/api/v1/user/me/`, { headers: authH() });
+      if (r.ok) setCurrentUser(await r.json());
+    } catch (_) {}
   };
 
-  // Load chat rooms via HTTP
   const loadRooms = async () => {
     const token = getToken();
-    if (!token) {
-      return;
-    }
-
+    if (!token) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch("https://api.karpagamalumni.in/chat/rooms/", {
-        method: "GET",
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRooms(data);
-      } else {
-        const text = await response.text().catch(() => "no-body");
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
+      const r = await fetch(`${API_HOST}/chat/rooms/`, { headers: authH() });
+      if (r.ok) setRooms(await r.json());
+    } catch (_) {} finally { setLoading(false); }
   };
 
-  // Search users
-  const searchUsers = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
+  const loadCommunityChat = async () => {
     const token = getToken();
     if (!token) return;
-
     try {
-      const response = await fetch(
-        `https://api.karpagamalumni.in/chat/search/?q=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data);
-      } else {
+      const r = await fetch(`${API_HOST}/chat/community/`, { headers: authH() });
+      if (r.ok) {
+        const data = await r.json();
+        if (data?.id) setCommunityRoom({ ...data, is_community: true, name: "Community Chat" });
       }
-    } catch (error) {
-    }
+    } catch (_) {}
   };
 
-  // Create room with user
+  const searchUsers = async (q) => {
+    if (!q.trim()) { setSearchResults([]); return; }
+    try {
+      const r = await fetch(`${API_HOST}/chat/search/?q=${encodeURIComponent(q)}`, { headers: authH() });
+      if (r.ok) setSearchResults(await r.json());
+    } catch (_) {}
+  };
+
   const createRoom = async (userId) => {
-    const token = getToken();
-    if (!token) return;
-
     try {
-      const response = await fetch("https://api.karpagamalumni.in/chat/rooms/", {
-        method: "POST",
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
-        },
+      const r = await fetch(`${API_HOST}/chat/rooms/`, {
+        method: "POST", headers: authH(),
         body: JSON.stringify({ target_user_id: userId }),
       });
-
-      if (response.ok) {
-        const room = await response.json();
-        setRooms((prev) => [...prev, room]);
-        setSelectedChat(room);
-        setShowSearch(false);
-        setSearchQuery("");
-        setSearchResults([]);
-        connectWebSocket(room.id);
+      if (r.ok) {
+        const room = await r.json();
+        setRooms((prev) => [room, ...prev.filter((x) => x.id !== room.id)]);
+        selectChat(room);
+        setShowSearch(false); setSearchQuery(""); setSearchResults([]);
       }
-    } catch (error) {
-    }
+    } catch (_) {}
   };
 
-  // Connect to WebSocket
-  const connectWebSocket = (roomId) => {
+  const deleteRoom = async (roomId) => {
+    try {
+      const r = await fetch(
+        `${API_HOST}/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
+        { method: "DELETE", headers: authH() }
+      );
+      if (r.ok) {
+        setRooms((prev) => prev.filter((x) => x.id !== roomId));
+        if (selectedChat?.id === roomId) {
+          setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false);
+        }
+        setShowDeleteModal(false); setRoomToDelete(null);
+      }
+    } catch (_) {}
+  };
+
+  const loadMessagesHTTP = async (roomId) => {
+    try {
+      const r = await fetch(`${API_HOST}/chat/rooms/${encodeURIComponent(roomId)}/messages/`, { headers: authH() });
+      if (r.ok) {
+        const msgs = await r.json();
+        setMessages(msgs.map((m) => ({
+          ...m,
+          time: m.time || fmtTime(m.timestamp) || fmtTime(m.delivered_at) || "",
+        })));
+      }
+    } catch (_) {}
+  };
+
+  const markSeen = useCallback(async (roomId, upToMsgId, isCommunity = false) => {
+    if (!roomId && !isCommunity) return;
+    const endpoints = isCommunity
+      ? [`${API_HOST}/chat/community/seen/`]
+      : [`${API_HOST}/chat/rooms/${roomId}/seen/`];
+
+    for (const endpoint of endpoints) {
+      try {
+        const r = await fetch(endpoint, {
+          method: "POST",
+          headers: authH(),
+          body: JSON.stringify(upToMsgId ? { message_id: upToMsgId } : {}),
+        });
+        if (r.ok) return;
+      } catch (_) {}
+    }
+  }, []);
+
+  // Fetch presence for a single user — stable, no deps on presenceMap
+  const fetchPresence = useCallback(async (userId) => {
+    if (!userId) return;
+    try {
+      const r = await fetch(`${API_HOST}/chat/presence/${userId}/`, { headers: authH() });
+      if (r.ok) {
+        const data = await r.json();
+        setPresenceMap((prev) => ({ ...prev, [userId]: data }));
+      }
+    } catch (_) {}
+  }, []);
+
+  // Fetch presence for all room partners once on initial room load
+  useEffect(() => {
+    const userIds = [...new Set(rooms.map((room) => room?.other_user?.id).filter(Boolean))];
+    userIds.forEach(fetchPresence);
+  }, [rooms]); // deliberately omit fetchPresence & presenceMap — only re-run when rooms change
+
+  // ── WebSocket ──────────────────────────────────────────────────────────────
+  const connectWebSocket = useCallback((roomId, isCommunity = false) => {
     const token = getToken();
     if (!token) return;
-
-    if (socket) {
-      try {
-        socket.onopen =
-          socket.onmessage =
-          socket.onerror =
-          socket.onclose =
-          null;
-        socket.close();
-      } catch (e) { }
-      setSocket(null);
-    }
-
+    closeSocket();
     setIsConnected(false);
     setMessages([]);
 
-    const wsProtocol = "wss:";
-    const wsHost = "api.karpagamalumni.in";
-    const wsUrl = `${wsProtocol}//${wsHost}/ws/chat/${encodeURIComponent(
-      roomId
-    )}/?token=${encodeURIComponent(token)}`;
-
+    const wsUrl = isCommunity
+      ? `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(token)}`
+      : `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(token)}`;
     const ws = new WebSocket(wsUrl);
+    socketRef.current = ws;
 
-    ws.onopen = () => {
-      setIsConnected(true);
-      setTimeout(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(
-            JSON.stringify({ action: "get_message_history", room_id: roomId })
-          );
-        }
-      }, 500);
-    };
+    ws.onopen = () => { setIsConnected(true); };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
+        // History batch
         if (data.action === "message_history" && Array.isArray(data.messages)) {
-          setMessages(data.messages);
-        } else if (
-          data.type === "chat_message" ||
-          data.action === "chat_message"
-        ) {
-          const newMessage = {
-            id:
-              data.message_id ||
-              data.id ||
-              Math.random().toString(36).slice(2, 9),
+          const normalized = data.messages.map((m) => ({
+            ...m,
+            time: m.time || fmtTime(m.timestamp) || fmtTime(m.delivered_at) || "",
+          }));
+          setMessages(normalized);
+          const lastMsg = normalized[normalized.length - 1];
+          if (lastMsg) markSeen(roomId, lastMsg.id, isCommunity);
+          return;
+        }
+
+        // New incoming message
+        if (data.action === "new_message" || data.type === "chat_message" || data.action === "chat_message") {
+          const newMsg = {
+            id: data.message_id || data.id || crypto.randomUUID(),
             text: data.message || data.text || "",
             sender: data.sender
-              ? typeof data.sender === "string"
-                ? { username: data.sender }
-                : data.sender
+              ? typeof data.sender === "string" ? { username: data.sender } : data.sender
               : null,
-            time: data.timestamp
-              ? new Date(data.timestamp).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-              })
-              : new Date().toLocaleTimeString(),
+            time: fmtTime(data.timestamp) || new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
             timestamp: data.timestamp || new Date().toISOString(),
+            status: data.status || "sent",
+            delivered_at: data.delivered_at || null,
+            seen_at: data.seen_at || null,
+            sender_id: data.sender_id || data.sender?.id || null,
           };
-          setMessages((prev) => [...prev, newMessage]);
+          setMessages((prev) => [...prev, newMsg]);
+          markSeen(roomId, newMsg.id, isCommunity);
+          setRooms((prev) => prev.map((r) =>
+            r.id === roomId
+              ? { ...r, lastMessage: newMsg.text, lastMessageTime: newMsg.timestamp }
+              : r
+          ));
+          return;
         }
-      } catch (error) {
-      }
+
+        // Status update (sent → delivered → seen)
+        if (data.action === "status_update" && Array.isArray(data.message_ids)) {
+          setMessages((prev) => prev.map((m) =>
+            data.message_ids.includes(String(m.id))
+              ? {
+                  ...m,
+                  status: data.status,
+                  delivered_at: data.delivered_at || m.delivered_at,
+                  seen_at: data.seen_at || m.seen_at,
+                }
+              : m
+          ));
+          return;
+        }
+
+        // Presence update
+        if (data.action === "presence_update") {
+          setPresenceMap((prev) => ({
+            ...prev,
+            [data.user_id]: { is_online: data.is_online, last_seen: data.last_seen },
+          }));
+          return;
+        }
+
+        // Message deleted
+        if (data.action === "message_deleted") {
+          setMessages((prev) => prev.filter((m) => String(m.id) !== String(data.message_id)));
+          return;
+        }
+
+        // Message edited
+        if (data.action === "message_edited") {
+          setMessages((prev) => prev.map((m) =>
+            String(m.id) === String(data.message_id)
+              ? { ...m, text: data.new_text, edited: true }
+              : m
+          ));
+          return;
+        }
+
+      } catch (_) {}
     };
 
-    ws.onerror = (error) => {
+    ws.onerror = () => { setIsConnected(false); loadMessagesHTTP(roomId); };
+    ws.onclose = (e) => {
       setIsConnected(false);
-      loadMessagesViaHTTP(roomId);
+      if (e.code === 1006 || !e.wasClean) loadMessagesHTTP(roomId);
     };
+  }, [markSeen]);
 
-    ws.onclose = (event) => {
-      setIsConnected(false);
-      if (event.code === 1006 || !event.wasClean) {
-        loadMessagesViaHTTP(roomId);
-      }
-    };
-
-    setSocket(ws);
-  };
-
-  // Create community chat
-  const createCommunityChat = async () => {
-    const token = getToken();
-    if (!token) return null;
-
-    setLoadingCommunity(true);
-    try {
-      const response = await fetch("https://api.karpagamalumni.in/chat/community/", {
-        method: "POST",
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: "Community Room",
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-
-        // Add community identifier
-        const communityRoom = {
-          ...data,
-          is_community: true,
-          name: "Community Chat",
-        };
-
-        setCommunityRoom(communityRoom);
-        return communityRoom;
-      } else {
-        const err = await response.json().catch(() => ({}));
-        return null;
-      }
-    } catch (error) {
-      return null;
-    } finally {
-      setLoadingCommunity(false);
+  const selectChat = useCallback((chat) => {
+    setSelectedChat(chat);
+    setEditingId(null);
+    setMenuMsgId(null);
+    setInfoMsg(null);
+    connectWebSocket(chat.id, Boolean(chat.is_community));
+    if (!chat.is_community && chat.other_user?.id) {
+      fetchPresence(chat.other_user.id);
     }
-  };
+  }, [connectWebSocket, fetchPresence]);
 
-  // Load community chat
-  const loadCommunityChat = async () => {
-    const token = getToken();
-    if (!token) return;
-
-    try {
-      const response = await fetch("https://api.karpagamalumni.in/chat/community/", {
-        method: "GET",
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.id) {
-          const communityRoom = {
-            ...data,
-            is_community: true,
-            name: "Community Chat",
-          };
-          setCommunityRoom(communityRoom);
-        } else {
-          // If no community exists, create one
-          await createCommunityChat();
-        }
-      } else {
-        await createCommunityChat();
-      }
-    } catch (error) {
-      await createCommunityChat();
-    }
-  };
-
-  // Sort rooms to put community first
-  const getSortedRooms = () => {
-    const allRooms = [...rooms];
-
-    if (communityRoom) {
-      // Remove any existing community room from the list (in case of duplicates)
-      const filteredRooms = allRooms.filter((room) => !room.is_community);
-      // Put community room first
-      return [communityRoom, ...filteredRooms];
-    }
-
-    return allRooms;
-  };
-
-  // Delete room
-  const deleteRoom = async (roomId) => {
-    const token = getToken();
-    if (!token) return;
-
-    try {
-      const response = await fetch(
-        `https://api.karpagamalumni.in/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        // Remove room from state
-        setRooms((prev) => prev.filter((room) => room.id !== roomId));
-
-        // If deleted room was selected, clear selection
-        if (selectedChat?.id === roomId) {
-          setSelectedChat(null);
-          if (socket) {
-            try {
-              socket.onopen =
-                socket.onmessage =
-                socket.onerror =
-                socket.onclose =
-                null;
-              socket.close();
-            } catch (e) { }
-            setSocket(null);
-          }
-          setMessages([]);
-          setIsConnected(false);
-        }
-
-        setShowDeleteModal(false);
-        setRoomToDelete(null);
-      } else {
-        const text = await response.text().catch(() => "no-body");
-      }
-    } catch (error) {
-    }
-  };
-
-  const handleDeleteClick = (room, e) => {
-    e.stopPropagation(); // Prevent selecting the chat
-    setRoomToDelete(room);
-    setShowDeleteModal(true);
-  };
-
-  // Fallback: Load messages via HTTP
-  const loadMessagesViaHTTP = async (roomId) => {
-    const token = getToken();
-    if (!token) return;
-
-    try {
-      const response = await fetch(
-        `https://api.karpagamalumni.in/chat/rooms/${encodeURIComponent(roomId)}/messages/`,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const msgs = await response.json();
-        setMessages(msgs);
-      }
-    } catch (error) {
-    }
-  };
-
-  // Send message
+  // ── Send ───────────────────────────────────────────────────────────────────
   const sendMessage = () => {
-    if (!message.trim()) return;
-
-    if (!socket || !isConnected) {
-      return;
-    }
-
-    try {
-      const payload = {
-        action: "send_message",
-        room_id: selectedChat?.id,
-        message: message.trim(),
-      };
-
-      socket.send(JSON.stringify(payload));
-      setMessage("");
-    } catch (error) {
-    }
+    if (!message.trim() || !socketRef.current || !isConnected) return;
+    socketRef.current.send(JSON.stringify({
+      action: "send_message",
+      room_id: selectedChat?.id,
+      message: message.trim(),
+    }));
+    setMessage("");
   };
 
-  const formatTime = (timestamp) => {
-    if (!timestamp) return "";
-    try {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch (e) {
-      return "";
-    }
+  // ── Edit / Delete via WS ───────────────────────────────────────────────────
+  const startEdit = (msg) => {
+    setEditingId(msg.id);
+    setEditText(msg.text);
+    setMenuMsgId(null);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const submitEdit = () => {
+    if (!editText.trim() || !socketRef.current || !isConnected) return;
+    socketRef.current.send(JSON.stringify({
+      action: "edit_message",
+      message_id: editingId,
+      message: editText.trim(),
+    }));
+    setEditingId(null);
+    setEditText("");
+  };
+
+  const deleteMessage = (msgId) => {
+    if (!socketRef.current || !isConnected) return;
+    socketRef.current.send(JSON.stringify({
+      action: "delete_message",
+      message_id: msgId,
+    }));
+    setMenuMsgId(null);
+  };
+
+  // ── Room list ──────────────────────────────────────────────────────────────
+  const getSortedRooms = () => {
+    const filtered = rooms.filter((r) => !r.is_community);
+    return communityRoom ? [communityRoom, ...filtered] : filtered;
+  };
+
+  // Presence for active chat header
+  const otherUserId  = selectedChat?.other_user?.id;
+  const otherPresence = otherUserId ? presenceMap[otherUserId] : null;
+
+  const presenceLabel = () => {
+    if (!selectedChat) return "";
+    if (selectedChat.is_community) return isConnected ? "Connected" : "Connecting…";
+    if (!isConnected) return "Connecting…";
+    if (otherPresence?.is_online) return "Online";
+    if (otherPresence?.last_seen) return `Last seen ${fmtLastSeen(otherPresence.last_seen)}`;
+    // presence fetch not resolved yet — show generic connected
+    return "Connected";
+  };
+
+  const presenceDotColor = () => {
+    if (!isConnected) return "bg-yellow-400 animate-pulse";
+    if (!selectedChat?.is_community && otherPresence?.is_online) return "bg-emerald-500";
+    if (!selectedChat?.is_community && otherPresence && !otherPresence.is_online) return "bg-gray-300";
+    return "bg-emerald-500";
+  };
+
+  const isOwnMessage = (msg) => {
+    if (!currentUser) return false;
+    return (
+      String(msg.sender?.id) === String(currentUser.id) ||
+      msg.sender?.username === currentUser.username ||
+      (msg.sender_id && String(msg.sender_id) === String(currentUser.id))
+    );
+  };
+
+  const canModifyMessage = (msg) => {
+    if (!currentUser) return false;
+    if (isOwnMessage(msg)) return true;
+    const role = currentUser.role || "";
+    return role === "Admin" || role === "Staff" || currentUser.is_staff;
   };
 
   const token = getToken();
-
   if (!token) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-sm p-8 max-w-md w-full">
-          <div className="text-center">
-            <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h2 className="text-xl font-bold text-gray-800 mb-2">
-              Authentication Required
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Please store your auth token in localStorage as 'auth_token'
-            </p>
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <code className="text-sm text-gray-700">
-                localStorage.setItem('auth_token', '&lt;your-token&gt;')
-              </code>
-            </div>
-          </div>
+        <div className="bg-white rounded-2xl shadow p-8 max-w-sm w-full text-center">
+          <MessageSquare className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+          <h2 className="text-lg font-bold text-gray-800 mb-1">Authentication Required</h2>
+          <p className="text-sm text-gray-500">Please log in to access chat.</p>
         </div>
       </div>
     );
@@ -522,106 +543,102 @@ const Chat = () => {
 
   return (
     <div className="bg-gray-50 h-[calc(100vh-56px-56px)] lg:h-[calc(100vh-56px)]">
-    {/* ── Agreement modal ── */}
-    {showAgreement && (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-        <div role="dialog" aria-modal="true" aria-labelledby="chat-agree-title"
-          className="bg-white w-full sm:max-w-lg rounded-3xl shadow-2xl overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 id="chat-agree-title" className="text-base font-bold text-gray-900">Chat Usage Agreement</h2>
-            <p className="text-gray-400 text-sm mt-0.5">Please read before continuing</p>
-          </div>
-          <div className="px-6 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
-            <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
-              <Eye className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-emerald-800">Messages Are Monitored</p>
-                <p className="text-emerald-700 text-xs mt-1">All messages are monitored by Administrators for safety and compliance.</p>
-              </div>
-            </div>
-            
-            {/* ── Updated Disclaimer Section ── */}
-            <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-3">
-              <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-red-800">Data Disclaimer</p>
-                <p className="text-red-700 text-xs mt-1">
-                  In case any issues arise during the use of the portal’s chat feature, we are not responsible for your data, content, or any consequences arising from the use of this chat service.
-                </p>
-              </div>
-            </div>
 
-            {/* ── Updated Bullet Points ── */}
-            <ul className="text-xs text-gray-500 space-y-1.5 px-1 mt-2">
-              {[
-                "Your messages may be reviewed by administrators",
-                "You are responsible for the content you share",
-                "We are not liable for data, content, or chat-related consequences",
-                "Use the chat responsibly and respectfully"
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
-            <button onClick={handleDeclineAgreement} className="px-4 py-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-semibold">
-              Decline
-            </button>
-            <button onClick={handleAcceptAgreement} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition text-sm font-semibold shadow-sm">
-              I Agree & Continue
-            </button>
+      {/* ── Agreement modal ── */}
+      {showAgreement && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="chat-agree-title"
+            className="bg-white w-full sm:max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-100">
+              <h2 id="chat-agree-title" className="text-base font-bold text-gray-900">Chat Usage Agreement</h2>
+              <p className="text-gray-400 text-sm mt-0.5">Please read before continuing</p>
+            </div>
+            <div className="px-6 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+              <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
+                <Eye className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-emerald-800">Messages Are Monitored</p>
+                  <p className="text-emerald-700 text-xs mt-1">All messages are monitored by Administrators for safety and compliance.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-3">
+                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Data Disclaimer</p>
+                  <p className="text-red-700 text-xs mt-1">
+                    In case any issues arise during the use of the portal's chat feature, we are not responsible for your data, content, or any consequences arising from the use of this chat service.
+                  </p>
+                </div>
+              </div>
+              <ul className="text-xs text-gray-500 space-y-1.5 px-1 mt-2">
+                {[
+                  "Your messages may be reviewed by administrators",
+                  "You are responsible for the content you share",
+                  "We are not liable for data, content, or chat-related consequences",
+                  "Use the chat responsibly and respectfully",
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-2">
+                    <span className="text-emerald-500 font-bold">✓</span>{t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+              <button onClick={() => window.history.back()}
+                className="px-4 py-2.5 text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-semibold">
+                Decline
+              </button>
+              <button onClick={handleAcceptAgreement}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition text-sm font-semibold shadow-sm">
+                I Agree & Continue
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-      {/* ── Instagram DM layout ── */}
+      )}
+
+      {/* ── Message Info Modal ── */}
+      {infoMsg && <MessageInfoPanel msg={infoMsg} onClose={() => setInfoMsg(null)} />}
+
       <div className="flex h-full max-w-5xl mx-auto border-x border-gray-200 bg-white">
 
-        {/* ── Left panel: conversation list ── */}
+        {/* ── Left: conversation list ── */}
         <div className={`${selectedChat ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-80 border-r border-gray-200`}>
-          {/* Panel header */}
+
+          {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h1 className="text-base font-bold text-gray-900">Messages</h1>
-            <button
-              onClick={() => setShowSearch(!showSearch)}
-              className={`w-9 h-9 flex items-center justify-center rounded-xl transition ${showSearch ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-              title="Find users"
-            >
+            <button onClick={() => setShowSearch(!showSearch)}
+              className={`w-9 h-9 flex items-center justify-center rounded-xl transition ${showSearch ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
               <Plus className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Search */}
+          {/* User search */}
           {showSearch && (
             <div className="px-4 py-3 border-b border-gray-100 space-y-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
-                  type="text"
-                  placeholder="Search people…"
-                  value={searchQuery}
+                  type="text" placeholder="Search people…" value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); searchUsers(e.target.value); }}
                   className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
                 />
               </div>
               {searchResults.length > 0 && (
                 <div className="bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden max-h-48 overflow-y-auto">
-                  {searchResults.map((user) => (
-                    <div key={user.id} onClick={() => createRoom(user.id)}
+                  {searchResults.map((u) => (
+                    <div key={u.id} onClick={() => createRoom(u.id)}
                       className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0">
-                      <div className="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {user.profile_photo ? (
-                          <img src={user.profile_photo.startsWith("http") ? user.profile_photo : `https://api.karpagamalumni.in${user.profile_photo}`} alt={user.username} className="w-9 h-9 rounded-full object-cover" />
-                        ) : (
-                          <span className="text-white text-sm font-bold">{user.first_name?.charAt(0) || user.username?.charAt(0)}</span>
+                      <div className="relative">
+                        <Avatar src={u.profile_photo} name={u.first_name || u.username} gender={u.gender} size={9} />
+                        {presenceMap[u.id]?.is_online && (
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
                         )}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{user.first_name} {user.last_name}</p>
-                        <p className="text-xs text-gray-400">@{user.username}</p>
+                        <p className="text-sm font-semibold text-gray-900">{u.first_name} {u.last_name}</p>
+                        <p className="text-xs text-gray-400">@{u.username}</p>
                       </div>
                     </div>
                   ))}
@@ -646,95 +663,228 @@ const Chat = () => {
                 <p className="text-gray-300 text-xs mt-1">Tap + to start one</p>
               </div>
             ) : (
-              getSortedRooms().map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => { setSelectedChat(chat); connectWebSocket(chat.id); }}
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition group relative ${selectedChat?.id === chat.id ? "bg-emerald-50" : ""}`}
-                >
-                  {/* Avatar */}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${chat.is_community ? "bg-gradient-to-br from-indigo-500 to-violet-600" : "bg-emerald-500"}`}>
-                    {chat.is_community ? <Globe className="w-6 h-6 text-white" /> :
-                      chat.avatar ? <img src={chat.avatar.startsWith("http") ? chat.avatar : `https://api.karpagamalumni.in${chat.avatar}`} alt={chat.name} className="w-12 h-12 object-cover" /> :
-                      <span className="text-white font-bold">{chat.name?.charAt(0)}</span>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center">
-                      <p className={`text-sm font-semibold truncate ${chat.is_community ? "text-indigo-800" : "text-gray-900"}`}>{chat.name}</p>
-                      <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{formatTime(chat.lastMessageTime)}</span>
+              getSortedRooms().map((chat) => {
+                const otherUser   = chat.other_user;
+                const roomPresence = otherUser ? presenceMap[otherUser.id] : null;
+                // last message time: prefer explicit field, fall back to last_message_time from API
+                const lastTime = chat.lastMessageTime || chat.last_message_time || chat.last_message?.timestamp;
+                return (
+                  <div key={chat.id}
+                    onClick={() => selectChat(chat)}
+                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition group relative ${selectedChat?.id === chat.id ? "bg-emerald-50" : ""}`}
+                  >
+                    <div className="relative">
+                      <Avatar
+                        src={chat.avatar || otherUser?.profile_photo}
+                        name={chat.name}
+                        gender={otherUser?.gender}
+                        size={12}
+                        isCommunity={chat.is_community}
+                      />
+                      {!chat.is_community && roomPresence?.is_online && (
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                      )}
                     </div>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">
-                      {chat.is_community ? "Community · All members" : chat.lastMessage || "No messages yet"}
-                    </p>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <p className={`text-sm font-semibold truncate ${chat.is_community ? "text-indigo-800" : "text-gray-900"}`}>
+                          {chat.name}
+                        </p>
+                        <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{fmtTime(lastTime)}</span>
+                      </div>
+                      <p className="text-xs text-gray-400 truncate mt-0.5">
+                        {chat.is_community
+                          ? "Community · All members"
+                          : (chat.lastMessage || chat.last_message?.text || "No messages yet")}
+                      </p>
+                    </div>
+
+                    {!chat.is_community && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setRoomToDelete(chat); setShowDeleteModal(true); }}
+                        className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 transition flex-shrink-0">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {chat.unreadCount > 0 && (
+                      <div className="w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">
+                        {chat.unreadCount}
+                      </div>
+                    )}
                   </div>
-                  {!chat.is_community && (
-                    <button onClick={(e) => handleDeleteClick(chat, e)}
-                      className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 transition flex-shrink-0">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {chat.unreadCount > 0 && (
-                    <div className="w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">{chat.unreadCount}</div>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
 
-        {/* ── Right panel: chat window ── */}
+        {/* ── Right: chat window ── */}
         <div className={`${selectedChat ? "flex" : "hidden lg:flex"} flex-1 flex-col`}>
           {selectedChat ? (
             <>
               {/* Chat top bar */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white">
-                <button onClick={() => setSelectedChat(null)} className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition">
+                <button onClick={() => { setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false); }}
+                  className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition">
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${selectedChat.is_community ? "bg-gradient-to-br from-indigo-500 to-violet-600" : "bg-emerald-500"}`}>
-                  {selectedChat.is_community ? <Globe className="w-4 h-4 text-white" /> :
-                    selectedChat.avatar ? <img src={selectedChat.avatar.startsWith("http") ? selectedChat.avatar : `https://api.karpagamalumni.in${selectedChat.avatar}`} alt={selectedChat.name} className="w-9 h-9 object-cover" /> :
-                    <span className="text-white text-sm font-bold">{selectedChat.name?.charAt(0)}</span>}
+                <div className="relative">
+                  <Avatar
+                    src={selectedChat.avatar || selectedChat.other_user?.profile_photo}
+                    name={selectedChat.name}
+                    gender={selectedChat.other_user?.gender}
+                    size={9}
+                    isCommunity={selectedChat.is_community}
+                  />
+                  {!selectedChat.is_community && otherPresence?.is_online && (
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-bold truncate ${selectedChat.is_community ? "text-indigo-800" : "text-gray-900"}`}>{selectedChat.name}</p>
+                  <p className={`text-sm font-bold truncate ${selectedChat.is_community ? "text-indigo-800" : "text-gray-900"}`}>
+                    {selectedChat.name}
+                  </p>
                   <div className="flex items-center gap-1">
-                    <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500" : "bg-yellow-400 animate-pulse"}`} />
-                    <p className="text-xs text-gray-400">{isConnected ? "Connected" : "Connecting…"}</p>
+                    <div className={`w-1.5 h-1.5 rounded-full ${presenceDotColor()}`} />
+                    <p className="text-xs text-gray-400">{presenceLabel()}</p>
                   </div>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50 space-y-3">
+              <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50 space-y-1.5"
+                onClick={() => setMenuMsgId(null)}>
+
                 {!isConnected && messages.length === 0 && (
                   <div className="flex justify-center">
                     <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-2 rounded-xl flex items-center gap-2 text-sm">
                       <div className="w-3.5 h-3.5 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin" />
                       Connecting…
-                      <button onClick={() => connectWebSocket(selectedChat.id)} className="underline text-yellow-800 font-medium">Retry</button>
+                      <button
+                        onClick={() => connectWebSocket(selectedChat.id, Boolean(selectedChat.is_community))}
+                        className="underline text-yellow-800 font-medium"
+                      >
+                        Retry
+                      </button>
                     </div>
                   </div>
                 )}
+
                 {messages.length === 0 && isConnected && (
                   <div className="text-center py-12">
                     <MessageSquare className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">{selectedChat.is_community ? "Be first to say hello!" : "Start the conversation!"}</p>
+                    <p className="text-gray-400 text-sm">
+                      {selectedChat.is_community ? "Be first to say hello!" : "Start the conversation!"}
+                    </p>
                   </div>
                 )}
+
                 {messages.map((msg) => {
-                  const isOwn = currentUser && (msg.sender?.id === currentUser.id || msg.sender?.username === currentUser.username);
+                  const own       = isOwnMessage(msg);
+                  const canModify = canModifyMessage(msg);
+                  const isEditing = editingId === msg.id;
+                  const showMenu  = menuMsgId === msg.id;
+
                   return (
-                    <div key={msg.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-                      <div className="max-w-[70%]">
-                        {!isOwn && msg.sender && (
-                          <p className="text-xs text-gray-400 mb-1 px-1">{msg.sender.first_name} {msg.sender.last_name}</p>
+                    <div key={msg.id} className={`flex ${own ? "justify-end" : "justify-start"} group`}>
+                      {/* Other user avatar — DM only */}
+                      {!own && !selectedChat.is_community && (
+                        <div className="mr-2 mt-auto mb-1">
+                          <Avatar
+                            src={msg.sender?.profile_photo}
+                            name={msg.sender?.first_name || msg.sender?.username}
+                            gender={msg.sender?.gender}
+                            size={7}
+                          />
+                        </div>
+                      )}
+
+                      <div className={`max-w-[72%] ${own ? "items-end" : "items-start"} flex flex-col`}>
+                        {/* Sender name — community non-own messages */}
+                        {!own && selectedChat.is_community && msg.sender && (
+                          <p className="text-xs text-gray-400 mb-1 px-1">
+                            {msg.sender.first_name} {msg.sender.last_name}
+                          </p>
                         )}
-                        <div className={`px-4 py-2.5 rounded-2xl text-sm ${isOwn
-                          ? selectedChat.is_community ? "bg-indigo-600 text-white rounded-tr-sm" : "bg-emerald-600 text-white rounded-tr-sm"
-                          : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-sm"}`}>
-                          <p>{msg.text}</p>
-                          <p className={`text-xs mt-1 ${isOwn ? "text-white/60" : "text-gray-400"}`}>{msg.time}</p>
+
+                        <div className="relative">
+                          {/* Context menu button */}
+                          {canModify && !isEditing && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setMenuMsgId(showMenu ? null : msg.id); }}
+                              className={`absolute top-1 ${own ? "-left-7" : "-right-7"} opacity-0 group-hover:opacity-100 transition w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-gray-700 z-10`}
+                            >
+                              <MoreVertical className="w-3 h-3" />
+                            </button>
+                          )}
+
+                          {/* Context menu */}
+                          {showMenu && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className={`absolute ${own ? "right-0" : "left-0"} top-8 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden w-36`}
+                            >
+                              {/* Message Info — own DM messages only */}
+                              {own && !selectedChat.is_community && (
+                                <button
+                                  onClick={() => { setInfoMsg(msg); setMenuMsgId(null); }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                                >
+                                  <Info className="w-3.5 h-3.5" /> Message Info
+                                </button>
+                              )}
+                              {isOwnMessage(msg) && (
+                                <button onClick={() => startEdit(msg)}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                  <Pencil className="w-3.5 h-3.5" /> Edit
+                                </button>
+                              )}
+                              <button onClick={() => deleteMessage(msg.id)}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Bubble */}
+                          {isEditing ? (
+                            <div className="flex items-center gap-2 bg-white border border-emerald-300 rounded-2xl px-3 py-2 shadow-sm">
+                              <input
+                                ref={inputRef}
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") submitEdit();
+                                  if (e.key === "Escape") setEditingId(null);
+                                }}
+                                className="text-sm text-gray-800 bg-transparent focus:outline-none flex-1 min-w-[120px]"
+                              />
+                              <button onClick={submitEdit} className="text-emerald-600 hover:text-emerald-700 transition">
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600 transition">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className={`px-4 py-2.5 rounded-2xl text-sm ${
+                              own
+                                ? selectedChat.is_community
+                                  ? "bg-indigo-600 text-white rounded-tr-sm"
+                                  : "bg-emerald-600 text-white rounded-tr-sm"
+                                : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-sm"
+                            }`}>
+                              <p className="break-words">{msg.text}</p>
+                              {msg.edited && (
+                                <span className={`text-[10px] italic ${own ? "text-white/50" : "text-gray-400"}`}> · edited</span>
+                              )}
+                              <div className="flex items-center justify-end gap-1 mt-1">
+                                <span className={`text-xs ${own ? "text-white/60" : "text-gray-400"}`}>{msg.time}</span>
+                                {own && <StatusIcon status={msg.status} isCommunity={selectedChat.is_community} />}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -751,15 +901,14 @@ const Chat = () => {
                     placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                    className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none"
+                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                     disabled={!isConnected}
+                    className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none"
                   />
-                  <button
-                    onClick={sendMessage}
-                    disabled={!message.trim() || !isConnected}
-                    className={`w-8 h-8 flex items-center justify-center rounded-xl transition disabled:opacity-40 ${selectedChat.is_community ? "text-indigo-600 hover:bg-indigo-50" : "text-emerald-600 hover:bg-emerald-50"}`}
-                  >
+                  <button onClick={sendMessage} disabled={!message.trim() || !isConnected}
+                    className={`w-8 h-8 flex items-center justify-center rounded-xl transition disabled:opacity-40 ${
+                      selectedChat.is_community ? "text-indigo-600 hover:bg-indigo-50" : "text-emerald-600 hover:bg-emerald-50"
+                    }`}>
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
@@ -779,7 +928,7 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete room modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div role="dialog" aria-modal="true" className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
@@ -792,12 +941,18 @@ const Chat = () => {
                 <p className="text-xs text-gray-400">This cannot be undone</p>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-5">Delete your chat with <span className="font-semibold">{roomToDelete?.name}</span>?</p>
+            <p className="text-sm text-gray-600 mb-5">
+              Delete your chat with <span className="font-semibold">{roomToDelete?.name}</span>?
+            </p>
             <div className="flex gap-3">
               <button onClick={() => { setShowDeleteModal(false); setRoomToDelete(null); }}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+                Cancel
+              </button>
               <button onClick={() => deleteRoom(roomToDelete?.id)}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition">Delete</button>
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition">
+                Delete
+              </button>
             </div>
           </div>
         </div>

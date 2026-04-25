@@ -248,7 +248,7 @@ const NewsCard = ({ item, onDelete, onUpdate }) => {
             <p className="text-sm font-bold text-gray-900">{item.user ? `${item.user.first_name} ${item.user.last_name}` : "Anonymous"}</p>
             <p className="text-xs text-gray-400 flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              {new Date(item.posted_on || item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              {new Date(item.posted_on || item.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
             </p>
           </div>
         </div>
