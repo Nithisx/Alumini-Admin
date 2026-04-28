@@ -115,6 +115,7 @@ export const COURSE_BRANCH_MAPPING = {
     "Aerospace Engineering",
     "Automobile Engineering",
     "Bio Medical Engineering",
+    "CAD/CAM Robotics",
     "Chemical Engineering",
     "Civil Engineering",
     "Computer Science Engineering",
