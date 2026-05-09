@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-import * as XLSX from "xlsx";
 import Pagination from "../../Shared/Pagination";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
 
@@ -252,6 +251,282 @@ const AutocompleteInput = ({
   );
 };
 
+// ── Export field definitions ───────────────────────────────────────────────
+const EXPORT_FIELD_GROUPS = [
+  {
+    label: "Identity",
+    fields: [
+      { key: "username", label: "Username" },
+      { key: "first_name", label: "First Name" },
+      { key: "last_name", label: "Last Name" },
+      { key: "gender", label: "Gender" },
+      { key: "date_of_birth", label: "Date of Birth" },
+      { key: "role", label: "Role" },
+    ],
+  },
+  {
+    label: "Contact",
+    fields: [
+      { key: "email", label: "Email" },
+      { key: "secondary_email", label: "Secondary Email" },
+      { key: "phone", label: "Phone" },
+    ],
+  },
+  {
+    label: "Academic",
+    fields: [
+      { key: "roll_no", label: "Roll Number" },
+      { key: "course", label: "Course" },
+      { key: "stream", label: "Stream" },
+      { key: "branch", label: "Branch" },
+      { key: "course_start_year", label: "Course Start Year" },
+      { key: "course_end_year", label: "Course End Year" },
+      { key: "passed_out_year", label: "Passed Out Year" },
+      { key: "college_name", label: "College Name" },
+    ],
+  },
+  {
+    label: "Professional",
+    fields: [
+      { key: "company", label: "Company" },
+      { key: "position", label: "Position" },
+      { key: "current_work", label: "Current Work" },
+      { key: "work_experience", label: "Work Experience" },
+      { key: "professional_skills", label: "Professional Skills" },
+      { key: "industries_worked_in", label: "Industries Worked In" },
+      { key: "roles_played", label: "Roles Played" },
+    ],
+  },
+  {
+    label: "Location",
+    fields: [
+      { key: "current_location", label: "Chapter / Current Location" },
+      { key: "home_town", label: "Home Town" },
+      { key: "city", label: "City" },
+      { key: "state", label: "State" },
+      { key: "country", label: "Country" },
+      { key: "Address", label: "Address" },
+      { key: "zip_code", label: "Zip Code" },
+    ],
+  },
+  {
+    label: "Account",
+    fields: [
+      { key: "account_status", label: "Account Status" },
+      { key: "account_type", label: "Account Type" },
+      { key: "is_active", label: "Is Active" },
+      { key: "is_staff", label: "Is Staff" },
+      { key: "last_login", label: "Last Login" },
+      { key: "date_joined", label: "Date Joined" },
+    ],
+  },
+  {
+    label: "Other",
+    fields: [
+      { key: "bio", label: "Bio" },
+      { key: "educational_course", label: "Educational Course" },
+      { key: "educational_institute", label: "Educational Institute" },
+    ],
+  },
+];
+
+const ALL_FIELD_KEYS = EXPORT_FIELD_GROUPS.flatMap((g) => g.fields).map((f) => f.key);
+
+// ── Export Modal ───────────────────────────────────────────────────────────
+function ExportModal({ onClose, onExport, loading, selectedCount, filteredTotal, exportFields, setExportFields, exportScope, setExportScope, exportFormat, setExportFormat }) {
+  const allSelected = exportFields.length === ALL_FIELD_KEYS.length;
+
+  const toggleField = (key) => {
+    setExportFields((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const toggleGroup = (groupFields) => {
+    const keys = groupFields.map((f) => f.key);
+    const allOn = keys.every((k) => exportFields.includes(k));
+    if (allOn) {
+      setExportFields((prev) => prev.filter((k) => !keys.includes(k)));
+    } else {
+      setExportFields((prev) => [...new Set([...prev, ...keys])]);
+    }
+  };
+
+  const toggleAll = () => {
+    setExportFields(allSelected ? [] : [...ALL_FIELD_KEYS]);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <h2 className="text-base font-bold text-gray-900">Export Members</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-5">
+          {/* Scope */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Export Scope</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: "selected", label: `Selected (${selectedCount})`, disabled: selectedCount === 0 },
+                { value: "page", label: "Current Page" },
+                { value: "all", label: `All Filtered (${filteredTotal})` },
+              ].map(({ value, label, disabled }) => (
+                <button
+                  key={value}
+                  disabled={disabled}
+                  onClick={() => !disabled && setExportScope(value)}
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition ${
+                    exportScope === value
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : disabled
+                      ? "border-gray-200 text-gray-300 cursor-not-allowed"
+                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Format */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">File Format</p>
+            <div className="flex gap-2">
+              {[
+                { value: "xlsx", label: "Excel (.xlsx)" },
+                { value: "csv", label: "CSV (.csv)" },
+              ].map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setExportFormat(value)}
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition ${
+                    exportFormat === value
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Fields */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Fields — {exportFields.length} / {ALL_FIELD_KEYS.length} selected
+              </p>
+              <button
+                onClick={toggleAll}
+                className="text-xs text-emerald-600 font-semibold hover:underline"
+              >
+                {allSelected ? "Deselect All" : "Select All"}
+              </button>
+            </div>
+            <div className="space-y-3">
+              {EXPORT_FIELD_GROUPS.map((group) => {
+                const groupKeys = group.fields.map((f) => f.key);
+                const allGroupOn = groupKeys.every((k) => exportFields.includes(k));
+                const someGroupOn = groupKeys.some((k) => exportFields.includes(k));
+                return (
+                  <div key={group.label} className="border border-gray-100 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => toggleGroup(group.fields)}
+                      className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition"
+                    >
+                      <span className="text-xs font-bold text-gray-700">{group.label}</span>
+                      <span className={`w-4 h-4 rounded border-2 flex items-center justify-center transition ${allGroupOn ? "bg-emerald-600 border-emerald-600" : someGroupOn ? "bg-emerald-200 border-emerald-400" : "border-gray-300"}`}>
+                        {(allGroupOn || someGroupOn) && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d={allGroupOn ? "M5 13l4 4L19 7" : "M5 12h14"} />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-gray-100">
+                      {group.fields.map((field) => {
+                        const on = exportFields.includes(field.key);
+                        return (
+                          <button
+                            key={field.key}
+                            onClick={() => toggleField(field.key)}
+                            className={`flex items-center gap-2 px-3 py-2 bg-white text-left text-xs transition hover:bg-emerald-50 ${on ? "text-gray-900" : "text-gray-400"}`}
+                          >
+                            <span className={`w-3.5 h-3.5 rounded border-2 flex-shrink-0 flex items-center justify-center transition ${on ? "bg-emerald-600 border-emerald-600" : "border-gray-300"}`}>
+                              {on && (
+                                <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </span>
+                            {field.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">
+            {exportFields.length === 0 ? "Select at least one field." : `${exportFields.length} column${exportFields.length !== 1 ? "s" : ""} will be exported.`}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onExport}
+              disabled={loading || exportFields.length === 0}
+              className="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Exporting…
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Export
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MembersPage() {
   const [members, setMembers] = useState([]);
   const [filteredTotal, setFilteredTotal] = useState(0);
@@ -300,6 +575,13 @@ export default function MembersPage() {
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [selectAllLoading, setSelectAllLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportScope, setExportScope] = useState("selected"); // "selected" | "page" | "all"
+  const [exportFormat, setExportFormat] = useState("xlsx"); // "xlsx" | "csv"
+  const [exportFields, setExportFields] = useState(() =>
+    EXPORT_FIELD_GROUPS.flatMap((g) => g.fields).map((f) => f.key)
+  );
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(() => readQueryNumber("page", 1));
@@ -605,108 +887,80 @@ export default function MembersPage() {
     }
   };
 
-  const exportToExcel = async () => {
-    if (selectedMembers.size === 0) {
-      toast.error("Please select at least one member to export.");
+  const handleExport = async () => {
+    if (exportFields.length === 0) {
+      toast.error("Select at least one field to export.");
+      return;
+    }
+    if (exportScope === "selected" && selectedMembers.size === 0) {
+      toast.error("No members selected.");
       return;
     }
 
     setExportLoading(true);
-
     try {
-      // If we have selected members that might not be in current page, fetch all filtered members
-      let selectedMembersData = [];
+      const body = {
+        format: exportFormat,
+        fields: exportFields,
+      };
 
-      if (selectAll || selectedMembers.size > members.length) {
-        // Fetch all filtered members to get complete data
-        const allFilteredMembers = await fetchAllFilteredMembers();
-        selectedMembersData = allFilteredMembers.filter((member) =>
-          selectedMembers.has(member.id)
-        );
+      if (exportScope === "selected") {
+        body.ids = [...selectedMembers];
+      } else if (exportScope === "page") {
+        body.ids = members.map((m) => m.id);
       } else {
-        // Use current page members if all selected are visible
-        selectedMembersData = members.filter((member) =>
-          selectedMembers.has(member.id)
-        );
+        // All filtered — send active filters so backend queries server-side
+        const filters = {};
+        if (roleFilter) filters.role = roleFilter;
+        if (cityFilter) filters.city = cityFilter;
+        if (stateFilter) filters.state = stateFilter;
+        if (countryFilter) filters.country = countryFilter;
+        if (genderFilter) filters.gender = genderFilter;
+        if (courseFilter) filters.course = courseFilter;
+        if (branchFilter) filters.branch = branchFilter;
+        if (passedOutYearFilter) filters.passed_out_year = passedOutYearFilter;
+        if (courseEndYearFilter) filters.course_end_year = courseEndYearFilter;
+        if (collegeNameFilter) filters.college_name = collegeNameFilter;
+        if (companyFilter) filters.company = companyFilter;
+        if (currentWorkFilter) filters.current_work = currentWorkFilter;
+        if (chapterFilter) filters.current_location = chapterFilter;
+        if (emailFilter) filters.email = emailFilter;
+        if (rollNoFilter) filters.roll_no = rollNoFilter;
+        if (workedInFilter) filters.worked_in = workedInFilter;
+        if (rolesPlayedFilter) filters.roles_played = rolesPlayedFilter;
+        if (searchQuery) filters.search = searchQuery;
+        if (nameSearchQuery) filters.name_search = nameSearchQuery;
+        body.filters = filters;
       }
 
-      // Prepare data for Excel export with all important fields
-      const excelData = selectedMembersData.map((member) => ({
-        ID: member.id,
-        Username: member.username,
-        "First Name": member.first_name,
-        "Last Name": member.last_name,
-        Email: member.email,
-        "Secondary Email": member.secondary_email,
-        Phone: member.phone,
-        Gender: member.gender,
-        "Date of Birth": member.date_of_birth,
-        Role: member.role,
-        "Roll Number": member.roll_no,
-        Course: member.course,
-        Stream: member.stream,
-        Branch: member.branch,
-        "Course Start Year": member.course_start_year,
-        "Course End Year": member.course_end_year,
-        "Passed Out Year": member.passed_out_year,
-        "College Name": member.college_name,
-        "Current Location/Chapter": member.current_location,
-        "Home Town": member.home_town,
-        City: member.city,
-        State: member.state,
-        Country: member.country,
-        Address: member.Address,
-        "Zip Code": member.zip_code,
-        Company: member.company,
-        Position: member.position,
-        "Current Work": member.current_work,
-        "Work Experience": member.work_experience,
-        "Professional Skills": member.professional_skills,
-        "Industries Worked In": member.industries_worked_in,
-        "Roles Played": member.roles_played,
-        Bio: member.bio,
-        "Educational Course": member.educational_course,
-        "Educational Institute": member.educational_institute,
-        "Account Status": member.approval_status?.status_display,
-        "Account Type": member.approval_status?.account_type,
-        "Is Active": member.approval_status?.is_active ? "Yes" : "No",
-        "Is Staff": member.approval_status?.is_staff ? "Yes" : "No",
-        "Last Login": member.approval_status?.last_login,
-        "Date Joined": member.approval_status?.date_joined,
-      }));
-
-      // Create workbook and worksheet
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(excelData);
-
-      // Auto-size columns
-      const colWidths = [];
-      const headers = Object.keys(excelData[0] || {});
-      headers.forEach((header, index) => {
-        const maxLength = Math.max(
-          header.length,
-          ...excelData.map((row) => String(row[header] || "").length)
-        );
-        colWidths[index] = { wch: Math.min(maxLength + 2, 50) };
-      });
-      ws["!cols"] = colWidths;
-
-      // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, "Members");
-
-      // Generate filename with timestamp
-      const timestamp = new Date().toISOString().split("T")[0];
-      const filename = `members_export_${timestamp}.xlsx`;
-
-      // Save file
-      XLSX.writeFile(wb, filename);
-
-      // Show success message
-      toast.error(
-        `Successfully exported ${selectedMembers.size} members to ${filename}`
+      const response = await axios.post(
+        `${BASE_URL}/members/export/`,
+        body,
+        {
+          headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+          responseType: "blob",
+        }
       );
-    } catch (error) {
-      toast.error("Error exporting data to Excel. Please try again.");
+
+      const ext = exportFormat === "xlsx" ? "xlsx" : "csv";
+      const timestamp = new Date().toISOString().split("T")[0];
+      const filename = `members_export_${timestamp}.${ext}`;
+      const url = URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      const approxCount = exportScope === "selected"
+        ? selectedMembers.size
+        : exportScope === "page"
+        ? members.length
+        : filteredTotal;
+      toast.success(`Exported ~${approxCount} members as ${ext.toUpperCase()}.`);
+      setShowExportModal(false);
+    } catch {
+      toast.error("Export failed. Please try again.");
     } finally {
       setExportLoading(false);
     }
@@ -936,6 +1190,21 @@ export default function MembersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      {showExportModal && (
+        <ExportModal
+          onClose={() => setShowExportModal(false)}
+          onExport={handleExport}
+          loading={exportLoading}
+          selectedCount={selectedMembers.size}
+          filteredTotal={filteredTotal}
+          exportFields={exportFields}
+          setExportFields={setExportFields}
+          exportScope={exportScope}
+          setExportScope={setExportScope}
+          exportFormat={exportFormat}
+          setExportFormat={setExportFormat}
+        />
+      )}
       {/* ── Instagram-style sticky header ── */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 py-3">
@@ -976,6 +1245,19 @@ export default function MembersPage() {
               className="flex-shrink-0 text-sm text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-xl hover:bg-red-50 transition"
             >
               Clear
+            </button>
+            <button
+              onClick={() => {
+                if (selectedMembers.size > 0) setExportScope("selected");
+                else setExportScope("page");
+                setShowExportModal(true);
+              }}
+              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-sm font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export
             </button>
           </div>
         </div>
@@ -1373,6 +1655,20 @@ export default function MembersPage() {
             )}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Select mode toggle */}
+            <button
+              onClick={() => {
+                const next = !selectionMode;
+                setSelectionMode(next);
+                if (!next) { setSelectedMembers(new Set()); setSelectAll(false); }
+              }}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition ${selectionMode ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              {selectionMode ? "Selecting" : "Select"}
+            </button>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Sort by</span>
               <select
@@ -1393,6 +1689,57 @@ export default function MembersPage() {
             </button>
           </div>
         </div>
+
+        {/* Selection bar — visible only in selection mode */}
+        {selectionMode && (
+          <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-2.5 flex-wrap">
+            <span className="text-sm font-semibold text-emerald-800">
+              {selectedMembers.size === 0 ? "No members selected" : `${selectedMembers.size} selected`}
+            </span>
+            <div className="flex items-center gap-2 ml-auto flex-wrap">
+              {/* Select current page */}
+              <button
+                onClick={() => {
+                  const newSet = new Set(selectedMembers);
+                  members.forEach((m) => newSet.add(m.id));
+                  setSelectedMembers(newSet);
+                }}
+                className="text-xs font-medium text-emerald-700 border border-emerald-300 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 transition"
+              >
+                + This page
+              </button>
+              {/* Select all filtered */}
+              <button
+                onClick={handleSelectAll}
+                disabled={selectAllLoading}
+                className="text-xs font-medium text-emerald-700 border border-emerald-300 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-50 transition disabled:opacity-50"
+              >
+                {selectAllLoading ? "Loading…" : selectAll ? "Deselect all" : `Select all ${filteredTotal}`}
+              </button>
+              {/* Clear selection */}
+              {selectedMembers.size > 0 && (
+                <button
+                  onClick={() => { setSelectedMembers(new Set()); setSelectAll(false); }}
+                  className="text-xs font-medium text-red-500 border border-red-200 px-3 py-1.5 rounded-xl bg-white hover:bg-red-50 transition"
+                >
+                  Clear
+                </button>
+              )}
+              {/* Export selected */}
+              {selectedMembers.size > 0 && (
+                <button
+                  onClick={() => { setExportScope("selected"); setShowExportModal(true); }}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-white bg-emerald-600 px-3 py-1.5 rounded-xl hover:bg-emerald-700 transition"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Export {selectedMembers.size}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Members content */}
         {loading ? (
@@ -1420,38 +1767,55 @@ export default function MembersPage() {
         ) : (
           /* ── Instagram-style profile grid ── */
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {members.map((member) => (
-              <div
-                key={member.id}
-                onClick={() => {
-                  sessionStorage.setItem(
-                    MEMBERS_RETURN_URL_KEY,
-                    `${window.location.pathname}${window.location.search}`
-                  );
-                  window.location.href = `/admin/members/${member.username}`;
-                }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer group hover:shadow-md transition-shadow"
-              >
-                {/* Square photo */}
-                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
-                  <img
-                    src={member.profile_photo ? `https://api.karpagamalumni.in${member.profile_photo}` : getProfilePlaceholderByGender(member.gender)}
-                    alt={`${member.first_name} ${member.last_name}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(member.gender); }}
-                  />
-                  <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadgeColor(member.role)}`}>
-                    {member.role}
+            {members.map((member) => {
+              const isSelected = selectedMembers.has(member.id);
+              return (
+                <div
+                  key={member.id}
+                  onClick={() => {
+                    if (selectionMode) {
+                      handleMemberSelect(member.id);
+                    } else {
+                      sessionStorage.setItem(
+                        MEMBERS_RETURN_URL_KEY,
+                        `${window.location.pathname}${window.location.search}`
+                      );
+                      window.location.href = `/admin/members/${member.username}`;
+                    }
+                  }}
+                  className={`bg-white rounded-2xl shadow-sm border overflow-hidden cursor-pointer group hover:shadow-md transition-all ${isSelected ? "border-emerald-400 ring-2 ring-emerald-400" : "border-gray-100"}`}
+                >
+                  {/* Square photo */}
+                  <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                    <img
+                      src={member.profile_photo ? `https://api.karpagamalumni.in${member.profile_photo}` : getProfilePlaceholderByGender(member.gender)}
+                      alt={`${member.first_name} ${member.last_name}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(member.gender); }}
+                    />
+                    <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadgeColor(member.role)}`}>
+                      {member.role}
+                    </div>
+                    {/* Checkbox overlay in selection mode */}
+                    {selectionMode && (
+                      <div className={`absolute top-2 left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${isSelected ? "bg-emerald-500 border-emerald-500" : "bg-white/80 border-gray-300"}`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div className="p-3">
+                    <p className="text-sm font-bold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
+                    {member.city && <p className="text-xs text-gray-400 truncate mt-0.5">{member.city}</p>}
+                    {member.current_work && <p className="text-xs text-emerald-600 truncate mt-0.5">{member.current_work}</p>}
                   </div>
                 </div>
-                {/* Info */}
-                <div className="p-3">
-                  <p className="text-sm font-bold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
-                  {member.city && <p className="text-xs text-gray-400 truncate mt-0.5">{member.city}</p>}
-                  {member.current_work && <p className="text-xs text-emerald-600 truncate mt-0.5">{member.current_work}</p>}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
