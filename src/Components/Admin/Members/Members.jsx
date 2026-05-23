@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import Pagination from "../../Shared/Pagination";
+import MultiSelectAutocomplete, { HighlightMatch } from "../../Shared/MultiSelectAutocomplete";
+import ActiveFilterChips from "../../Shared/ActiveFilterChips";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
 
 const TOKEN =
@@ -12,8 +14,6 @@ const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const API_URL = `${BASE_URL}/admin-members/`;
 const DROPDOWN_FILTERS_URL = `${BASE_URL}/dynamic-dropdown-filters/`;
 
-
-const MAX_DROPDOWN_ITEMS = 50;
 const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
 
 const readQueryValue = (key, fallback = "") => {
@@ -22,233 +22,28 @@ const readQueryValue = (key, fallback = "") => {
   return value ?? fallback;
 };
 
+const readQueryArray = (key) => {
+  const raw = readQueryValue(key, "");
+  if (!raw) return [];
+  return raw.split(",").map((v) => v.trim()).filter(Boolean);
+};
+
 const readQueryNumber = (key, fallback) => {
   const raw = readQueryValue(key, "");
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-// Highlight matched text in suggestions
-const HighlightMatch = ({ text, query }) => {
-  if (!query.trim()) return <span>{text}</span>;
-  const strText = text.toString();
-  const idx = strText.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return <span>{strText}</span>;
-  return (
-    <span>
-      {strText.substring(0, idx)}
-      <mark className="bg-blue-100 text-blue-800 rounded px-0.5">{strText.substring(idx, idx + query.length)}</mark>
-      {strText.substring(idx + query.length)}
-    </span>
-  );
-};
-
-const AutocompleteInput = ({
-  id,
-  label,
-  placeholder,
-  value,
-  onChange,
-  filterType,
-  options,
-  icon,
-}) => {
-  const [inputValue, setInputValue] = useState(value || "");
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
-  const [totalMatches, setTotalMatches] = useState(0);
-  const inputRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const containerRef = useRef(null);
-
-  // Cache the fullest set of options we've ever received.
-  const cachedOptionsRef = useRef([]);
-
-  // Update cache: always keep the larger set so we never lose options
-  useEffect(() => {
-    if (options.length > cachedOptionsRef.current.length) {
-      cachedOptionsRef.current = options;
-    }
-  }, [options]);
-
-  // Sync input value with parent value
-  useEffect(() => {
-    setInputValue(value || "");
-  }, [value]);
-
-  // Re-filter suggestions when options change (e.g. after API refetch)
-  useEffect(() => {
-    if (showSuggestions) {
-      filterOptions(inputValue);
-    }
-  }, [options]);
-
-  // Filter suggestions helper — always uses cached (full) options
-  const filterOptions = (query) => {
-    const source = cachedOptionsRef.current.length > 0
-      ? cachedOptionsRef.current
-      : options;
-
-    if (query.trim() === "") {
-      const limited = source.slice(0, MAX_DROPDOWN_ITEMS);
-      setFilteredSuggestions(limited);
-      setTotalMatches(source.length);
-    } else {
-      const filtered = source.filter((item) =>
-        item.toString().toLowerCase().includes(query.toLowerCase())
-      );
-      setTotalMatches(filtered.length);
-      setFilteredSuggestions(filtered.slice(0, MAX_DROPDOWN_ITEMS));
-    }
-  };
-
-  const handleChange = (e) => {
-    const val = e.target.value;
-    setInputValue(val);
-    filterOptions(val);
-    setShowSuggestions(true);
-  };
-
-  // Handle Enter key press for manual filtering
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      onChange(inputValue);
-      setShowSuggestions(false);
-    }
-  };
-
-  // Handle manual trigger on blur - only if value changed
-  const handleBlur = () => {
-    setTimeout(() => {
-      setShowSuggestions(false);
-      if (inputValue !== value) {
-        onChange(inputValue);
-      }
-    }, 200);
-  };
-
-  const handleFocus = () => {
-    filterOptions(inputValue);
-    setShowSuggestions(true);
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setInputValue(suggestion);
-    onChange(suggestion);
-    setShowSuggestions(false);
-  };
-
-  const handleClear = (e) => {
-    e.stopPropagation();
-    setInputValue("");
-    onChange("");
-    setShowSuggestions(false);
-    inputRef.current?.focus();
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const isActive = value && value.trim() !== "";
-
-  return (
-    <div className="space-y-1.5 relative" ref={containerRef}>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          className={`w-full border rounded-lg px-3 py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-sm ${isActive
-            ? "border-blue-400 bg-blue-50/30 shadow-sm shadow-blue-100"
-            : "border-gray-300"
-            }`}
-          placeholder={placeholder}
-          value={inputValue}
-          onChange={handleChange}
-          onKeyDown={handleKeyPress}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          autoComplete="off"
-        />
-        {icon}
-
-        {/* Clear button when value exists */}
-        {(inputValue || isActive) && (
-          <button
-            type="button"
-            onMouseDown={handleClear}
-            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors"
-            title="Clear"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-
-        {/* Dropdown Suggestions */}
-        {showSuggestions && filteredSuggestions.length > 0 && (
-          <div
-            ref={dropdownRef}
-            className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto"
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            {filteredSuggestions.map((suggestion, index) => (
-              <div
-                key={`${filterType}-${index}-${suggestion}`}
-                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-50 last:border-b-0 transition-colors group"
-                onMouseDown={() => handleSuggestionClick(suggestion)}
-              >
-                <span className="text-gray-700 group-hover:text-blue-700 transition-colors truncate block">
-                  <HighlightMatch text={suggestion} query={inputValue} />
-                </span>
-              </div>
-            ))}
-            {totalMatches > MAX_DROPDOWN_ITEMS && (
-              <div className="px-3 py-2 text-center text-xs text-gray-400 bg-gray-50 border-t border-gray-100 sticky bottom-0">
-                Showing {MAX_DROPDOWN_ITEMS} of {totalMatches} results — type to narrow down
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* No options message */}
-        {showSuggestions &&
-          filteredSuggestions.length === 0 &&
-          inputValue.trim() !== "" && (
-            <div
-              ref={dropdownRef}
-              className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl"
-              onMouseDown={(e) => e.preventDefault()}
-            >
-              <div className="px-3 py-3 text-center text-gray-500 text-sm">
-                <svg className="w-5 h-5 mx-auto mb-1 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                No matches for "<strong>{inputValue}</strong>"
-              </div>
-            </div>
-          )}
-      </div>
-    </div>
-  );
+// Compare any value (string/number) case-insensitively to any string in the list.
+const valueMatchesAny = (memberValue, filterValues) => {
+  if (memberValue === null || memberValue === undefined) return false;
+  if (!filterValues || filterValues.length === 0) return false;
+  const mv = String(memberValue).trim().toLowerCase();
+  if (!mv) return false;
+  return filterValues.some((fv) => {
+    const f = String(fv).trim().toLowerCase();
+    return f === mv || mv.includes(f);
+  });
 };
 
 // ── Export field definitions ───────────────────────────────────────────────
@@ -532,25 +327,26 @@ export default function MembersPage() {
   const [filteredTotal, setFilteredTotal] = useState(0);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
-  const [roleFilter, setRoleFilter] = useState(() => readQueryValue("role"));
-  const [cityFilter, setCityFilter] = useState(() => readQueryValue("city"));
-  const [workedInFilter, setWorkedInFilter] = useState(() => readQueryValue("worked_in"));
+  // Multi-select filters — each holds an array of selected values
+  const [roleFilter, setRoleFilter] = useState(() => readQueryArray("role"));
+  const [cityFilter, setCityFilter] = useState(() => readQueryArray("city"));
+  const [workedInFilter, setWorkedInFilter] = useState(() => readQueryArray("worked_in"));
   const [searchQuery, setSearchQuery] = useState(() => readQueryValue("search"));
   const [nameSearchQuery, setNameSearchQuery] = useState(() => readQueryValue("name_search"));
-  const [rolesPlayedFilter, setRolesPlayedFilter] = useState(() => readQueryValue("roles_played"));
-  const [genderFilter, setGenderFilter] = useState(() => readQueryValue("gender"));
-  const [courseEndYearFilter, setCourseEndYearFilter] = useState(() => readQueryValue("course_end_year"));
-  const [companyFilter, setCompanyFilter] = useState(() => readQueryValue("company"));
-  const [countryFilter, setCountryFilter] = useState(() => readQueryValue("country"));
-  const [stateFilter, setStateFilter] = useState(() => readQueryValue("state"));
-  const [passedOutYearFilter, setPassedOutYearFilter] = useState(() => readQueryValue("passed_out_year"));
-  const [courseFilter, setCourseFilter] = useState(() => readQueryValue("course"));
-  const [collegeNameFilter, setCollegeNameFilter] = useState(() => readQueryValue("college_name"));
-  const [currentWorkFilter, setCurrentWorkFilter] = useState(() => readQueryValue("current_work"));
-  const [chapterFilter, setChapterFilter] = useState(() => readQueryValue("current_location")); // Add chapter filter state
-  const [branchFilter, setBranchFilter] = useState(() => readQueryValue("branch")); // Add branch filter state
-  const [emailFilter, setEmailFilter] = useState(() => readQueryValue("email")); // Declare emailFilter state
-  const [rollNoFilter, setRollNoFilter] = useState(() => readQueryValue("roll_no")); // Declare rollNoFilter state
+  const [rolesPlayedFilter, setRolesPlayedFilter] = useState(() => readQueryArray("roles_played"));
+  const [genderFilter, setGenderFilter] = useState(() => readQueryArray("gender"));
+  const [courseEndYearFilter, setCourseEndYearFilter] = useState(() => readQueryArray("course_end_year"));
+  const [companyFilter, setCompanyFilter] = useState(() => readQueryArray("company"));
+  const [countryFilter, setCountryFilter] = useState(() => readQueryArray("country"));
+  const [stateFilter, setStateFilter] = useState(() => readQueryArray("state"));
+  const [passedOutYearFilter, setPassedOutYearFilter] = useState(() => readQueryArray("passed_out_year"));
+  const [courseFilter, setCourseFilter] = useState(() => readQueryArray("course"));
+  const [collegeNameFilter, setCollegeNameFilter] = useState(() => readQueryArray("college_name"));
+  const [currentWorkFilter, setCurrentWorkFilter] = useState(() => readQueryArray("current_work"));
+  const [chapterFilter, setChapterFilter] = useState(() => readQueryArray("current_location"));
+  const [branchFilter, setBranchFilter] = useState(() => readQueryArray("branch"));
+  const [emailFilter, setEmailFilter] = useState(() => readQueryArray("email"));
+  const [rollNoFilter, setRollNoFilter] = useState(() => readQueryArray("roll_no"));
   const [showFilters, setShowFilters] = useState(() => readQueryValue("show_filters") === "1");
   // Add a new state to track manual search triggers
   const [manualSearchTrigger, setManualSearchTrigger] = useState(0);
@@ -600,25 +396,26 @@ export default function MembersPage() {
     if (typeof window === "undefined") return;
 
     const params = new URLSearchParams();
-    if (roleFilter) params.set("role", roleFilter);
-    if (cityFilter) params.set("city", cityFilter);
-    if (workedInFilter) params.set("worked_in", workedInFilter);
+    const setArr = (key, arr) => { if (arr && arr.length > 0) params.set(key, arr.join(",")); };
+    setArr("role", roleFilter);
+    setArr("city", cityFilter);
+    setArr("worked_in", workedInFilter);
     if (searchQuery) params.set("search", searchQuery);
     if (nameSearchQuery) params.set("name_search", nameSearchQuery);
-    if (rolesPlayedFilter) params.set("roles_played", rolesPlayedFilter);
-    if (genderFilter) params.set("gender", genderFilter);
-    if (courseEndYearFilter) params.set("course_end_year", courseEndYearFilter);
-    if (companyFilter) params.set("company", companyFilter);
-    if (countryFilter) params.set("country", countryFilter);
-    if (stateFilter) params.set("state", stateFilter);
-    if (passedOutYearFilter) params.set("passed_out_year", passedOutYearFilter);
-    if (courseFilter) params.set("course", courseFilter);
-    if (collegeNameFilter) params.set("college_name", collegeNameFilter);
-    if (currentWorkFilter) params.set("current_work", currentWorkFilter);
-    if (chapterFilter) params.set("current_location", chapterFilter);
-    if (emailFilter) params.set("email", emailFilter);
-    if (branchFilter) params.set("branch", branchFilter);
-    if (rollNoFilter) params.set("roll_no", rollNoFilter);
+    setArr("roles_played", rolesPlayedFilter);
+    setArr("gender", genderFilter);
+    setArr("course_end_year", courseEndYearFilter);
+    setArr("company", companyFilter);
+    setArr("country", countryFilter);
+    setArr("state", stateFilter);
+    setArr("passed_out_year", passedOutYearFilter);
+    setArr("course", courseFilter);
+    setArr("college_name", collegeNameFilter);
+    setArr("current_work", currentWorkFilter);
+    setArr("current_location", chapterFilter);
+    setArr("email", emailFilter);
+    setArr("branch", branchFilter);
+    setArr("roll_no", rollNoFilter);
 
     params.set("page", currentPage.toString());
     params.set("page_size", pageSize.toString());
@@ -662,27 +459,26 @@ export default function MembersPage() {
     setFiltersLoading(true);
     try {
       const params = new URLSearchParams();
-
-      // Add ALL current filters to the request
-      if (roleFilter) params.append("role", roleFilter);
-      if (cityFilter) params.append("city", cityFilter);
-      if (workedInFilter) params.append("worked_in", workedInFilter);
-      if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
+      const addArr = (key, arr) => { if (arr && arr.length > 0) params.append(key, arr.join(",")); };
+      addArr("role", roleFilter);
+      addArr("city", cityFilter);
+      addArr("worked_in", workedInFilter);
+      addArr("roles_played", rolesPlayedFilter);
       if (searchQuery) params.append("search", searchQuery);
       if (nameSearchQuery) params.append("name_search", nameSearchQuery);
-      if (genderFilter) params.append("gender", genderFilter);
-      if (courseEndYearFilter) params.append("course_end_year", courseEndYearFilter);
-      if (companyFilter) params.append("company", companyFilter);
-      if (countryFilter) params.append("country", countryFilter);
-      if (stateFilter) params.append("state", stateFilter);
-      if (passedOutYearFilter) params.append("passed_out_year", passedOutYearFilter);
-      if (courseFilter) params.append("course", courseFilter);
-      if (collegeNameFilter) params.append("college_name", collegeNameFilter);
-      if (currentWorkFilter) params.append("current_work", currentWorkFilter);
-      if (chapterFilter) params.append("current_location", chapterFilter);
-      if (emailFilter) params.append("email", emailFilter);
-      if (branchFilter) params.append("branch", branchFilter);
-      if (rollNoFilter) params.append("roll_no", rollNoFilter);
+      addArr("gender", genderFilter);
+      addArr("course_end_year", courseEndYearFilter);
+      addArr("company", companyFilter);
+      addArr("country", countryFilter);
+      addArr("state", stateFilter);
+      addArr("passed_out_year", passedOutYearFilter);
+      addArr("course", courseFilter);
+      addArr("college_name", collegeNameFilter);
+      addArr("current_work", currentWorkFilter);
+      addArr("current_location", chapterFilter);
+      addArr("email", emailFilter);
+      addArr("branch", branchFilter);
+      addArr("roll_no", rollNoFilter);
 
       // Build URL with or without parameters
       const url = params.toString()
@@ -720,27 +516,26 @@ export default function MembersPage() {
     const orderingValue = sortDirection === "desc" ? sortField : `-${sortField}`;
     params.append("ordering", orderingValue);
 
-    if (roleFilter) params.append("role", roleFilter);
-    if (cityFilter) params.append("city", cityFilter);
-    if (workedInFilter) params.append("worked_in", workedInFilter);
-    if (rolesPlayedFilter) params.append("roles_played", rolesPlayedFilter);
+    const addArr = (key, arr) => { if (arr && arr.length > 0) params.append(key, arr.join(",")); };
+    addArr("role", roleFilter);
+    addArr("city", cityFilter);
+    addArr("worked_in", workedInFilter);
+    addArr("roles_played", rolesPlayedFilter);
     if (searchQuery) params.append("search", searchQuery);
     if (nameSearchQuery) params.append("name_search", nameSearchQuery);
-    if (genderFilter) params.append("gender", genderFilter);
-    if (courseEndYearFilter)
-      params.append("course_end_year", courseEndYearFilter);
-    if (companyFilter) params.append("company", companyFilter);
-    if (countryFilter) params.append("country", countryFilter);
-    if (stateFilter) params.append("state", stateFilter);
-    if (passedOutYearFilter)
-      params.append("passed_out_year", passedOutYearFilter);
-    if (courseFilter) params.append("course", courseFilter);
-    if (collegeNameFilter) params.append("college_name", collegeNameFilter);
-    if (currentWorkFilter) params.append("current_work", currentWorkFilter);
-    if (chapterFilter) params.append("current_location", chapterFilter);
-    if (emailFilter) params.append("email", emailFilter);
-    if (branchFilter) params.append("branch", branchFilter);
-    if (rollNoFilter) params.append("roll_no", rollNoFilter);
+    addArr("gender", genderFilter);
+    addArr("course_end_year", courseEndYearFilter);
+    addArr("company", companyFilter);
+    addArr("country", countryFilter);
+    addArr("state", stateFilter);
+    addArr("passed_out_year", passedOutYearFilter);
+    addArr("course", courseFilter);
+    addArr("college_name", collegeNameFilter);
+    addArr("current_work", currentWorkFilter);
+    addArr("current_location", chapterFilter);
+    addArr("email", emailFilter);
+    addArr("branch", branchFilter);
+    addArr("roll_no", rollNoFilter);
     try {
       const response = await axios.get(`${API_URL}?${params.toString()}`, {
         headers: {
@@ -807,27 +602,26 @@ export default function MembersPage() {
       page_size: 1000, // Use maximum allowed page size
     });
 
-    if (roleFilter) baseParams.append("role", roleFilter);
-    if (cityFilter) baseParams.append("city", cityFilter);
-    if (workedInFilter) baseParams.append("worked_in", workedInFilter);
-    if (rolesPlayedFilter) baseParams.append("roles_played", rolesPlayedFilter);
+    const addArr = (key, arr) => { if (arr && arr.length > 0) baseParams.append(key, arr.join(",")); };
+    addArr("role", roleFilter);
+    addArr("city", cityFilter);
+    addArr("worked_in", workedInFilter);
+    addArr("roles_played", rolesPlayedFilter);
     if (searchQuery) baseParams.append("search", searchQuery);
     if (nameSearchQuery) baseParams.append("name_search", nameSearchQuery);
-    if (genderFilter) baseParams.append("gender", genderFilter);
-    if (courseEndYearFilter)
-      baseParams.append("course_end_year", courseEndYearFilter);
-    if (companyFilter) baseParams.append("company", companyFilter);
-    if (countryFilter) baseParams.append("country", countryFilter);
-    if (stateFilter) baseParams.append("state", stateFilter);
-    if (passedOutYearFilter)
-      baseParams.append("passed_out_year", passedOutYearFilter);
-    if (courseFilter) baseParams.append("course", courseFilter);
-    if (collegeNameFilter) baseParams.append("college_name", collegeNameFilter);
-    if (currentWorkFilter) baseParams.append("current_work", currentWorkFilter);
-    if (chapterFilter) baseParams.append("current_location", chapterFilter);
-    if (emailFilter) baseParams.append("email", emailFilter);
-    if (branchFilter) baseParams.append("branch", branchFilter);
-    if (rollNoFilter) baseParams.append("roll_no", rollNoFilter);
+    addArr("gender", genderFilter);
+    addArr("course_end_year", courseEndYearFilter);
+    addArr("company", companyFilter);
+    addArr("country", countryFilter);
+    addArr("state", stateFilter);
+    addArr("passed_out_year", passedOutYearFilter);
+    addArr("course", courseFilter);
+    addArr("college_name", collegeNameFilter);
+    addArr("current_work", currentWorkFilter);
+    addArr("current_location", chapterFilter);
+    addArr("email", emailFilter);
+    addArr("branch", branchFilter);
+    addArr("roll_no", rollNoFilter);
 
     try {
       while (hasMore) {
@@ -911,23 +705,24 @@ export default function MembersPage() {
       } else {
         // All filtered — send active filters so backend queries server-side
         const filters = {};
-        if (roleFilter) filters.role = roleFilter;
-        if (cityFilter) filters.city = cityFilter;
-        if (stateFilter) filters.state = stateFilter;
-        if (countryFilter) filters.country = countryFilter;
-        if (genderFilter) filters.gender = genderFilter;
-        if (courseFilter) filters.course = courseFilter;
-        if (branchFilter) filters.branch = branchFilter;
-        if (passedOutYearFilter) filters.passed_out_year = passedOutYearFilter;
-        if (courseEndYearFilter) filters.course_end_year = courseEndYearFilter;
-        if (collegeNameFilter) filters.college_name = collegeNameFilter;
-        if (companyFilter) filters.company = companyFilter;
-        if (currentWorkFilter) filters.current_work = currentWorkFilter;
-        if (chapterFilter) filters.current_location = chapterFilter;
-        if (emailFilter) filters.email = emailFilter;
-        if (rollNoFilter) filters.roll_no = rollNoFilter;
-        if (workedInFilter) filters.worked_in = workedInFilter;
-        if (rolesPlayedFilter) filters.roles_played = rolesPlayedFilter;
+        const setArr = (key, arr) => { if (arr && arr.length > 0) filters[key] = arr; };
+        setArr("role", roleFilter);
+        setArr("city", cityFilter);
+        setArr("state", stateFilter);
+        setArr("country", countryFilter);
+        setArr("gender", genderFilter);
+        setArr("course", courseFilter);
+        setArr("branch", branchFilter);
+        setArr("passed_out_year", passedOutYearFilter);
+        setArr("course_end_year", courseEndYearFilter);
+        setArr("college_name", collegeNameFilter);
+        setArr("company", companyFilter);
+        setArr("current_work", currentWorkFilter);
+        setArr("current_location", chapterFilter);
+        setArr("email", emailFilter);
+        setArr("roll_no", rollNoFilter);
+        setArr("worked_in", workedInFilter);
+        setArr("roles_played", rolesPlayedFilter);
         if (searchQuery) filters.search = searchQuery;
         if (nameSearchQuery) filters.name_search = nameSearchQuery;
         body.filters = filters;
@@ -1150,25 +945,25 @@ export default function MembersPage() {
   };
 
   const handleResetFilters = () => {
-    setRoleFilter("");
-    setCityFilter("");
-    setWorkedInFilter("");
-    setRolesPlayedFilter("");
+    setRoleFilter([]);
+    setCityFilter([]);
+    setWorkedInFilter([]);
+    setRolesPlayedFilter([]);
     setSearchQuery("");
     setNameSearchQuery("");
-    setGenderFilter("");
-    setCourseEndYearFilter("");
-    setCompanyFilter("");
-    setCountryFilter("");
-    setStateFilter("");
-    setPassedOutYearFilter("");
-    setEmailFilter("");
-    setCourseFilter("");
-    setCollegeNameFilter("");
-    setCurrentWorkFilter("");
-    setChapterFilter("");
-    setBranchFilter("");
-    setRollNoFilter("");
+    setGenderFilter([]);
+    setCourseEndYearFilter([]);
+    setCompanyFilter([]);
+    setCountryFilter([]);
+    setStateFilter([]);
+    setPassedOutYearFilter([]);
+    setEmailFilter([]);
+    setCourseFilter([]);
+    setCollegeNameFilter([]);
+    setCurrentWorkFilter([]);
+    setChapterFilter([]);
+    setBranchFilter([]);
+    setRollNoFilter([]);
     setCurrentPage(1);
     // Reset manual search trigger to ensure search is cleared
     setManualSearchTrigger(prev => prev + 1);
@@ -1276,23 +1071,16 @@ export default function MembersPage() {
               </h2>
             </div>
 
-          {/* Filters Loading State or Grid */}
-          {filtersLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-                <span className="text-gray-500 text-sm">Loading filters…</span>
-              </div>
-            </div>
-          ) : (
+          {/* Filter grid — suggestions load per-dropdown so the panel stays interactive */}
+          {(
             <div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {/* Role Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="role-filter"
                   label="Role"
                   placeholder="Select role..."
-                  value={roleFilter}
+                  values={roleFilter} loading={filtersLoading}
                   onChange={setRoleFilter}
                   filterType="role"
                   options={dropdownFilters.role || []}
@@ -1314,11 +1102,11 @@ export default function MembersPage() {
                 />
 
                 {/* Course Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="course-filter"
                   label="Course"
                   placeholder="Select course..."
-                  value={courseFilter}
+                  values={courseFilter} loading={filtersLoading}
                   onChange={setCourseFilter}
                   filterType="course"
                   options={dropdownFilters.course || []}
@@ -1339,11 +1127,11 @@ export default function MembersPage() {
                   }
                 />
 
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="branch-filter"
                   label="Branch"
                   placeholder="Select branch..."
-                  value={branchFilter}
+                  values={branchFilter} loading={filtersLoading}
                   onChange={setBranchFilter}
                   filterType="branch"
                   options={dropdownFilters.branch || []}
@@ -1365,11 +1153,11 @@ export default function MembersPage() {
                 />
 
                 {/* Roll No Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="roll-no-filter"
                   label="Roll No"
                   placeholder="Search by roll no..."
-                  value={rollNoFilter}
+                  values={rollNoFilter} loading={filtersLoading}
                   onChange={setRollNoFilter}
                   filterType="roll_no"
                   options={dropdownFilters.roll_no || []}
@@ -1391,11 +1179,11 @@ export default function MembersPage() {
                 />
 
                 {/* Passed Out Year Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="passed-out-year-filter"
                   label="Passed Out Year"
                   placeholder="Select year..."
-                  value={passedOutYearFilter}
+                  values={passedOutYearFilter} loading={filtersLoading}
                   onChange={setPassedOutYearFilter}
                   filterType="passedOutYear"
                   options={dropdownFilters.passed_out_year || []}
@@ -1417,11 +1205,11 @@ export default function MembersPage() {
                 />
 
                 {/* City Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="city-filter"
                   label="City"
                   placeholder="Select city..."
-                  value={cityFilter}
+                  values={cityFilter} loading={filtersLoading}
                   onChange={setCityFilter}
                   filterType="city"
                   options={dropdownFilters.city || []}
@@ -1449,11 +1237,11 @@ export default function MembersPage() {
                 />
 
                 {/* State Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="state-filter"
                   label="State"
                   placeholder="Select state..."
-                  value={stateFilter}
+                  values={stateFilter} loading={filtersLoading}
                   onChange={setStateFilter}
                   filterType="state"
                   options={dropdownFilters.state || []}
@@ -1475,11 +1263,11 @@ export default function MembersPage() {
                 />
 
                 {/* Country Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="country-filter"
                   label="Country"
                   placeholder="Select country..."
-                  value={countryFilter}
+                  values={countryFilter} loading={filtersLoading}
                   onChange={setCountryFilter}
                   filterType="country"
                   options={dropdownFilters.country || []}
@@ -1501,11 +1289,11 @@ export default function MembersPage() {
                 />
 
                 {/* College Name Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="college-name-filter"
                   label="Faculty "
                   placeholder="Select Faculty ..."
-                  value={collegeNameFilter}
+                  values={collegeNameFilter} loading={filtersLoading}
                   onChange={setCollegeNameFilter}
                   filterType="collegeName"
                   options={dropdownFilters.college_name || []}
@@ -1527,11 +1315,11 @@ export default function MembersPage() {
                 />
 
                 {/* Working In Filter */}
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="current-work-filter"
                   label="Working In"
                   placeholder="Select company..."
-                  value={currentWorkFilter}
+                  values={currentWorkFilter} loading={filtersLoading}
                   onChange={setCurrentWorkFilter}
                   filterType="currentWork"
                   options={dropdownFilters.current_work || []}
@@ -1552,11 +1340,11 @@ export default function MembersPage() {
                   }
                 />
 
-                <AutocompleteInput
+                <MultiSelectAutocomplete
                   id="email"
                   label="Email"
                   placeholder="Select email..."
-                  value={emailFilter}
+                  values={emailFilter} loading={filtersLoading}
                   onChange={setEmailFilter}
                   filterType="email"
                   options={dropdownFilters.email || []}
@@ -1646,13 +1434,39 @@ export default function MembersPage() {
           </div>
         </div>
 
+        {/* Active filter chips — quick view of every selected value with remove */}
+        <ActiveFilterChips
+          onClearAll={handleResetFilters}
+          filters={[
+            { key: "role", label: "Role", values: roleFilter, onRemove: (v) => setRoleFilter(roleFilter.filter((x) => x !== v)) },
+            { key: "course", label: "Course", values: courseFilter, onRemove: (v) => setCourseFilter(courseFilter.filter((x) => x !== v)) },
+            { key: "branch", label: "Branch", values: branchFilter, onRemove: (v) => setBranchFilter(branchFilter.filter((x) => x !== v)) },
+            { key: "roll_no", label: "Roll No", values: rollNoFilter, onRemove: (v) => setRollNoFilter(rollNoFilter.filter((x) => x !== v)) },
+            { key: "passed_out_year", label: "Passed Out", values: passedOutYearFilter, onRemove: (v) => setPassedOutYearFilter(passedOutYearFilter.filter((x) => x !== v)) },
+            { key: "city", label: "City", values: cityFilter, onRemove: (v) => setCityFilter(cityFilter.filter((x) => x !== v)) },
+            { key: "state", label: "State", values: stateFilter, onRemove: (v) => setStateFilter(stateFilter.filter((x) => x !== v)) },
+            { key: "country", label: "Country", values: countryFilter, onRemove: (v) => setCountryFilter(countryFilter.filter((x) => x !== v)) },
+            { key: "college_name", label: "Faculty", values: collegeNameFilter, onRemove: (v) => setCollegeNameFilter(collegeNameFilter.filter((x) => x !== v)) },
+            { key: "current_work", label: "Working In", values: currentWorkFilter, onRemove: (v) => setCurrentWorkFilter(currentWorkFilter.filter((x) => x !== v)) },
+            { key: "email", label: "Email", values: emailFilter, onRemove: (v) => setEmailFilter(emailFilter.filter((x) => x !== v)) },
+            { key: "gender", label: "Gender", values: genderFilter, onRemove: (v) => setGenderFilter(genderFilter.filter((x) => x !== v)) },
+            { key: "company", label: "Company", values: companyFilter, onRemove: (v) => setCompanyFilter(companyFilter.filter((x) => x !== v)) },
+            { key: "current_location", label: "Chapter", values: chapterFilter, onRemove: (v) => setChapterFilter(chapterFilter.filter((x) => x !== v)) },
+            { key: "course_end_year", label: "Course End", values: courseEndYearFilter, onRemove: (v) => setCourseEndYearFilter(courseEndYearFilter.filter((x) => x !== v)) },
+            { key: "worked_in", label: "Worked In", values: workedInFilter, onRemove: (v) => setWorkedInFilter(workedInFilter.filter((x) => x !== v)) },
+            { key: "roles_played", label: "Roles", values: rolesPlayedFilter, onRemove: (v) => setRolesPlayedFilter(rolesPlayedFilter.filter((x) => x !== v)) },
+            ...(searchQuery ? [{ key: "search", label: "Search", values: [searchQuery], onRemove: () => setSearchQuery("") }] : []),
+            ...(nameSearchQuery ? [{ key: "name_search", label: "Name", values: [nameSearchQuery], onRemove: () => setNameSearchQuery("") }] : []),
+          ]}
+        />
+
         {/* Results summary + sort bar */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500 font-medium">
             <span className="font-bold text-gray-800">{filteredTotal}</span> {filteredTotal === 1 ? "member" : "members"}
-            {(roleFilter || cityFilter || searchQuery || nameSearchQuery || countryFilter || stateFilter || passedOutYearFilter || courseFilter || collegeNameFilter || currentWorkFilter || chapterFilter || emailFilter) && (
+            {(roleFilter.length || cityFilter.length || searchQuery || nameSearchQuery || countryFilter.length || stateFilter.length || passedOutYearFilter.length || courseFilter.length || collegeNameFilter.length || currentWorkFilter.length || chapterFilter.length || emailFilter.length || branchFilter.length || rollNoFilter.length || companyFilter.length || genderFilter.length || courseEndYearFilter.length || workedInFilter.length || rolesPlayedFilter.length) ? (
               <span className="ml-2 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">filtered</span>
-            )}
+            ) : null}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             {/* Select mode toggle */}
@@ -1793,7 +1607,7 @@ export default function MembersPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(member.gender); }}
                     />
-                    <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadgeColor(member.role)}`}>
+                    <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadgeColor(member.role)} ${valueMatchesAny(member.role, roleFilter) ? "ring-2 ring-yellow-300" : ""}`}>
                       {member.role}
                     </div>
                     {/* Checkbox overlay in selection mode */}
@@ -1809,9 +1623,46 @@ export default function MembersPage() {
                   </div>
                   {/* Info */}
                   <div className="p-3">
-                    <p className="text-sm font-bold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
-                    {member.city && <p className="text-xs text-gray-400 truncate mt-0.5">{member.city}</p>}
-                    {member.current_work && <p className="text-xs text-emerald-600 truncate mt-0.5">{member.current_work}</p>}
+                    <p className="text-sm font-bold text-gray-900 truncate">
+                      <HighlightMatch text={`${member.first_name || ""} ${member.last_name || ""}`.trim()} query={nameSearchQuery || searchQuery} />
+                    </p>
+                    {member.city && (
+                      <p className={`text-xs truncate mt-0.5 ${valueMatchesAny(member.city, cityFilter) ? "text-blue-700 font-semibold" : "text-gray-400"}`}>
+                        <HighlightMatch text={member.city} query={(cityFilter && cityFilter[0]) || ""} />
+                      </p>
+                    )}
+                    {member.current_work && (
+                      <p className={`text-xs truncate mt-0.5 ${valueMatchesAny(member.current_work, currentWorkFilter) || valueMatchesAny(member.current_work, companyFilter) ? "text-blue-700 font-semibold" : "text-emerald-600"}`}>
+                        <HighlightMatch text={member.current_work} query={(currentWorkFilter && currentWorkFilter[0]) || (companyFilter && companyFilter[0]) || ""} />
+                      </p>
+                    )}
+                    {/* Show additional fields when actively filtered on them */}
+                    {member.course && valueMatchesAny(member.course, courseFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Course: <HighlightMatch text={member.course} query={(courseFilter && courseFilter[0]) || ""} /></p>
+                    )}
+                    {member.branch && valueMatchesAny(member.branch, branchFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Branch: <HighlightMatch text={member.branch} query={(branchFilter && branchFilter[0]) || ""} /></p>
+                    )}
+                    {member.college_name && valueMatchesAny(member.college_name, collegeNameFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Faculty: <HighlightMatch text={member.college_name} query={(collegeNameFilter && collegeNameFilter[0]) || ""} /></p>
+                    )}
+                    {member.passed_out_year && valueMatchesAny(member.passed_out_year, passedOutYearFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Passed Out: {member.passed_out_year}</p>
+                    )}
+                    {member.state && valueMatchesAny(member.state, stateFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-gray-500">State: <HighlightMatch text={member.state} query={(stateFilter && stateFilter[0]) || ""} /></p>
+                    )}
+                    {member.country && valueMatchesAny(member.country, countryFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-gray-500">Country: <HighlightMatch text={member.country} query={(countryFilter && countryFilter[0]) || ""} /></p>
+                    )}
+                    {member.email && valueMatchesAny(member.email, emailFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-gray-500">
+                        <HighlightMatch text={member.email} query={(emailFilter && emailFilter[0]) || ""} />
+                      </p>
+                    )}
+                    {member.roll_no && valueMatchesAny(member.roll_no, rollNoFilter) && (
+                      <p className="text-xs truncate mt-0.5 text-gray-500">Roll: <HighlightMatch text={member.roll_no} query={(rollNoFilter && rollNoFilter[0]) || ""} /></p>
+                    )}
                   </div>
                 </div>
               );
