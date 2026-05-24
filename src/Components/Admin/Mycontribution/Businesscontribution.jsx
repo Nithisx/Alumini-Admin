@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Building, Trash2, Eye, X, MapPin, Phone, Globe, Users, Calendar, Tag } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
+import { ViewStats, LikesList } from "../../Shared/EngagementStats";
 
 const TOKEN = localStorage.getItem("Token");
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
@@ -66,6 +67,20 @@ const BusinessCard = ({ business, onDelete, onView }) => (
         )}
       </div>
     </div>
+
+    <ViewStats
+      contentType="businesses"
+      contentId={business.id}
+      totalViews={business.total_views}
+      uniqueViewers={business.unique_viewers}
+      recentViewers={business.recent_viewers}
+    />
+
+    <LikesList
+      totalLikes={business.total_likes}
+      likers={business.likers}
+      recentLikers={business.recent_likers}
+    />
   </div>
 );
 

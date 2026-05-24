@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { MoreHorizontal, Trash2, Edit, X, Upload, Calendar, Newspaper, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
+import { ViewStats, LikesList } from "../../Shared/EngagementStats";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -294,6 +295,20 @@ const NewsCard = ({ item, onDelete, onUpdate }) => {
           <p className="text-xs text-gray-600 line-clamp-3">{item.content || item.description}</p>
         )}
       </div>
+
+      <ViewStats
+        contentType="news"
+        contentId={item.id}
+        totalViews={item.total_views}
+        uniqueViewers={item.unique_viewers}
+        recentViewers={item.recent_viewers}
+      />
+
+      <LikesList
+        totalLikes={item.total_likes}
+        likers={item.likers}
+        recentLikers={item.recent_likers}
+      />
 
       <EditNewsModal
         article={item}

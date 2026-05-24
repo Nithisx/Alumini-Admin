@@ -4,6 +4,7 @@ import ConfirmModal from "../../Shared/ConfirmModal";
 import axios from "axios";
 import { Calendar, Image, Eye, Edit, Trash2, Save, X, Upload } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
+import { ViewStats, LikesList } from "../../Shared/EngagementStats";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -169,6 +170,16 @@ const AlbumsContribution = () => {
                 </>
               )}
             </div>
+
+            {editingAlbum !== album.id && (
+              <ViewStats
+                contentType="albums"
+                contentId={album.id}
+                totalViews={album.total_views}
+                uniqueViewers={album.unique_viewers}
+                recentViewers={album.recent_viewers}
+              />
+            )}
           </div>
         ))}
       </div>
