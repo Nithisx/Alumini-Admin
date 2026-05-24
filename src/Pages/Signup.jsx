@@ -999,19 +999,31 @@ const Signup = () => {
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <InputField
+                      <SuggestionInput
                         label="Home Town"
                         value={formData.home_town}
-                        onChange={(v) => updateField("home_town", v)}
+                        onChange={(v) => {
+                          updateField("home_town", v);
+                          debouncedFetch("cities", { city: v });
+                        }}
+                        onFocus={() => fetchSuggestions("cities", { city: formData.home_town })}
                         placeholder="Your home town"
                         required={false}
+                        suggestions={apiSuggestions.cities}
+                        loading={loadingSuggestions.cities}
                       />
-                      <InputField
+                      <SuggestionInput
                         label="Current Location"
                         value={formData.current_location}
-                        onChange={(v) => updateField("current_location", v)}
+                        onChange={(v) => {
+                          updateField("current_location", v);
+                          debouncedFetch("cities", { city: v });
+                        }}
+                        onFocus={() => fetchSuggestions("cities", { city: formData.current_location })}
                         placeholder="City you live in"
                         required={false}
+                        suggestions={apiSuggestions.cities}
+                        loading={loadingSuggestions.cities}
                       />
                     </div>
 
@@ -1036,35 +1048,83 @@ const Signup = () => {
                         placeholder="Correspondence address (if different)"
                       />
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-4">
-                        <InputField
+                        <SuggestionInput
                           label="Correspondence City"
                           value={formData.correspondence_city}
-                          onChange={(v) => updateField("correspondence_city", v)}
+                          onChange={(v) => {
+                            updateField("correspondence_city", v);
+                            debouncedFetch("cities", {
+                              country: formData.correspondence_country,
+                              state: formData.correspondence_state,
+                              city: v,
+                            });
+                          }}
+                          onFocus={() => fetchSuggestions("cities", {
+                            country: formData.correspondence_country,
+                            state: formData.correspondence_state,
+                            city: formData.correspondence_city,
+                          })}
                           placeholder="City"
                           required={false}
+                          suggestions={apiSuggestions.cities}
+                          loading={loadingSuggestions.cities}
                         />
-                        <InputField
+                        <SuggestionInput
                           label="Correspondence State"
                           value={formData.correspondence_state}
-                          onChange={(v) => updateField("correspondence_state", v)}
+                          onChange={(v) => {
+                            updateField("correspondence_state", v);
+                            debouncedFetch("states", {
+                              country: formData.correspondence_country,
+                              state: v,
+                            });
+                          }}
+                          onFocus={() => fetchSuggestions("states", {
+                            country: formData.correspondence_country,
+                            state: formData.correspondence_state,
+                          })}
                           placeholder="State"
                           required={false}
+                          suggestions={apiSuggestions.states}
+                          loading={loadingSuggestions.states}
                         />
                       </div>
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
-                        <InputField
+                        <SuggestionInput
                           label="Correspondence Country"
                           value={formData.correspondence_country}
-                          onChange={(v) => updateField("correspondence_country", v)}
+                          onChange={(v) => {
+                            updateField("correspondence_country", v);
+                            debouncedFetch("countries", { country: v });
+                          }}
+                          onFocus={() => fetchSuggestions("countries", { country: formData.correspondence_country })}
                           placeholder="Country"
                           required={false}
+                          suggestions={apiSuggestions.countries}
+                          loading={loadingSuggestions.countries}
                         />
-                        <InputField
+                        <SuggestionInput
                           label="Correspondence Pincode"
                           value={formData.correspondence_pincode}
-                          onChange={(v) => updateField("correspondence_pincode", v)}
+                          onChange={(v) => {
+                            updateField("correspondence_pincode", v);
+                            debouncedFetch("pincodes", {
+                              country: formData.correspondence_country,
+                              state: formData.correspondence_state,
+                              city: formData.correspondence_city,
+                              pincode: v,
+                            });
+                          }}
+                          onFocus={() => fetchSuggestions("pincodes", {
+                            country: formData.correspondence_country,
+                            state: formData.correspondence_state,
+                            city: formData.correspondence_city,
+                            pincode: formData.correspondence_pincode,
+                          })}
                           placeholder="Pincode"
                           required={false}
+                          suggestions={apiSuggestions.pincodes}
+                          loading={loadingSuggestions.pincodes}
                         />
                       </div>
                     </div>
