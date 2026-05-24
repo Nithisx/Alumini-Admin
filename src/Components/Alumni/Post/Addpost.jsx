@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
+import {
+  DOCUMENT_ACCEPT_ATTR,
+  formatFileSize,
+  validateDocumentFile,
+} from "../../../lib/documentValidation";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,6 +22,7 @@ import {
   faCalendarAlt,
   faPlus,
   faImage,
+  faFileLines,
   faTimesCircle,
   faTimes,
   faUpload,
@@ -223,8 +229,10 @@ const JobFeed = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadedDocs, setUploadedDocs] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+  const docInputRef = useRef(null);
 
   // Form field states
   const [description, setDescription] = useState("");
@@ -329,6 +337,28 @@ const JobFeed = () => {
     setUploadedFile(null);
   };
 
+  const handleDocumentSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const accepted = [];
+    for (const file of files) {
+      const result = validateDocumentFile(file);
+      if (!result.ok) {
+        toast.error(`${file.name}: ${result.error}`);
+        continue;
+      }
+      accepted.push({ file, name: file.name, size: file.size });
+    }
+    if (accepted.length) {
+      setUploadedDocs((prev) => [...prev, ...accepted]);
+    }
+    e.target.value = "";
+  };
+
+  const removeDocument = (index) => {
+    setUploadedDocs((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Reset form fields
   const resetForm = () => {
     setDescription("");
@@ -338,6 +368,7 @@ const JobFeed = () => {
     setSalaryRange("");
     setJobType("");
     removeFile();
+    setUploadedDocs([]);
     setError("");
   };
 
@@ -373,6 +404,10 @@ const JobFeed = () => {
       if (uploadedFile) {
         formData.append("images", uploadedFile.file);
       }
+
+      uploadedDocs.forEach((doc) => {
+        formData.append("documents", doc.file);
+      });
 
       const response = await fetch(API_URL, {
         method: "POST",
@@ -715,6 +750,62 @@ const JobFeed = () => {
                           </div>
                         </div>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Document Upload Section */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Attach Documents (PDF, Word, Excel, etc.)
+                    </label>
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-green-400 hover:bg-gray-50 transition-colors cursor-pointer text-center"
+                      onClick={() => docInputRef.current && docInputRef.current.click()}
+                    >
+                      <FontAwesomeIcon icon={faFileLines} className="text-green-600 mr-2" />
+                      <span className="text-sm text-gray-700">
+                        Click to add documents
+                      </span>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Allowed: PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, TXT, CSV, ZIP. Max 20 MB each. Script and executable files are blocked.
+                      </p>
+                      <input
+                        type="file"
+                        className="hidden"
+                        ref={docInputRef}
+                        onChange={handleDocumentSelect}
+                        accept={DOCUMENT_ACCEPT_ATTR}
+                        multiple
+                      />
+                    </div>
+
+                    {uploadedDocs.length > 0 && (
+                      <ul className="mt-3 space-y-2">
+                        {uploadedDocs.map((doc, idx) => (
+                          <li
+                            key={`${doc.name}-${idx}`}
+                            className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                          >
+                            <div className="flex items-center min-w-0">
+                              <FontAwesomeIcon icon={faFileLines} className="text-gray-500 mr-2 flex-shrink-0" />
+                              <span className="text-sm text-gray-800 truncate">
+                                {doc.name}
+                              </span>
+                              <span className="ml-2 text-xs text-gray-500 flex-shrink-0">
+                                {formatFileSize(doc.size)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeDocument(idx)}
+                              className="text-red-500 hover:text-red-700 ml-3 flex-shrink-0"
+                              aria-label="Remove document"
+                            >
+                              <FontAwesomeIcon icon={faTimesCircle} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 </div>

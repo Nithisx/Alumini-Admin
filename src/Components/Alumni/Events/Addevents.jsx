@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
   faImage,
+  faFileLines,
   faTimesCircle,
   faTimes,
   faUpload,
@@ -16,6 +17,11 @@ import {
   faSortAmountDown
 } from "@fortawesome/free-solid-svg-icons";
 import Events from "./Events";
+import {
+  DOCUMENT_ACCEPT_ATTR,
+  formatFileSize,
+  validateDocumentFile,
+} from "../../../lib/documentValidation";
 
 const AddEvent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,7 +40,31 @@ const AddEvent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiResponse, setApiResponse] = useState(null);
   const [apiError, setApiError] = useState(null);
+  const [uploadedDocs, setUploadedDocs] = useState([]);
   const fileInputRef = useRef(null);
+  const docInputRef = useRef(null);
+
+  const handleDocumentSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const accepted = [];
+    for (const file of files) {
+      const result = validateDocumentFile(file);
+      if (!result.ok) {
+        toast.error(`${file.name}: ${result.error}`);
+        continue;
+      }
+      accepted.push({ file, name: file.name, size: file.size });
+    }
+    if (accepted.length) {
+      setUploadedDocs((prev) => [...prev, ...accepted]);
+    }
+    e.target.value = "";
+  };
+
+  const removeDocument = (index) => {
+    setUploadedDocs((prev) => prev.filter((_, i) => i !== index));
+  };
 
   // Drag‑and‑drop handlers
   const handleDragOver = (e) => {
@@ -116,6 +146,10 @@ const AddEvent = () => {
       if (uploadedFile?.file) {
         eventData.append("images", uploadedFile.file);
       }
+
+      uploadedDocs.forEach((doc) => {
+        eventData.append("documents", doc.file);
+      });
 
       const token = localStorage.getItem("Token");
       const response = await fetch("https://api.karpagamalumni.in/api/v1/events/", {
@@ -404,6 +438,57 @@ const AddEvent = () => {
                             <span className="text-xs text-gray-500">{uploadedFile.size} MB</span>
                           </div>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Document attachments */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Attach Documents
+                      </label>
+                      <div
+                        className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-green-400 hover:bg-gray-50 transition-colors cursor-pointer text-center"
+                        onClick={() => docInputRef.current && docInputRef.current.click()}
+                      >
+                        <FontAwesomeIcon icon={faFileLines} className="text-green-600 mr-2" />
+                        <span className="text-sm text-gray-700">Click to add documents</span>
+                        <p className="text-xs text-gray-400 mt-1">
+                          PDF, Word, Excel, PowerPoint, TXT, CSV, ZIP. Max 20 MB each. Scripts and executables are blocked.
+                        </p>
+                        <input
+                          type="file"
+                          className="hidden"
+                          ref={docInputRef}
+                          onChange={handleDocumentSelect}
+                          accept={DOCUMENT_ACCEPT_ATTR}
+                          multiple
+                        />
+                      </div>
+                      {uploadedDocs.length > 0 && (
+                        <ul className="mt-3 space-y-2">
+                          {uploadedDocs.map((doc, idx) => (
+                            <li
+                              key={`${doc.name}-${idx}`}
+                              className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                            >
+                              <div className="flex items-center min-w-0">
+                                <FontAwesomeIcon icon={faFileLines} className="text-gray-500 mr-2 flex-shrink-0" />
+                                <span className="text-sm text-gray-800 truncate">{doc.name}</span>
+                                <span className="ml-2 text-xs text-gray-500 flex-shrink-0">
+                                  {formatFileSize(doc.size)}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeDocument(idx)}
+                                className="text-red-500 hover:text-red-700 ml-3 flex-shrink-0"
+                                aria-label="Remove document"
+                              >
+                                <FontAwesomeIcon icon={faTimesCircle} />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </div>
                   </div>

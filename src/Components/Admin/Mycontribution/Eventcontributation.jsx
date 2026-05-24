@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
   MoreHorizontal, MapPin, Clock, Trash2, X, Heart, MessageCircle,
-  Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus,
+  Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus, FileText,
 } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
 
@@ -144,6 +144,116 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
   );
 };
 
+const ViewStats = ({ contentType, contentId, totalViews, uniqueViewers, recentViewers }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [viewers, setViewers] = useState(recentViewers || []);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadedAll, setLoadedAll] = useState(false);
+
+  const fetchAllViewers = async () => {
+    if (loadedAll || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const token = localStorage.getItem("Token");
+      const res = await fetch(`${BASE_URL}/${contentType}/${contentId}/viewers/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setViewers(Array.isArray(data) ? data : []);
+        setLoadedAll(true);
+      }
+    } catch { /* ignore */ } finally { setLoadingMore(false); }
+  };
+
+  const handleToggle = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && (uniqueViewers || 0) > viewers.length && !loadedAll) {
+      fetchAllViewers();
+    }
+  };
+
+  return (
+    <div className="px-4 pb-3 pt-1 border-t border-gray-50">
+      <button
+        type="button"
+        onClick={handleToggle}
+        className="flex items-center gap-2 text-xs font-medium text-gray-600 hover:text-emerald-700"
+      >
+        <Eye className="w-4 h-4" />
+        <span>{totalViews || 0} {totalViews === 1 ? "view" : "views"}</span>
+        <span className="text-gray-400">·</span>
+        <span>{uniqueViewers || 0} unique {uniqueViewers === 1 ? "viewer" : "viewers"}</span>
+        {(uniqueViewers || 0) > 0 && (
+          <span className="text-emerald-600 ml-1">{expanded ? "Hide" : "Show"}</span>
+        )}
+      </button>
+
+      {expanded && (
+        <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+          {loadingMore && viewers.length === 0 && (
+            <p className="text-xs text-gray-400">Loading viewers…</p>
+          )}
+          {!loadingMore && viewers.length === 0 && (
+            <p className="text-xs text-gray-400">No one has viewed this yet.</p>
+          )}
+          {viewers.map((v) => (
+            <div key={v.id} className="flex items-center gap-2 text-xs">
+              {v.user?.profile_photo ? (
+                <img
+                  src={v.user.profile_photo.startsWith("http") ? v.user.profile_photo : `${MEDIA_BASE_URL}${v.user.profile_photo}`}
+                  alt=""
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <span className="text-emerald-700 font-bold text-[10px]">
+                    {v.user?.first_name?.[0] || v.user?.username?.[0] || "?"}
+                  </span>
+                </div>
+              )}
+              <span className="font-medium text-gray-800 truncate">
+                {v.user?.first_name} {v.user?.last_name || ""}
+              </span>
+              {v.user?.role && (
+                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px]">{v.user.role}</span>
+              )}
+              <span className="ml-auto text-gray-400 text-[10px]">
+                {v.view_count} {v.view_count === 1 ? "view" : "views"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const DocumentList = ({ documents }) => {
+  if (!documents || documents.length === 0) return null;
+  return (
+    <div className="px-4 pb-3 space-y-1.5">
+      <p className="text-xs font-semibold text-gray-600">Attached documents</p>
+      {documents.map((doc) => {
+        const href = doc.document?.startsWith("http") ? doc.document : `${MEDIA_BASE_URL}${doc.document}`;
+        return (
+          <a
+            key={doc.id}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-xs text-emerald-700 hover:underline bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5"
+          >
+            <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">{doc.original_name || "document"}</span>
+          </a>
+        );
+      })}
+    </div>
+  );
+};
+
 const EventCard = ({ item, onDelete, onUpdate }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -255,6 +365,16 @@ const EventCard = ({ item, onDelete, onUpdate }) => {
             </div>
           )}
         </div>
+
+        <DocumentList documents={item.documents} />
+
+        <ViewStats
+          contentType="events"
+          contentId={item.id}
+          totalViews={item.total_views}
+          uniqueViewers={item.unique_viewers}
+          recentViewers={item.recent_viewers}
+        />
 
         {/* Delete confirm */}
         {confirmDelete && (
