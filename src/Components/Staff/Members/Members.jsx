@@ -755,7 +755,7 @@ export default function MembersPage() {
 
       <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
         {/* Filters Panel */}
-        <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all ${showFilters ? "block" : "hidden"}`}>
+        <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm transition-all ${showFilters ? "block" : "hidden"}`}>
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
