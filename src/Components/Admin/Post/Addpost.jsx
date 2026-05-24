@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
+import { DocumentList } from "../../Shared/DocumentPreview";
 import {
   DOCUMENT_ACCEPT_ATTR,
   formatFileSize,
@@ -204,6 +205,9 @@ const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
 
       {/* Full-width image */}
       <ImageGallery images={post.images || []} />
+
+      {/* Attached documents */}
+      <DocumentList documents={post.documents} />
 
       {/* Engagement: like / comment / share */}
       <EngagementPanel

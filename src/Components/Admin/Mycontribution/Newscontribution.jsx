@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
-import { MoreHorizontal, Trash2, Edit, X, Upload, Calendar, Newspaper, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit, X, Upload, Calendar, Newspaper, ChevronLeft, ChevronRight } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
 
@@ -11,8 +11,8 @@ const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 const ImageSlider = ({ images }) => {
   const [idx, setIdx] = useState(0);
   return (
-    <div className="relative w-full aspect-video bg-gray-100">
-      <img src={`${MEDIA_BASE_URL}${images[idx].image}`} alt="News" className="w-full h-full object-cover" />
+    <div className="relative w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+      <img src={`${MEDIA_BASE_URL}${images[idx].image}`} alt="News" className="w-full max-h-[60vh] sm:max-h-[55vh] object-contain" />
       {images.length > 1 && (
         <>
           <button onClick={() => setIdx((i) => (i - 1 + images.length) % images.length)}
@@ -280,12 +280,8 @@ const NewsCard = ({ item, onDelete, onUpdate }) => {
       </div>
 
       {/* Image */}
-      {item.images && item.images.length > 0 ? (
+      {item.images && item.images.length > 0 && (
         <ImageSlider images={item.images} />
-      ) : (
-        <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-          <ImageIcon className="w-12 h-12 text-gray-300" />
-        </div>
       )}
 
       {/* Content */}

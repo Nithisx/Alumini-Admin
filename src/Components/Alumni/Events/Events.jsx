@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarAlt, faClock, faMapMarkerAlt, faSearch } from "@fortawesome/free-solid-svg-icons";
 import EngagementPanel from "../../Shared/EngagementPanel";
+import { DocumentList } from "../../Shared/DocumentPreview";
 
 const AuthorizedImage = ({ url, alt, className }) => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -243,6 +244,11 @@ export default function Events() {
                       </a>
                     )}
                   </div>
+                </div>
+
+                {/* Attached documents */}
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DocumentList documents={event.documents} />
                 </div>
 
                 {/* Interaction Panel */}

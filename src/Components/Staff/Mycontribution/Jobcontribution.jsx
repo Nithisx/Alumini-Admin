@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
   MoreHorizontal, MapPin, Trash2, Edit, X, Save, Upload, Calendar, DollarSign,
-  Briefcase, ChevronLeft, ChevronRight, Image as ImageIcon, Users, Eye, FileText,
+  Briefcase, ChevronLeft, ChevronRight, Users, Eye,
 } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
+import { DocumentList } from "../../Shared/DocumentPreview";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -13,13 +14,11 @@ const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 const ImageSlider = ({ images }) => {
   const [idx, setIdx] = useState(0);
   return (
-    // Removed 'aspect-video', added 'max-h-[80vh]' and flexbox centering
-    <div className="relative w-full bg-gray-100 max-h-[70vh] flex items-center justify-center overflow-hidden">
-      <img 
-        src={`${MEDIA_BASE_URL}${images[idx].image}`} 
-        alt="Job" 
-        // Changed 'h-full object-cover' to 'max-h-[80vh] object-contain'
-        className="w-full max-h-[80vh] object-contain" 
+    <div className="relative w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+      <img
+        src={`${MEDIA_BASE_URL}${images[idx].image}`}
+        alt="Job"
+        className="w-full max-h-[60vh] sm:max-h-[55vh] object-contain"
       />
       
       {images.length > 1 && (
@@ -253,29 +252,6 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
   );
 };
 
-const DocumentList = ({ documents }) => {
-  if (!documents || documents.length === 0) return null;
-  return (
-    <div className="px-4 pb-3 space-y-1.5">
-      <p className="text-xs font-semibold text-gray-600">Attached documents</p>
-      {documents.map((doc) => {
-        const href = doc.document?.startsWith("http") ? doc.document : `${MEDIA_BASE_URL}${doc.document}`;
-        return (
-          <a
-            key={doc.id}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-xs text-emerald-700 hover:underline bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5"
-          >
-            <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">{doc.original_name || "document"}</span>
-          </a>
-        );
-      })}
-    </div>
-  );
-};
 
 const JobCard = ({ item, onDelete, onUpdate }) => {
   const [showMenu, setShowMenu] = useState(false);
@@ -351,12 +327,8 @@ const JobCard = ({ item, onDelete, onUpdate }) => {
       </div>
 
       {/* Image */}
-      {item.images && item.images.length > 0 ? (
+      {item.images && item.images.length > 0 && (
         <ImageSlider images={item.images} />
-      ) : (
-        <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-          <ImageIcon className="w-12 h-12 text-gray-300" />
-        </div>
       )}
 
       {/* Content */}

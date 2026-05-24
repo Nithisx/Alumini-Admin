@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Tag, User } from 'lucide-react';
 import EngagementPanel from '../../Shared/EngagementPanel';
+import { DocumentList } from '../../Shared/DocumentPreview';
 
 const SingleEvents = () => {
   const { id } = useParams();
@@ -285,6 +286,14 @@ const SingleEvents = () => {
                   {event.description}
                 </div>
               </div>
+              {event.documents && event.documents.length > 0 && (
+                <div className="border-t border-gray-100 pt-4 pb-1">
+                  <h3 className="mb-2 px-6 text-base font-semibold text-gray-800">Documents</h3>
+                  <div className="px-2">
+                    <DocumentList documents={event.documents} title="" />
+                  </div>
+                </div>
+              )}
               <EngagementPanel
                 contentType="events"
                 contentId={id}

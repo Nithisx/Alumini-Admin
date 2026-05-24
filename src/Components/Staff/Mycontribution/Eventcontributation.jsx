@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
   MoreHorizontal, MapPin, Clock, Trash2, X, Heart, MessageCircle,
-  Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus, FileText,
+  Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus,
 } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
+import { DocumentList } from "../../Shared/DocumentPreview";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -13,8 +14,8 @@ const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 const ImageSlider = ({ images }) => {
   const [idx, setIdx] = useState(0);
   return (
-    <div className="relative w-full aspect-video bg-gray-100">
-      <img src={`${MEDIA_BASE_URL}${images[idx].image}`} alt="Event" className="w-full h-full object-cover" />
+    <div className="relative w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+      <img src={`${MEDIA_BASE_URL}${images[idx].image}`} alt="Event" className="w-full max-h-[60vh] sm:max-h-[55vh] object-contain" />
       {images.length > 1 && (
         <>
           <button onClick={() => setIdx((i) => (i - 1 + images.length) % images.length)}
@@ -145,30 +146,6 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
   );
 };
 
-const DocumentList = ({ documents }) => {
-  if (!documents || documents.length === 0) return null;
-  return (
-    <div className="px-4 pb-3 space-y-1.5">
-      <p className="text-xs font-semibold text-gray-600">Attached documents</p>
-      {documents.map((doc) => {
-        const href = doc.document?.startsWith("http") ? doc.document : `${MEDIA_BASE_URL}${doc.document}`;
-        return (
-          <a
-            key={doc.id}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-xs text-emerald-700 hover:underline bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5"
-          >
-            <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">{doc.original_name || "document"}</span>
-          </a>
-        );
-      })}
-    </div>
-  );
-};
-
 const EventCard = ({ item, onDelete, onUpdate }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -229,7 +206,9 @@ const EventCard = ({ item, onDelete, onUpdate }) => {
         {/* Image */}
         {item.images && item.images.length > 0 && (
           item.images.length === 1 ? (
-            <div className="w-full aspect-video"><img src={`${MEDIA_BASE_URL}${item.images[0].image}`} alt="" className="w-full h-full object-cover" /></div>
+            <div className="w-full bg-gray-100 flex items-center justify-center">
+              <img src={`${MEDIA_BASE_URL}${item.images[0].image}`} alt="" className="w-full max-h-[60vh] sm:max-h-[55vh] object-contain" />
+            </div>
           ) : <ImageSlider images={item.images} />
         )}
 
