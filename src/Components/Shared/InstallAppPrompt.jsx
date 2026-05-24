@@ -67,36 +67,29 @@ const INSTALL_TOAST_STYLES = `
   .install-toast-btn-secondary:hover {
     background-color: #f0faf3;
   }
-  .Toastify__toast-container--top-right {
-    top: 20px;
-    right: 20px;
-  }
-  .Toastify__toast {
+  .Toastify__toast.install-toast-wrapper {
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     padding: 16px;
     min-width: 320px;
     max-width: 400px;
-    background: #ffffff !important;
-  }
-  .Toastify__toast--info {
-    background: #ffffff !important;
+    background: #ffffff;
     color: #1a1a1a;
-    border-left: 6px solid #1e7e34 !important;
+    border-left: 6px solid #1e7e34;
   }
-  .Toastify__toast-body {
+  .Toastify__toast.install-toast-wrapper .Toastify__toast-body {
     padding: 0;
     margin: 0;
     width: 100%;
   }
-  .Toastify__close-button {
+  .Toastify__toast.install-toast-wrapper .Toastify__close-button {
     color: #999;
     opacity: 0.6;
     align-self: flex-start;
     margin-top: -4px;
     margin-right: -4px;
   }
-  .Toastify__close-button:hover {
+  .Toastify__toast.install-toast-wrapper .Toastify__close-button:hover {
     opacity: 1;
   }
 `;
@@ -216,6 +209,7 @@ export default function InstallAppPrompt() {
         closeOnClick: false,
         draggable: false,
         icon: false,
+        className: "install-toast-wrapper",
       }
     );
   }, [shouldShowPrompt, deferredInstallPrompt]);
