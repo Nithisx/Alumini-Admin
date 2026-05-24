@@ -55,14 +55,20 @@ export default function MultiSelectAutocomplete({
   const inputRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Keep the largest options set we've seen so suggestions don't collapse to
-  // zero once a value is applied (the backend re-filters by selected values).
+  // Cache strategy:
+  // - When no values are selected: always use the fresh (context-narrowed) options from backend.
+  // - When values are selected: only expand the cache, never shrink it, so the user can
+  //   continue adding more items even after the backend narrows the list for that field.
   const cachedRef = useRef([]);
+  const valuesLen = (values || []).length;
   useEffect(() => {
-    if ((options || []).length > cachedRef.current.length) {
-      cachedRef.current = options;
+    const fresh = options || [];
+    if (fresh.length === 0) return;
+    if (valuesLen === 0 || fresh.length > cachedRef.current.length) {
+      cachedRef.current = fresh;
     }
-  }, [options]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options, valuesLen]);
 
   const computeFiltered = (q) => {
     const source = (cachedRef.current && cachedRef.current.length > 0)
@@ -118,13 +124,12 @@ export default function MultiSelectAutocomplete({
       e.preventDefault();
       const matches = computeFiltered(query);
       if (matches.length > 0) {
+        // Accept the first suggestion match only
         addValue(matches[0]);
-      } else if (query.trim()) {
-        addValue(query);
+        setQuery("");
+        setShowDropdown(true);
       }
-      setQuery("");
-      // Keep dropdown open so user can continue picking more
-      setShowDropdown(true);
+      // No match → do nothing; user must select from the dropdown
     } else if (e.key === "Backspace" && query === "" && (values || []).length > 0) {
       // Backspace on empty input pops the last chip
       onChange((values || []).slice(0, -1));
@@ -248,7 +253,7 @@ export default function MultiSelectAutocomplete({
                     <svg className="w-5 h-5 mx-auto mb-1 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    No matches for "<strong>{query}</strong>" — press Enter to use anyway
+                    No matches for "<strong>{query}</strong>"
                   </>
                 ) : (
                   "No options available"
