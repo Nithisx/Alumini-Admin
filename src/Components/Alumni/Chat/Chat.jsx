@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Search, Send, ArrowLeft, Plus, Users, MessageSquare,
   Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
-  Clock, Pencil, X, Info, Copy,
+  Clock, Pencil, X, Info, Copy, Paperclip, CornerUpLeft,
 } from "lucide-react";
 import { getMediaUrl } from "../../../config/api";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
@@ -154,6 +154,9 @@ const Chat = () => {
   const [editText, setEditText]         = useState("");
   const [ctxMenu, setCtxMenu]           = useState(null);
   const [infoMsg, setInfoMsg]           = useState(null);
+  const [replyTo, setReplyTo]           = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const messagesEndRef    = useRef(null);
   const socketRef         = useRef(null);
@@ -162,6 +165,8 @@ const Chat = () => {
   const selectedChatIdRef = useRef(null);
   const currentUserIdRef  = useRef(null);
   const longPressTimer    = useRef(null);
+  const fileInputRef      = useRef(null);
+  const editInputRef      = useRef(null);
 
   useEffect(() => { currentUserIdRef.current = currentUser?.id || null; }, [currentUser]);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -365,6 +370,10 @@ const Chat = () => {
             delivered_at: data.delivered_at || null,
             seen_at: data.seen_at || null,
             sender_id: data.sender_id || data.sender?.id || null,
+            reply_to: data.reply_to || null,
+            media: data.media || null,
+            media_type: data.media_type || null,
+            edited: data.edited || false,
           };
           setMessages((prev) => [...prev, newMsg]);
           markSeen(roomId, newMsg.id, isCommunity);
@@ -411,18 +420,56 @@ const Chat = () => {
     setEditingId(null);
     setCtxMenu(null);
     setInfoMsg(null);
+    setReplyTo(null);
+    setMediaPreview(null);
     connectWebSocket(chat.id, Boolean(chat.is_community));
     setRooms((prev) => prev.map((r) => String(r.id) === String(chat.id) ? { ...r, unreadCount: 0 } : r));
     if (!chat.is_community && chat.other_user?.id && !presenceMap[chat.other_user.id]) fetchPresence(chat.other_user.id);
   }, [connectWebSocket, fetchPresence, presenceMap]);
 
-  const sendMessage = () => {
-    if (!message.trim() || !socketRef.current || !isConnected) return;
-    socketRef.current.send(JSON.stringify({ action: "send_message", room_id: selectedChat?.id, message: message.trim() }));
+  const sendMessage = async () => {
+    if ((!message.trim() && !mediaPreview) || !socketRef.current || !isConnected) return;
+
+    let mediaUrl = null;
+    let mediaType = null;
+
+    if (mediaPreview) {
+      setUploadingMedia(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", mediaPreview.file);
+        const res = await fetch(`${API_HOST}/chat/upload/`, {
+          method: "POST",
+          headers: { Authorization: `Token ${getToken()}` },
+          body: formData,
+        });
+        if (res.ok) {
+          const d = await res.json();
+          mediaUrl = d.media_url;
+          mediaType = d.media_type;
+        } else {
+          setUploadingMedia(false);
+          return;
+        }
+      } catch (_) {
+        setUploadingMedia(false);
+        return;
+      }
+      setUploadingMedia(false);
+    }
+
+    const payload = { action: "send_message", room_id: selectedChat?.id, message: message.trim() };
+    if (replyTo) payload.reply_to_id = replyTo.id;
+    if (mediaUrl) { payload.media_url = mediaUrl; payload.media_type = mediaType; }
+
+    socketRef.current.send(JSON.stringify(payload));
     setMessage("");
+    setReplyTo(null);
+    if (mediaPreview?.url) URL.revokeObjectURL(mediaPreview.url);
+    setMediaPreview(null);
   };
 
-  const startEdit = (msg) => { setEditingId(msg.id); setEditText(msg.text); setCtxMenu(null); setTimeout(() => inputRef.current?.focus(), 50); };
+  const startEdit = (msg) => { setEditingId(msg.id); setEditText(msg.text); setCtxMenu(null); setTimeout(() => editInputRef.current?.focus(), 50); };
   const submitEdit = () => {
     if (!editText.trim() || !socketRef.current || !isConnected) return;
     socketRef.current.send(JSON.stringify({ action: "edit_message", message_id: editingId, message: editText.trim() }));
@@ -440,13 +487,32 @@ const Chat = () => {
   };
   const cancelLongPress = () => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; } };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+    if (!isImage && !isVideo) return;
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`File too large. Max ${isVideo ? "50 MB for videos" : "10 MB for images/GIFs"}.`);
+      e.target.value = "";
+      return;
+    }
+    const type = isVideo ? "video" : (file.type === "image/gif" ? "gif" : "image");
+    const url = URL.createObjectURL(file);
+    setMediaPreview({ file, url, type });
+    e.target.value = "";
+  };;
+
   const buildMenuItems = (msg) => {
     const own = isOwnMessage(msg);
     const canModify = canModifyMessage(msg);
     const items = [];
+    items.push({ label: "Reply", icon: <CornerUpLeft className="w-3.5 h-3.5" />, action: () => { setReplyTo(msg); setTimeout(() => inputRef.current?.focus(), 50); } });
     if (own && !selectedChat?.is_community) items.push({ label: "Message Info", icon: <Info className="w-3.5 h-3.5" />, action: () => setInfoMsg(msg) });
-    items.push({ label: "Copy", icon: <Copy className="w-3.5 h-3.5" />, action: () => navigator.clipboard?.writeText(msg.text).catch(() => {}) });
-    if (canModify && own) items.push({ label: "Edit", icon: <Pencil className="w-3.5 h-3.5" />, action: () => startEdit(msg) });
+    if (msg.text) items.push({ label: "Copy", icon: <Copy className="w-3.5 h-3.5" />, action: () => navigator.clipboard?.writeText(msg.text).catch(() => {}) });
+    if (canModify && own && msg.text) items.push({ label: "Edit", icon: <Pencil className="w-3.5 h-3.5" />, action: () => startEdit(msg) });
     if (canModify) items.push({ label: "Delete", icon: <Trash2 className="w-3.5 h-3.5" />, danger: true, action: () => deleteMessage(msg.id) });
     return items;
   };
@@ -493,7 +559,7 @@ const Chat = () => {
   );
 
   return (
-    <div className="bg-gray-50 h-[calc(100dvh-56px-56px)] lg:h-[calc(100dvh-56px)] overflow-hidden" onContextMenu={(e) => e.preventDefault()}>
+    <div className="bg-gray-50 h-[calc(100dvh-56px)] overflow-hidden" onContextMenu={(e) => e.preventDefault()}>
 
       {ctxMenu && <ContextMenu x={ctxMenu.x} y={ctxMenu.y} items={buildMenuItems(ctxMenu.msg)} onClose={() => setCtxMenu(null)} />}
 
@@ -685,7 +751,7 @@ const Chat = () => {
                         <div className="relative">
                           {isEditing ? (
                             <div className="flex items-center gap-2 bg-white border border-emerald-300 rounded-2xl px-3 py-2 shadow-sm">
-                              <input ref={inputRef} value={editText} onChange={(e) => setEditText(e.target.value)}
+                              <input ref={editInputRef} value={editText} onChange={(e) => setEditText(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === "Enter") submitEdit(); if (e.key === "Escape") setEditingId(null); }}
                                 className="text-sm text-gray-800 bg-transparent focus:outline-none flex-1 min-w-[120px]" />
                               <button onClick={submitEdit} className="text-emerald-600 hover:text-emerald-700 transition"><Check className="w-4 h-4" /></button>
@@ -693,13 +759,31 @@ const Chat = () => {
                             </div>
                           ) : (
                             <div
-                              className={`px-4 py-2.5 rounded-2xl text-sm select-text cursor-default ${own ? (selectedChat.is_community ? "bg-indigo-600 text-white rounded-tr-sm" : "bg-emerald-600 text-white rounded-tr-sm") : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-sm"}`}
+                              className={`px-3 py-2.5 rounded-2xl text-sm select-text cursor-default ${own ? (selectedChat.is_community ? "bg-indigo-600 text-white rounded-tr-sm" : "bg-emerald-600 text-white rounded-tr-sm") : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-sm"}`}
                               onContextMenu={(e) => openCtxMenu(e, msg)}
                               onTouchStart={(e) => onTouchStart(e, msg)}
                               onTouchEnd={cancelLongPress}
                               onTouchMove={cancelLongPress}
                             >
-                              <p className="break-words">{msg.text}</p>
+                              {msg.reply_to && (
+                                <div className={`mb-2 px-2.5 py-1.5 rounded-xl border-l-[3px] text-xs ${own ? "bg-black/20 border-white/70" : "bg-gray-50 border-emerald-400"}`}>
+                                  <p className={`font-semibold truncate ${own ? "text-white/80" : "text-emerald-700"}`}>{msg.reply_to.sender_name}</p>
+                                  <p className={`truncate mt-0.5 ${own ? "text-white/60" : "text-gray-500"}`}>
+                                    {msg.reply_to.text || (msg.reply_to.media_type ? `[${msg.reply_to.media_type}]` : "[media]")}
+                                  </p>
+                                </div>
+                              )}
+                              {msg.media && (
+                                <div className="mb-1.5 overflow-hidden rounded-xl">
+                                  {msg.media_type === "video" ? (
+                                    <video src={msg.media} controls className="max-w-full rounded-xl" style={{ maxHeight: 220 }} />
+                                  ) : (
+                                    <img src={msg.media} alt="media" className="max-w-full rounded-xl object-cover cursor-pointer"
+                                      style={{ maxHeight: 220 }} onClick={() => window.open(msg.media, "_blank")} />
+                                  )}
+                                </div>
+                              )}
+                              {msg.text && <p className="break-words">{msg.text}</p>}
                               {msg.edited && <span className={`text-[10px] italic ${own ? "text-white/50" : "text-gray-400"}`}> · edited</span>}
                               <div className="flex items-center justify-end gap-1 mt-1">
                                 <span className={`text-xs ${own ? "text-white/60" : "text-gray-400"}`}>{msg.time}</span>
@@ -715,18 +799,58 @@ const Chat = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-100 bg-white flex-shrink-0">
-                <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-3 sm:px-4 py-2">
-                  <input type="text"
-                    placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
-                    value={message} onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                    disabled={!isConnected}
-                    className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none" />
-                  <button onClick={sendMessage} disabled={!message.trim() || !isConnected}
-                    className={`w-8 h-8 flex items-center justify-center rounded-xl transition disabled:opacity-40 ${selectedChat.is_community ? "text-indigo-600 hover:bg-indigo-50" : "text-emerald-600 hover:bg-emerald-50"}`}>
-                    <Send className="w-4 h-4" />
-                  </button>
+              <div className="border-t border-gray-100 bg-white flex-shrink-0">
+                {replyTo && (
+                  <div className="px-3 pt-2 flex items-start gap-2">
+                    <div className={`flex-1 border-l-[3px] px-2.5 py-1.5 rounded-r-lg bg-gray-50 ${selectedChat.is_community ? "border-indigo-400" : "border-emerald-500"}`}>
+                      <p className={`text-xs font-semibold truncate ${selectedChat.is_community ? "text-indigo-700" : "text-emerald-700"}`}>
+                        {replyTo.sender?.first_name || replyTo.sender?.username || "User"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {replyTo.text || (replyTo.media_type ? `[${replyTo.media_type}]` : "[media]")}
+                      </p>
+                    </div>
+                    <button onClick={() => setReplyTo(null)} className="p-1 mt-0.5 text-gray-400 hover:text-gray-600 transition flex-shrink-0">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+                {mediaPreview && (
+                  <div className="px-3 pt-2">
+                    <div className="relative inline-block">
+                      {mediaPreview.type === "video" ? (
+                        <video src={mediaPreview.url} className="h-20 rounded-xl object-cover" />
+                      ) : (
+                        <img src={mediaPreview.url} alt="preview" className="h-20 rounded-xl object-cover" />
+                      )}
+                      <button onClick={() => { URL.revokeObjectURL(mediaPreview.url); setMediaPreview(null); }}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="px-3 sm:px-4 py-2 sm:py-3">
+                  <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-3 sm:px-4 py-2">
+                    <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileChange} />
+                    <button onClick={() => fileInputRef.current?.click()} disabled={!isConnected}
+                      className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition disabled:opacity-40">
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+                    <input type="text"
+                      ref={inputRef}
+                      placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
+                      value={message} onChange={(e) => setMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                      disabled={!isConnected}
+                      className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none" />
+                    <button onClick={sendMessage} disabled={(!message.trim() && !mediaPreview) || !isConnected || uploadingMedia}
+                      className={`w-8 h-8 flex items-center justify-center rounded-xl transition disabled:opacity-40 ${selectedChat.is_community ? "text-indigo-600 hover:bg-indigo-50" : "text-emerald-600 hover:bg-emerald-50"}`}>
+                      {uploadingMedia
+                        ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        : <Send className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>

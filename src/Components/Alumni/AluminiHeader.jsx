@@ -126,8 +126,8 @@ export default function AlumniHeader() {
         )}
       </nav>
 
-      {/* ── Instagram-style bottom nav (mobile only, < lg) ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 safe-area-bottom">
+      {/* ── Instagram-style bottom nav (mobile only, < lg, hidden on chat) ── */}
+      <nav className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom ${pathname.includes('/chat') ? 'hidden' : 'lg:hidden'}`}>
         <div className="flex items-center justify-around h-14 px-2">
           {mobileBottomItems.map((item) => (
             <a

@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 // Staff UI Components
 import AdminHeader from "./AluminiHeader";
@@ -25,13 +25,15 @@ import Chat from "./Chat/Chat";
 import ChapterDetail from "../Shared/ChapterDetail";
 
 const AlumniLayout = () => {
+  const location = useLocation();
+  const isChat = location.pathname.includes("/chat");
   return (
     <div>
       {/* Admin Header (Sidebar) */}
       <AdminHeader />
 
       {/* Main Content */}
-      <main className="role-content w-full min-w-0 p-0 pb-14 lg:pb-0">
+      <main className={`role-content w-full min-w-0 p-0 ${isChat ? "" : "pb-14 lg:pb-0"}`}>
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="event" element={<AddEvent />} />
