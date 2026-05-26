@@ -176,6 +176,12 @@ const Chat = () => {
   const globalSocketRef = useRef(null); // long-lived global socket (rooms list, presence, notifications)
   const inputRef       = useRef(null);
   const selectedChatIdRef = useRef(null);
+  const currentUserIdRef = useRef(null);
+
+  // Keep the currentUser id available inside the WS message handler
+  useEffect(() => {
+    currentUserIdRef.current = currentUser?.id || null;
+  }, [currentUser]);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(() => { scrollToBottom(); }, [messages]);
@@ -248,19 +254,23 @@ const Chat = () => {
 
         if (data.action === "room_update") {
           setRooms((prev) => {
-            const exists = prev.some((r) => String(r.id) === String(data.room_id));
-            if (!exists) return prev;
-            const updated = prev.map((r) =>
-              String(r.id) === String(data.room_id)
+            const idx = prev.findIndex((r) => String(r.id) === String(data.room_id));
+            if (idx === -1) {
+              // Room not in list yet — refetch in the background to grab it
+              loadRooms();
+              return prev;
+            }
+            const isOpen = String(selectedChatIdRef.current) === String(data.room_id);
+            const fromSelf = String(data.sender_id) === String(currentUserIdRef.current);
+            const updated = prev.map((r, i) =>
+              i === idx
                 ? {
                     ...r,
                     lastMessage: data.last_message ?? r.lastMessage,
                     lastMessageTime: data.last_message_time ?? r.lastMessageTime,
-                    unreadCount:
-                      String(selectedChatIdRef.current) === String(data.room_id) ||
-                      String(data.sender_id) === String(currentUser?.id)
-                        ? (r.unreadCount || 0)
-                        : (r.unreadCount || 0) + 1,
+                    unreadCount: isOpen || fromSelf
+                      ? 0
+                      : (r.unreadCount || 0) + 1,
                   }
                 : r
             );
@@ -281,18 +291,33 @@ const Chat = () => {
           return;
         }
 
-        if (data.action === "presence_update" && data.user_id) {
+        // Presence: accept both action and bare type form. Normalise key to string.
+        if ((data.action === "presence_update" || data.type === "presence_update") && data.user_id != null) {
+          const key = String(data.user_id);
           setPresenceMap((prev) => ({
             ...prev,
-            [data.user_id]: { is_online: data.is_online, last_seen: data.last_seen },
+            [key]: {
+              ...(prev[key] || {}),
+              is_online: !!data.is_online,
+              last_seen: data.last_seen ?? prev[key]?.last_seen ?? null,
+            },
           }));
           return;
         }
 
         if (data.action === "incoming_message") {
-          // Per-room socket handles in-room rendering; this is just a hint
-          // that a message landed in some other room — room_update covers
-          // the rooms-list mutation, so nothing else to do here.
+          // The per-room socket (if open for this room) handles the actual
+          // message render via "chat_message". This branch is a safety net
+          // for when the user is NOT in the room — just nudge the rooms list
+          // refresh so the unread count picks it up even if room_update was
+          // delayed or lost.
+          if (data.room_id && String(selectedChatIdRef.current) !== String(data.room_id)) {
+            setRooms((prev) => prev.map((r) =>
+              String(r.id) === String(data.room_id)
+                ? { ...r, unreadCount: (r.unreadCount || 0) + 1 }
+                : r
+            ));
+          }
           return;
         }
       } catch (_) {}
@@ -487,11 +512,17 @@ const Chat = () => {
           };
           setMessages((prev) => [...prev, newMsg]);
           markSeen(roomId, newMsg.id, isCommunity);
-          setRooms((prev) => prev.map((r) =>
-            r.id === roomId
-              ? { ...r, lastMessage: newMsg.text, lastMessageTime: newMsg.timestamp }
-              : r
-          ));
+          setRooms((prev) => {
+            const updated = prev.map((r) =>
+              String(r.id) === String(roomId)
+                ? { ...r, lastMessage: newMsg.text, lastMessageTime: newMsg.timestamp, unreadCount: 0 }
+                : r
+            );
+            updated.sort((a, b) =>
+              new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0)
+            );
+            return updated;
+          });
           return;
         }
 
@@ -607,8 +638,8 @@ const Chat = () => {
   };
 
   // Presence for active chat header
-  const otherUserId  = selectedChat?.other_user?.id;
-  const otherPresence = otherUserId ? presenceMap[otherUserId] : null;
+  const otherUserId   = selectedChat?.other_user?.id;
+  const otherPresence = otherUserId ? presenceMap[String(otherUserId)] : null;
 
   const presenceLabel = () => {
     if (!selectedChat) return "";
@@ -779,8 +810,9 @@ const Chat = () => {
               </div>
             ) : (
               getSortedRooms().map((chat) => {
-                const otherUser   = chat.other_user;
-                const roomPresence = otherUser ? presenceMap[otherUser.id] : null;
+                const otherUser    = chat.other_user;
+                const roomPresence = otherUser ? presenceMap[String(otherUser.id)] : null;
+                const isOnline     = !chat.is_community && !!roomPresence?.is_online;
                 // last message time: prefer explicit field, fall back to last_message_time from API
                 const lastTime = chat.lastMessageTime || chat.last_message_time || chat.last_message?.timestamp;
                 return (
@@ -796,8 +828,11 @@ const Chat = () => {
                         size={12}
                         isCommunity={chat.is_community}
                       />
-                      {!chat.is_community && roomPresence?.is_online && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                      {isOnline && (
+                        <span
+                          title="Online"
+                          className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow"
+                        />
                       )}
                     </div>
 
@@ -808,10 +843,15 @@ const Chat = () => {
                         </p>
                         <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{fmtTime(lastTime)}</span>
                       </div>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">
-                        {chat.is_community
-                          ? "Community · All members"
-                          : (chat.lastMessage || chat.last_message?.text || "No messages yet")}
+                      <p className="text-xs truncate mt-0.5 flex items-center gap-1">
+                        {isOnline && (
+                          <span className="text-emerald-600 font-medium">● Online</span>
+                        )}
+                        <span className="text-gray-400 truncate">
+                          {chat.is_community
+                            ? "Community · All members"
+                            : (chat.lastMessage || chat.last_message?.text || "No messages yet")}
+                        </span>
                       </p>
                     </div>
 
