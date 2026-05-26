@@ -503,7 +503,24 @@ const Chat = () => {
     const url = URL.createObjectURL(file);
     setMediaPreview({ file, url, type });
     e.target.value = "";
-  };;
+  };
+
+  const handlePaste = (e) => {
+    const items = Array.from(e.clipboardData?.items || []);
+    const mediaItem = items.find(item => item.type.startsWith("image/") || item.type.startsWith("video/"));
+    if (!mediaItem) return;
+    e.preventDefault();
+    const file = mediaItem.getAsFile();
+    if (!file) return;
+    const isVideo = mediaItem.type.startsWith("video/");
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`File too large. Max ${isVideo ? "50 MB for videos" : "10 MB for images/GIFs"}.`);
+      return;
+    }
+    const type = isVideo ? "video" : (mediaItem.type === "image/gif" ? "gif" : "image");
+    setMediaPreview({ file, url: URL.createObjectURL(file), type });
+  };
 
   const buildMenuItems = (msg) => {
     const own = isOwnMessage(msg);
@@ -559,7 +576,7 @@ const Chat = () => {
   );
 
   return (
-    <div className="bg-gray-50 h-[calc(100dvh-56px)] overflow-hidden" onContextMenu={(e) => e.preventDefault()}>
+    <div className="fixed left-0 right-0 top-14 bottom-0 overflow-hidden bg-gray-50" onContextMenu={(e) => e.preventDefault()}>
 
       {ctxMenu && <ContextMenu x={ctxMenu.x} y={ctxMenu.y} items={buildMenuItems(ctxMenu.msg)} onClose={() => setCtxMenu(null)} />}
 
@@ -842,6 +859,7 @@ const Chat = () => {
                       placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
                       value={message} onChange={(e) => setMessage(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                      onPaste={handlePaste}
                       disabled={!isConnected}
                       className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none" />
                     <button onClick={sendMessage} disabled={(!message.trim() && !mediaPreview) || !isConnected || uploadingMedia}
