@@ -231,6 +231,7 @@ const Chat = () => {
   const [presenceMap, setPresenceMap]   = useState({});
   const [editingId, setEditingId]       = useState(null);
   const [editText, setEditText]         = useState("");
+  const [mediaLightbox, setMediaLightbox] = useState(null);
 
   // Context menu (replaces per-message menuMsgId hover button)
   const [ctxMenu, setCtxMenu]           = useState(null); // { x, y, msg }
@@ -892,6 +893,36 @@ const Chat = () => {
         />
       )}
 
+      {/* Media Lightbox */}
+      {mediaLightbox && (
+        <div
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setMediaLightbox(null)}
+        >
+          <button
+            className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+            onClick={() => setMediaLightbox(null)}
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <a
+            href={mediaLightbox}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-4 right-4 text-white/60 hover:text-white text-xs underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Open original
+          </a>
+          <img
+            src={mediaLightbox}
+            alt="Full size"
+            className="max-w-full max-h-full rounded-xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* Agreement modal */}
       {showAgreement && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
@@ -1294,10 +1325,21 @@ const Chat = () => {
                               {msg.media && (
                                 <div className="mb-1.5 overflow-hidden rounded-xl">
                                   {msg.media_type === "video" ? (
-                                    <video src={msg.media} controls className="max-w-full rounded-xl" style={{ maxHeight: 220 }} />
+                                    <video
+                                      src={getMediaUrl(msg.media)}
+                                      controls
+                                      className="max-w-full rounded-xl"
+                                      style={{ maxHeight: 220 }}
+                                    />
                                   ) : (
-                                    <img src={msg.media} alt="media" className="max-w-full rounded-xl object-cover cursor-pointer"
-                                      style={{ maxHeight: 220 }} onClick={() => window.open(msg.media, "_blank")} />
+                                    <img
+                                      src={getMediaUrl(msg.media)}
+                                      alt={msg.media_type === "gif" ? "GIF" : "Image"}
+                                      className="max-w-full rounded-xl object-cover cursor-pointer hover:opacity-90 transition"
+                                      style={{ maxHeight: 220 }}
+                                      onClick={() => setMediaLightbox(getMediaUrl(msg.media))}
+                                      onError={(e) => { e.currentTarget.style.opacity = "0.4"; }}
+                                    />
                                   )}
                                 </div>
                               )}
