@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Search, Send, ArrowLeft, Plus, Users, MessageSquare,
   Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
-  Clock, Pencil, X, MoreVertical, Info,
+  Clock, Pencil, X, MoreVertical, Info, Shield, Copy,
 } from "lucide-react";
 import { getMediaUrl } from "../../../config/api";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
@@ -49,15 +49,26 @@ const photoUrl = (photoPath) => getMediaUrl(photoPath);
 
 // ── Message Status Icon ───────────────────────────────────────────────────────
 
-const StatusIcon = ({ status, isCommunity }) => {
+const StatusIcon = ({ status, isCommunity, className = "" }) => {
   if (isCommunity) return null;
   if (status === "seen")
-    return <CheckCheck className="w-3.5 h-3.5 text-sky-300 inline-block ml-1" aria-label="Seen" />;
+    return <CheckCheck className={`w-3.5 h-3.5 text-sky-300 inline-block ml-1 ${className}`} aria-label="Seen" />;
   if (status === "delivered")
-    return <CheckCheck className="w-3.5 h-3.5 text-white/50 inline-block ml-1" aria-label="Delivered" />;
+    return <CheckCheck className={`w-3.5 h-3.5 text-white/50 inline-block ml-1 ${className}`} aria-label="Delivered" />;
   if (status === "sent")
-    return <Check className="w-3.5 h-3.5 text-white/50 inline-block ml-1" aria-label="Sent" />;
-  return <Clock className="w-3 h-3 text-white/40 inline-block ml-1" aria-label="Pending" />;
+    return <Check className={`w-3.5 h-3.5 text-white/50 inline-block ml-1 ${className}`} aria-label="Sent" />;
+  return <Clock className={`w-3 h-3 text-white/40 inline-block ml-1 ${className}`} aria-label="Pending" />;
+};
+
+// Sidebar-specific status icon (dark background)
+const SidebarStatusIcon = ({ status }) => {
+  if (status === "seen")
+    return <CheckCheck className="w-3 h-3 text-sky-500 inline-block" aria-label="Seen" />;
+  if (status === "delivered")
+    return <CheckCheck className="w-3 h-3 text-gray-400 inline-block" aria-label="Delivered" />;
+  if (status === "sent")
+    return <Check className="w-3 h-3 text-gray-400 inline-block" aria-label="Sent" />;
+  return null;
 };
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
@@ -65,9 +76,7 @@ const StatusIcon = ({ status, isCommunity }) => {
 const Avatar = ({ src, name, gender, size = 10, isCommunity = false }) => {
   const [imgError, setImgError] = useState(false);
 
-  useEffect(() => {
-    setImgError(false);
-  }, [src]);
+  useEffect(() => { setImgError(false); }, [src]);
 
   const cls = `w-${size} h-${size} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
   if (isCommunity)
@@ -90,7 +99,7 @@ const Avatar = ({ src, name, gender, size = 10, isCommunity = false }) => {
 
 // ── Message Info Panel ────────────────────────────────────────────────────────
 
-const MessageInfoPanel = ({ msg, onClose }) => {
+const MessageInfoPanel = ({ msg, onClose, isCommunity }) => {
   if (!msg) return null;
   return (
     <div
@@ -113,16 +122,23 @@ const MessageInfoPanel = ({ msg, onClose }) => {
           </div>
           <div className="space-y-2 text-sm">
             <Row icon={<Clock className="w-3.5 h-3.5 text-gray-400" />} label="Sent" value={fmtDateTime(msg.timestamp)} />
-            <Row
-              icon={<CheckCheck className="w-3.5 h-3.5 text-gray-400" />}
-              label="Delivered"
-              value={msg.delivered_at ? fmtDateTime(msg.delivered_at) : "—"}
-            />
-            <Row
-              icon={<CheckCheck className="w-3.5 h-3.5 text-sky-400" />}
-              label="Seen"
-              value={msg.seen_at ? fmtDateTime(msg.seen_at) : "—"}
-            />
+            {!isCommunity && (
+              <>
+                <Row
+                  icon={<CheckCheck className="w-3.5 h-3.5 text-gray-400" />}
+                  label="Delivered"
+                  value={msg.delivered_at ? fmtDateTime(msg.delivered_at) : "—"}
+                />
+                <Row
+                  icon={<CheckCheck className="w-3.5 h-3.5 text-sky-400" />}
+                  label="Seen"
+                  value={msg.seen_at ? fmtDateTime(msg.seen_at) : "—"}
+                />
+              </>
+            )}
+            {isCommunity && (
+              <p className="text-xs text-gray-400 italic">Community delivery info is not tracked per-user.</p>
+            )}
           </div>
         </div>
       </div>
@@ -137,6 +153,53 @@ const Row = ({ icon, label, value }) => (
     <span className="text-gray-800 font-medium">{value}</span>
   </div>
 );
+
+// ── Context Menu ──────────────────────────────────────────────────────────────
+
+const ContextMenu = ({ x, y, items, onClose }) => {
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handle = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) onClose();
+    };
+    document.addEventListener("mousedown", handle);
+    document.addEventListener("touchstart", handle);
+    return () => {
+      document.removeEventListener("mousedown", handle);
+      document.removeEventListener("touchstart", handle);
+    };
+  }, [onClose]);
+
+  // Clamp to viewport
+  const style = { position: "fixed", zIndex: 9999 };
+  const viewW = window.innerWidth;
+  const viewH = window.innerHeight;
+  const menuW = 160;
+  const menuH = items.length * 40;
+  style.left = Math.min(x, viewW - menuW - 8);
+  style.top  = Math.min(y, viewH - menuH - 8);
+
+  return (
+    <div
+      ref={menuRef}
+      style={style}
+      className="bg-white border border-gray-100 rounded-xl shadow-2xl overflow-hidden w-40 py-1"
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {items.map((item) => (
+        <button
+          key={item.label}
+          onClick={() => { item.action(); onClose(); }}
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition hover:bg-gray-50 ${item.danger ? "text-red-600 hover:bg-red-50" : "text-gray-700"}`}
+        >
+          {item.icon}
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
@@ -158,41 +221,46 @@ const Chat = () => {
     () => !localStorage.getItem("chat_agreement_accepted")
   );
 
-  // Presence: map of userId → { is_online, last_seen }
-  const [presenceMap, setPresenceMap]   = useState({});
+  // Admin spectating
+  const [spectateMode, setSpectateMode]       = useState(false);
+  const [allRooms, setAllRooms]               = useState([]);
+  const [allRoomsLoading, setAllRoomsLoading] = useState(false);
+  const [spectateSearch, setSpectateSearch]   = useState("");
+  const [isSpectating, setIsSpectating]       = useState(false);
 
-  // Edit state
+  const [presenceMap, setPresenceMap]   = useState({});
   const [editingId, setEditingId]       = useState(null);
   const [editText, setEditText]         = useState("");
 
-  // Message context menu
-  const [menuMsgId, setMenuMsgId]       = useState(null);
-
-  // Message info modal
+  // Context menu (replaces per-message menuMsgId hover button)
+  const [ctxMenu, setCtxMenu]           = useState(null); // { x, y, msg }
   const [infoMsg, setInfoMsg]           = useState(null);
 
-  const messagesEndRef = useRef(null);
-  const socketRef      = useRef(null);  // per-room socket
-  const globalSocketRef = useRef(null); // long-lived global socket (rooms list, presence, notifications)
-  const inputRef       = useRef(null);
+  const messagesEndRef    = useRef(null);
+  const socketRef         = useRef(null);
+  const globalSocketRef   = useRef(null);
+  const inputRef          = useRef(null);
   const selectedChatIdRef = useRef(null);
-  const currentUserIdRef = useRef(null);
+  const currentUserIdRef  = useRef(null);
+  const longPressTimer    = useRef(null);
 
-  // Keep the currentUser id available inside the WS message handler
-  useEffect(() => {
-    currentUserIdRef.current = currentUser?.id || null;
-  }, [currentUser]);
+  useEffect(() => { currentUserIdRef.current = currentUser?.id || null; }, [currentUser]);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(() => { scrollToBottom(); }, [messages]);
 
-  // ── Agreement ──────────────────────────────────────────────────────────────
+  // Close context menu on scroll
+  useEffect(() => {
+    const close = () => setCtxMenu(null);
+    window.addEventListener("scroll", close, true);
+    return () => window.removeEventListener("scroll", close, true);
+  }, []);
+
   const handleAcceptAgreement = () => {
     localStorage.setItem("chat_agreement_accepted", "true");
     setShowAgreement(false);
   };
 
-  // ── Init ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     connectGlobalSocket();
     return () => { closeSocket(); closeGlobalSocket(); };
@@ -202,10 +270,7 @@ const Chat = () => {
   const closeSocket = () => {
     const ws = socketRef.current;
     if (ws) {
-      try {
-        ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null;
-        ws.close();
-      } catch (_) {}
+      try { ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null; ws.close(); } catch (_) {}
       socketRef.current = null;
     }
   };
@@ -213,15 +278,12 @@ const Chat = () => {
   const closeGlobalSocket = () => {
     const ws = globalSocketRef.current;
     if (ws) {
-      try {
-        ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null;
-        ws.close();
-      } catch (_) {}
+      try { ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null; ws.close(); } catch (_) {}
       globalSocketRef.current = null;
     }
   };
 
-  // ── Global WebSocket: rooms list + presence + notifications ────────────────
+  // ── Global WebSocket ───────────────────────────────────────────────────────
   const connectGlobalSocket = () => {
     const token = getToken();
     if (!token) return;
@@ -255,22 +317,18 @@ const Chat = () => {
         if (data.action === "room_update") {
           setRooms((prev) => {
             const idx = prev.findIndex((r) => String(r.id) === String(data.room_id));
-            if (idx === -1) {
-              // Room not in list yet — refetch in the background to grab it
-              loadRooms();
-              return prev;
-            }
-            const isOpen = String(selectedChatIdRef.current) === String(data.room_id);
+            if (idx === -1) { loadRooms(); return prev; }
+            const isOpen   = String(selectedChatIdRef.current) === String(data.room_id);
             const fromSelf = String(data.sender_id) === String(currentUserIdRef.current);
-            const updated = prev.map((r, i) =>
+            const updated  = prev.map((r, i) =>
               i === idx
                 ? {
                     ...r,
                     lastMessage: data.last_message ?? r.lastMessage,
                     lastMessageTime: data.last_message_time ?? r.lastMessageTime,
-                    unreadCount: isOpen || fromSelf
-                      ? 0
-                      : (r.unreadCount || 0) + 1,
+                    lastMessageSenderId: data.last_message_sender_id ?? r.lastMessageSenderId,
+                    lastMessageStatus: data.last_message_status ?? r.lastMessageStatus,
+                    unreadCount: isOpen || fromSelf ? 0 : (r.unreadCount || 0) + 1,
                   }
                 : r
             );
@@ -284,37 +342,41 @@ const Chat = () => {
 
         if (data.action === "room_created" && data.room?.id) {
           setRooms((prev) =>
-            prev.some((r) => String(r.id) === String(data.room.id))
-              ? prev
-              : [data.room, ...prev]
+            prev.some((r) => String(r.id) === String(data.room.id)) ? prev : [data.room, ...prev]
           );
           return;
         }
 
-        // Presence: accept both action and bare type form. Normalise key to string.
         if ((data.action === "presence_update" || data.type === "presence_update") && data.user_id != null) {
           const key = String(data.user_id);
           setPresenceMap((prev) => ({
             ...prev,
-            [key]: {
-              ...(prev[key] || {}),
-              is_online: !!data.is_online,
-              last_seen: data.last_seen ?? prev[key]?.last_seen ?? null,
-            },
+            [key]: { ...(prev[key] || {}), is_online: !!data.is_online, last_seen: data.last_seen ?? prev[key]?.last_seen ?? null },
           }));
           return;
         }
 
         if (data.action === "incoming_message") {
-          // The per-room socket (if open for this room) handles the actual
-          // message render via "chat_message". This branch is a safety net
-          // for when the user is NOT in the room — just nudge the rooms list
-          // refresh so the unread count picks it up even if room_update was
-          // delayed or lost.
           if (data.room_id && String(selectedChatIdRef.current) !== String(data.room_id)) {
             setRooms((prev) => prev.map((r) =>
+              String(r.id) === String(data.room_id) ? { ...r, unreadCount: (r.unreadCount || 0) + 1 } : r
+            ));
+          }
+          return;
+        }
+
+        // Status updates (e.g. delivered) pushed to sender via their user group
+        if (data.action === "status_update" && Array.isArray(data.message_ids)) {
+          setMessages((prev) => prev.map((m) =>
+            data.message_ids.includes(String(m.id))
+              ? { ...m, status: data.status, delivered_at: data.delivered_at || m.delivered_at, seen_at: data.seen_at || m.seen_at }
+              : m
+          ));
+          // Also update sidebar status for last message
+          if (data.room_id) {
+            setRooms((prev) => prev.map((r) =>
               String(r.id) === String(data.room_id)
-                ? { ...r, unreadCount: (r.unreadCount || 0) + 1 }
+                ? { ...r, lastMessageStatus: data.status }
                 : r
             ));
           }
@@ -325,7 +387,7 @@ const Chat = () => {
 
     ws.onerror = () => { restBootstrapFallback(); };
     ws.onclose = (e) => {
-      // Fall back to REST if WS isn't reachable; reconnect on transient drops
+      globalSocketRef.current = null; // allow reconnect check to pass
       if (e.code === 1006 || !e.wasClean) {
         restBootstrapFallback();
         setTimeout(() => { if (!globalSocketRef.current) connectGlobalSocket(); }, 4000);
@@ -333,12 +395,7 @@ const Chat = () => {
     };
   };
 
-  // ── REST fallback (only used if WS is unavailable) ─────────────────────────
-  const restBootstrapFallback = () => {
-    loadRooms();
-    getCurrentUser();
-    loadCommunityChat();
-  };
+  const restBootstrapFallback = () => { loadRooms(); getCurrentUser(); loadCommunityChat(); };
 
   // ── API helpers ────────────────────────────────────────────────────────────
   const getCurrentUser = async () => {
@@ -348,7 +405,6 @@ const Chat = () => {
       const r = await fetch(`${API_HOST}/chat/user/me/`, { headers: authH() });
       if (r.ok) { setCurrentUser(await r.json()); return; }
     } catch (_) {}
-    // fallback to alumni profile endpoint
     try {
       const r = await fetch(`${API_HOST}/api/v1/user/me/`, { headers: authH() });
       if (r.ok) setCurrentUser(await r.json());
@@ -375,6 +431,14 @@ const Chat = () => {
         if (data?.id) setCommunityRoom({ ...data, is_community: true, name: "Community Chat" });
       }
     } catch (_) {}
+  };
+
+  const loadAllRooms = async () => {
+    setAllRoomsLoading(true);
+    try {
+      const r = await fetch(`${API_HOST}/chat/admin/rooms/`, { headers: authH() });
+      if (r.ok) setAllRooms(await r.json());
+    } catch (_) {} finally { setAllRoomsLoading(false); }
   };
 
   const searchUsers = async (q) => {
@@ -431,23 +495,18 @@ const Chat = () => {
 
   const markSeen = useCallback(async (roomId, upToMsgId, isCommunity = false) => {
     if (!roomId && !isCommunity) return;
-    const endpoints = isCommunity
-      ? [`${API_HOST}/chat/community/seen/`]
-      : [`${API_HOST}/chat/rooms/${roomId}/seen/`];
-
-    for (const endpoint of endpoints) {
-      try {
-        const r = await fetch(endpoint, {
-          method: "POST",
-          headers: authH(),
-          body: JSON.stringify(upToMsgId ? { message_id: upToMsgId } : {}),
-        });
-        if (r.ok) return;
-      } catch (_) {}
-    }
+    const endpoint = isCommunity
+      ? `${API_HOST}/chat/community/seen/`
+      : `${API_HOST}/chat/rooms/${roomId}/seen/`;
+    try {
+      await fetch(endpoint, {
+        method: "POST",
+        headers: authH(),
+        body: JSON.stringify(upToMsgId ? { message_id: upToMsgId } : {}),
+      });
+    } catch (_) {}
   }, []);
 
-  // Fetch presence for a single user — stable, no deps on presenceMap
   const fetchPresence = useCallback(async (userId) => {
     if (!userId) return;
     try {
@@ -459,11 +518,7 @@ const Chat = () => {
     } catch (_) {}
   }, []);
 
-  // Presence is delivered via the global WS bootstrap + presence_update pushes.
-  // REST fetchPresence is kept only as a per-user fallback (e.g. opening a chat
-  // before the bootstrap arrived).
-
-  // ── WebSocket ──────────────────────────────────────────────────────────────
+  // ── WebSocket (per-room) ───────────────────────────────────────────────────
   const connectWebSocket = useCallback((roomId, isCommunity = false) => {
     const token = getToken();
     if (!token) return;
@@ -483,7 +538,6 @@ const Chat = () => {
       try {
         const data = JSON.parse(event.data);
 
-        // History batch
         if (data.action === "message_history" && Array.isArray(data.messages)) {
           const normalized = data.messages.map((m) => ({
             ...m,
@@ -495,7 +549,6 @@ const Chat = () => {
           return;
         }
 
-        // New incoming message
         if (data.action === "new_message" || data.type === "chat_message" || data.action === "chat_message") {
           const newMsg = {
             id: data.message_id || data.id || crypto.randomUUID(),
@@ -515,33 +568,31 @@ const Chat = () => {
           setRooms((prev) => {
             const updated = prev.map((r) =>
               String(r.id) === String(roomId)
-                ? { ...r, lastMessage: newMsg.text, lastMessageTime: newMsg.timestamp, unreadCount: 0 }
+                ? {
+                    ...r,
+                    lastMessage: newMsg.text,
+                    lastMessageTime: newMsg.timestamp,
+                    lastMessageSenderId: newMsg.sender_id || newMsg.sender?.id,
+                    lastMessageStatus: newMsg.status,
+                    unreadCount: 0,
+                  }
                 : r
             );
-            updated.sort((a, b) =>
-              new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0)
-            );
+            updated.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
             return updated;
           });
           return;
         }
 
-        // Status update (sent → delivered → seen)
         if (data.action === "status_update" && Array.isArray(data.message_ids)) {
           setMessages((prev) => prev.map((m) =>
             data.message_ids.includes(String(m.id))
-              ? {
-                  ...m,
-                  status: data.status,
-                  delivered_at: data.delivered_at || m.delivered_at,
-                  seen_at: data.seen_at || m.seen_at,
-                }
+              ? { ...m, status: data.status, delivered_at: data.delivered_at || m.delivered_at, seen_at: data.seen_at || m.seen_at }
               : m
           ));
           return;
         }
 
-        // Presence update
         if (data.action === "presence_update") {
           setPresenceMap((prev) => ({
             ...prev,
@@ -550,40 +601,36 @@ const Chat = () => {
           return;
         }
 
-        // Message deleted
         if (data.action === "message_deleted") {
           setMessages((prev) => prev.filter((m) => String(m.id) !== String(data.message_id)));
           return;
         }
 
-        // Message edited
         if (data.action === "message_edited") {
           setMessages((prev) => prev.map((m) =>
-            String(m.id) === String(data.message_id)
-              ? { ...m, text: data.new_text, edited: true }
-              : m
+            String(m.id) === String(data.message_id) ? { ...m, text: data.new_text, edited: true } : m
           ));
           return;
         }
-
       } catch (_) {}
     };
 
     ws.onerror = () => { setIsConnected(false); loadMessagesHTTP(roomId); };
     ws.onclose = (e) => {
+      socketRef.current = null;
       setIsConnected(false);
       if (e.code === 1006 || !e.wasClean) loadMessagesHTTP(roomId);
     };
   }, [markSeen]);
 
-  const selectChat = useCallback((chat) => {
+  const selectChat = useCallback((chat, spectating = false) => {
     setSelectedChat(chat);
+    setIsSpectating(spectating);
     selectedChatIdRef.current = chat?.id || null;
     setEditingId(null);
-    setMenuMsgId(null);
+    setCtxMenu(null);
     setInfoMsg(null);
     connectWebSocket(chat.id, Boolean(chat.is_community));
-    // Opening a room means we've read it — clear its unread badge locally
     setRooms((prev) => prev.map((r) =>
       String(r.id) === String(chat.id) ? { ...r, unreadCount: 0 } : r
     ));
@@ -594,7 +641,7 @@ const Chat = () => {
 
   // ── Send ───────────────────────────────────────────────────────────────────
   const sendMessage = () => {
-    if (!message.trim() || !socketRef.current || !isConnected) return;
+    if (!message.trim() || !socketRef.current || !isConnected || isSpectating) return;
     socketRef.current.send(JSON.stringify({
       action: "send_message",
       room_id: selectedChat?.id,
@@ -603,32 +650,77 @@ const Chat = () => {
     setMessage("");
   };
 
-  // ── Edit / Delete via WS ───────────────────────────────────────────────────
+  // ── Edit / Delete ──────────────────────────────────────────────────────────
   const startEdit = (msg) => {
     setEditingId(msg.id);
     setEditText(msg.text);
-    setMenuMsgId(null);
+    setCtxMenu(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const submitEdit = () => {
     if (!editText.trim() || !socketRef.current || !isConnected) return;
-    socketRef.current.send(JSON.stringify({
-      action: "edit_message",
-      message_id: editingId,
-      message: editText.trim(),
-    }));
+    socketRef.current.send(JSON.stringify({ action: "edit_message", message_id: editingId, message: editText.trim() }));
     setEditingId(null);
     setEditText("");
   };
 
   const deleteMessage = (msgId) => {
     if (!socketRef.current || !isConnected) return;
-    socketRef.current.send(JSON.stringify({
-      action: "delete_message",
-      message_id: msgId,
-    }));
-    setMenuMsgId(null);
+    socketRef.current.send(JSON.stringify({ action: "delete_message", message_id: msgId }));
+    setCtxMenu(null);
+  };
+
+  // ── Context menu helpers ───────────────────────────────────────────────────
+  const openCtxMenu = (e, msg) => {
+    e.preventDefault();
+    setCtxMenu({ x: e.clientX, y: e.clientY, msg });
+  };
+
+  const buildMenuItems = (msg) => {
+    const own       = isOwnMessage(msg);
+    const canModify = canModifyMessage(msg);
+    const items     = [];
+
+    if (own && !selectedChat?.is_community) {
+      items.push({
+        label: "Message Info",
+        icon:  <Info className="w-3.5 h-3.5" />,
+        action: () => setInfoMsg(msg),
+      });
+    }
+    items.push({
+      label: "Copy",
+      icon:  <Copy className="w-3.5 h-3.5" />,
+      action: () => navigator.clipboard?.writeText(msg.text).catch(() => {}),
+    });
+    if (canModify && own) {
+      items.push({
+        label: "Edit",
+        icon:  <Pencil className="w-3.5 h-3.5" />,
+        action: () => startEdit(msg),
+      });
+    }
+    if (canModify) {
+      items.push({
+        label: "Delete",
+        icon:  <Trash2 className="w-3.5 h-3.5" />,
+        danger: true,
+        action: () => deleteMessage(msg.id),
+      });
+    }
+    return items;
+  };
+
+  // Long-press for mobile
+  const onTouchStart = (e, msg) => {
+    longPressTimer.current = setTimeout(() => {
+      const touch = e.touches[0];
+      setCtxMenu({ x: touch.clientX, y: touch.clientY, msg });
+    }, 500);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   };
 
   // ── Room list ──────────────────────────────────────────────────────────────
@@ -637,22 +729,35 @@ const Chat = () => {
     return communityRoom ? [communityRoom, ...filtered] : filtered;
   };
 
-  // Presence for active chat header
+  const filteredAllRooms = allRooms.filter((r) => {
+    if (!spectateSearch.trim()) return true;
+    const q = spectateSearch.toLowerCase();
+    return (
+      r.name?.toLowerCase().includes(q) ||
+      r.other_user?.first_name?.toLowerCase().includes(q) ||
+      r.other_user?.last_name?.toLowerCase().includes(q) ||
+      r.other_user?.username?.toLowerCase().includes(q)
+    );
+  });
+
+  const isAdmin = currentUser?.role === "Admin" || currentUser?.is_staff;
+
   const otherUserId   = selectedChat?.other_user?.id;
   const otherPresence = otherUserId ? presenceMap[String(otherUserId)] : null;
 
   const presenceLabel = () => {
     if (!selectedChat) return "";
-    if (selectedChat.is_community) return isConnected ? "Connected" : "Connecting…";
-    if (!isConnected) return "Connecting…";
-    if (otherPresence?.is_online) return "Online";
-    if (otherPresence?.last_seen) return `Last seen ${fmtLastSeen(otherPresence.last_seen)}`;
-    // presence fetch not resolved yet — show generic connected
+    if (isSpectating)               return "Spectating (read-only)";
+    if (selectedChat.is_community)  return isConnected ? "Connected" : "Connecting…";
+    if (!isConnected)               return "Connecting…";
+    if (otherPresence?.is_online)   return "Online";
+    if (otherPresence?.last_seen)   return `Last seen ${fmtLastSeen(otherPresence.last_seen)}`;
     return "Connected";
   };
 
   const presenceDotColor = () => {
-    if (!isConnected) return "bg-yellow-400 animate-pulse";
+    if (isSpectating)  return "bg-amber-400";
+    if (!isConnected)  return "bg-yellow-400 animate-pulse";
     if (!selectedChat?.is_community && otherPresence?.is_online) return "bg-emerald-500";
     if (!selectedChat?.is_community && otherPresence && !otherPresence.is_online) return "bg-gray-300";
     return "bg-emerald-500";
@@ -688,9 +793,21 @@ const Chat = () => {
   }
 
   return (
-    <div className="bg-gray-50 h-[calc(100dvh-56px-56px)] lg:h-[calc(100dvh-56px)] overflow-hidden">
+    <div
+      className="bg-gray-50 h-[calc(100dvh-56px-56px)] lg:h-[calc(100dvh-56px)] overflow-hidden"
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {/* Context Menu */}
+      {ctxMenu && (
+        <ContextMenu
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          items={buildMenuItems(ctxMenu.msg)}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
 
-      {/* ── Agreement modal ── */}
+      {/* Agreement modal */}
       {showAgreement && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
           <div role="dialog" aria-modal="true" aria-labelledby="chat-agree-title"
@@ -743,8 +860,14 @@ const Chat = () => {
         </div>
       )}
 
-      {/* ── Message Info Modal ── */}
-      {infoMsg && <MessageInfoPanel msg={infoMsg} onClose={() => setInfoMsg(null)} />}
+      {/* Message Info Modal */}
+      {infoMsg && (
+        <MessageInfoPanel
+          msg={infoMsg}
+          isCommunity={selectedChat?.is_community}
+          onClose={() => setInfoMsg(null)}
+        />
+      )}
 
       <div className="flex h-full w-full lg:max-w-5xl mx-auto lg:border-x border-gray-200 bg-white overflow-hidden">
 
@@ -752,16 +875,36 @@ const Chat = () => {
         <div className={`${selectedChat ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-80 lg:border-r border-gray-200 min-h-0`}>
 
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h1 className="text-base font-bold text-gray-900">Messages</h1>
-            <button onClick={() => setShowSearch(!showSearch)}
-              className={`w-9 h-9 flex items-center justify-center rounded-xl transition ${showSearch ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
-              <Plus className="w-4 h-4" />
-            </button>
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
+            <h1 className="text-base font-bold text-gray-900 flex-1 min-w-0 truncate">
+              {spectateMode ? "Spectate Rooms" : "Messages"}
+            </h1>
+            <div className="flex items-center gap-1.5">
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setSpectateMode((v) => {
+                      if (!v) loadAllRooms();
+                      return !v;
+                    });
+                  }}
+                  title={spectateMode ? "My Chats" : "Spectate All Rooms"}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition ${spectateMode ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                >
+                  <Shield className="w-4 h-4" />
+                </button>
+              )}
+              {!spectateMode && (
+                <button onClick={() => setShowSearch(!showSearch)}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition ${showSearch ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* User search */}
-          {showSearch && (
+          {/* User search (my chats mode) */}
+          {!spectateMode && showSearch && (
             <div className="px-4 py-3 border-b border-gray-100 space-y-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -796,80 +939,139 @@ const Chat = () => {
             </div>
           )}
 
-          {/* Room list (the only scrollable region on the sidebar) */}
+          {/* Spectate search */}
+          {spectateMode && (
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text" placeholder="Filter rooms…" value={spectateSearch}
+                  onChange={(e) => setSpectateSearch(e.target.value)}
+                  className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Room list */}
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-            {loading ? (
-              <div className="flex justify-center items-center py-10">
-                <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
-              </div>
-            ) : getSortedRooms().length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No conversations yet</p>
-                <p className="text-gray-300 text-xs mt-1">Tap + to start one</p>
-              </div>
-            ) : (
-              getSortedRooms().map((chat) => {
-                const otherUser    = chat.other_user;
-                const roomPresence = otherUser ? presenceMap[String(otherUser.id)] : null;
-                const isOnline     = !chat.is_community && !!roomPresence?.is_online;
-                // last message time: prefer explicit field, fall back to last_message_time from API
-                const lastTime = chat.lastMessageTime || chat.last_message_time || chat.last_message?.timestamp;
-                return (
-                  <div key={chat.id}
-                    onClick={() => selectChat(chat)}
-                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition group relative ${selectedChat?.id === chat.id ? "bg-emerald-50" : ""}`}
-                  >
-                    <div className="relative">
+            {spectateMode ? (
+              // ── Spectate list ──
+              allRoomsLoading ? (
+                <div className="flex justify-center items-center py-10">
+                  <div className="w-8 h-8 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin" />
+                </div>
+              ) : filteredAllRooms.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <Shield className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">No rooms found</p>
+                </div>
+              ) : (
+                filteredAllRooms.map((chat) => {
+                  const lastTime = chat.lastMessageTime || chat.last_message_time;
+                  return (
+                    <div key={chat.id}
+                      onClick={() => selectChat(chat, true)}
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-amber-50 transition relative ${selectedChat?.id === chat.id && isSpectating ? "bg-amber-50" : ""}`}
+                    >
                       <Avatar
-                        src={chat.avatar || otherUser?.profile_photo}
+                        src={chat.avatar || chat.other_user?.profile_photo}
                         name={chat.name}
-                        gender={otherUser?.gender}
+                        gender={chat.other_user?.gender}
                         size={12}
-                        isCommunity={chat.is_community}
                       />
-                      {isOnline && (
-                        <span
-                          title="Online"
-                          className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow"
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm font-semibold truncate text-gray-900">{chat.name}</p>
+                          <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{fmtTime(lastTime)}</span>
+                        </div>
+                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                          {chat.lastMessage || chat.last_message?.text || "No messages yet"}
+                        </p>
+                      </div>
+                      <Shield className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                    </div>
+                  );
+                })
+              )
+            ) : (
+              // ── My chats list ──
+              loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+                </div>
+              ) : getSortedRooms().length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">No conversations yet</p>
+                  <p className="text-gray-300 text-xs mt-1">Tap + to start one</p>
+                </div>
+              ) : (
+                getSortedRooms().map((chat) => {
+                  const otherUser    = chat.other_user;
+                  const roomPresence = otherUser ? presenceMap[String(otherUser.id)] : null;
+                  const isOnline     = !chat.is_community && !!roomPresence?.is_online;
+                  const lastTime     = chat.lastMessageTime || chat.last_message_time || chat.last_message?.timestamp;
+                  const isMySentMsg  = currentUser && String(chat.lastMessageSenderId) === String(currentUser.id);
+                  return (
+                    <div key={chat.id}
+                      onClick={() => selectChat(chat, false)}
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition group relative ${selectedChat?.id === chat.id && !isSpectating ? "bg-emerald-50" : ""}`}
+                    >
+                      <div className="relative">
+                        <Avatar
+                          src={chat.avatar || otherUser?.profile_photo}
+                          name={chat.name}
+                          gender={otherUser?.gender}
+                          size={12}
+                          isCommunity={chat.is_community}
                         />
+                        {isOnline && (
+                          <span
+                            title="Online"
+                            className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow"
+                          />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <p className={`text-sm font-semibold truncate ${chat.is_community ? "text-indigo-800" : "text-gray-900"}`}>
+                            {chat.name}
+                          </p>
+                          <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{fmtTime(lastTime)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5 min-w-0">
+                          {/* Show status icon for own last message; otherwise show online dot */}
+                          {isMySentMsg && !chat.is_community ? (
+                            <SidebarStatusIcon status={chat.lastMessageStatus} />
+                          ) : (isOnline && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                          ))}
+                          <span className="text-xs text-gray-400 truncate">
+                            {chat.is_community
+                              ? "Community · All members"
+                              : (chat.lastMessage || chat.last_message?.text || "No messages yet")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {!chat.is_community && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setRoomToDelete(chat); setShowDeleteModal(true); }}
+                          className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 transition flex-shrink-0">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {chat.unreadCount > 0 && (
+                        <div className="w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">
+                          {chat.unreadCount}
+                        </div>
                       )}
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center">
-                        <p className={`text-sm font-semibold truncate ${chat.is_community ? "text-indigo-800" : "text-gray-900"}`}>
-                          {chat.name}
-                        </p>
-                        <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{fmtTime(lastTime)}</span>
-                      </div>
-                      <p className="text-xs truncate mt-0.5 flex items-center gap-1">
-                        {isOnline && (
-                          <span className="text-emerald-600 font-medium">● Online</span>
-                        )}
-                        <span className="text-gray-400 truncate">
-                          {chat.is_community
-                            ? "Community · All members"
-                            : (chat.lastMessage || chat.last_message?.text || "No messages yet")}
-                        </span>
-                      </p>
-                    </div>
-
-                    {!chat.is_community && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setRoomToDelete(chat); setShowDeleteModal(true); }}
-                        className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 transition flex-shrink-0">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                    {chat.unreadCount > 0 && (
-                      <div className="w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center flex-shrink-0">
-                        {chat.unreadCount}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
+                  );
+                })
+              )
             )}
           </div>
         </div>
@@ -878,9 +1080,9 @@ const Chat = () => {
         <div className={`${selectedChat ? "flex" : "hidden lg:flex"} flex-1 flex-col min-h-0 min-w-0`}>
           {selectedChat ? (
             <>
-              {/* Chat top bar (sticky-feel: stays put while messages scroll) */}
+              {/* Top bar */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
-                <button onClick={() => { setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false); }}
+                <button onClick={() => { setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false); setIsSpectating(false); }}
                   className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition">
                   <ArrowLeft className="w-4 h-4" />
                 </button>
@@ -892,13 +1094,14 @@ const Chat = () => {
                     size={9}
                     isCommunity={selectedChat.is_community}
                   />
-                  {!selectedChat.is_community && otherPresence?.is_online && (
+                  {!selectedChat.is_community && !isSpectating && otherPresence?.is_online && (
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-bold truncate ${selectedChat.is_community ? "text-indigo-800" : "text-gray-900"}`}>
                     {selectedChat.name}
+                    {isSpectating && <span className="ml-1.5 text-xs font-normal text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Admin View</span>}
                   </p>
                   <div className="flex items-center gap-1">
                     <div className={`w-1.5 h-1.5 rounded-full ${presenceDotColor()}`} />
@@ -907,10 +1110,11 @@ const Chat = () => {
                 </div>
               </div>
 
-              {/* Messages (the only scrollable region in the chat panel) */}
-              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 bg-gray-50 space-y-1.5"
-                onClick={() => setMenuMsgId(null)}>
-
+              {/* Messages */}
+              <div
+                className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 bg-gray-50 space-y-1.5"
+                onClick={() => setCtxMenu(null)}
+              >
                 {!isConnected && messages.length === 0 && (
                   <div className="flex justify-center">
                     <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-2 rounded-xl flex items-center gap-2 text-sm">
@@ -937,13 +1141,10 @@ const Chat = () => {
 
                 {messages.map((msg) => {
                   const own       = isOwnMessage(msg);
-                  const canModify = canModifyMessage(msg);
                   const isEditing = editingId === msg.id;
-                  const showMenu  = menuMsgId === msg.id;
 
                   return (
                     <div key={msg.id} className={`flex ${own ? "justify-end" : "justify-start"} group`}>
-                      {/* Other user avatar — DM only */}
                       {!own && !selectedChat.is_community && (
                         <div className="mr-2 mt-auto mb-1">
                           <Avatar
@@ -956,7 +1157,6 @@ const Chat = () => {
                       )}
 
                       <div className={`max-w-[72%] ${own ? "items-end" : "items-start"} flex flex-col`}>
-                        {/* Sender name — community non-own messages */}
                         {!own && selectedChat.is_community && msg.sender && (
                           <p className="text-xs text-gray-400 mb-1 px-1">
                             {msg.sender.first_name} {msg.sender.last_name}
@@ -964,44 +1164,6 @@ const Chat = () => {
                         )}
 
                         <div className="relative">
-                          {/* Context menu button */}
-                          {canModify && !isEditing && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setMenuMsgId(showMenu ? null : msg.id); }}
-                              className={`absolute top-1 ${own ? "-left-7" : "-right-7"} opacity-0 group-hover:opacity-100 transition w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-gray-700 z-10`}
-                            >
-                              <MoreVertical className="w-3 h-3" />
-                            </button>
-                          )}
-
-                          {/* Context menu */}
-                          {showMenu && (
-                            <div
-                              onClick={(e) => e.stopPropagation()}
-                              className={`absolute ${own ? "right-0" : "left-0"} top-8 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden w-36`}
-                            >
-                              {/* Message Info — own DM messages only */}
-                              {own && !selectedChat.is_community && (
-                                <button
-                                  onClick={() => { setInfoMsg(msg); setMenuMsgId(null); }}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                                >
-                                  <Info className="w-3.5 h-3.5" /> Message Info
-                                </button>
-                              )}
-                              {isOwnMessage(msg) && (
-                                <button onClick={() => startEdit(msg)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
-                                  <Pencil className="w-3.5 h-3.5" /> Edit
-                                </button>
-                              )}
-                              <button onClick={() => deleteMessage(msg.id)}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition">
-                                <Trash2 className="w-3.5 h-3.5" /> Delete
-                              </button>
-                            </div>
-                          )}
-
                           {/* Bubble */}
                           {isEditing ? (
                             <div className="flex items-center gap-2 bg-white border border-emerald-300 rounded-2xl px-3 py-2 shadow-sm">
@@ -1023,13 +1185,19 @@ const Chat = () => {
                               </button>
                             </div>
                           ) : (
-                            <div className={`px-4 py-2.5 rounded-2xl text-sm ${
-                              own
-                                ? selectedChat.is_community
-                                  ? "bg-indigo-600 text-white rounded-tr-sm"
-                                  : "bg-emerald-600 text-white rounded-tr-sm"
-                                : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-sm"
-                            }`}>
+                            <div
+                              className={`px-4 py-2.5 rounded-2xl text-sm select-text cursor-default ${
+                                own
+                                  ? selectedChat.is_community
+                                    ? "bg-indigo-600 text-white rounded-tr-sm"
+                                    : "bg-emerald-600 text-white rounded-tr-sm"
+                                  : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-tl-sm"
+                              }`}
+                              onContextMenu={(e) => openCtxMenu(e, msg)}
+                              onTouchStart={(e) => onTouchStart(e, msg)}
+                              onTouchEnd={cancelLongPress}
+                              onTouchMove={cancelLongPress}
+                            >
                               <p className="break-words">{msg.text}</p>
                               {msg.edited && (
                                 <span className={`text-[10px] italic ${own ? "text-white/50" : "text-gray-400"}`}> · edited</span>
@@ -1048,26 +1216,35 @@ const Chat = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Message input (pinned to bottom; never scrolls with messages) */}
-              <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-100 bg-white flex-shrink-0">
-                <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-3 sm:px-4 py-2">
-                  <input
-                    type="text"
-                    placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                    disabled={!isConnected}
-                    className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none"
-                  />
-                  <button onClick={sendMessage} disabled={!message.trim() || !isConnected}
-                    className={`w-8 h-8 flex items-center justify-center rounded-xl transition disabled:opacity-40 ${
-                      selectedChat.is_community ? "text-indigo-600 hover:bg-indigo-50" : "text-emerald-600 hover:bg-emerald-50"
-                    }`}>
-                    <Send className="w-4 h-4" />
-                  </button>
+              {/* Input */}
+              {isSpectating ? (
+                <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-100 bg-amber-50 flex-shrink-0">
+                  <div className="flex items-center gap-2 bg-amber-100 rounded-2xl px-4 py-2.5">
+                    <Shield className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <span className="text-sm text-amber-700 font-medium">Read-only admin view</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-100 bg-white flex-shrink-0">
+                  <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-3 sm:px-4 py-2">
+                    <input
+                      type="text"
+                      placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                      disabled={!isConnected}
+                      className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none"
+                    />
+                    <button onClick={sendMessage} disabled={!message.trim() || !isConnected}
+                      className={`w-8 h-8 flex items-center justify-center rounded-xl transition disabled:opacity-40 ${
+                        selectedChat.is_community ? "text-indigo-600 hover:bg-indigo-50" : "text-emerald-600 hover:bg-emerald-50"
+                      }`}>
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
