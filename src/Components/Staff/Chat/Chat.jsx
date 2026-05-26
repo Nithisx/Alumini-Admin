@@ -172,8 +172,10 @@ const Chat = () => {
   const [infoMsg, setInfoMsg]           = useState(null);
 
   const messagesEndRef = useRef(null);
-  const socketRef      = useRef(null);
+  const socketRef      = useRef(null);  // per-room socket
+  const globalSocketRef = useRef(null); // long-lived global socket (rooms list, presence, notifications)
   const inputRef       = useRef(null);
+  const selectedChatIdRef = useRef(null);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(() => { scrollToBottom(); }, [messages]);
@@ -186,10 +188,9 @@ const Chat = () => {
 
   // ── Init ───────────────────────────────────────────────────────────────────
   useEffect(() => {
-    loadRooms();
-    getCurrentUser();
-    loadCommunityChat();
-    return () => closeSocket();
+    connectGlobalSocket();
+    return () => { closeSocket(); closeGlobalSocket(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const closeSocket = () => {
@@ -201,6 +202,117 @@ const Chat = () => {
       } catch (_) {}
       socketRef.current = null;
     }
+  };
+
+  const closeGlobalSocket = () => {
+    const ws = globalSocketRef.current;
+    if (ws) {
+      try {
+        ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null;
+        ws.close();
+      } catch (_) {}
+      globalSocketRef.current = null;
+    }
+  };
+
+  // ── Global WebSocket: rooms list + presence + notifications ────────────────
+  const connectGlobalSocket = () => {
+    const token = getToken();
+    if (!token) return;
+    closeGlobalSocket();
+
+    const wsUrl = `wss://${WS_HOST}/ws/chat/?token=${encodeURIComponent(token)}`;
+    let ws;
+    try { ws = new WebSocket(wsUrl); } catch { restBootstrapFallback(); return; }
+    globalSocketRef.current = ws;
+
+    ws.onopen = () => {
+      try { ws.send(JSON.stringify({ action: "bootstrap" })); } catch (_) {}
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.action === "bootstrap") {
+          if (Array.isArray(data.rooms)) setRooms(data.rooms);
+          if (data.community?.id) {
+            setCommunityRoom({ ...data.community, is_community: true, name: "Community Chat" });
+          }
+          if (data.presence && typeof data.presence === "object") {
+            setPresenceMap((prev) => ({ ...prev, ...data.presence }));
+          }
+          if (data.me) setCurrentUser(data.me);
+          return;
+        }
+
+        if (data.action === "room_update") {
+          setRooms((prev) => {
+            const exists = prev.some((r) => String(r.id) === String(data.room_id));
+            if (!exists) return prev;
+            const updated = prev.map((r) =>
+              String(r.id) === String(data.room_id)
+                ? {
+                    ...r,
+                    lastMessage: data.last_message ?? r.lastMessage,
+                    lastMessageTime: data.last_message_time ?? r.lastMessageTime,
+                    unreadCount:
+                      String(selectedChatIdRef.current) === String(data.room_id) ||
+                      String(data.sender_id) === String(currentUser?.id)
+                        ? (r.unreadCount || 0)
+                        : (r.unreadCount || 0) + 1,
+                  }
+                : r
+            );
+            updated.sort((a, b) =>
+              new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0)
+            );
+            return updated;
+          });
+          return;
+        }
+
+        if (data.action === "room_created" && data.room?.id) {
+          setRooms((prev) =>
+            prev.some((r) => String(r.id) === String(data.room.id))
+              ? prev
+              : [data.room, ...prev]
+          );
+          return;
+        }
+
+        if (data.action === "presence_update" && data.user_id) {
+          setPresenceMap((prev) => ({
+            ...prev,
+            [data.user_id]: { is_online: data.is_online, last_seen: data.last_seen },
+          }));
+          return;
+        }
+
+        if (data.action === "incoming_message") {
+          // Per-room socket handles in-room rendering; this is just a hint
+          // that a message landed in some other room — room_update covers
+          // the rooms-list mutation, so nothing else to do here.
+          return;
+        }
+      } catch (_) {}
+    };
+
+    ws.onerror = () => { restBootstrapFallback(); };
+    ws.onclose = (e) => {
+      // Fall back to REST if WS isn't reachable; reconnect on transient drops
+      if (e.code === 1006 || !e.wasClean) {
+        restBootstrapFallback();
+        setTimeout(() => { if (!globalSocketRef.current) connectGlobalSocket(); }, 4000);
+      }
+    };
+  };
+
+  // ── REST fallback (only used if WS is unavailable) ─────────────────────────
+  const restBootstrapFallback = () => {
+    loadRooms();
+    getCurrentUser();
+    loadCommunityChat();
   };
 
   // ── API helpers ────────────────────────────────────────────────────────────
@@ -322,11 +434,9 @@ const Chat = () => {
     } catch (_) {}
   }, []);
 
-  // Fetch presence for all room partners once on initial room load
-  useEffect(() => {
-    const userIds = [...new Set(rooms.map((room) => room?.other_user?.id).filter(Boolean))];
-    userIds.forEach(fetchPresence);
-  }, [rooms]); // deliberately omit fetchPresence & presenceMap — only re-run when rooms change
+  // Presence is delivered via the global WS bootstrap + presence_update pushes.
+  // REST fetchPresence is kept only as a per-user fallback (e.g. opening a chat
+  // before the bootstrap arrived).
 
   // ── WebSocket ──────────────────────────────────────────────────────────────
   const connectWebSocket = useCallback((roomId, isCommunity = false) => {
@@ -437,14 +547,19 @@ const Chat = () => {
 
   const selectChat = useCallback((chat) => {
     setSelectedChat(chat);
+    selectedChatIdRef.current = chat?.id || null;
     setEditingId(null);
     setMenuMsgId(null);
     setInfoMsg(null);
     connectWebSocket(chat.id, Boolean(chat.is_community));
-    if (!chat.is_community && chat.other_user?.id) {
+    // Opening a room means we've read it — clear its unread badge locally
+    setRooms((prev) => prev.map((r) =>
+      String(r.id) === String(chat.id) ? { ...r, unreadCount: 0 } : r
+    ));
+    if (!chat.is_community && chat.other_user?.id && !presenceMap[chat.other_user.id]) {
       fetchPresence(chat.other_user.id);
     }
-  }, [connectWebSocket, fetchPresence]);
+  }, [connectWebSocket, fetchPresence, presenceMap]);
 
   // ── Send ───────────────────────────────────────────────────────────────────
   const sendMessage = () => {
@@ -542,7 +657,7 @@ const Chat = () => {
   }
 
   return (
-    <div className="bg-gray-50 h-[calc(100vh-56px-56px)] lg:h-[calc(100vh-56px)]">
+    <div className="bg-gray-50 h-[calc(100dvh-56px-56px)] lg:h-[calc(100dvh-56px)] overflow-hidden">
 
       {/* ── Agreement modal ── */}
       {showAgreement && (
@@ -600,10 +715,10 @@ const Chat = () => {
       {/* ── Message Info Modal ── */}
       {infoMsg && <MessageInfoPanel msg={infoMsg} onClose={() => setInfoMsg(null)} />}
 
-      <div className="flex h-full max-w-5xl mx-auto border-x border-gray-200 bg-white">
+      <div className="flex h-full w-full lg:max-w-5xl mx-auto lg:border-x border-gray-200 bg-white overflow-hidden">
 
         {/* ── Left: conversation list ── */}
-        <div className={`${selectedChat ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-80 border-r border-gray-200`}>
+        <div className={`${selectedChat ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-80 lg:border-r border-gray-200 min-h-0`}>
 
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -650,8 +765,8 @@ const Chat = () => {
             </div>
           )}
 
-          {/* Room list */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Room list (the only scrollable region on the sidebar) */}
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
             {loading ? (
               <div className="flex justify-center items-center py-10">
                 <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
@@ -720,11 +835,11 @@ const Chat = () => {
         </div>
 
         {/* ── Right: chat window ── */}
-        <div className={`${selectedChat ? "flex" : "hidden lg:flex"} flex-1 flex-col`}>
+        <div className={`${selectedChat ? "flex" : "hidden lg:flex"} flex-1 flex-col min-h-0 min-w-0`}>
           {selectedChat ? (
             <>
-              {/* Chat top bar */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white">
+              {/* Chat top bar (sticky-feel: stays put while messages scroll) */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
                 <button onClick={() => { setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false); }}
                   className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition">
                   <ArrowLeft className="w-4 h-4" />
@@ -752,8 +867,8 @@ const Chat = () => {
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50 space-y-1.5"
+              {/* Messages (the only scrollable region in the chat panel) */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 bg-gray-50 space-y-1.5"
                 onClick={() => setMenuMsgId(null)}>
 
                 {!isConnected && messages.length === 0 && (
@@ -893,9 +1008,9 @@ const Chat = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Message input */}
-              <div className="px-4 py-3 border-t border-gray-100 bg-white">
-                <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-4 py-2">
+              {/* Message input (pinned to bottom; never scrolls with messages) */}
+              <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-100 bg-white flex-shrink-0">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-3 sm:px-4 py-2">
                   <input
                     type="text"
                     placeholder={selectedChat.is_community ? "Message the community…" : "Message…"}
