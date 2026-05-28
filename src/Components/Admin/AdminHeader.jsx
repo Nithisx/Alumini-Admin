@@ -17,7 +17,8 @@ import {
   faUser,
   faHandHoldingHeart,
   faComments,
-  faClipboardList
+  faClipboardList,
+  faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../assets/KAHEAA.svg";
 
@@ -165,6 +166,11 @@ export default function AdminHeader() {
       path: "/admin/audit",
       icon: faClipboardList,
       label: "Audit",
+    },
+    {
+      path: "/admin/import-members",
+      icon: faFileImport,
+      label: "Import",
     },
   ];
 
