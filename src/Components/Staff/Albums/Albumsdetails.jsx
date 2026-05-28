@@ -20,14 +20,11 @@ const AlbumDetailPage = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const token = localStorage.getItem("Token");
-  const [currentUserId, setCurrentUserId] = useState(null);
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
-  const canDeleteImage = (img) => {
-    const ownerId = img.uploaded_by ?? img.created_by ?? img.user?.id ?? img.user_id;
-    return currentUserId && ownerId && currentUserId === parseInt(ownerId, 10);
-  };
+  // Staff can delete any image
+  const canDeleteImage = () => true;
 
   const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
     return new Promise((resolve) => {
@@ -89,16 +86,10 @@ const AlbumDetailPage = () => {
     if (!albumId) return;
     const fetchData = async () => {
       try {
-        const [imagesRes, profileRes] = await Promise.all([
-          axios.get(`${BASE_URL}/albums/${albumId}/images/`, {
-            headers: { Authorization: `Token ${token}` },
-          }),
-          axios.get(`${BASE_URL}/profile/`, {
-            headers: { Authorization: `Token ${token}` },
-          }),
-        ]);
+        const imagesRes = await axios.get(`${BASE_URL}/albums/${albumId}/images/`, {
+          headers: { Authorization: `Token ${token}` },
+        });
         setEventImages(imagesRes.data);
-        if (profileRes.data?.id) setCurrentUserId(profileRes.data.id);
       } catch {
       } finally {
         setLoading(false);

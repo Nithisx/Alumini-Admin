@@ -27,22 +27,14 @@ const AlbumsPage = () => {
   const [editUploadedFile, setEditUploadedFile] = useState(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  const [currentUserId, setCurrentUserId] = useState(null);
-
   useEffect(() => {
     (async () => {
       try {
         const token = localStorage.getItem("Token");
-        const [albumsRes, profileRes] = await Promise.all([
-          axios.get("https://api.karpagamalumni.in/api/v1/albums/", {
-            headers: { Authorization: `Token ${token}` },
-          }),
-          axios.get("https://api.karpagamalumni.in/api/v1/profile/", {
-            headers: { Authorization: `Token ${token}` },
-          }),
-        ]);
+        const albumsRes = await axios.get("https://api.karpagamalumni.in/api/v1/albums/", {
+          headers: { Authorization: `Token ${token}` },
+        });
         setAlbums(Array.isArray(albumsRes.data) ? albumsRes.data : []);
-        if (profileRes.data?.id) setCurrentUserId(profileRes.data.id);
       } catch {
         toast.error("Could not load albums.");
         setAlbums([]);
@@ -60,10 +52,8 @@ const AlbumsPage = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isOwner = (album) => {
-    const ownerId = album.created_by ?? album.owner ?? album.user?.id ?? album.user_id;
-    return currentUserId && ownerId && currentUserId === parseInt(ownerId, 10);
-  };
+  // Admin can manage all albums
+  const isOwner = () => true;
 
   const doDeleteAlbum = async (id) => {
     try {
@@ -225,7 +215,7 @@ const AlbumsPage = () => {
               return (
                 <div
                   key={album.id}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div
                     onClick={() => navigate(`/admin/albums/${album.id}`)}
@@ -263,6 +253,7 @@ const AlbumsPage = () => {
                         className="relative flex-shrink-0 ml-1"
                         ref={openMenuId === album.id ? menuRef : null}
                         onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
                       >
                         <button
                           onClick={() => setOpenMenuId(openMenuId === album.id ? null : album.id)}
