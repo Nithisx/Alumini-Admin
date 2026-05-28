@@ -27,6 +27,7 @@ import SendMail from "./mail/sendmail";
 import Chart from "./Chat/Chat"
 import AuditPage from "./Audit/AuditPage";
 import ChapterDetail from "../Shared/ChapterDetail";
+import MemberImport from "./MemberImport/MemberImport";
 const AdminLayout = () => {
   return (
     <div>
@@ -62,6 +63,7 @@ const AdminLayout = () => {
           <Route path="chat" element={<Chart />} />
           <Route path="audit" element={<AuditPage />} />
           <Route path="chapters/:type/:value" element={<ChapterDetail />} />
+          <Route path="import-members" element={<MemberImport />} />
           {/* Add more admin routes if needed */}
         </Routes>
       </main>
