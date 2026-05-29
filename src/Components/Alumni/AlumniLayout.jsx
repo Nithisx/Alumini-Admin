@@ -15,6 +15,7 @@ import Singlemember from "./Members/Singlemember";
 import Dashboard from "./Dashboard/Dashboard";
 import Birthday from "./Birthday/Birthday";
 import Singleevents from "./Events/Singleevents";
+import EditEvent from "./Events/Editevent";
 import BusinessDirectory from "./Business/BusinessDirectory";
 import BusinessDetail from "./Business/BusinessDetail";
 import Myprofile from "./Myprofile/Myprofile";
@@ -38,6 +39,7 @@ const AlumniLayout = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="event" element={<AddEvent />} />
           <Route path="event/:id" element={<Singleevents />} />
+          <Route path="event/:id/edit" element={<EditEvent />} />
           <Route path="albums" element={<AlbumsPage />} />
           <Route path="albums/:albumId" element={<AlbumDetailPage />} />
           <Route path="students" element={<StudentImageUpload />} />

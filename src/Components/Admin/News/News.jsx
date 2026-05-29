@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch, faNewspaper, faTag } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faNewspaper, faTag, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import AddNewsModal from "./Addnewsmodel";
+import EditNewsModal from "./Editnewsmodal";
+import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
 
 const TOKEN = () => localStorage.getItem("Token");
@@ -34,6 +36,8 @@ export default function NewsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentUserId, setCurrentUserId] = useState(null);
   const [canModerate, setCanModerate] = useState(false);
+  const [editingNewsId, setEditingNewsId] = useState(null);
+  const [confirmDeleteNewsId, setConfirmDeleteNewsId] = useState(null);
   const navigate = useNavigate();
 
   const fetchNews = async () => {
@@ -69,6 +73,20 @@ export default function NewsList() {
       .catch(() => {});
   }, []);
 
+  const handleDeleteNews = async (newsId) => {
+    try {
+      const token = TOKEN();
+      const res = await fetch(`${BASE_URL}/api/v1/news/${newsId}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Token ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      setPosts((prev) => prev.filter((p) => p.id !== newsId));
+    } catch {
+      // silent
+    }
+  };
+
   const formatDate = (iso) =>
     new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
@@ -91,6 +109,21 @@ export default function NewsList() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
+      <ConfirmModal
+        isOpen={!!confirmDeleteNewsId}
+        title="Delete News Article"
+        message="This will permanently delete this news article."
+        danger
+        confirmText="Delete"
+        onConfirm={() => { handleDeleteNews(confirmDeleteNewsId); setConfirmDeleteNewsId(null); }}
+        onCancel={() => setConfirmDeleteNewsId(null)}
+      />
+      <EditNewsModal
+        show={!!editingNewsId}
+        newsId={editingNewsId}
+        onClose={() => setEditingNewsId(null)}
+        onSuccess={() => { setEditingNewsId(null); fetchNews(); }}
+      />
       {/* Sticky header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3">
@@ -191,6 +224,26 @@ export default function NewsList() {
                       <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-1 rounded-md flex-shrink-0 border border-amber-100">
                         Featured
                       </span>
+                    )}
+                    {canModerate && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setEditingNewsId(post.id); }}
+                          className="h-7 w-7 rounded-full text-blue-600 hover:bg-blue-50 flex items-center justify-center"
+                          title="Edit news"
+                        >
+                          <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteNewsId(post.id); }}
+                          className="h-7 w-7 rounded-full text-red-600 hover:bg-red-50 flex items-center justify-center"
+                          title="Delete news"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                        </button>
+                      </div>
                     )}
                   </div>
 

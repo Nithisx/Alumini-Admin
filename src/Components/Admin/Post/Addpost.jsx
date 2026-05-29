@@ -12,6 +12,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTrash,
+  faEdit,
   faUserCircle,
   faMapMarkerAlt,
   faBuilding,
@@ -132,13 +133,13 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component — social feed style (full-width, like Facebook/Instagram)
-const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
-  const isOwn = post.user?.id === currentUserId;
-  const canDelete = isOwn || canModerate;
+const JobCard = ({ post, onRequestDelete, onRequestEdit, currentUserId, canModerate }) => {
+  const isOwn = String(post.user?.id ?? "") === String(currentUserId ?? "");
+  const canManage = isOwn || canModerate;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Header with user info + delete */}
+      {/* Header with user info + actions */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {post.user?.profile_photo ? (
@@ -162,14 +163,23 @@ const JobCard = ({ post, onRequestDelete, currentUserId, canModerate }) => {
             </div>
           </div>
         </div>
-        {canDelete && (
-          <button
-            onClick={() => onRequestDelete(post.id)}
-            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
-            title="Delete post"
-          >
-            <FontAwesomeIcon icon={faTrash} className="text-xs" />
-          </button>
+        {canManage && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onRequestEdit(post)}
+              className="text-gray-400 hover:text-blue-500 transition-colors p-1 rounded"
+              title="Edit post"
+            >
+              <FontAwesomeIcon icon={faEdit} className="text-xs" />
+            </button>
+            <button
+              onClick={() => onRequestDelete(post.id)}
+              className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
+              title="Delete post"
+            >
+              <FontAwesomeIcon icon={faTrash} className="text-xs" />
+            </button>
+          </div>
         )}
       </div>
 
@@ -229,6 +239,11 @@ const JobFeed = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [canModerate, setCanModerate] = useState(false);
 
+  // Edit modal state
+  const [editingJob, setEditingJob] = useState(null);
+  const [editForm, setEditForm] = useState({ description: "", companyName: "", role: "", location: "", salaryRange: "", jobType: "" });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
   // Modal and file upload states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -283,6 +298,48 @@ const JobFeed = () => {
         .catch(() => {});
     }
   }, []);
+
+  const openEditModal = (post) => {
+    setEditingJob(post);
+    setEditForm({
+      description: post.description || "",
+      companyName: post.company_name || "",
+      role: post.role || "",
+      location: post.location || "",
+      salaryRange: post.salary_range || "",
+      jobType: post.job_type || "",
+    });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editForm.companyName || !editForm.role || !editForm.location) return;
+    setIsSavingEdit(true);
+    try {
+      const token = await getAuthToken();
+      const formData = new FormData();
+      formData.append("description", editForm.description);
+      formData.append("company_name", editForm.companyName);
+      formData.append("role", editForm.role);
+      formData.append("location", editForm.location);
+      formData.append("salary_range", editForm.salaryRange);
+      formData.append("job_type", editForm.jobType);
+      const res = await fetch(`${API_URL}${editingJob.id}/`, {
+        method: "PUT",
+        headers: { Authorization: `Token ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setPosts((prev) => prev.map((p) => p.id === editingJob.id ? updated : p));
+      setEditingJob(null);
+      toast.success("Job post updated!");
+    } catch {
+      toast.error("Failed to update job post.");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   // Delete a post
   const deletePost = async (postId) => {
@@ -454,6 +511,93 @@ const JobFeed = () => {
         onCancel={() => setConfirmDeleteId(null)}
       />
 
+      {/* Edit Job Modal */}
+      {editingJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[92vh] overflow-y-auto"
+          >
+            <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-blue-100">
+              <h3 className="text-lg sm:text-xl font-bold text-blue-700">Edit Job Post</h3>
+              <button onClick={() => setEditingJob(null)} className="text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full hover:bg-gray-200 flex items-center justify-center">
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="p-4 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Name *</label>
+                  <input type="text" required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={editForm.companyName}
+                    onChange={(e) => setEditForm((f) => ({ ...f, companyName: e.target.value }))}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Role/Position *</label>
+                  <input type="text" required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={editForm.role}
+                    onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Location *</label>
+                  <input type="text" required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={editForm.location}
+                    onChange={(e) => setEditForm((f) => ({ ...f, location: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Salary Range</label>
+                  <input type="text"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={editForm.salaryRange}
+                    onChange={(e) => setEditForm((f) => ({ ...f, salaryRange: e.target.value }))}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Job Type</label>
+                  <select
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={editForm.jobType}
+                    onChange={(e) => setEditForm((f) => ({ ...f, jobType: e.target.value }))}
+                  >
+                    <option value="">Select a job type</option>
+                    <option value="fulltime">Full Time</option>
+                    <option value="parttime">Part Time</option>
+                    <option value="contract">Contract</option>
+                    <option value="internship">Internship</option>
+                    <option value="remote">Remote</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                  <textarea rows="4"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={editForm.description}
+                    onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setEditingJob(null)} disabled={isSavingEdit}
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSavingEdit}
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-60">
+                  {isSavingEdit ? <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Saving...</> : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Two-column layout: feed + sidebar */}
       <div className="max-w-5xl mx-auto px-4 py-0 flex flex-col lg:flex-row gap-6 items-start">
         {/* Main feed column */}
@@ -507,6 +651,7 @@ const JobFeed = () => {
                   key={post.id}
                   post={post}
                   onRequestDelete={setConfirmDeleteId}
+                  onRequestEdit={openEditModal}
                   currentUserId={currentUserId}
                   canModerate={canModerate}
                 />

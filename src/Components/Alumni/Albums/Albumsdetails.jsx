@@ -22,15 +22,25 @@ const AlbumDetailPage = () => {
   const token = localStorage.getItem("Token");
   const [currentUserId, setCurrentUserId] = useState(null);
   const [albumOwnerId, setAlbumOwnerId] = useState(null);
+  const [canModerate, setCanModerate] = useState(false);
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
-  const canDeleteImage = (img) => {
+  const isAlbumOwner = () => {
     if (!currentUserId) return false;
-    // Album owner can delete any image in their album
-    if (albumOwnerId && currentUserId === parseInt(albumOwnerId, 10)) return true;
-    const ownerId = img.uploaded_by ?? img.created_by ?? img.user?.id ?? img.user_id;
-    return ownerId && currentUserId === parseInt(ownerId, 10);
+    if (!albumOwnerId) return false;
+    return String(currentUserId) === String(albumOwnerId);
+  };
+
+  const canManageAlbum = canModerate || isAlbumOwner();
+
+  const canDeleteImage = (img) => {
+    if (canModerate) return true;
+    if (!currentUserId) return false;
+    if (isAlbumOwner()) return true;
+    // image-level owner check
+    const ownerId = img.uploaded_by ?? img.created_by ?? (typeof img.user === "string" ? img.user : img.user?.id) ?? img.user_id;
+    return ownerId && String(currentUserId) === String(ownerId);
   };
 
   const compressImage = (file, maxSizeMB = 5, quality = 0.8) => {
@@ -93,22 +103,50 @@ const AlbumDetailPage = () => {
     if (!albumId) return;
     const fetchData = async () => {
       try {
-        const [imagesRes, profileRes, albumRes] = await Promise.all([
+        // Fetch images and profile in parallel; album fetch is best-effort
+        const [imagesRes, profileRes] = await Promise.all([
           axios.get(`${BASE_URL}/albums/${albumId}/images/`, {
             headers: { Authorization: `Token ${token}` },
           }),
           axios.get(`${BASE_URL}/profile/`, {
             headers: { Authorization: `Token ${token}` },
           }),
-          axios.get(`${BASE_URL}/albums/${albumId}/`, {
-            headers: { Authorization: `Token ${token}` },
-          }),
         ]);
-        setEventImages(imagesRes.data);
-        if (profileRes.data?.id) setCurrentUserId(profileRes.data.id);
-        const album = albumRes.data;
-        const ownerId = album.created_by ?? album.owner ?? album.user?.id ?? album.user_id;
-        if (ownerId) setAlbumOwnerId(ownerId);
+        const images = imagesRes.data;
+        setEventImages(images);
+        const profile = profileRes.data;
+        const uid = profile?.id ? String(profile.id) : null;
+        if (uid) setCurrentUserId(uid);
+        const role = (profile?.role || "").toLowerCase();
+        setCanModerate(Boolean(profile?.is_staff) || role === "admin" || role === "staff");
+
+        // Derive album owner from images first (AlbumImageSerializer.get_user returns album owner)
+        const ownerFromImages =
+          images[0]?.user?.id != null
+            ? String(images[0].user.id)
+            : typeof images[0]?.user === "string"
+            ? images[0].user
+            : null;
+
+        if (ownerFromImages) {
+          setAlbumOwnerId(ownerFromImages);
+        } else {
+          // Fall back to album detail API
+          try {
+            const albumRes = await axios.get(`${BASE_URL}/albums/${albumId}/`, {
+              headers: { Authorization: `Token ${token}` },
+            });
+            const album = albumRes.data;
+            const ownerId =
+              album.user_id ??
+              (typeof album.user === "string" ? album.user : album.user?.id) ??
+              album.created_by ??
+              album.owner;
+            if (ownerId) setAlbumOwnerId(String(ownerId));
+          } catch {
+            // album owner could not be determined
+          }
+        }
       } catch {
       } finally {
         setLoading(false);
@@ -369,14 +407,16 @@ const AlbumDetailPage = () => {
             </div>
           )}
 
-          <button
-            onClick={() => setShowForm(true)}
-            className="fixed bottom-8 right-8 h-14 w-14 flex items-center justify-center rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition text-2xl font-bold disabled:opacity-50"
-            title="Upload Images" disabled={uploading}>
-            {uploading ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
-            ) : '+'}
-          </button>
+          {canManageAlbum && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="fixed bottom-8 right-8 h-14 w-14 flex items-center justify-center rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition text-2xl font-bold disabled:opacity-50"
+              title="Upload Images" disabled={uploading}>
+              {uploading ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+              ) : '+'}
+            </button>
+          )}
         </>
       )}
     </div>

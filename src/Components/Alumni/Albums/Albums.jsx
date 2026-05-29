@@ -61,8 +61,10 @@ const AlbumsPage = () => {
   }, []);
 
   const isOwner = (album) => {
-    const ownerId = album.created_by ?? album.owner ?? album.user?.id ?? album.user_id;
-    return currentUserId && ownerId && currentUserId === parseInt(ownerId, 10);
+    if (!currentUserId) return false;
+    // album.user comes from the API as a UUID string (not an object)
+    const ownerId = album.user ?? album.created_by ?? album.owner ?? album.user_id;
+    return ownerId && String(currentUserId) === String(ownerId);
   };
 
   const doDeleteAlbum = async (id) => {

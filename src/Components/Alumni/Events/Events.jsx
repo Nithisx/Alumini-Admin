@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarAlt, faClock, faMapMarkerAlt, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faCalendarAlt, faClock, faMapMarkerAlt, faSearch, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import EngagementPanel from "../../Shared/EngagementPanel";
 import { DocumentList } from "../../Shared/DocumentPreview";
 
@@ -122,6 +122,28 @@ export default function Events() {
     return null;
   };
 
+  const isEventOwner = (event) => {
+    if (!currentUserId) return false;
+    const ownerId = event?.user ?? event?.user_id;
+    if (!ownerId) return false;
+    return String(currentUserId) === String(ownerId);
+  };
+
+  const handleDelete = async (eventId) => {
+    if (!eventId) return;
+    if (!window.confirm("Delete this event?")) return;
+    try {
+      const response = await fetch(`https://api.karpagamalumni.in/api/v1/events/${eventId}/`, {
+        method: "DELETE",
+        headers: { Authorization: token ? `Token ${token}` : "" },
+      });
+      if (!response.ok) throw new Error();
+      setEvents((prev) => prev.filter((e) => String(e.id) !== String(eventId) && String(e.pk) !== String(eventId)));
+    } catch {
+      // silent
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
       {/* ── Instagram-style sticky page header ── */}
@@ -190,6 +212,32 @@ export default function Events() {
                       <span className="text-[10px] bg-violet-50 text-violet-700 font-bold px-2 py-1 rounded-md flex-shrink-0 max-w-[100vw] truncate border border-violet-100">
                         {event.venue}
                       </span>
+                    )}
+                    {resolvedId && (canModerate || isEventOwner(event)) && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/alumni/event/${resolvedId}/edit`);
+                          }}
+                          className="h-7 w-7 rounded-full text-blue-600 hover:bg-blue-50"
+                          title="Edit event"
+                        >
+                          <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(resolvedId);
+                          }}
+                          className="h-7 w-7 rounded-full text-red-600 hover:bg-red-50"
+                          title="Delete event"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                        </button>
+                      </div>
                     )}
                   </div>
 

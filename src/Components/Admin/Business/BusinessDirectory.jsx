@@ -27,31 +27,35 @@ const BusinessDirectory = () => {
   const [servicesCollapsed, setServicesCollapsed] = useState(false);
 
   const token = localStorage.getItem("Token");
-  const userType = localStorage.getItem("userType");
-  const currentUserId = localStorage.getItem("userId");
   const BASE_URL = "https://api.karpagamalumni.in/api/v1";
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
 
+  const [canModerate, setCanModerate] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
   const canEditBusiness = (business) => {
-    if (userType === "admin") return true;
-    if (userType === "student" || userType === "staff") {
-      if (business.owner_details?.user_type === "admin") return false;
-      return business.owner_details?.id === parseInt(currentUserId);
-    }
-    return false;
+    if (canModerate) return true;
+    if (!currentUserId) return false;
+    const ownerId = business.user ?? business.owner_details?.id ?? business.user_id;
+    return ownerId && String(currentUserId) === String(ownerId);
   };
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
-        const [bRes, cRes] = await Promise.all([
+        const [bRes, cRes, profileRes] = await Promise.all([
           axios.get(`${BASE_URL}/businesses/`, { headers: { Authorization: `Token ${token}` } }),
           axios.get(`${BASE_URL}/businesses/categories/`, { headers: { Authorization: `Token ${token}` } }),
+          axios.get(`${BASE_URL}/profile/`, { headers: { Authorization: `Token ${token}` } }),
         ]);
         setBusinesses(bRes.data);
         setFilteredBusinesses(bRes.data);
         setCategories(cRes.data);
+        const profile = profileRes.data;
+        setCurrentUserId(profile?.id ?? null);
+        const role = (profile?.role || "").toLowerCase();
+        setCanModerate(Boolean(profile?.is_staff) || role === "admin" || role === "staff");
       } catch { }
       finally { setLoading(false); }
     })();
