@@ -298,7 +298,7 @@ const AlbumDetailPage = () => {
                   {canDeleteImage(event) && (
                     <button
                       onClick={() => setConfirmDeleteId(event.id)}
-                      className="absolute top-2 right-2 bg-red-500 p-2 rounded hover:bg-red-400 transition duration-300 opacity-0 group-hover:opacity-100"
+                      className="absolute top-2 right-2 bg-red-500 p-2 rounded hover:bg-red-400 transition duration-300"
                     >
                       <FontAwesomeIcon icon={faTrash} className="text-sm text-white" />
                     </button>
