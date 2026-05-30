@@ -48,10 +48,12 @@ export default function OAuthSignupComplete() {
     course_start_year: "",
     course_end_year: "",
     passed_out_year: "",
+    country_code: "+91",
     phone: "",
     country: "",
     state: "",
     city: "",
+    pincode: "",
   });
 
   const [error, setError] = useState("");
@@ -185,10 +187,12 @@ export default function OAuthSignupComplete() {
         sessionStorage.setItem("oauth_access_token", accessToken);
       }
 
+      const { pincode, ...formWithoutPincode } = form;
       const res = await api.post("/auth/google/signup/", {
         access_token: accessToken,
         avatar_url: oauthAvatarUrl,
-        ...form,
+        ...formWithoutPincode,
+        ...(pincode ? { zip_code: pincode } : {}),
       });
 
       // Backend says this email is already pending or approved → go to login
@@ -317,8 +321,12 @@ export default function OAuthSignupComplete() {
                 <input type="date" name="date_of_birth" value={form.date_of_birth} onChange={handleChange}
                   required max={new Date().toISOString().split("T")[0]} className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" />
               </Field>
-              <Field label="Phone">
-                <input name="phone" value={form.phone} onChange={handleChange}
+              <Field label="Country Code *">
+                <input name="country_code" value={form.country_code} onChange={handleChange} required
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" placeholder="+91" />
+              </Field>
+              <Field label="Phone *">
+                <input name="phone" value={form.phone} onChange={handleChange} required
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" placeholder="Phone number" maxLength={15} />
               </Field>
             </div>
@@ -327,42 +335,46 @@ export default function OAuthSignupComplete() {
           {/* Location */}
           <section>
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Location</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Field label="Country">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Country *">
                 <SuggestionInput
                   value={form.country}
                   onChange={(v) => { setForm(f => ({ ...f, country: v })); debouncedLocFetch("countries", { country: v }); }}
                   onFocus={() => fetchLocationSuggestions("countries", { country: form.country })}
                   placeholder="Country"
-                  required={false}
+                  required={true}
                   suggestions={locationSuggestions.countries}
                   loading={loadingLoc.countries}
                   inputClassName="focus:ring-green-600"
                 />
               </Field>
-              <Field label="State">
+              <Field label="State *">
                 <SuggestionInput
                   value={form.state}
                   onChange={(v) => { setForm(f => ({ ...f, state: v })); debouncedLocFetch("states", { country: form.country, state: v }); }}
                   onFocus={() => fetchLocationSuggestions("states", { country: form.country, state: form.state })}
                   placeholder="State"
-                  required={false}
+                  required={true}
                   suggestions={locationSuggestions.states}
                   loading={loadingLoc.states}
                   inputClassName="focus:ring-green-600"
                 />
               </Field>
-              <Field label="City">
+              <Field label="City *">
                 <SuggestionInput
                   value={form.city}
                   onChange={(v) => { setForm(f => ({ ...f, city: v })); debouncedLocFetch("cities", { country: form.country, state: form.state, city: v }); }}
                   onFocus={() => fetchLocationSuggestions("cities", { country: form.country, state: form.state, city: form.city })}
                   placeholder="City"
-                  required={false}
+                  required={true}
                   suggestions={locationSuggestions.cities}
                   loading={loadingLoc.cities}
                   inputClassName="focus:ring-green-600"
                 />
+              </Field>
+              <Field label="Pincode/Zipcode">
+                <input name="pincode" value={form.pincode} onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-600 text-sm" placeholder="Enter pincode" />
               </Field>
             </div>
           </section>
