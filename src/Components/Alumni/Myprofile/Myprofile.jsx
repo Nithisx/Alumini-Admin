@@ -4,7 +4,8 @@ import React, { useEffect, useState, useRef, useCallback } from "react"
 import { toast } from "react-toastify";
 import axios from "axios"
 import SuggestionInput from "../../Shared/SuggestionInput"
-import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS } from "../../../config/api"
+import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS, API_USER_COURSES, API_USER_COURSE } from "../../../config/api"
+import { COURSES, COURSE_BRANCH_MAPPING, COLLEGE_NAMES } from "../../../constants/academicOptions"
 import {
   ArrowLeft,
   Edit,
@@ -26,6 +27,9 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Plus,
+  X,
+  Trash2,
 } from "lucide-react"
 
 // API Configuration
@@ -222,6 +226,16 @@ const ProfileScreen = () => {
     }, delay);
   }, [fetchSuggestions]);
 
+  // Multi-course state
+  const [courses, setCourses] = useState([])
+  const [showAddCourseModal, setShowAddCourseModal] = useState(false)
+  const [addCourseForm, setAddCourseForm] = useState({
+    course: "", branch: "", stream: "", roll_no: "",
+    college_name: "", course_start_year: "", course_end_year: "", passed_out_year: "",
+  })
+  const [addCourseLoading, setAddCourseLoading] = useState(false)
+  const [deletingCourseId, setDeletingCourseId] = useState(null)
+
   const tabs = ["Personal", "Work", "Contact", "Social"]
   const editTabs = ["Basic Info", "Academic", "Contact & Address", "Work & Social"]
 
@@ -302,8 +316,70 @@ const ProfileScreen = () => {
     }
   }
 
+  const fetchCourses = async () => {
+    try {
+      const token = localStorage.getItem("Token")
+      if (!token) return
+      const res = await fetch(API_USER_COURSES, { headers: { Authorization: `Token ${token}` } })
+      if (res.ok) {
+        const data = await res.json()
+        setCourses(Array.isArray(data) ? data : [])
+      }
+    } catch (_) {}
+  }
+
+  const handleAddCourse = async () => {
+    if (!addCourseForm.course) { toast.error("Course is required"); return }
+    setAddCourseLoading(true)
+    try {
+      const token = localStorage.getItem("Token")
+      const res = await fetch(API_USER_COURSES, {
+        method: "POST",
+        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(addCourseForm),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        const msg = data?.non_field_errors?.[0] || data?.detail || data?.error || "Failed to add course"
+        toast.error(msg)
+        return
+      }
+      toast.success("Course added successfully")
+      setCourses((prev) => [...prev, data])
+      setShowAddCourseModal(false)
+      setAddCourseForm({ course: "", branch: "", stream: "", roll_no: "", college_name: "", course_start_year: "", course_end_year: "", passed_out_year: "" })
+    } catch (_) {
+      toast.error("Failed to add course")
+    } finally {
+      setAddCourseLoading(false)
+    }
+  }
+
+  const handleDeleteCourse = async (courseId) => {
+    setDeletingCourseId(courseId)
+    try {
+      const token = localStorage.getItem("Token")
+      const res = await fetch(API_USER_COURSE(courseId), {
+        method: "DELETE",
+        headers: { Authorization: `Token ${token}` },
+      })
+      if (res.ok || res.status === 204) {
+        setCourses((prev) => prev.filter((c) => c.id !== courseId))
+        toast.success("Course removed")
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data?.error || "Failed to remove course")
+      }
+    } catch (_) {
+      toast.error("Failed to remove course")
+    } finally {
+      setDeletingCourseId(null)
+    }
+  }
+
   useEffect(() => {
     fetchProfile()
+    fetchCourses()
   }, [])
 
   const handleImageUpload = (field, event) => {
@@ -680,25 +756,54 @@ const ProfileScreen = () => {
               </div>
             )}
 
-            {(profile.course || profile.branch || profile.passed_out_year) && (
-              <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
-                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-green-700 uppercase mb-1">Education</p>
-                  {(profile.course || profile.branch) && (
-                    <p className="text-sm sm:text-base text-green-900 break-words">
+            <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
+              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-green-700 uppercase">Education</p>
+                  <button
+                    onClick={() => setShowAddCourseModal(true)}
+                    className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium border border-green-300 rounded-md px-2 py-0.5 hover:bg-green-50 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" /> Add Course
+                  </button>
+                </div>
+                {courses.length > 0 ? (
+                  <div className="space-y-2">
+                    {courses.map((c) => (
+                      <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group">
+                        {!c.is_primary && (
+                          <button
+                            onClick={() => handleDeleteCourse(c.id)}
+                            disabled={deletingCourseId === c.id}
+                            className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
+                            title="Remove enrollment"
+                          >
+                            {deletingCourseId === c.id ? <Loader className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                          </button>
+                        )}
+                        <p className="text-sm text-green-900 font-medium break-words">
+                          {[c.course, c.branch].filter(Boolean).join(" — ")}
+                          {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                        </p>
+                        {c.college_name && <p className="text-xs text-green-600 mt-0.5">{c.college_name}</p>}
+                        {c.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {c.passed_out_year}</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (profile.course || profile.branch || profile.passed_out_year) ? (
+                  <div className="bg-green-50 rounded-lg px-3 py-2">
+                    <p className="text-sm text-green-900 font-medium break-words">
                       {[profile.course, profile.branch].filter(Boolean).join(" — ")}
                     </p>
-                  )}
-                  {profile.college_name && (
-                    <p className="text-xs text-green-600 mt-0.5">{profile.college_name}</p>
-                  )}
-                  {profile.passed_out_year && (
-                    <p className="text-xs text-green-500 mt-0.5">Passed out: {profile.passed_out_year}</p>
-                  )}
-                </div>
+                    {profile.college_name && <p className="text-xs text-green-600 mt-0.5">{profile.college_name}</p>}
+                    {profile.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {profile.passed_out_year}</p>}
+                  </div>
+                ) : (
+                  <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
+                )}
               </div>
-            )}
+            </div>
 
             {Array.isArray(profile.professional_skills) && profile.professional_skills.length > 0 && (
               <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
@@ -766,7 +871,7 @@ const ProfileScreen = () => {
             )}
 
             {!profile.current_work && !profile.company && !profile.position && !profile.work_experience &&
-             !profile.course && !profile.branch && !profile.passed_out_year && !profile.faculty_job_title &&
+             courses.length === 0 && !profile.course && !profile.branch && !profile.passed_out_year && !profile.faculty_job_title &&
              !(Array.isArray(profile.professional_skills) && profile.professional_skills.length > 0) && (
               <div className="flex flex-col items-center justify-center h-32 sm:h-40">
                 <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-green-300 mb-2" />
@@ -1062,6 +1167,49 @@ const ProfileScreen = () => {
       case 1: // Academic
         return (
           <div className="space-y-4">
+            {/* Enrolled courses list with add/remove */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold text-green-900">Enrolled Courses</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAddCourseModal(true)}
+                  className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium border border-green-300 rounded-md px-2 py-1 hover:bg-green-50 transition-colors"
+                >
+                  <Plus className="w-3 h-3" /> Add Course
+                </button>
+              </div>
+              {courses.length > 0 ? (
+                <div className="space-y-2">
+                  {courses.map((c) => (
+                    <div key={c.id} className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                      <div>
+                        <p className="text-sm text-green-900 font-medium">
+                          {[c.course, c.branch].filter(Boolean).join(" — ")}
+                          {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                        </p>
+                        {c.college_name && <p className="text-xs text-green-600">{c.college_name}</p>}
+                        {c.passed_out_year && <p className="text-xs text-green-500">Passed out: {c.passed_out_year}</p>}
+                      </div>
+                      {!c.is_primary && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCourse(c.id)}
+                          disabled={deletingCourseId === c.id}
+                          className="text-red-400 hover:text-red-600 ml-2 flex-shrink-0"
+                          title="Remove"
+                        >
+                          {deletingCourseId === c.id ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
+              )}
+            </div>
+
             <div className="border-t border-green-200 pt-4">
               <h3 className="text-sm font-bold text-green-900 mb-3">Higher / Further Education</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -1855,6 +2003,130 @@ const ProfileScreen = () => {
 
         {/* Change Password Modal */}
         {renderChangePasswordModal()}
+
+        {/* Add Course Modal */}
+        {showAddCourseModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-green-100">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-green-600" />
+                  <h2 className="text-base font-bold text-green-900">Add New Course</h2>
+                </div>
+                <button onClick={() => setShowAddCourseModal(false)} className="text-green-400 hover:text-green-700">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-5 space-y-3">
+                {/* Course */}
+                <div>
+                  <label className="block text-xs font-bold text-green-900 mb-1">Course <span className="text-red-500">*</span></label>
+                  <select
+                    value={addCourseForm.course}
+                    onChange={(e) => setAddCourseForm((p) => ({ ...p, course: e.target.value, branch: "" }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="">Select course</option>
+                    {COURSES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Branch */}
+                {addCourseForm.course && COURSE_BRANCH_MAPPING[addCourseForm.course]?.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-bold text-green-900 mb-1">Branch / Specialization</label>
+                    <select
+                      value={addCourseForm.branch}
+                      onChange={(e) => setAddCourseForm((p) => ({ ...p, branch: e.target.value }))}
+                      className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    >
+                      <option value="">Select branch</option>
+                      {COURSE_BRANCH_MAPPING[addCourseForm.course].map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {/* College */}
+                <div>
+                  <label className="block text-xs font-bold text-green-900 mb-1">College</label>
+                  <select
+                    value={addCourseForm.college_name}
+                    onChange={(e) => setAddCourseForm((p) => ({ ...p, college_name: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="">Select college</option>
+                    {COLLEGE_NAMES.map((col) => (
+                      <option key={col} value={col}>{col}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Roll No */}
+                <div>
+                  <label className="block text-xs font-bold text-green-900 mb-1">Roll Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 20BCE001"
+                    value={addCourseForm.roll_no}
+                    onChange={(e) => setAddCourseForm((p) => ({ ...p, roll_no: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+                {/* Years */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-green-900 mb-1">Start Year</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 2018"
+                      value={addCourseForm.course_start_year}
+                      onChange={(e) => setAddCourseForm((p) => ({ ...p, course_start_year: e.target.value }))}
+                      className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-green-900 mb-1">End Year</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 2022"
+                      value={addCourseForm.course_end_year}
+                      onChange={(e) => setAddCourseForm((p) => ({ ...p, course_end_year: e.target.value }))}
+                      className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                </div>
+                {/* Passed Out Year */}
+                <div>
+                  <label className="block text-xs font-bold text-green-900 mb-1">Passed Out Year</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 2022"
+                    value={addCourseForm.passed_out_year}
+                    onChange={(e) => setAddCourseForm((p) => ({ ...p, passed_out_year: e.target.value }))}
+                    className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 px-5 pb-5">
+                <button
+                  onClick={() => setShowAddCourseModal(false)}
+                  className="flex-1 border border-green-300 text-green-700 rounded-lg py-2.5 text-sm font-medium hover:bg-green-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddCourse}
+                  disabled={addCourseLoading || !addCourseForm.course}
+                  className="flex-1 bg-green-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                >
+                  {addCourseLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Enroll
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* FAB — hidden since edit is in header now, keep as fallback on mobile */}
         <button

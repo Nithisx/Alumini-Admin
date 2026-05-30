@@ -25,6 +25,8 @@ export const API_CHANGE_PASSWORD  = `${API_BASE}/change-password/`;
 // Profile
 export const API_PROFILE        = `${API_BASE}/profile/`;
 export const API_SUGGESTIONS    = `${API_BASE}/suggestions`;
+export const API_USER_COURSES   = `${API_BASE}/user-courses/`;
+export const API_USER_COURSE    = (id) => `${API_BASE}/user-courses/${id}/`;
 
 // Members
 export const API_MEMBERS        = `${API_BASE}/members/`;
