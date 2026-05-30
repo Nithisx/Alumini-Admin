@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 
 const SuggestionInput = ({
   value,
@@ -13,30 +13,26 @@ const SuggestionInput = ({
   suggestions = [],
   loading = false,
   showDropdownConditions = true,
-  className="",
-  inputClassName="",
+  className = "",
+  inputClassName = "",
+  // When true, blur without confirming clears the input if there's no exact match
+  clearOnBlurIfNoMatch = false,
+  // When true, shows a ✓ tick button instead of "Add '…' as new entry" text
+  tickConfirmStyle = false,
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // Tracks whether the current value was confirmed via selection or "add new"
+  const isConfirmedRef = useRef(false);
 
   const getDisplay = (suggestion) =>
-    typeof suggestion === 'object'
-      ? (suggestion.display || suggestion.countryCode || Object.values(suggestion)[0])
+    typeof suggestion === "object"
+      ? suggestion.display || suggestion.countryCode || Object.values(suggestion)[0]
       : suggestion;
 
   const getActual = (suggestion) =>
-    typeof suggestion === 'object'
-      ? (suggestion.value || suggestion.countryCode || Object.values(suggestion)[0])
+    typeof suggestion === "object"
+      ? suggestion.value || suggestion.countryCode || Object.values(suggestion)[0]
       : suggestion;
 
   const trimmedValue = String(value ?? "").trim();
@@ -53,10 +49,34 @@ const SuggestionInput = ({
   const canAddNew = !loading && trimmedValue.length > 0 && !hasExactMatch;
 
   const handleAddNew = () => {
+    isConfirmedRef.current = true;
     if (onSelect) {
       onSelect(trimmedValue, trimmedValue);
     } else {
       onChange(trimmedValue);
+    }
+    setShowSuggestions(false);
+  };
+
+  const handleSelect = (actualValue, suggestion) => {
+    isConfirmedRef.current = true;
+    if (onSelect) {
+      onSelect(actualValue, suggestion);
+    } else {
+      onChange(actualValue);
+    }
+    setShowSuggestions(false);
+  };
+
+  const handleChange = (e) => {
+    isConfirmedRef.current = false;
+    onChange(e.target.value);
+    setShowSuggestions(true);
+  };
+
+  const handleBlur = () => {
+    if (clearOnBlurIfNoMatch && !isConfirmedRef.current && !hasExactMatch && trimmedValue) {
+      onChange("");
     }
     setShowSuggestions(false);
   };
@@ -81,17 +101,13 @@ const SuggestionInput = ({
             : "border-gray-300"
         } ${inputClassName}`}
         value={value}
-        onChange={(e) => {
-          onChange(e.target.value);
-          setShowSuggestions(true);
-        }}
-        onClick={() => {
-          setShowSuggestions(true);
-        }}
+        onChange={handleChange}
+        onClick={() => setShowSuggestions(true)}
         onFocus={() => {
           if (onFocus) onFocus();
           setShowSuggestions(true);
         }}
+        onBlur={handleBlur}
         placeholder={placeholder}
       />
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -109,29 +125,19 @@ const SuggestionInput = ({
             filteredSuggestions.map((suggestion, index) => {
               const displayValue = getDisplay(suggestion);
               const actualValue = getActual(suggestion);
-
               return (
                 <li
                   key={index}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700 break-words"
-                  onMouseDown={(e) => {
-                    e.preventDefault(); // Prevents input onBlur before click
-                  }}
-                  onClick={() => {
-                    if (onSelect) {
-                      onSelect(actualValue, suggestion);
-                    } else {
-                      onChange(actualValue);
-                    }
-                    setShowSuggestions(false);
-                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSelect(actualValue, suggestion)}
                 >
                   {displayValue}
                 </li>
               );
             })}
 
-          {canAddNew && (
+          {canAddNew && !tickConfirmStyle && (
             <li className="border-t border-gray-100 bg-gray-50 sticky bottom-0">
               <button
                 type="button"
@@ -143,6 +149,23 @@ const SuggestionInput = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span className="truncate">Add "{trimmedValue}" as new entry</span>
+              </button>
+            </li>
+          )}
+
+          {canAddNew && tickConfirmStyle && (
+            <li className="border-t border-gray-100 bg-gray-50 sticky bottom-0 flex items-center justify-center py-1.5">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleAddNew}
+                title={`Confirm "${trimmedValue}"`}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-green-600 bg-green-50 hover:bg-green-100 text-xs font-medium transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+                Confirm
               </button>
             </li>
           )}

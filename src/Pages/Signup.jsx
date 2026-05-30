@@ -740,6 +740,7 @@ const Signup = () => {
                       suggestions={apiSuggestions.usernames}
                       loading={loadingSuggestions.usernames}
                       showDropdownConditions={!fieldErrors.username}
+                      tickConfirmStyle
                     />
                     {formData.username && (
                       <div className="absolute right-3 top-8">
@@ -825,6 +826,7 @@ const Signup = () => {
                     error={fieldErrors.country}
                     suggestions={apiSuggestions.countries}
                     loading={loadingSuggestions.countries}
+                    clearOnBlurIfNoMatch
                   />
                   <SuggestionInput
                     label="State"
@@ -838,6 +840,7 @@ const Signup = () => {
                     error={fieldErrors.state}
                     suggestions={apiSuggestions.states}
                     loading={loadingSuggestions.states}
+                    clearOnBlurIfNoMatch
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
@@ -853,6 +856,7 @@ const Signup = () => {
                     error={fieldErrors.city}
                     suggestions={apiSuggestions.cities}
                     loading={loadingSuggestions.cities}
+                    clearOnBlurIfNoMatch
                   />
                   <SuggestionInput
                     label="Pincode/Zipcode"

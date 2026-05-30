@@ -550,6 +550,7 @@ export default function OAuthSignupComplete() {
                       suggestions={apiSuggestions.usernames}
                       loading={loadingSuggestions.usernames}
                       showDropdownConditions={!fieldErrors.username}
+                      tickConfirmStyle
                     />
                     {formData.username && (
                       <div className="absolute right-3 top-8">
@@ -638,6 +639,7 @@ export default function OAuthSignupComplete() {
                     error={fieldErrors.country}
                     suggestions={apiSuggestions.countries}
                     loading={loadingSuggestions.countries}
+                    clearOnBlurIfNoMatch
                   />
                   <SuggestionInput
                     label="State"
@@ -653,6 +655,7 @@ export default function OAuthSignupComplete() {
                     error={fieldErrors.state}
                     suggestions={apiSuggestions.states}
                     loading={loadingSuggestions.states}
+                    clearOnBlurIfNoMatch
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
@@ -678,6 +681,7 @@ export default function OAuthSignupComplete() {
                     error={fieldErrors.city}
                     suggestions={apiSuggestions.cities}
                     loading={loadingSuggestions.cities}
+                    clearOnBlurIfNoMatch
                   />
                   <SuggestionInput
                     label="Pincode/Zipcode"
