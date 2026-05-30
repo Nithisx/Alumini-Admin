@@ -105,15 +105,22 @@ function GoogleIcon() {
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [oauthLoading, setOauthLoading] = useState(false);
+  // Start in loading state immediately if this is an OAuth callback (URL has #access_token)
+  const [oauthLoading, setOauthLoading] = useState(
+    () => window.location.hash.includes("access_token=")
+  );
 
   // Handle OAuth redirect callback (when Google redirects back to /signup)
   useEffect(() => {
     const handleOAuthCallback = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setOauthLoading(false);
+        return;
+      }
 
       setOauthLoading(true);
+      let navigated = false;
       try {
         const res = await fetch(`${api_base}/auth/google/`, {
           method: "POST",
@@ -128,11 +135,13 @@ const Signup = () => {
           localStorage.setItem("Token", data.token);
           localStorage.setItem("Role", roleMap[data.role] || "alumni");
           await supabase.auth.signOut();
+          navigated = true;
           navigate(roleMap[data.role] === "admin" ? "/admin/dashboard" : roleMap[data.role] === "staff" ? "/staff/dashboard" : "/alumni/dashboard");
         } else if (data.status === "new_user") {
           sessionStorage.setItem("oauth_access_token", session.access_token);
           sessionStorage.setItem("oauth_avatar_url", data.avatar_url || "");
           await supabase.auth.signOut();
+          navigated = true;
           navigate("/oauth-signup", {
             state: {
               email: data.email,
@@ -145,7 +154,7 @@ const Signup = () => {
       } catch {
         await supabase.auth.signOut();
       } finally {
-        setOauthLoading(false);
+        if (!navigated) setOauthLoading(false);
       }
     };
     handleOAuthCallback();
