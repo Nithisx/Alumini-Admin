@@ -113,7 +113,7 @@ export default function OAuthSignupComplete() {
     roll_no: "",
     course: "",
     branch: "",
-    role: "Alumni",
+    role: "",
     course_start_year: "",
     course_end_year: "",
     passed_out_year: "",
