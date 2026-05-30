@@ -47,6 +47,35 @@ const fmtLastSeen = (ts) => {
 
 const photoUrl = (photoPath) => getMediaUrl(photoPath);
 
+// Render plain text with clickable links
+const renderTextWithLinks = (text, own = false) => {
+  if (!text) return null;
+  const parts = [];
+  const urlRegex = /((https?:\/\/|www\.)[^\s<>]+)/gi;
+  let lastIndex = 0;
+  let match;
+  while ((match = urlRegex.exec(text)) !== null) {
+    const idx = match.index;
+    if (idx > lastIndex) parts.push(text.slice(lastIndex, idx));
+    let url = match[0];
+    if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
+    parts.push(
+      <a
+        key={`u-${idx}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={own ? "underline text-white/90 break-words" : "underline text-emerald-600 break-words"}
+      >
+        {match[0]}
+      </a>
+    );
+    lastIndex = idx + match[0].length;
+  }
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return parts.map((p, i) => (typeof p === "string" ? <span key={`t-${i}`}>{p}</span> : p));
+};
+
 // ── Message Status Icon ───────────────────────────────────────────────────────
 
 const StatusIcon = ({ status, isCommunity, className = "" }) => {
@@ -118,7 +147,7 @@ const MessageInfoPanel = ({ msg, onClose, isCommunity }) => {
         </div>
         <div className="px-5 py-4 space-y-3">
           <div className="bg-gray-50 rounded-xl px-4 py-2.5 text-sm text-gray-700 break-words">
-            {msg.text}
+            {renderTextWithLinks(msg.text, false)}
           </div>
           <div className="space-y-2 text-sm">
             <Row icon={<Clock className="w-3.5 h-3.5 text-gray-400" />} label="Sent" value={fmtDateTime(msg.timestamp)} />
@@ -1343,7 +1372,7 @@ const Chat = () => {
                                   )}
                                 </div>
                               )}
-                              {msg.text && <p className="break-words">{msg.text}</p>}
+                              {msg.text && <p className="break-words">{renderTextWithLinks(msg.text, own)}</p>}
                               {msg.edited && (
                                 <span className={`text-[10px] italic ${own ? "text-white/50" : "text-gray-400"}`}> · edited</span>
                               )}

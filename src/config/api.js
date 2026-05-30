@@ -1,16 +1,17 @@
 /**
  * Central API configuration.
- * All base URLs are derived from VITE_API_BASE_URL so that switching
- * environments (dev / staging / prod) requires only a .env change.
+ * All URLs are derived from VITE_* env variables so backend hosts are not
+ * hardcoded in source and can be changed via .env only.
  */
 
-const PROD_API_BASE = 'https://api.karpagamalumni.in/api/v1';
+const APP_ORIGIN = typeof window !== 'undefined' ? window.location.origin : '';
+export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || APP_ORIGIN;
 const DEV_API_BASE = import.meta.env.VITE_DEV_API_BASE_URL || '/api/v1';
 
 // In dev, default to a same-origin path so Vite proxy can avoid browser CORS issues.
-export const API_BASE = import.meta.env.DEV
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV
   ? DEV_API_BASE
-  : (import.meta.env.VITE_API_BASE_URL || PROD_API_BASE);
+  : `${API_ORIGIN}/api/v1`);
 
 // Auth
 export const API_LOGIN_ALUMNI   = `${API_BASE}/login/`;
@@ -83,7 +84,24 @@ export const API_BUSINESS_COMMENT_REPLY   = (id) => `${API_BASE}/businesses/comm
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
 
-const CHAT_HOST = 'https://api.karpagamalumni.in';
+const CHAT_HOST = import.meta.env.VITE_CHAT_API_HOST || API_ORIGIN;
+
+const toWsOrigin = (origin) => {
+  try {
+    const u = new URL(origin, APP_ORIGIN || 'http://localhost');
+    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+    return u.origin;
+  } catch {
+    if (typeof window !== 'undefined') {
+      return window.location.protocol === 'https:'
+        ? `wss://${window.location.host}`
+        : `ws://${window.location.host}`;
+    }
+    return 'ws://localhost';
+  }
+};
+
+const WS_BASE = import.meta.env.VITE_WS_BASE_URL || toWsOrigin(CHAT_HOST);
 
 export const API_CHAT_ROOMS          = `${CHAT_HOST}/chat/rooms/`;
 export const API_CHAT_ROOM_MESSAGES  = (roomId) => `${CHAT_HOST}/chat/rooms/${roomId}/messages/`;
@@ -97,9 +115,9 @@ export const API_CHAT_PRESENCE_BULK  = `${CHAT_HOST}/chat/presence/bulk/`;
 export const API_PORTAL_SHARE        = `${API_BASE}/share/portal/`;
 
 export const WS_CHAT_URL = (roomId, token) =>
-  `wss://api.karpagamalumni.in/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(token)}`;
+  `${WS_BASE}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(token)}`;
 export const WS_COMMUNITY_URL = (token) =>
-  `wss://api.karpagamalumni.in/ws/community-chat/?token=${encodeURIComponent(token)}`;
+  `${WS_BASE}/ws/community-chat/?token=${encodeURIComponent(token)}`;
 
 // Media helper — resolves a relative media path to a full URL
 export const getMediaUrl = (uri) => {
