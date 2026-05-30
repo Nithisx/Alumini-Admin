@@ -108,7 +108,7 @@ export const COURSE_BRANCH_MAPPING = {
   "Master of Architecture": ["General"],
   "Master of Building and Engineering Management": ["General"],
   "Master of Business Administration": ["Business Process Services", "General", "MBA"],
-  "Master of Commerce": ["General", "Professional Accounting"],
+  "Master of Commerce": ["General", "Professional Accounting", "M. Com"],
   "Master of Computer Applications": ["Computer Application", "General"],
   "Master of Engineering": [
     "Aeronautical Engineering",
