@@ -8,7 +8,7 @@ import OAuthSignupComplete from './Pages/OAuthSignupComplete';
 import Home from './Pages/home';
 import About from './Pages/about';
 import Contact from './Pages/Contact';
-import PrivacyPolicy from './Pages/PrivacyPolicy';
+import PrivacyPolicy from './Pages/PrivacyPolicyPage';
 import TermsOfService from './Pages/TermsOfService';
 import ResetPassword from './Pages/ResetPassword';
 import ShareRedirect from './Pages/ShareRedirect';

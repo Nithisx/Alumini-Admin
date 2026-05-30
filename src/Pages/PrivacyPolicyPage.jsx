@@ -187,7 +187,7 @@ const PrivacyPolicy = () => {
                   <p>Pollachi Main Road, Eachanari, Coimbatore</p>
                   <p>Tamil Nadu – 641021, India</p>
                   <p>
-                    Email:{" "}
+                    Email: {" "}
                     <a href="mailto:alumni@kahedu.edu.in" className="text-green-600 hover:underline">
                       alumni@kahedu.edu.in
                     </a>
