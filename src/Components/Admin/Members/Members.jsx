@@ -1636,12 +1636,16 @@ export default function MembersPage() {
                         <HighlightMatch text={member.current_work} query={(currentWorkFilter && currentWorkFilter[0]) || (companyFilter && companyFilter[0]) || ""} />
                       </p>
                     )}
-                    {/* Show additional fields when actively filtered on them */}
-                    {member.course && valueMatchesAny(member.course, courseFilter) && (
-                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Course: <HighlightMatch text={member.course} query={(courseFilter && courseFilter[0]) || ""} /></p>
+                    {/* Academic info — always show, highlight when actively filtered */}
+                    {member.course && (
+                      <p className={`text-xs truncate mt-0.5 font-medium ${valueMatchesAny(member.course, courseFilter) ? "text-purple-700" : "text-gray-500"}`}>
+                        <HighlightMatch text={member.course} query={(courseFilter && courseFilter[0]) || ""} />
+                      </p>
                     )}
-                    {member.branch && valueMatchesAny(member.branch, branchFilter) && (
-                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Branch: <HighlightMatch text={member.branch} query={(branchFilter && branchFilter[0]) || ""} /></p>
+                    {member.branch && (
+                      <p className={`text-xs truncate mt-0.5 ${valueMatchesAny(member.branch, branchFilter) ? "text-purple-700 font-medium" : "text-gray-400"}`}>
+                        <HighlightMatch text={member.branch} query={(branchFilter && branchFilter[0]) || ""} />
+                      </p>
                     )}
                     {member.college_name && valueMatchesAny(member.college_name, collegeNameFilter) && (
                       <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Faculty: <HighlightMatch text={member.college_name} query={(collegeNameFilter && collegeNameFilter[0]) || ""} /></p>

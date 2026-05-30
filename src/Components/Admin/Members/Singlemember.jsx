@@ -16,6 +16,8 @@ const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
 const API_DEACTIVATE_USER = "https://api.karpagamalumni.in/api/v1/deactivate-user/";
 const API_DELETE_USER = "https://api.karpagamalumni.in/api/v1/delete-user/";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
+const getAdminCoursesUrl = (userId) => `https://api.karpagamalumni.in/api/v1/profile/${userId}/courses/`;
+const getAdminCourseUrl = (userId, courseId) => `https://api.karpagamalumni.in/api/v1/profile/${userId}/courses/${courseId}/`;
 const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
 const COVER_PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1556888335-95371827d5fb?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
@@ -123,6 +125,11 @@ export default function SingleMember() {
   const [deleting, setDeleting] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userCourses, setUserCourses] = useState([]);
+  const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+  const [addCourseForm, setAddCourseForm] = useState({ course: "", branch: "", college_name: "", passed_out_year: "" });
+  const [addCourseLoading, setAddCourseLoading] = useState(false);
+  const [deletingCourseId, setDeletingCourseId] = useState(null);
 
   /* ── helpers ── */
   const navigateToMembersList = () => {
@@ -147,9 +154,74 @@ export default function SingleMember() {
         if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
           setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
         }
+        // Profile response already embeds user_courses — use it directly
+        // to avoid a redundant second API call. Fall back to fetch only if absent.
+        if (Array.isArray(data.user_courses)) {
+          setUserCourses(data.user_courses);
+        } else {
+          fetchUserCourses(data.id);
+        }
       })
       .finally(() => setLoading(false));
   }, [name]);
+
+  const fetchUserCourses = async (userId) => {
+    try {
+      const res = await fetch(getAdminCoursesUrl(userId), {
+        headers: { Authorization: `Token ${TOKEN}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUserCourses(Array.isArray(data) ? data : []);
+      }
+    } catch (_) {}
+  };
+
+  const handleAddCourse = async () => {
+    if (!addCourseForm.course) { toast.error("Course is required"); return; }
+    setAddCourseLoading(true);
+    try {
+      const res = await fetch(getAdminCoursesUrl(member.id), {
+        method: "POST",
+        headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify(addCourseForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.non_field_errors?.[0] || data?.error || data?.detail || "Failed to add course");
+        return;
+      }
+      toast.success("Course added successfully");
+      await fetchUserCourses(member.id);
+      setShowAddCourseModal(false);
+      setAddCourseForm({ course: "", branch: "", college_name: "", passed_out_year: "" });
+    } catch (_) {
+      toast.error("Failed to add course");
+    } finally {
+      setAddCourseLoading(false);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    setDeletingCourseId(courseId);
+    try {
+      const res = await fetch(getAdminCourseUrl(member.id, courseId), {
+        method: "DELETE",
+        headers: { Authorization: `Token ${TOKEN}` },
+      });
+      if (res.ok || res.status === 204) {
+        setUserCourses((prev) => prev.filter((c) => c.id !== courseId));
+        toast.success("Course removed");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data?.error || "Failed to remove course");
+      }
+    } catch (_) {
+      toast.error("Failed to remove course");
+    } finally {
+      setDeletingCourseId(null);
+    }
+  };
 
   /* ── edit helpers ── */
   const handleEditClick = () => {
@@ -634,6 +706,54 @@ export default function SingleMember() {
                 <TagList items={roles_played} colorClass="bg-orange-100 text-orange-700" />
               )}
             </FieldRow>
+
+            <FieldRow icon={Icons.education} label="Education">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-gray-400">Course enrollments</span>
+                  <button
+                    onClick={() => setShowAddCourseModal(true)}
+                    className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium border border-green-300 rounded-md px-2 py-1 hover:bg-green-50 transition-colors"
+                  >
+                    + Add Course
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {(course || college_name || passed_out_year) && (
+                    <div className="bg-green-50 rounded-lg px-3 py-2 border border-green-100">
+                      <p className="text-sm text-gray-800 font-medium">
+                        {[course, branch].filter(Boolean).join(" — ")}
+                        <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>
+                      </p>
+                      {college_name && <p className="text-xs text-gray-500 mt-0.5">{college_name}</p>}
+                      {passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {passed_out_year}</p>}
+                    </div>
+                  )}
+                  {userCourses.map((c) => (
+                    <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group border border-green-100">
+                      <p className="text-sm text-gray-800 font-medium pr-6">
+                        {[c.course, c.branch].filter(Boolean).join(" — ")}
+                      </p>
+                      {c.college_name && <p className="text-xs text-gray-500 mt-0.5">{c.college_name}</p>}
+                      {c.passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {c.passed_out_year}</p>}
+                      <button
+                        onClick={() => handleDeleteCourse(c.id)}
+                        disabled={deletingCourseId === c.id}
+                        className="absolute top-2 right-2 text-red-400 hover:text-red-600 disabled:opacity-50"
+                        title="Remove course"
+                      >
+                        {deletingCourseId === c.id
+                          ? <span className="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                          : Icons.x}
+                      </button>
+                    </div>
+                  ))}
+                  {!course && !college_name && !passed_out_year && userCourses.length === 0 && (
+                    <p className="text-xs text-gray-400 italic">No course enrollments yet</p>
+                  )}
+                </div>
+              </div>
+            </FieldRow>
           </div>
         );
 
@@ -898,6 +1018,87 @@ export default function SingleMember() {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* ── Add Course Modal ── */}
+      {showAddCourseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-800">Add Course Enrollment</h2>
+              <button onClick={() => setShowAddCourseModal(false)} className="text-gray-400 hover:text-gray-600">{Icons.x}</button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Course *</label>
+                <select
+                  value={addCourseForm.course}
+                  onChange={(e) => setAddCourseForm((f) => ({ ...f, course: e.target.value, branch: "" }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                >
+                  <option value="">Select Course</option>
+                  {COURSES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              {addCourseForm.course && COURSE_BRANCH_MAPPING[addCourseForm.course] && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Branch / Stream</label>
+                  <select
+                    value={addCourseForm.branch}
+                    onChange={(e) => setAddCourseForm((f) => ({ ...f, branch: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  >
+                    <option value="">Select Branch</option>
+                    {COURSE_BRANCH_MAPPING[addCourseForm.course].map((b) => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">College</label>
+                <select
+                  value={addCourseForm.college_name}
+                  onChange={(e) => setAddCourseForm((f) => ({ ...f, college_name: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                >
+                  <option value="">Select College</option>
+                  {COLLEGE_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Passed Out Year</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 2024"
+                  value={addCourseForm.passed_out_year}
+                  onChange={(e) => setAddCourseForm((f) => ({ ...f, passed_out_year: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-5 justify-end">
+              <button
+                onClick={() => setShowAddCourseModal(false)}
+                className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddCourse}
+                disabled={addCourseLoading}
+                className="px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-60 flex items-center gap-1.5"
+              >
+                {addCourseLoading
+                  ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Adding…</>
+                  : "Add Course"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -345,7 +345,7 @@ const ProfileScreen = () => {
         return
       }
       toast.success("Course added successfully")
-      setCourses((prev) => [...prev, data])
+      await fetchCourses()
       setShowAddCourseModal(false)
       setAddCourseForm({ course: "", branch: "", stream: "", roll_no: "", college_name: "", course_start_year: "", course_end_year: "", passed_out_year: "" })
     } catch (_) {
@@ -746,7 +746,7 @@ const ProfileScreen = () => {
               </div>
             )}
 
-            {profile.work_experience && (
+            {!!profile.work_experience && (
               <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -768,40 +768,38 @@ const ProfileScreen = () => {
                     <Plus className="w-3 h-3" /> Add Course
                   </button>
                 </div>
-                {courses.length > 0 ? (
-                  <div className="space-y-2">
-                    {courses.map((c) => (
-                      <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group">
-                        {!c.is_primary && (
-                          <button
-                            onClick={() => handleDeleteCourse(c.id)}
-                            disabled={deletingCourseId === c.id}
-                            className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
-                            title="Remove enrollment"
-                          >
-                            {deletingCourseId === c.id ? <Loader className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                          </button>
-                        )}
-                        <p className="text-sm text-green-900 font-medium break-words">
-                          {[c.course, c.branch].filter(Boolean).join(" — ")}
-                          {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
-                        </p>
-                        {c.college_name && <p className="text-xs text-green-600 mt-0.5">{c.college_name}</p>}
-                        {c.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {c.passed_out_year}</p>}
-                      </div>
-                    ))}
-                  </div>
-                ) : (profile.course || profile.branch || profile.passed_out_year) ? (
-                  <div className="bg-green-50 rounded-lg px-3 py-2">
-                    <p className="text-sm text-green-900 font-medium break-words">
-                      {[profile.course, profile.branch].filter(Boolean).join(" — ")}
-                    </p>
-                    {profile.college_name && <p className="text-xs text-green-600 mt-0.5">{profile.college_name}</p>}
-                    {profile.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {profile.passed_out_year}</p>}
-                  </div>
-                ) : (
-                  <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
-                )}
+                <div className="space-y-2">
+                  {(profile.course || profile.college_name || profile.passed_out_year) && (
+                    <div className="bg-green-50 rounded-lg px-3 py-2 relative group">
+                      <p className="text-sm text-green-900 font-medium break-words">
+                        {[profile.course, profile.branch].filter(Boolean).join(" — ")}
+                        <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>
+                      </p>
+                      {profile.college_name && <p className="text-xs text-green-600 mt-0.5">{profile.college_name}</p>}
+                      {profile.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {profile.passed_out_year}</p>}
+                    </div>
+                  )}
+                  {courses.map((c) => (
+                    <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group">
+                      <button
+                        onClick={() => handleDeleteCourse(c.id)}
+                        disabled={deletingCourseId === c.id}
+                        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
+                        title="Remove enrollment"
+                      >
+                        {deletingCourseId === c.id ? <Loader className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                      </button>
+                      <p className="text-sm text-green-900 font-medium break-words pr-5">
+                        {[c.course, c.branch].filter(Boolean).join(" — ")}
+                      </p>
+                      {c.college_name && <p className="text-xs text-green-600 mt-0.5">{c.college_name}</p>}
+                      {c.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {c.passed_out_year}</p>}
+                    </div>
+                  ))}
+                  {!profile.course && !profile.college_name && !profile.passed_out_year && courses.length === 0 && (
+                    <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1179,35 +1177,43 @@ const ProfileScreen = () => {
                   <Plus className="w-3 h-3" /> Add Course
                 </button>
               </div>
-              {courses.length > 0 ? (
-                <div className="space-y-2">
-                  {courses.map((c) => (
-                    <div key={c.id} className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                      <div>
-                        <p className="text-sm text-green-900 font-medium">
-                          {[c.course, c.branch].filter(Boolean).join(" — ")}
-                          {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
-                        </p>
-                        {c.college_name && <p className="text-xs text-green-600">{c.college_name}</p>}
-                        {c.passed_out_year && <p className="text-xs text-green-500">Passed out: {c.passed_out_year}</p>}
-                      </div>
-                      {!c.is_primary && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCourse(c.id)}
-                          disabled={deletingCourseId === c.id}
-                          className="text-red-400 hover:text-red-600 ml-2 flex-shrink-0"
-                          title="Remove"
-                        >
-                          {deletingCourseId === c.id ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                        </button>
-                      )}
+              <div className="space-y-2">
+                {(profile.course || profile.college_name || profile.passed_out_year) && (
+                  <div className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-sm text-green-900 font-medium">
+                        {[profile.course, profile.branch].filter(Boolean).join(" — ")}
+                        <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>
+                      </p>
+                      {profile.college_name && <p className="text-xs text-green-600">{profile.college_name}</p>}
+                      {profile.passed_out_year && <p className="text-xs text-green-500">Passed out: {profile.passed_out_year}</p>}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
-              )}
+                  </div>
+                )}
+                {courses.map((c) => (
+                  <div key={c.id} className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-sm text-green-900 font-medium">
+                        {[c.course, c.branch].filter(Boolean).join(" — ")}
+                      </p>
+                      {c.college_name && <p className="text-xs text-green-600">{c.college_name}</p>}
+                      {c.passed_out_year && <p className="text-xs text-green-500">Passed out: {c.passed_out_year}</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCourse(c.id)}
+                      disabled={deletingCourseId === c.id}
+                      className="text-red-400 hover:text-red-600 ml-2 flex-shrink-0"
+                      title="Remove"
+                    >
+                      {deletingCourseId === c.id ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                ))}
+                {!profile.course && !profile.college_name && !profile.passed_out_year && courses.length === 0 && (
+                  <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
+                )}
+              </div>
             </div>
 
             <div className="border-t border-green-200 pt-4">

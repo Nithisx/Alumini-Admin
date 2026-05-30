@@ -746,7 +746,7 @@ const ProfileScreen = () => {
               </div>
             )}
 
-            {profile.work_experience && (
+            {!!profile.work_experience && (
               <div className="flex items-start space-x-3 pb-3 sm:pb-4 border-b border-green-200">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-1 flex-shrink-0" />
                 <div className="flex-1 min-w-0">

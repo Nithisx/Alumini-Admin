@@ -29,6 +29,10 @@ export const API_SUGGESTIONS    = `${API_BASE}/suggestions`;
 export const API_USER_COURSES   = `${API_BASE}/user-courses/`;
 export const API_USER_COURSE    = (id) => `${API_BASE}/user-courses/${id}/`;
 
+// Admin: manage courses on behalf of a user
+export const API_ADMIN_USER_COURSES = (userId) => `${API_BASE}/profile/${userId}/courses/`;
+export const API_ADMIN_USER_COURSE  = (userId, courseId) => `${API_BASE}/profile/${userId}/courses/${courseId}/`;
+
 // Members
 export const API_MEMBERS        = `${API_BASE}/members/`;
 export const API_MEMBER_DETAIL  = (id) => `${API_BASE}/members/${id}/`;
