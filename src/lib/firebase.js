@@ -21,11 +21,27 @@ function getMessagingInstance() {
   return messagingInstance;
 }
 
+async function registerTokenWithBackend(token, authToken) {
+  const cached = localStorage.getItem('FCMToken');
+  if (cached === token) return; // token unchanged — skip the network round-trip
+  const { API_FCM_REGISTER } = await import('../config/api.js');
+  await fetch(API_FCM_REGISTER, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Token ${authToken}`,
+    },
+    body: JSON.stringify({ token, device_type: 'web' }),
+  });
+  localStorage.setItem('FCMToken', token);
+}
+
 export async function requestNotificationPermission(authToken) {
   if (!authToken) return null;
 
-  // Push subscriptions require a production build — the Vite dev server serves
-  // sw.js as a dev module that Chrome's push service rejects.
+  // Push subscriptions require a production build with HTTPS.
+  // The Vite dev server serves sw.js as a virtual module that Chrome's push
+  // service rejects. Skip entirely in dev to keep the console clean.
   if (import.meta.env.DEV) return null;
 
   if (!('Notification' in window) || !('serviceWorker' in navigator)) return null;
@@ -35,29 +51,43 @@ export async function requestNotificationPermission(authToken) {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return null;
 
-    // Wait for the VitePWA-managed SW (src/sw.js) to be active. The SW
-    // already includes onBackgroundMessage, so no separate firebase-messaging-sw.js
-    // is needed.
-    const swRegistration = await navigator.serviceWorker.ready;
+    // Wait for VitePWA's sw.js to be active. The SW includes onBackgroundMessage
+    // so no separate firebase-messaging-sw.js is needed.
+    const swReg = await navigator.serviceWorker.ready;
+
+    // ── Happy path ───────────────────────────────────────────────────────────
+    // If the browser already has a valid push subscription for this SW
+    // registration, Firebase returns (and refreshes) the existing token fast.
+    try {
+      const token = await getToken(getMessagingInstance(), {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: swReg,
+      });
+      if (token) {
+        await registerTokenWithBackend(token, authToken);
+        return token;
+      }
+    } catch {
+      // Fall through to stale-subscription cleanup below.
+    }
+
+    // ── Stale subscription recovery ──────────────────────────────────────────
+    // "Registration failed – push service error" means the browser has an
+    // expired or mismatched push endpoint (e.g. left over from a previous SW
+    // version). Unsubscribe it, then retry once. This is safe here because
+    // requestNotificationPermission is called from a single place
+    // (NotificationProvider) so there is no concurrent caller to race with.
+    const stale = await swReg.pushManager.getSubscription();
+    if (stale) await stale.unsubscribe().catch(() => {});
 
     const token = await getToken(getMessagingInstance(), {
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: swRegistration,
+      serviceWorkerRegistration: swReg,
     });
 
     if (!token) return null;
 
-    const { API_FCM_REGISTER } = await import('../config/api.js');
-    await fetch(API_FCM_REGISTER, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Token ${authToken}`,
-      },
-      body: JSON.stringify({ token, device_type: 'web' }),
-    });
-
-    localStorage.setItem('FCMToken', token);
+    await registerTokenWithBackend(token, authToken);
     return token;
   } catch (err) {
     console.warn('[FCM] Registration failed:', err.message);
