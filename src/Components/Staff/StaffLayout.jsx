@@ -25,10 +25,12 @@ import Mycontribution from "./Mycontribution/Mycontributation";
 import Chat from "./Chat/Chat";
 import ChapterDetail from "../Shared/ChapterDetail";
 import { NotificationProvider } from "../Shared/NotificationProvider.jsx";
+import NotificationPromptModal from "../Shared/NotificationPromptModal.jsx";
 
 const StaffLayout = () => {
   return (
     <NotificationProvider>
+      <NotificationPromptModal />
       <div>
         {/* Staff Header */}
         <StaffHeader />

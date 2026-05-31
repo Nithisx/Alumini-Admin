@@ -8,12 +8,19 @@ import "./App.css";
 import Loader from "./Pages/Loder";
 
 export default function App() {
-  const [appLoading, setAppLoading] = useState(true);
+  const [appLoading, setAppLoading] = useState(() => {
+    const pathname = window.location.pathname;
+    const hasToken = !!localStorage.getItem("Token");
+    const isHomePage = pathname === "/" || pathname === "/home";
+    const isDashboardPage = pathname.includes("dashboard") || pathname === "/admin" || pathname === "/staff" || pathname === "/alumni";
+    return isHomePage || (isDashboardPage && !hasToken);
+  });
 
   useEffect(() => {
+    if (!appLoading) return;
     const timer = setTimeout(() => setAppLoading(false), 3000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [appLoading]);
 
   return (
     <ErrorBoundary>

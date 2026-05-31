@@ -29,9 +29,11 @@ import AuditPage from "./Audit/AuditPage";
 import ChapterDetail from "../Shared/ChapterDetail";
 import MemberImport from "./MemberImport/MemberImport";
 import { NotificationProvider } from "../Shared/NotificationProvider.jsx";
+import NotificationPromptModal from "../Shared/NotificationPromptModal.jsx";
 const AdminLayout = () => {
   return (
     <NotificationProvider>
+      <NotificationPromptModal />
       <div>
         {/* Admin Header */}
         <AdminHeader />

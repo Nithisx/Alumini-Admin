@@ -53,9 +53,9 @@ export default function FCMDiagnostics() {
         <button onClick={refresh} style={{ marginRight: 8 }}>Refresh</button>
         <button onClick={async () => {
           append('Requesting permission...');
-          const t = await requestNotificationPermission(localStorage.getItem('Token'));
+          const result = await requestNotificationPermission(localStorage.getItem('Token'));
           setToken(localStorage.getItem('FCMToken'));
-          append('requestNotificationPermission finished.');
+          append(`requestNotificationPermission finished: ${JSON.stringify(result)}`);
         }} style={{ marginRight: 8 }}>Request Permission / Register</button>
         <button onClick={async () => {
           append('Unregistering token...');

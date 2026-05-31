@@ -25,12 +25,14 @@ import BusinessView from "./Business/BusinessView";
 import Chat from "./Chat/Chat";
 import ChapterDetail from "../Shared/ChapterDetail";
 import { NotificationProvider } from "../Shared/NotificationProvider.jsx";
+import NotificationPromptModal from "../Shared/NotificationPromptModal.jsx";
 
 const AlumniLayout = () => {
   const location = useLocation();
   const isChat = location.pathname.includes("/chat");
   return (
     <NotificationProvider>
+      <NotificationPromptModal />
       <div>
         {/* Admin Header (Sidebar) */}
         <AdminHeader />

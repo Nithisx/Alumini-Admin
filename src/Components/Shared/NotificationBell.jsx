@@ -4,6 +4,8 @@
  * Shows an animated bell icon with an unread badge count.
  * Clicking opens a glassmorphism dropdown with scrollable notification list,
  * per-notification read-on-click, and a "Mark all read" button.
+ *
+ * If push notifications aren't enabled yet, shows a prompt to enable them.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -35,8 +37,166 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
+// ── Enable Notifications Banner ───────────────────────────────────────────────
+function EnableNotificationsBanner({ status, onEnable }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult]   = useState(null);
+
+  const handleEnable = async () => {
+    setLoading(true);
+    const res = await onEnable();
+    setResult(res);
+    setLoading(false);
+  };
+
+  // Already granted — don't show
+  if (status.permission === 'granted') return null;
+
+  // iOS not installed as PWA
+  if (status.isIOS && !status.isPWA) {
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+        borderBottom: '1px solid rgba(217,119,6,0.15)',
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22 }}>📲</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#92400e', marginBottom: 3 }}>
+            Enable Push Notifications
+          </div>
+          <div style={{ fontSize: 12, color: '#a16207', lineHeight: 1.4 }}>
+            To receive notifications on your iPhone/iPad, tap
+            <strong> Share </strong> → <strong> Add to Home Screen</strong>.
+            Then open the app from your home screen.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Permission denied — tell user to change in settings
+  if (status.permission === 'denied') {
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)',
+        borderBottom: '1px solid rgba(239,68,68,0.15)',
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22 }}>🚫</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#991b1b', marginBottom: 3 }}>
+            Notifications Blocked
+          </div>
+          <div style={{ fontSize: 12, color: '#b91c1c', lineHeight: 1.4 }}>
+            Notifications are blocked by your browser. Please update your browser or device settings to allow them.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Browser doesn't support notifications
+  if (!status.supported) {
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+        borderBottom: '1px solid rgba(0,0,0,0.08)',
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22 }}>⚠️</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#374151', marginBottom: 3 }}>
+            Not Supported
+          </div>
+          <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.4 }}>
+            Your browser does not support push notifications.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error result
+  if (result && !result.success) {
+    const messages = {
+      dismissed: 'You dismissed the notification prompt. Click below to try again.',
+      token_failed: 'Could not generate a notification token. Please try again.',
+      error: result.message || 'Something went wrong. Please try again.',
+    };
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+        borderBottom: '1px solid rgba(217,119,6,0.15)',
+        display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <span style={{ fontSize: 22 }}>⚠️</span>
+          <div style={{ fontSize: 12, color: '#a16207', lineHeight: 1.4 }}>
+            {messages[result.reason] || messages.error}
+          </div>
+        </div>
+        <button
+          onClick={handleEnable}
+          disabled={loading}
+          style={{
+            background: '#059669', color: '#fff', border: 'none', borderRadius: 8,
+            padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          {loading ? 'Enabling…' : 'Try Again'}
+        </button>
+      </div>
+    );
+  }
+
+  // Default: permission is 'default' — show enable button
+  return (
+    <div style={{
+      padding: '12px 16px',
+      background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)',
+      borderBottom: '1px solid rgba(5,150,105,0.12)',
+      display: 'flex', gap: 10, alignItems: 'center',
+    }}>
+      <span style={{ fontSize: 22 }}>🔔</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, color: '#065f46', marginBottom: 2 }}>
+          Stay Updated
+        </div>
+        <div style={{ fontSize: 12, color: '#047857', lineHeight: 1.3 }}>
+          Enable push notifications to never miss important updates.
+        </div>
+      </div>
+      <button
+        id="enable-notifications-btn"
+        onClick={handleEnable}
+        disabled={loading}
+        style={{
+          background: '#059669', color: '#fff', border: 'none', borderRadius: 8,
+          padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          whiteSpace: 'nowrap', flexShrink: 0,
+          opacity: loading ? 0.6 : 1,
+          transition: 'opacity 0.15s, transform 0.1s',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.03)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+      >
+        {loading ? 'Enabling…' : 'Enable'}
+      </button>
+    </div>
+  );
+}
+
 export default function NotificationBell() {
-  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+  const {
+    notifications, unreadCount, markRead, markAllRead,
+    notificationStatus, requestPermission,
+  } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref  = useRef(null);
   const navigate = useNavigate();
@@ -190,6 +350,12 @@ export default function NotificationBell() {
             )}
           </div>
 
+          {/* Enable Notifications Banner (shows only when permission isn't granted) */}
+          <EnableNotificationsBanner
+            status={notificationStatus}
+            onEnable={requestPermission}
+          />
+
           {/* Scrollable list */}
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {notifications.length === 0 ? (
@@ -329,7 +495,8 @@ export default function NotificationBell() {
         #notification-dropdown::-webkit-scrollbar-thumb {
           background: rgba(5,150,105,0.25); border-radius: 3px;
         }
-      `}</style>
+      `}
+      </style>
     </div>
   );
 }

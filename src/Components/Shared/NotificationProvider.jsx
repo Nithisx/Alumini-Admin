@@ -1,9 +1,11 @@
 /**
  * NotificationProvider — React context that:
- *  1. Requests FCM push notification permission on first load (after login)
- *  2. Listens for foreground FCM messages and shows an in-app toast
- *  3. Fetches the unread notification count from the backend periodically
- *  4. Exposes { notifications, unreadCount, fetchNotifications, markRead, markAllRead }
+ *  1. Silently registers FCM token if permission is already granted (on mount)
+ *  2. Exposes requestPermission() for UI-triggered permission prompts
+ *  3. Listens for foreground FCM messages and shows an in-app toast
+ *  4. Fetches the unread notification count from the backend periodically
+ *  5. Exposes { notifications, unreadCount, fetchNotifications, markRead, markAllRead,
+ *               notificationStatus, requestPermission }
  */
 
 import React, {
@@ -12,7 +14,9 @@ import React, {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
+  registerExistingPermission,
   requestNotificationPermission,
+  getNotificationStatus,
   onForegroundMessage,
 } from '../../lib/firebase.js';
 import {
@@ -42,10 +46,16 @@ export function NotificationProvider({ children }) {
   const [notifications, setNotifications]     = useState([]);
   const [unreadCount,   setUnreadCount]        = useState(0);
   const [loading,       setLoading]            = useState(false);
+  const [notifStatus,   setNotifStatus]        = useState(() => getNotificationStatus());
   const pollingRef = useRef(null);
   const navigate   = useNavigate();
 
   const authToken = localStorage.getItem('Token');
+
+  // ── Refresh the notification status (e.g. after user grants permission) ────
+  const refreshStatus = useCallback(() => {
+    setNotifStatus(getNotificationStatus());
+  }, []);
 
   // ── Fetch notifications from backend ──────────────────────────────────────
   const fetchNotifications = useCallback(async () => {
@@ -96,20 +106,30 @@ export function NotificationProvider({ children }) {
     }
   }, [authToken]);
 
-  // ── Register FCM token + listen for foreground messages ───────────────────
+  // ── Request permission (must be triggered by user interaction) ────────────
+  const requestPermission = useCallback(async () => {
+    if (!authToken) return { success: false, reason: 'no_auth' };
+    const result = await requestNotificationPermission(authToken);
+    refreshStatus();
+    return result;
+  }, [authToken, refreshStatus]);
+
+  // ── Silent FCM registration + foreground listener (on mount) ──────────────
   useEffect(() => {
     if (!authToken) return;
 
-    // Register FCM token (asks permission on first call)
-    requestNotificationPermission(authToken).catch(() => {});
+    // Silently register token if permission is already granted
+    // (no prompt — safe to call on page load)
+    registerExistingPermission(authToken)
+      .then(() => refreshStatus())
+      .catch(() => {});
 
     // Listen for messages arriving while the tab is active
     const unsubscribe = onForegroundMessage((payload) => {
-      const notification = payload.notification || {};
-      const data         = payload.data         || {};
-      const title = notification.title || data.title || 'New Notification';
-      const body  = notification.body  || data.body  || '';
-      const type  = data.type || 'general';
+      const data  = payload.data || {};
+      const title = data.title || 'New Notification';
+      const body  = data.body  || '';
+      const type  = data.type  || 'general';
 
       // Show a styled toast
       toast.info(
@@ -142,7 +162,7 @@ export function NotificationProvider({ children }) {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [authToken, fetchNotifications]);
+  }, [authToken, fetchNotifications, refreshStatus]);
 
   // ── Initial fetch + polling ───────────────────────────────────────────────
   useEffect(() => {
@@ -162,6 +182,8 @@ export function NotificationProvider({ children }) {
         fetchNotifications,
         markRead,
         markAllRead,
+        notificationStatus: notifStatus,
+        requestPermission,
       }}
     >
       {children}

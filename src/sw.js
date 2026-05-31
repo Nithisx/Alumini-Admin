@@ -20,15 +20,14 @@ const messaging = getMessaging(initializeApp({
 }));
 
 onBackgroundMessage(messaging, (payload) => {
-  const notification = payload.notification || {};
-  const data         = payload.data         || {};
+  const data = payload.data || {};
   self.registration.showNotification(
-    notification.title || data.title || 'Karpagam Alumni',
+    data.title || 'Karpagam Alumni',
     {
-      body:               notification.body || data.body || 'You have a new notification.',
+      body:               data.body || 'You have a new notification.',
       icon:               '/pwa-192x192-v2.png',
-      badge:              '/pwa-192x192-v2.png',
-      image:              notification.image || data.image || undefined,
+      badge:              '/notification-badge.png',
+      image:              data.image || undefined,
       tag:                data.type || 'general',
       renotify:           true,
       requireInteraction: false,
