@@ -69,11 +69,54 @@ export async function requestNotificationPermission(authToken) {
     const existing = await swReg.pushManager.getSubscription();
     if (existing) await existing.unsubscribe();
 
-    const fcmToken = await getToken(getMessagingInstance(), {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: swReg,
-    });
+    // Try to obtain an FCM token. If the browser has a stale or conflicting
+    // service worker (e.g. an old firebase-messaging-sw.js) some browsers
+    // throw an AbortError: "Registration failed - push service error".
+    // In that case attempt a one-time cleanup of registrations and retry.
+    let fcmToken = null;
+    try {
+      fcmToken = await getToken(getMessagingInstance(), {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: swReg,
+      });
+    } catch (innerErr) {
+      // If this is a push service registration failure, try to remove
+      // conflicting registrations and retry once.
+      const isPushRegistrationError =
+        innerErr && (innerErr.name === 'AbortError' || /push service error/i.test(String(innerErr)));
 
+      if (isPushRegistrationError && 'serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        console.warn('[FCM] Push registration failed, attempting to clean up old service workers and retry.', innerErr);
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const r of regs) {
+            // Unregister standalone firebase-messaging-sw if present to avoid conflicts
+            try {
+              const url = r.active?.scriptURL || '';
+              if (url.includes('firebase-messaging-sw.js') || url.includes('/firebase-messaging-sw.js')) {
+                await r.unregister();
+                console.info('[FCM] Unregistered conflicting service worker:', url);
+              }
+            } catch (uErr) {
+              // ignore per-registration errors
+            }
+          }
+
+          // Wait for the VitePWA-managed SW to become ready and then retry
+          const swReady = await navigator.serviceWorker.ready;
+          fcmToken = await getToken(getMessagingInstance(), {
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: swReady,
+          });
+        } catch (retryErr) {
+          console.error('[FCM] Retry after cleanup failed:', retryErr);
+        }
+      } else {
+        throw innerErr;
+      }
+    }
+
+    // Ensure we have a token from either the initial attempt or the retry
     if (!fcmToken) {
       console.warn('[FCM] No registration token returned.');
       return null;
