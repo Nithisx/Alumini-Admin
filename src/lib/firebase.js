@@ -1,83 +1,55 @@
 /**
  * Firebase Cloud Messaging — frontend SDK setup.
- * Handles permission requests, token retrieval, and foreground message listening.
  *
- * Firebase project: alumni-kahe  (project_id from service account)
+ * Background push handling lives in src/sw.js (bundled by VitePWA).
+ * This file handles: permission requests, FCM token retrieval, and
+ * foreground message listening inside the React app.
  */
 
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
-// ── Firebase project config (alumni-kahe) ────────────────────────────────────
-// These values come from Firebase Console → Project Settings → Your apps → Web app.
-// They are safe to expose in client-side code — all security is enforced by
-// Firebase Security Rules and the backend (FCM Server Key never leaves the backend).
 const firebaseConfig = {
-  apiKey:            "AIzaSyBGeM47wLernND70Mr1VRQ0VsJM913AfZE",
-  authDomain:        "alumni-kahe.firebaseapp.com",
-  projectId:         "alumni-kahe",
-  storageBucket:     "alumni-kahe.firebasestorage.app",
-  messagingSenderId: "1093673972115",
-  appId:             "1:1093673972115:web:720dad3aea9dea90de3866",
-  measurementId:     "G-GRFZ9ZQZCC",
+  apiKey:            'AIzaSyBGeM47wLernND70Mr1VRQ0VsJM913AfZE',
+  authDomain:        'alumni-kahe.firebaseapp.com',
+  projectId:         'alumni-kahe',
+  storageBucket:     'alumni-kahe.firebasestorage.app',
+  messagingSenderId: '1093673972115',
+  appId:             '1:1093673972115:web:720dad3aea9dea90de3866',
+  measurementId:     'G-GRFZ9ZQZCC',
 };
 
 // VAPID key — Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
-const VAPID_KEY = "BIj5TfQsfPj-wCOlqzlu5kTFeeZl-Q_oMZyTJJn8XPoIcjCYtSKxxfE8NQRTV24hqPn_PDjK32uS9eVTfABrkEY";
+const VAPID_KEY = 'BIj5TfQsfPj-wCOlqzlu5kTFeeZl-Q_oMZyTJJn8XPoIcjCYtSKxxfE8NQRTV24hqPn_PDjK32uS9eVTfABrkEY';
 
-// ── Initialise Firebase ───────────────────────────────────────────────────────
 let app = null;
 let messaging = null;
 
 function getFirebaseApp() {
-  if (!app) {
-    app = initializeApp(firebaseConfig);
-  }
+  if (!app) app = initializeApp(firebaseConfig);
   return app;
 }
 
 function getMessagingInstance() {
-  if (!messaging) {
-    messaging = getMessaging(getFirebaseApp());
-  }
+  if (!messaging) messaging = getMessaging(getFirebaseApp());
   return messaging;
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function _waitForSWActive(registration) {
-  if (registration.active) return Promise.resolve();
-  return new Promise((resolve) => {
-    const sw = registration.installing || registration.waiting;
-    if (!sw) { resolve(); return; }
-    sw.addEventListener('statechange', function onState() {
-      if (this.state === 'activated') {
-        sw.removeEventListener('statechange', onState);
-        resolve();
-      }
-    });
-  });
-}
-
-// ── Request permission & register token ──────────────────────────────────────
 
 /**
  * Ask the browser for notification permission and, if granted, obtain the
  * FCM registration token and POST it to the backend.
  *
- * @param {string} authToken   - The alumni portal auth token (for the API call)
- * @returns {Promise<string|null>}  The FCM token, or null on failure/denial
+ * Uses navigator.serviceWorker.ready so FCM shares the single VitePWA-managed
+ * SW (src/sw.js) — no separate firebase-messaging-sw.js registration needed.
  */
 export async function requestNotificationPermission(authToken) {
   if (!authToken) return null;
 
-  // Safari and some browsers don't support the Notifications API
-  if (!('Notification' in window)) {
-    console.warn('[FCM] This browser does not support notifications.');
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    console.warn('[FCM] Push notifications not supported in this browser.');
     return null;
   }
 
-  // Don't re-ask if already denied
   if (Notification.permission === 'denied') return null;
 
   try {
@@ -87,16 +59,15 @@ export async function requestNotificationPermission(authToken) {
       return null;
     }
 
-    // Register the Firebase messaging SW and wait for it to become active.
-    // VitePWA's sw.js may already hold scope /, so firebase-messaging-sw.js
-    // starts in "waiting" — skipWaiting() in that file activates it immediately,
-    // but we still need to wait here before calling pushManager.subscribe().
-    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    await _waitForSWActive(swReg);
+    // navigator.serviceWorker.ready resolves once VitePWA's sw.js is active.
+    // No need to register a second SW — the combined sw.js already includes
+    // the Firebase onBackgroundMessage handler.
+    const swReg = await navigator.serviceWorker.ready;
 
-    // Unsubscribe any stale push subscription that may use a different VAPID key.
-    const existingSub = await swReg.pushManager.getSubscription();
-    if (existingSub) await existingSub.unsubscribe();
+    // Clear any stale push subscription (e.g. from a different VAPID key)
+    // before asking FCM for a fresh token.
+    const existing = await swReg.pushManager.getSubscription();
+    if (existing) await existing.unsubscribe();
 
     const fcmToken = await getToken(getMessagingInstance(), {
       vapidKey: VAPID_KEY,
@@ -104,11 +75,10 @@ export async function requestNotificationPermission(authToken) {
     });
 
     if (!fcmToken) {
-      console.warn('[FCM] No registration token available.');
+      console.warn('[FCM] No registration token returned.');
       return null;
     }
 
-    // POST the token to the backend
     const { API_FCM_REGISTER } = await import('../config/api.js');
     await fetch(API_FCM_REGISTER, {
       method: 'POST',
@@ -130,8 +100,6 @@ export async function requestNotificationPermission(authToken) {
 
 /**
  * Deactivate the stored FCM token on logout so the backend stops sending pushes.
- *
- * @param {string} authToken - The alumni portal auth token (for the API call)
  */
 export async function unregisterNotificationToken(authToken) {
   const fcmToken = localStorage.getItem('FCMToken');
@@ -148,15 +116,13 @@ export async function unregisterNotificationToken(authToken) {
     });
     localStorage.removeItem('FCMToken');
   } catch {
-    // Swallow — the backend will eventually deactivate the stale token
+    // Swallow — the backend will eventually deactivate the stale token.
   }
 }
 
 /**
- * Listen for messages received while the app is in the foreground.
- *
- * @param {Function} callback  - Called with the FCM message payload
- * @returns {Function}         - Unsubscribe function
+ * Listen for messages received while the app tab is active (foreground).
+ * Returns the Firebase unsubscribe function.
  */
 export function onForegroundMessage(callback) {
   try {
