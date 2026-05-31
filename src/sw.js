@@ -1,7 +1,7 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { initializeApp } from 'firebase/app';
+import { getMessaging, onBackgroundMessage } from 'firebase/messaging/sw';
 
-// Activate immediately and take control of all clients so PWA caching
-// kicks in on first load without requiring a page reload.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
@@ -9,3 +9,52 @@ self.addEventListener('activate', (event) => {
 
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
+
+const messaging = getMessaging(initializeApp({
+  apiKey:            'AIzaSyBGeM47wLernND70Mr1VRQ0VsJM913AfZE',
+  authDomain:        'alumni-kahe.firebaseapp.com',
+  projectId:         'alumni-kahe',
+  storageBucket:     'alumni-kahe.firebasestorage.app',
+  messagingSenderId: '1093673972115',
+  appId:             '1:1093673972115:web:720dad3aea9dea90de3866',
+}));
+
+onBackgroundMessage(messaging, (payload) => {
+  const notification = payload.notification || {};
+  const data         = payload.data         || {};
+  self.registration.showNotification(
+    notification.title || data.title || 'Karpagam Alumni',
+    {
+      body:               notification.body || data.body || 'You have a new notification.',
+      icon:               '/pwa-192x192-v2.png',
+      badge:              '/pwa-192x192-v2.png',
+      image:              notification.image || data.image || undefined,
+      tag:                data.type || 'general',
+      renotify:           true,
+      requireInteraction: false,
+      data:               { click_url: data.click_url || '/' },
+      actions: [
+        { action: 'open',    title: 'View'    },
+        { action: 'dismiss', title: 'Dismiss' },
+      ],
+    }
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'dismiss') return;
+  const url = event.notification.data?.click_url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.navigate(url);
+          return;
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
+});
