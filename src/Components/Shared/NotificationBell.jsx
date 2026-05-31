@@ -7,18 +7,20 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNotifications } from './NotificationProvider.jsx';
 
 // ── Type metadata ─────────────────────────────────────────────────────────────
 const TYPE_META = {
-  event:    { icon: '📅', label: 'Event',    color: '#7c3aed', bg: '#ede9fe' },
-  job:      { icon: '💼', label: 'Job',      color: '#0369a1', bg: '#e0f2fe' },
-  news:     { icon: '📰', label: 'News',     color: '#b45309', bg: '#fef3c7' },
-  business: { icon: '🏢', label: 'Business', color: '#047857', bg: '#d1fae5' },
-  birthday: { icon: '🎂', label: 'Birthday', color: '#be185d', bg: '#fce7f3' },
-  comment:  { icon: '💬', label: 'Comment',  color: '#0891b2', bg: '#cffafe' },
-  chat:     { icon: '💬', label: 'Chat',     color: '#0891b2', bg: '#cffafe' },
-  general:  { icon: '🔔', label: 'Alert',    color: '#4f46e5', bg: '#e0e7ff' },
+  event:                { icon: '📅', label: 'Event',           color: '#7c3aed', bg: '#ede9fe' },
+  job:                  { icon: '💼', label: 'Job',             color: '#0369a1', bg: '#e0f2fe' },
+  news:                 { icon: '📰', label: 'News',            color: '#b45309', bg: '#fef3c7' },
+  business:             { icon: '🏢', label: 'Business',        color: '#047857', bg: '#d1fae5' },
+  birthday:             { icon: '🎂', label: 'Birthday',        color: '#be185d', bg: '#fce7f3' },
+  comment:              { icon: '💬', label: 'Comment',         color: '#0891b2', bg: '#cffafe' },
+  chat:                 { icon: '💬', label: 'Chat',            color: '#0891b2', bg: '#cffafe' },
+  registration_request: { icon: '👤', label: 'Registration',   color: '#d97706', bg: '#fef3c7' },
+  general:              { icon: '🔔', label: 'Alert',           color: '#4f46e5', bg: '#e0e7ff' },
 };
 
 function timeAgo(dateStr) {
@@ -37,6 +39,7 @@ export default function NotificationBell() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref  = useRef(null);
+  const navigate = useNavigate();
 
   // Close on outside click
   useEffect(() => {
@@ -50,7 +53,14 @@ export default function NotificationBell() {
   const handleItemClick = (notif) => {
     if (!notif.is_read) markRead(notif.id);
     const url = notif.data?.click_url;
-    if (url) window.location.href = url;
+    if (url) {
+      // Use React Router for same-origin paths (SPA navigation, no full reload)
+      if (url.startsWith('/')) {
+        navigate(url);
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    }
     setOpen(false);
   };
 

@@ -18,6 +18,7 @@ import {
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../assets/KAHEAA.svg";
+import NotificationBell from "../Shared/NotificationBell.jsx";
 
 export default function StaffHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
@@ -82,6 +83,9 @@ export default function StaffHeader() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Notification Bell */}
+            <NotificationBell />
+
             <button
               onClick={handleLogout}
               title="Logout"

@@ -9,6 +9,7 @@
 import React, {
   createContext, useContext, useState, useEffect, useCallback, useRef,
 } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
   requestNotificationPermission,
@@ -26,14 +27,15 @@ const POLL_INTERVAL_MS = 30_000; // poll every 30 s
 
 // Notification type → icon map (for toast display)
 const TYPE_ICONS = {
-  event:    '📅',
-  job:      '💼',
-  news:     '📰',
-  business: '🏢',
-  birthday: '🎂',
-  comment:  '💬',
-  chat:     '💬',
-  general:  '🔔',
+  event:                '📅',
+  job:                  '💼',
+  news:                 '📰',
+  business:             '🏢',
+  birthday:             '🎂',
+  comment:              '💬',
+  chat:                 '💬',
+  registration_request: '👤',
+  general:              '🔔',
 };
 
 export function NotificationProvider({ children }) {
@@ -41,6 +43,7 @@ export function NotificationProvider({ children }) {
   const [unreadCount,   setUnreadCount]        = useState(0);
   const [loading,       setLoading]            = useState(false);
   const pollingRef = useRef(null);
+  const navigate   = useNavigate();
 
   const authToken = localStorage.getItem('Token');
 
@@ -121,7 +124,13 @@ export function NotificationProvider({ children }) {
           position: 'top-right',
           autoClose: 5000,
           onClick: () => {
-            if (data.click_url) window.location.href = data.click_url;
+            if (data.click_url) {
+              if (data.click_url.startsWith('/')) {
+                navigate(data.click_url);
+              } else {
+                window.open(data.click_url, '_blank', 'noopener,noreferrer');
+              }
+            }
           },
         }
       );

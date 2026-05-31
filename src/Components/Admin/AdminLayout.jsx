@@ -28,46 +28,49 @@ import Chart from "./Chat/Chat"
 import AuditPage from "./Audit/AuditPage";
 import ChapterDetail from "../Shared/ChapterDetail";
 import MemberImport from "./MemberImport/MemberImport";
+import { NotificationProvider } from "../Shared/NotificationProvider.jsx";
 const AdminLayout = () => {
   return (
-    <div>
-      {/* Admin Header */}
-      <AdminHeader />
+    <NotificationProvider>
+      <div>
+        {/* Admin Header */}
+        <AdminHeader />
 
-      {/* Main Content */}
-      <main className="role-content w-full min-w-0 p-0 pb-14 lg:pb-0">
-        <Routes>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="register-request" element={<RegisterRequestPage />} />
-          <Route path="event" element={<AddEvent />} />
-          <Route path="albums" element={<AlbumsPage />} />
-          <Route path="albums/:albumId" element={<AlbumDetailPage />} />
-          <Route path="students" element={<StudentImageUpload />} />
-          <Route path="map" element={<Map />} />
-          <Route path="news" element={<NewsRoom />} />
-          <Route path="news/:id" element={<SingleNews />} />
-          <Route path="members" element={<Members />} />
-          <Route path="members/:name" element={<SingleMember />} />
-          <Route path="jobs" element={<Addpost />} />
-          <Route path="birthday" element={<Birthday />} />
-          <Route path="event/:id" element={<Singleevents />} />
-          <Route path="event/:id/edit" element={<EditEvent />} />
-          <Route path="business" element={<BusinessDirectory />} />
-          <Route path="business/add" element={<BusinessDetail />} />
-          <Route path="business/edit/:id" element={<BusinessDetail />} />
-          <Route path="business/:id" element={<BusinessDetail />} />
-          <Route path="business/view/:id" element={<BusinessView />} />
-          <Route path="my-profile" element={<Myprofile />} />
-          <Route path="my-contribution" element={<Mycontribution />} />
-          <Route path="sendmail" element={<SendMail />} />
-          <Route path="chat" element={<Chart />} />
-          <Route path="audit" element={<AuditPage />} />
-          <Route path="chapters/:type/:value" element={<ChapterDetail />} />
-          <Route path="import-members" element={<MemberImport />} />
-          {/* Add more admin routes if needed */}
-        </Routes>
-      </main>
-    </div>
+        {/* Main Content */}
+        <main className="role-content w-full min-w-0 p-0 pb-14 lg:pb-0">
+          <Routes>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="register-request" element={<RegisterRequestPage />} />
+            <Route path="event" element={<AddEvent />} />
+            <Route path="albums" element={<AlbumsPage />} />
+            <Route path="albums/:albumId" element={<AlbumDetailPage />} />
+            <Route path="students" element={<StudentImageUpload />} />
+            <Route path="map" element={<Map />} />
+            <Route path="news" element={<NewsRoom />} />
+            <Route path="news/:id" element={<SingleNews />} />
+            <Route path="members" element={<Members />} />
+            <Route path="members/:name" element={<SingleMember />} />
+            <Route path="jobs" element={<Addpost />} />
+            <Route path="birthday" element={<Birthday />} />
+            <Route path="event/:id" element={<Singleevents />} />
+            <Route path="event/:id/edit" element={<EditEvent />} />
+            <Route path="business" element={<BusinessDirectory />} />
+            <Route path="business/add" element={<BusinessDetail />} />
+            <Route path="business/edit/:id" element={<BusinessDetail />} />
+            <Route path="business/:id" element={<BusinessDetail />} />
+            <Route path="business/view/:id" element={<BusinessView />} />
+            <Route path="my-profile" element={<Myprofile />} />
+            <Route path="my-contribution" element={<Mycontribution />} />
+            <Route path="sendmail" element={<SendMail />} />
+            <Route path="chat" element={<Chart />} />
+            <Route path="audit" element={<AuditPage />} />
+            <Route path="chapters/:type/:value" element={<ChapterDetail />} />
+            <Route path="import-members" element={<MemberImport />} />
+            {/* Add more admin routes if needed */}
+          </Routes>
+        </main>
+      </div>
+    </NotificationProvider>
   );
 };
 
