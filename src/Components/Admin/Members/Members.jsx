@@ -1583,6 +1583,16 @@ export default function MembersPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {members.map((member) => {
               const isSelected = selectedMembers.has(member.id);
+              const ucs = Array.isArray(member.user_courses) ? member.user_courses : [];
+              const primaryUc = ucs.find(c => c.is_primary) || ucs[0] || null;
+              // For filter highlights, check all enrollments so secondary courses surface correctly
+              const matchedCourseUc = courseFilter.length ? ucs.find(c => valueMatchesAny(c.course, courseFilter)) : null;
+              const matchedBranchUc = branchFilter.length ? ucs.find(c => valueMatchesAny(c.branch, branchFilter)) : null;
+              const matchedCollegeUc = collegeNameFilter.length ? ucs.find(c => valueMatchesAny(c.college_name, collegeNameFilter)) : null;
+              const matchedPassedOutUc = passedOutYearFilter.length ? ucs.find(c => valueMatchesAny(c.passed_out_year, passedOutYearFilter)) : null;
+              const matchedRollNoUc = rollNoFilter.length ? ucs.find(c => valueMatchesAny(c.roll_no, rollNoFilter)) : null;
+              // Display course: prefer the one matching the active filter, fall back to primary
+              const displayUc = matchedCourseUc || matchedBranchUc || primaryUc;
               return (
                 <div
                   key={member.id}
@@ -1636,22 +1646,22 @@ export default function MembersPage() {
                         <HighlightMatch text={member.current_work} query={(currentWorkFilter && currentWorkFilter[0]) || (companyFilter && companyFilter[0]) || ""} />
                       </p>
                     )}
-                    {/* Academic info — always show, highlight when actively filtered */}
-                    {member.course && (
-                      <p className={`text-xs truncate mt-0.5 font-medium ${valueMatchesAny(member.course, courseFilter) ? "text-purple-700" : "text-gray-500"}`}>
-                        <HighlightMatch text={member.course} query={(courseFilter && courseFilter[0]) || ""} />
+                    {/* Academic info — sourced from user_courses (all enrollments) */}
+                    {displayUc?.course && (
+                      <p className={`text-xs truncate mt-0.5 font-medium ${matchedCourseUc ? "text-purple-700" : "text-gray-500"}`}>
+                        <HighlightMatch text={displayUc.course} query={(courseFilter && courseFilter[0]) || ""} />
                       </p>
                     )}
-                    {member.branch && (
-                      <p className={`text-xs truncate mt-0.5 ${valueMatchesAny(member.branch, branchFilter) ? "text-purple-700 font-medium" : "text-gray-400"}`}>
-                        <HighlightMatch text={member.branch} query={(branchFilter && branchFilter[0]) || ""} />
+                    {displayUc?.branch && (
+                      <p className={`text-xs truncate mt-0.5 ${matchedBranchUc ? "text-purple-700 font-medium" : "text-gray-400"}`}>
+                        <HighlightMatch text={displayUc.branch} query={(branchFilter && branchFilter[0]) || ""} />
                       </p>
                     )}
-                    {member.college_name && valueMatchesAny(member.college_name, collegeNameFilter) && (
-                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Faculty: <HighlightMatch text={member.college_name} query={(collegeNameFilter && collegeNameFilter[0]) || ""} /></p>
+                    {matchedCollegeUc && (
+                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Faculty: <HighlightMatch text={matchedCollegeUc.college_name} query={(collegeNameFilter && collegeNameFilter[0]) || ""} /></p>
                     )}
-                    {member.passed_out_year && valueMatchesAny(member.passed_out_year, passedOutYearFilter) && (
-                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Passed Out: {member.passed_out_year}</p>
+                    {matchedPassedOutUc && (
+                      <p className="text-xs truncate mt-0.5 text-purple-700 font-medium">Passed Out: {matchedPassedOutUc.passed_out_year}</p>
                     )}
                     {member.state && valueMatchesAny(member.state, stateFilter) && (
                       <p className="text-xs truncate mt-0.5 text-gray-500">State: <HighlightMatch text={member.state} query={(stateFilter && stateFilter[0]) || ""} /></p>
@@ -1664,8 +1674,8 @@ export default function MembersPage() {
                         <HighlightMatch text={member.email} query={(emailFilter && emailFilter[0]) || ""} />
                       </p>
                     )}
-                    {member.roll_no && valueMatchesAny(member.roll_no, rollNoFilter) && (
-                      <p className="text-xs truncate mt-0.5 text-gray-500">Roll: <HighlightMatch text={member.roll_no} query={(rollNoFilter && rollNoFilter[0]) || ""} /></p>
+                    {matchedRollNoUc && (
+                      <p className="text-xs truncate mt-0.5 text-gray-500">Roll: <HighlightMatch text={matchedRollNoUc.roll_no} query={(rollNoFilter && rollNoFilter[0]) || ""} /></p>
                     )}
                   </div>
                 </div>

@@ -463,15 +463,8 @@ const ProfileScreen = () => {
       formData.append("correspondence_country", profile.correspondence_country || "")
       formData.append("correspondence_pincode", profile.correspondence_pincode || "")
 
-      // Academic
-      formData.append("course", profile.course || "")
-      formData.append("branch", profile.branch || "")
-      formData.append("stream", profile.stream || "")
-      formData.append("roll_no", profile.roll_no || "")
-      formData.append("college_name", profile.college_name || "")
-      formData.append("course_start_year", profile.course_start_year || "")
-      formData.append("course_end_year", profile.course_end_year || "")
-      formData.append("passed_out_year", profile.passed_out_year || "")
+      // Academic flat fields are intentionally omitted here —
+      // course data is managed exclusively via the UserCourse API (Enrolled Courses section)
       formData.append("educational_course", profile.educational_course || "")
       formData.append("educational_institute", profile.educational_institute || "")
 
@@ -769,34 +762,27 @@ const ProfileScreen = () => {
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {(profile.course || profile.college_name || profile.passed_out_year) && (
-                    <div className="bg-green-50 rounded-lg px-3 py-2 relative group">
-                      <p className="text-sm text-green-900 font-medium break-words">
-                        {[profile.course, profile.branch].filter(Boolean).join(" — ")}
-                        <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>
-                      </p>
-                      {profile.college_name && <p className="text-xs text-green-600 mt-0.5">{profile.college_name}</p>}
-                      {profile.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {profile.passed_out_year}</p>}
-                    </div>
-                  )}
                   {courses.map((c) => (
                     <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group">
-                      <button
-                        onClick={() => handleDeleteCourse(c.id)}
-                        disabled={deletingCourseId === c.id}
-                        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
-                        title="Remove enrollment"
-                      >
-                        {deletingCourseId === c.id ? <Loader className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                      </button>
+                      {!c.is_primary && (
+                        <button
+                          onClick={() => handleDeleteCourse(c.id)}
+                          disabled={deletingCourseId === c.id}
+                          className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
+                          title="Remove enrollment"
+                        >
+                          {deletingCourseId === c.id ? <Loader className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                        </button>
+                      )}
                       <p className="text-sm text-green-900 font-medium break-words pr-5">
                         {[c.course, c.branch].filter(Boolean).join(" — ")}
+                        {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
                       </p>
                       {c.college_name && <p className="text-xs text-green-600 mt-0.5">{c.college_name}</p>}
                       {c.passed_out_year && <p className="text-xs text-green-500 mt-0.5">Passed out: {c.passed_out_year}</p>}
                     </div>
                   ))}
-                  {!profile.course && !profile.college_name && !profile.passed_out_year && courses.length === 0 && (
+                  {courses.length === 0 && (
                     <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
                   )}
                 </div>
@@ -869,7 +855,7 @@ const ProfileScreen = () => {
             )}
 
             {!profile.current_work && !profile.company && !profile.position && !profile.work_experience &&
-             courses.length === 0 && !profile.course && !profile.branch && !profile.passed_out_year && !profile.faculty_job_title &&
+             courses.length === 0 && !profile.faculty_job_title &&
              !(Array.isArray(profile.professional_skills) && profile.professional_skills.length > 0) && (
               <div className="flex flex-col items-center justify-center h-32 sm:h-40">
                 <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-green-300 mb-2" />
@@ -1178,39 +1164,30 @@ const ProfileScreen = () => {
                 </button>
               </div>
               <div className="space-y-2">
-                {(profile.course || profile.college_name || profile.passed_out_year) && (
-                  <div className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                    <div>
-                      <p className="text-sm text-green-900 font-medium">
-                        {[profile.course, profile.branch].filter(Boolean).join(" — ")}
-                        <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>
-                      </p>
-                      {profile.college_name && <p className="text-xs text-green-600">{profile.college_name}</p>}
-                      {profile.passed_out_year && <p className="text-xs text-green-500">Passed out: {profile.passed_out_year}</p>}
-                    </div>
-                  </div>
-                )}
                 {courses.map((c) => (
                   <div key={c.id} className="flex items-start justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                     <div>
                       <p className="text-sm text-green-900 font-medium">
                         {[c.course, c.branch].filter(Boolean).join(" — ")}
+                        {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
                       </p>
                       {c.college_name && <p className="text-xs text-green-600">{c.college_name}</p>}
                       {c.passed_out_year && <p className="text-xs text-green-500">Passed out: {c.passed_out_year}</p>}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteCourse(c.id)}
-                      disabled={deletingCourseId === c.id}
-                      className="text-red-400 hover:text-red-600 ml-2 flex-shrink-0"
-                      title="Remove"
-                    >
-                      {deletingCourseId === c.id ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                    </button>
+                    {!c.is_primary && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCourse(c.id)}
+                        disabled={deletingCourseId === c.id}
+                        className="text-red-400 hover:text-red-600 ml-2 flex-shrink-0"
+                        title="Remove"
+                      >
+                        {deletingCourseId === c.id ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      </button>
+                    )}
                   </div>
                 ))}
-                {!profile.course && !profile.college_name && !profile.passed_out_year && courses.length === 0 && (
+                {courses.length === 0 && (
                   <p className="text-xs text-green-500 italic">No courses enrolled yet</p>
                 )}
               </div>

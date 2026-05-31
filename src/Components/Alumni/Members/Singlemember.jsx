@@ -42,6 +42,11 @@ const TagList = ({ items, colorClass }) =>
     <span className="text-gray-400 italic">Not provided</span>
   );
 
+const getPrimaryCourse = (user) => {
+  const courses = Array.isArray(user?.user_courses) ? user.user_courses : [];
+  return courses.find((course) => course?.is_primary) || courses[0] || null;
+};
+
 /* ─── SVG icons ──────────────────────────────────────────────────────────── */
 const Icons = {
   person: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>,
@@ -140,14 +145,15 @@ export default function SingleMember() {
   const {
     username, first_name, last_name, salutation, gender, date_of_birth,
     email, secondary_email, phone, cover_photo, current_location,
-    home_town, city, state, country, course, branch, start_year,
-    end_year, college_name, chapter, role, bio, current_work, worked_in,
-    passed_out_year, roll_no, social_links = {}, is_active = true,
+    home_town, city, state, country, chapter, role, bio, current_work, worked_in,
+    social_links = {}, is_active = true,
     company, position, work_experience,
     professional_skills = [], industries_worked_in = [], roles_played = [],
   } = member;
 
   const displayName = [salutation, first_name, last_name].filter(Boolean).join(" ");
+  const primaryCourse = getPrimaryCourse(member);
+  const userCourses = Array.isArray(member?.user_courses) ? member.user_courses : [];
 
   /* ── tab content renderer ── */
   const renderTabContent = () => {
@@ -196,26 +202,28 @@ export default function SingleMember() {
       case "Professional Summary":
         return (
           <div>
-            <FieldRow icon={Icons.education} label="College">
-              <span>{college_name || "—"}</span>
-            </FieldRow>
-
-            <FieldRow icon={Icons.education} label="Course & Branch">
-              <span>{[course, branch].filter(Boolean).join(", ") || "—"}</span>
-            </FieldRow>
-
-            {(start_year || end_year) && (
-              <FieldRow icon={Icons.calendar} label="Study Duration">
-                <span>{[start_year, end_year].filter(Boolean).join(" – ") || "—"}</span>
-              </FieldRow>
-            )}
-
-            <FieldRow icon={Icons.calendar} label="Passed Out Year">
-              <span>{passed_out_year || "—"}</span>
-            </FieldRow>
-
-            <FieldRow icon={Icons.tag} label="Roll No">
-              <span>{roll_no || "—"}</span>
+            <FieldRow icon={Icons.education} label="Education">
+              <div className="space-y-2">
+                {userCourses.map((c) => (
+                  <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 border border-green-100">
+                    <p className="text-sm text-gray-800 font-medium">
+                      {[c.course, c.branch].filter(Boolean).join(" — ") || "—"}
+                      {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                    </p>
+                    {c.college_name && <p className="text-xs text-gray-500 mt-0.5">{c.college_name}</p>}
+                    {(c.course_start_year || c.course_end_year) && (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Study duration: {[c.course_start_year, c.course_end_year].filter(Boolean).join(" – ")}
+                      </p>
+                    )}
+                    {c.passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {c.passed_out_year}</p>}
+                    {c.roll_no && <p className="text-xs text-gray-400 mt-0.5">Roll no: {c.roll_no}</p>}
+                  </div>
+                ))}
+                {userCourses.length === 0 && (
+                  <p className="text-xs text-gray-400 italic">No course enrollments yet</p>
+                )}
+              </div>
             </FieldRow>
 
             <FieldRow icon={Icons.building} label="Company">

@@ -75,6 +75,11 @@ const TagList = ({ items, colorClass }) =>
     <span className="text-gray-400 italic">Not provided</span>
   );
 
+const getPrimaryCourse = (user) => {
+  const courses = Array.isArray(user?.user_courses) ? user.user_courses : [];
+  return courses.find((course) => course?.is_primary) || courses[0] || null;
+};
+
 /* ─── SVG icons ──────────────────────────────────────────────────────────── */
 const Icons = {
   person: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>,
@@ -228,8 +233,9 @@ export default function SingleMember() {
     setIsEditing(true);
     setEditedMember({ ...member });
     setChangedFields(new Set());
-    if (member.course && COURSE_BRANCH_MAPPING[member.course]) {
-      setAvailableBranches(COURSE_BRANCH_MAPPING[member.course]);
+    const primaryCourse = getPrimaryCourse(member);
+    if (primaryCourse?.course && COURSE_BRANCH_MAPPING[primaryCourse.course]) {
+      setAvailableBranches(COURSE_BRANCH_MAPPING[primaryCourse.course]);
     } else {
       setAvailableBranches([]);
     }
@@ -432,15 +438,14 @@ export default function SingleMember() {
   const {
     username, first_name, last_name, salutation, gender, date_of_birth,
     email, secondary_email, phone, cover_photo, current_location,
-    home_town, city, state, country, branch, course, start_year,
-    end_year, college_name, chapter, role, bio, current_work, worked_in,
-    passed_out_year, roll_no, social_links = {}, is_active = true,
+    home_town, city, state, country, chapter, role, bio, current_work, worked_in,
+    social_links = {}, is_active = true,
     company, position, work_experience,
     professional_skills = [], industries_worked_in = [], roles_played = [],
   } = member;
 
   const displayName = [salutation, first_name, last_name].filter(Boolean).join(" ");
-  const currentData = isEditing ? editedMember : member;
+  const primaryCourse = getPrimaryCourse(member);
 
   /* ── tab content renderer ── */
   const renderTabContent = () => {
@@ -538,64 +543,51 @@ export default function SingleMember() {
       case "Professional Summary":
         return (
           <div>
-            <FieldRow icon={Icons.education} label="College">
-              {isEditing ? (
-                <EditSelect value={editedMember.college_name || ""} onChange={(v) => handleInputChange("college_name", v)}>
-                  <option value="">Select College</option>
-                  {COLLEGE_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </EditSelect>
-              ) : (
-                <span>{college_name || "—"}</span>
-              )}
-            </FieldRow>
-
-            <FieldRow icon={Icons.education} label="Course & Branch">
-              {isEditing ? (
+            <FieldRow icon={Icons.education} label="Education">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-gray-400">Course enrollments</span>
+                  <button
+                    onClick={() => setShowAddCourseModal(true)}
+                    className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium border border-green-300 rounded-md px-2 py-1 hover:bg-green-50 transition-colors"
+                  >
+                    + Add Course
+                  </button>
+                </div>
                 <div className="space-y-2">
-                  <EditSelect value={editedMember.course || ""} onChange={(v) => handleInputChange("course", v)}>
-                    <option value="">Select Course</option>
-                    {COURSES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </EditSelect>
-                  {editedMember.course && COURSE_BRANCH_MAPPING[editedMember.course] && (
-                    <EditSelect value={editedMember.branch || ""} onChange={(v) => handleInputChange("branch", v)}>
-                      <option value="">Select Branch/Stream</option>
-                      {COURSE_BRANCH_MAPPING[editedMember.course].map((b) => <option key={b} value={b}>{b}</option>)}
-                    </EditSelect>
+                  {userCourses.map((c) => (
+                    <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group border border-green-100">
+                      <p className="text-sm text-gray-800 font-medium pr-6">
+                        {[c.course, c.branch].filter(Boolean).join(" — ")}
+                        {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                      </p>
+                      {c.college_name && <p className="text-xs text-gray-500 mt-0.5">{c.college_name}</p>}
+                      {(c.course_start_year || c.course_end_year) && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Study duration: {[c.course_start_year, c.course_end_year].filter(Boolean).join(" – ")}
+                        </p>
+                      )}
+                      {c.passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {c.passed_out_year}</p>}
+                      {c.roll_no && <p className="text-xs text-gray-400 mt-0.5">Roll no: {c.roll_no}</p>}
+                      {!c.is_primary && (
+                        <button
+                          onClick={() => handleDeleteCourse(c.id)}
+                          disabled={deletingCourseId === c.id}
+                          className="absolute top-2 right-2 text-red-400 hover:text-red-600 disabled:opacity-50"
+                          title="Remove course"
+                        >
+                          {deletingCourseId === c.id
+                            ? <span className="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                            : Icons.x}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {userCourses.length === 0 && (
+                    <p className="text-xs text-gray-400 italic">No course enrollments yet</p>
                   )}
                 </div>
-              ) : (
-                <span>{[course, branch].filter(Boolean).join(", ") || "—"}</span>
-              )}
-            </FieldRow>
-
-            {(start_year || end_year || isEditing) && (
-              <FieldRow icon={Icons.calendar} label="Study Duration">
-                {isEditing ? (
-                  <div className="flex items-center gap-2">
-                    <EditInput type="number" placeholder="Start Year" value={editedMember.start_year || ""} onChange={(v) => handleInputChange("start_year", v)} className="w-28" />
-                    <span className="text-gray-400">–</span>
-                    <EditInput type="number" placeholder="End Year" value={editedMember.end_year || ""} onChange={(v) => handleInputChange("end_year", v)} className="w-28" />
-                  </div>
-                ) : (
-                  <span>{[start_year, end_year].filter(Boolean).join(" – ") || "—"}</span>
-                )}
-              </FieldRow>
-            )}
-
-            <FieldRow icon={Icons.calendar} label="Passed Out Year">
-              {isEditing ? (
-                <EditInput type="number" value={editedMember.passed_out_year || ""} onChange={(v) => handleInputChange("passed_out_year", v)} className="w-36" />
-              ) : (
-                <span>{passed_out_year || "—"}</span>
-              )}
-            </FieldRow>
-
-            <FieldRow icon={Icons.tag} label="Roll No">
-              {isEditing ? (
-                <EditInput value={editedMember.roll_no || ""} onChange={(v) => handleInputChange("roll_no", v)} />
-              ) : (
-                <span>{roll_no || "—"}</span>
-              )}
+              </div>
             </FieldRow>
 
             <FieldRow icon={Icons.building} label="Company">
@@ -705,54 +697,6 @@ export default function SingleMember() {
               ) : (
                 <TagList items={roles_played} colorClass="bg-orange-100 text-orange-700" />
               )}
-            </FieldRow>
-
-            <FieldRow icon={Icons.education} label="Education">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-gray-400">Course enrollments</span>
-                  <button
-                    onClick={() => setShowAddCourseModal(true)}
-                    className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium border border-green-300 rounded-md px-2 py-1 hover:bg-green-50 transition-colors"
-                  >
-                    + Add Course
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {(course || college_name || passed_out_year) && (
-                    <div className="bg-green-50 rounded-lg px-3 py-2 border border-green-100">
-                      <p className="text-sm text-gray-800 font-medium">
-                        {[course, branch].filter(Boolean).join(" — ")}
-                        <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>
-                      </p>
-                      {college_name && <p className="text-xs text-gray-500 mt-0.5">{college_name}</p>}
-                      {passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {passed_out_year}</p>}
-                    </div>
-                  )}
-                  {userCourses.map((c) => (
-                    <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group border border-green-100">
-                      <p className="text-sm text-gray-800 font-medium pr-6">
-                        {[c.course, c.branch].filter(Boolean).join(" — ")}
-                      </p>
-                      {c.college_name && <p className="text-xs text-gray-500 mt-0.5">{c.college_name}</p>}
-                      {c.passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {c.passed_out_year}</p>}
-                      <button
-                        onClick={() => handleDeleteCourse(c.id)}
-                        disabled={deletingCourseId === c.id}
-                        className="absolute top-2 right-2 text-red-400 hover:text-red-600 disabled:opacity-50"
-                        title="Remove course"
-                      >
-                        {deletingCourseId === c.id
-                          ? <span className="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                          : Icons.x}
-                      </button>
-                    </div>
-                  ))}
-                  {!course && !college_name && !passed_out_year && userCourses.length === 0 && (
-                    <p className="text-xs text-gray-400 italic">No course enrollments yet</p>
-                  )}
-                </div>
-              </div>
             </FieldRow>
           </div>
         );
