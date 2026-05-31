@@ -18,12 +18,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-com
 // 2. Initialise the Firebase app
 // ---------------------------------------------------------------------------
 firebase.initializeApp({
-  apiKey:            self.FIREBASE_API_KEY            || "AIzaSyExample",
+  apiKey:            "AIzaSyBGeM47wLernND70Mr1VRQ0VsJM913AfZE",
   authDomain:        "alumni-kahe.firebaseapp.com",
   projectId:         "alumni-kahe",
-  storageBucket:     "alumni-kahe.appspot.com",
-  messagingSenderId: self.FIREBASE_MESSAGING_SENDER_ID || "",
-  appId:             self.FIREBASE_APP_ID             || "",
+  storageBucket:     "alumni-kahe.firebasestorage.app",
+  messagingSenderId: "1093673972115",
+  appId:             "1:1093673972115:web:720dad3aea9dea90de3866",
 });
 
 // ---------------------------------------------------------------------------

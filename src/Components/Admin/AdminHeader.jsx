@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { unregisterNotificationToken } from "../../lib/firebase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileAlt,
@@ -94,6 +95,8 @@ export default function AdminHeader() {
   }, [pathname]);
 
   const handleLogout = () => {
+    const token = localStorage.getItem("Token");
+    unregisterNotificationToken(token).catch(() => {});
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
     toast.success("Logged out successfully!");

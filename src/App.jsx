@@ -6,6 +6,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import Loader from "./Pages/Loder";
+import { requestNotificationPermission } from "./lib/firebase";
 
 export default function App() {
   const [appLoading, setAppLoading] = useState(true);
@@ -13,6 +14,13 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => setAppLoading(false), 3000);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("Token");
+    if (token) {
+      requestNotificationPermission(token).catch(() => {});
+    }
   }, []);
 
   return (

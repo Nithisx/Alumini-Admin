@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../assets/KAHEAA.svg";
 import NotificationBell from "../Shared/NotificationBell.jsx";
+import { unregisterNotificationToken } from "../../lib/firebase";
 
 export default function AlumniHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
@@ -20,6 +21,8 @@ export default function AlumniHeader() {
   }, []);
 
   const handleLogout = () => {
+    const token = localStorage.getItem("Token");
+    unregisterNotificationToken(token).catch(() => {});
     localStorage.removeItem("Token");
     localStorage.removeItem("Role");
     toast.success("Logged out successfully!");

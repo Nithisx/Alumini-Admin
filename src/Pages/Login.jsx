@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
 import { supabase } from "../lib/supabase";
+import { requestNotificationPermission } from "../lib/firebase";
 
 const api = axios.create({
   baseURL: "https://api.karpagamalumni.in/api/v1",
@@ -56,6 +57,7 @@ export default function LoginPage() {
           const roleKey = roleMap[data.role] || "alumni";
           localStorage.setItem("Role", roleKey);
           await supabase.auth.signOut();
+          requestNotificationPermission(data.token).catch(() => {});
           toast.success("Signed in with Google successfully!");
           redirectAfterLogin(roleKey);
         } else if (data.status === "pending") {
@@ -104,6 +106,7 @@ export default function LoginPage() {
       if (data.token) {
         localStorage.setItem("Token", data.token);
         localStorage.setItem("Role", data.role_key);
+        requestNotificationPermission(data.token).catch(() => {});
         toast.success("Logged in successfully!");
         redirectAfterLogin(data.role_key);
       } else {

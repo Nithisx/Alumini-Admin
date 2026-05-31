@@ -13,16 +13,17 @@ import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 // They are safe to expose in client-side code — all security is enforced by
 // Firebase Security Rules and the backend (FCM Server Key never leaves the backend).
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            || "AIzaSyExample",
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        || "alumni-kahe.firebaseapp.com",
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID         || "alumni-kahe",
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     || "alumni-kahe.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID             || "",
+  apiKey:            "AIzaSyBGeM47wLernND70Mr1VRQ0VsJM913AfZE",
+  authDomain:        "alumni-kahe.firebaseapp.com",
+  projectId:         "alumni-kahe",
+  storageBucket:     "alumni-kahe.firebasestorage.app",
+  messagingSenderId: "1093673972115",
+  appId:             "1:1093673972115:web:720dad3aea9dea90de3866",
+  measurementId:     "G-GRFZ9ZQZCC",
 };
 
-// VAPID key — from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "";
+// VAPID key — Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+const VAPID_KEY = "BIj5TfQsfPj-wCOlqzlu5kTFeeZl-Q_oMZyTJJn8XPoIcjCYtSKxxfE8NQRTV24hqPn_PDjK32uS9eVTfABrkEY";
 
 // ── Initialise Firebase ───────────────────────────────────────────────────────
 let app = null;
@@ -94,11 +95,36 @@ export async function requestNotificationPermission(authToken) {
       body: JSON.stringify({ token: fcmToken, device_type: 'web' }),
     });
 
+    localStorage.setItem('FCMToken', fcmToken);
     console.info('[FCM] Token registered successfully.');
     return fcmToken;
   } catch (err) {
     console.error('[FCM] Error requesting notification permission:', err);
     return null;
+  }
+}
+
+/**
+ * Deactivate the stored FCM token on logout so the backend stops sending pushes.
+ *
+ * @param {string} authToken - The alumni portal auth token (for the API call)
+ */
+export async function unregisterNotificationToken(authToken) {
+  const fcmToken = localStorage.getItem('FCMToken');
+  if (!fcmToken || !authToken) return;
+  try {
+    const { API_FCM_UNREGISTER } = await import('../config/api.js');
+    await fetch(API_FCM_UNREGISTER, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Token ${authToken}`,
+      },
+      body: JSON.stringify({ token: fcmToken }),
+    });
+    localStorage.removeItem('FCMToken');
+  } catch {
+    // Swallow — the backend will eventually deactivate the stale token
   }
 }
 
