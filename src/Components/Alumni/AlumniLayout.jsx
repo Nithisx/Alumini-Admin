@@ -24,43 +24,46 @@ import StudentImageUpload from "./Albums/Albums";
 import BusinessView from "./Business/BusinessView";
 import Chat from "./Chat/Chat";
 import ChapterDetail from "../Shared/ChapterDetail";
+import { NotificationProvider } from "../Shared/NotificationProvider.jsx";
 
 const AlumniLayout = () => {
   const location = useLocation();
   const isChat = location.pathname.includes("/chat");
   return (
-    <div>
-      {/* Admin Header (Sidebar) */}
-      <AdminHeader />
+    <NotificationProvider>
+      <div>
+        {/* Admin Header (Sidebar) */}
+        <AdminHeader />
 
-      {/* Main Content */}
-      <main className={`role-content w-full min-w-0 p-0 ${isChat ? "" : "pb-14 lg:pb-0"}`}>
-        <Routes>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="event" element={<AddEvent />} />
-          <Route path="event/:id" element={<Singleevents />} />
-          <Route path="event/:id/edit" element={<EditEvent />} />
-          <Route path="albums" element={<AlbumsPage />} />
-          <Route path="albums/:albumId" element={<AlbumDetailPage />} />
-          <Route path="students" element={<StudentImageUpload />} />
-          <Route path="map" element={<Map />} />
-          <Route path="news" element={<NewsRoom />} />
-          <Route path="news/:id" element={<SingleNews />} />
-          <Route path="members" element={<Members />} />
-          <Route path="members/:name" element={<Singlemember />} />
-          <Route path="jobs" element={<Addpost />} />
-          <Route path="birthday" element={<Birthday />} />
-          <Route path="business" element={<BusinessDirectory />} />
-          <Route path="business/:id" element={<BusinessDetail />} />
-          <Route path="business/view/:id" element={<BusinessView />} />
-          <Route path="my-profile" element={<Myprofile />} />
-          <Route path="my-contribution" element={<Mycontribution />} />
-          <Route path="chat" element={<Chat/>} />
-          <Route path="chapters/:type/:value" element={<ChapterDetail />} />
-          {/* Add more routes as needed */}
-        </Routes>
-      </main>
-    </div>
+        {/* Main Content */}
+        <main className={`role-content w-full min-w-0 p-0 ${isChat ? "" : "pb-14 lg:pb-0"}`}>
+          <Routes>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="event" element={<AddEvent />} />
+            <Route path="event/:id" element={<Singleevents />} />
+            <Route path="event/:id/edit" element={<EditEvent />} />
+            <Route path="albums" element={<AlbumsPage />} />
+            <Route path="albums/:albumId" element={<AlbumDetailPage />} />
+            <Route path="students" element={<StudentImageUpload />} />
+            <Route path="map" element={<Map />} />
+            <Route path="news" element={<NewsRoom />} />
+            <Route path="news/:id" element={<SingleNews />} />
+            <Route path="members" element={<Members />} />
+            <Route path="members/:name" element={<Singlemember />} />
+            <Route path="jobs" element={<Addpost />} />
+            <Route path="birthday" element={<Birthday />} />
+            <Route path="business" element={<BusinessDirectory />} />
+            <Route path="business/:id" element={<BusinessDetail />} />
+            <Route path="business/view/:id" element={<BusinessView />} />
+            <Route path="my-profile" element={<Myprofile />} />
+            <Route path="my-contribution" element={<Mycontribution />} />
+            <Route path="chat" element={<Chat/>} />
+            <Route path="chapters/:type/:value" element={<ChapterDetail />} />
+            {/* Add more routes as needed */}
+          </Routes>
+        </main>
+      </div>
+    </NotificationProvider>
   );
 };
 

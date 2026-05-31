@@ -147,3 +147,11 @@ export const getMediaUrl = (uri) => {
   return `${origin}/api/v1/media/${input}`;
 };
 
+// ── Notifications & FCM ───────────────────────────────────────────────────────
+export const API_FCM_REGISTER          = `${API_BASE}/fcm/register/`;
+export const API_FCM_UNREGISTER        = `${API_BASE}/fcm/unregister/`;
+export const API_NOTIFICATIONS         = `${API_BASE}/notifications/`;
+export const API_NOTIFICATION_READ     = (id) => `${API_BASE}/notifications/${id}/read/`;
+export const API_NOTIFICATION_READ_ALL = `${API_BASE}/notifications/read-all/`;
+
+

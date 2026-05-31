@@ -7,6 +7,7 @@ import {
   faBuilding, faUser, faHandHoldingHeart, faComments, faBars, faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../assets/KAHEAA.svg";
+import NotificationBell from "../Shared/NotificationBell.jsx";
 
 export default function AlumniHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
@@ -74,6 +75,9 @@ export default function AlumniHeader() {
 
           {/* Right section */}
           <div className="flex items-center gap-3">
+            {/* Notification Bell */}
+            <NotificationBell />
+
             {/* Logout (desktop) */}
             <button
               onClick={handleLogout}
