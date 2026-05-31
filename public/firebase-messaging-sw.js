@@ -14,6 +14,11 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
+// Activate immediately without waiting for existing tabs to close.
+// Required when VitePWA's sw.js is already controlling the same scope.
+self.addEventListener('install', (e) => e.waitUntil(self.skipWaiting()));
+self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+
 // ---------------------------------------------------------------------------
 // 2. Initialise the Firebase app
 // ---------------------------------------------------------------------------

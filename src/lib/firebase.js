@@ -43,6 +43,22 @@ function getMessagingInstance() {
   return messaging;
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function _waitForSWActive(registration) {
+  if (registration.active) return Promise.resolve();
+  return new Promise((resolve) => {
+    const sw = registration.installing || registration.waiting;
+    if (!sw) { resolve(); return; }
+    sw.addEventListener('statechange', function onState() {
+      if (this.state === 'activated') {
+        sw.removeEventListener('statechange', onState);
+        resolve();
+      }
+    });
+  });
+}
+
 // ── Request permission & register token ──────────────────────────────────────
 
 /**
@@ -71,12 +87,20 @@ export async function requestNotificationPermission(authToken) {
       return null;
     }
 
+    // Register the Firebase messaging SW and wait for it to become active.
+    // VitePWA's sw.js may already hold scope /, so firebase-messaging-sw.js
+    // starts in "waiting" — skipWaiting() in that file activates it immediately,
+    // but we still need to wait here before calling pushManager.subscribe().
+    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    await _waitForSWActive(swReg);
+
+    // Unsubscribe any stale push subscription that may use a different VAPID key.
+    const existingSub = await swReg.pushManager.getSubscription();
+    if (existingSub) await existingSub.unsubscribe();
+
     const fcmToken = await getToken(getMessagingInstance(), {
       vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: await navigator.serviceWorker.register(
-        '/firebase-messaging-sw.js',
-        { scope: '/' }
-      ),
+      serviceWorkerRegistration: swReg,
     });
 
     if (!fcmToken) {
