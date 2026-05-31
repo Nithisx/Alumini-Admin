@@ -99,6 +99,27 @@ async function getFCMServiceWorker() {
 
   // Production: VitePWA registers sw.js (Workbox + Firebase bundled).
   // Wait for it to be fully active before passing it to getToken().
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    let swReg = null;
+    for (const r of regs) {
+      const scriptURL = r.active?.scriptURL || r.installing?.scriptURL || r.waiting?.scriptURL;
+      if (scriptURL) {
+        if (scriptURL.includes('firebase-messaging-sw.js')) {
+          console.log('[FCM] Unregistering duplicate/legacy service worker:', scriptURL);
+          await r.unregister();
+        } else if (scriptURL.includes('sw.js')) {
+          swReg = r;
+        }
+      }
+    }
+    if (swReg) {
+      return swReg;
+    }
+  } catch (err) {
+    console.warn('[FCM] Error during SW scanning:', err);
+  }
+
   return navigator.serviceWorker.ready;
 }
 
