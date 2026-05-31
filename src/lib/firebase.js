@@ -1,21 +1,20 @@
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
+// Values come from .env / .env.local — never hardcoded.
 const firebaseConfig = {
-  apiKey:            'AIzaSyBGeM47wLernND70Mr1VRQ0VsJM913AfZE',
-  authDomain:        'alumni-kahe.firebaseapp.com',
-  projectId:         'alumni-kahe',
-  storageBucket:     'alumni-kahe.firebasestorage.app',
-  messagingSenderId: '1093673972115',
-  appId:             '1:1093673972115:web:720dad3aea9dea90de3866',
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const VAPID_KEY = 'BIj5TfQsfPj-wCOlqzlu5kTFeeZl-Q_oMZyTJJn8XPoIcjCYtSKxxfE8NQRTV24hqPn_PDjK32uS9eVTfABrkEY';
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-// Isolated scope for the FCM service worker.
-// Using a path that no page lives at keeps it from conflicting with
-// VitePWA's sw.js which controls scope '/'.
-// Push events are dispatched to whichever SW owns the push subscription,
+// Isolated scope keeps the FCM SW from conflicting with VitePWA's sw.js
+// which owns scope '/'. Push events go to whichever SW owns the subscription
 // regardless of which pages that SW controls.
 const FCM_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
 
@@ -28,8 +27,8 @@ function getMessagingInstance() {
   return messagingInstance;
 }
 
-// Register (or re-use) the dedicated FCM service worker and wait until
-// it is fully activated before returning the registration.
+// Register (or reuse) the dedicated FCM service worker and wait until it
+// is fully activated before returning — required before calling getToken().
 async function getFCMServiceWorker() {
   const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
     scope: FCM_SW_SCOPE,
@@ -37,7 +36,7 @@ async function getFCMServiceWorker() {
 
   if (reg.active) return reg;
 
-  // First install — wait for the SW to move from installing → activated.
+  // First install: wait for installing → activated transition.
   return new Promise((resolve, reject) => {
     const sw = reg.installing ?? reg.waiting;
     if (!sw) { resolve(reg); return; }
@@ -55,7 +54,7 @@ async function getFCMServiceWorker() {
 
 async function registerTokenWithBackend(token, authToken) {
   const cached = localStorage.getItem('FCMToken');
-  if (cached === token) return;
+  if (cached === token) return; // unchanged — skip the round-trip
   const { API_FCM_REGISTER } = await import('../config/api.js');
   await fetch(API_FCM_REGISTER, {
     method: 'POST',
@@ -70,11 +69,6 @@ async function registerTokenWithBackend(token, authToken) {
 
 export async function requestNotificationPermission(authToken) {
   if (!authToken) return null;
-
-  // Push subscriptions need a production build — skip entirely in dev to avoid
-  // "push service error" noise from the Vite dev server SW.
-  if (import.meta.env.DEV) return null;
-
   if (!('Notification' in window) || !('serviceWorker' in navigator)) return null;
   if (Notification.permission === 'denied') return null;
 
@@ -82,11 +76,13 @@ export async function requestNotificationPermission(authToken) {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return null;
 
-    // Register firebase-messaging-sw.js at an isolated scope so it coexists
-    // with VitePWA's sw.js (scope '/') without a controller conflict.
+    // firebase-messaging-sw.js lives in public/ so it is served by both
+    // the Vite dev server (localhost) and the production CDN (Vercel).
+    // Push subscriptions work on localhost without HTTPS, so no environment
+    // guard is needed here.
     const fcmSWReg = await getFCMServiceWorker();
 
-    // Happy path — existing valid subscription returns a token immediately.
+    // Happy path — existing valid subscription → fast token refresh.
     try {
       const token = await getToken(getMessagingInstance(), {
         vapidKey: VAPID_KEY,
@@ -97,10 +93,10 @@ export async function requestNotificationPermission(authToken) {
         return token;
       }
     } catch {
-      // Fall through to stale-subscription recovery below.
+      // Fall through to stale-subscription recovery.
     }
 
-    // Recovery — clear any stale push endpoint and retry once.
+    // Recovery — clear stale endpoint and retry once.
     const stale = await fcmSWReg.pushManager.getSubscription();
     if (stale) await stale.unsubscribe().catch(() => {});
 
