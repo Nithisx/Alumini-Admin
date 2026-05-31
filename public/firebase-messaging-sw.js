@@ -13,6 +13,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+  // In production, the Workbox sw.js handles background notifications.
+  // This file is only the active FCM handler in local development (localhost),
+  // where VitePWA's sw.js is disabled. Skip here to avoid duplicate notifications.
+  if (!self.location.hostname.includes('localhost')) return;
+
   const data = payload.data || {};
   self.registration.showNotification(
     data.title || 'Karpagam Alumni',
