@@ -1,0 +1,80 @@
+import React, { useState, useEffect } from 'react';
+import { requestNotificationPermission, unregisterNotificationToken, onForegroundMessage } from '../../lib/firebase';
+
+export default function FCMDiagnostics() {
+  const [regs, setRegs] = useState([]);
+  const [subs, setSubs] = useState([]);
+  const [token, setToken] = useState(localStorage.getItem('FCMToken') || null);
+  const [permission, setPermission] = useState(Notification.permission);
+  const [ua] = useState(navigator.userAgent);
+  const [log, setLog] = useState([]);
+
+  const append = (m) => setLog((s) => [...s, `${new Date().toLocaleTimeString()}: ${m}`]);
+
+  async function refresh() {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      setRegs(regs.map((r) => ({ scope: r.scope, scriptURL: r.active?.scriptURL, state: r.active?.state })));
+      const subChecks = await Promise.all(regs.map(async (r) => {
+        try {
+          const sub = r.pushManager && r.pushManager.getSubscription ? await r.pushManager.getSubscription() : null;
+          return { scope: r.scope, hasSubscription: !!sub };
+        } catch (e) {
+          return { scope: r.scope, error: String(e) };
+        }
+      }));
+      setSubs(subChecks);
+      setToken(localStorage.getItem('FCMToken') || null);
+      setPermission(Notification.permission);
+      append('Refreshed diagnostics');
+    } catch (e) {
+      append('Failed to refresh diagnostics: ' + String(e));
+    }
+  }
+
+  useEffect(() => {
+    refresh();
+    const unsub = onForegroundMessage((payload) => {
+      append('Foreground message: ' + (payload?.notification?.title || JSON.stringify(payload.data || {})));
+    });
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>FCM Diagnostics</h2>
+      <p><strong>User agent:</strong> {ua}</p>
+      <p><strong>Notification permission:</strong> {permission}</p>
+      <p><strong>Stored FCM token:</strong> {token ? <span style={{wordBreak:'break-all'}}>{token}</span> : '—'}</p>
+
+      <div style={{ marginTop: 12 }}>
+        <button onClick={refresh} style={{ marginRight: 8 }}>Refresh</button>
+        <button onClick={async () => {
+          append('Requesting permission...');
+          const t = await requestNotificationPermission(localStorage.getItem('Token'));
+          setToken(localStorage.getItem('FCMToken'));
+          append('requestNotificationPermission finished.');
+        }} style={{ marginRight: 8 }}>Request Permission / Register</button>
+        <button onClick={async () => {
+          append('Unregistering token...');
+          await unregisterNotificationToken(localStorage.getItem('Token'));
+          setToken(localStorage.getItem('FCMToken'));
+          append('unregisterNotificationToken finished.');
+        }}>Unregister token</button>
+      </div>
+
+      <h3 style={{ marginTop: 18 }}>Service Workers</h3>
+      <pre style={{ background: '#f6f6f6', padding: 12 }}>{JSON.stringify(regs, null, 2)}</pre>
+
+      <h3>Push subscription checks</h3>
+      <pre style={{ background: '#f6f6f6', padding: 12 }}>{JSON.stringify(subs, null, 2)}</pre>
+
+      <h3>Logs</h3>
+      <div style={{ background: '#111', color: '#fff', padding: 12, maxHeight: 240, overflow: 'auto' }}>
+        {log.map((l, i) => <div key={i} style={{ fontFamily: 'monospace', fontSize: 12 }}>{l}</div>)}
+      </div>
+    </div>
+  );
+}

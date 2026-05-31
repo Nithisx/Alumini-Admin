@@ -14,6 +14,7 @@ import ResetPassword from './Pages/ResetPassword';
 import ShareRedirect from './Pages/ShareRedirect';
 import { normalizeRoleForBase } from './lib/authRole';
 import InstallAppPrompt from './Components/Shared/InstallAppPrompt';
+import FCMDiagnostics from './Components/Shared/FCMDiagnostics';
 
 // Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
@@ -96,6 +97,7 @@ const AppRoutes = () => {
         />
 
         {/* Fallback Route */}
+        <Route path="/fcm-diagnostics" element={<FCMDiagnostics />} />
         <Route path="*" element={<AuthRedirect />} />
       </Routes>
     </Router>

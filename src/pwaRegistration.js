@@ -1,4 +1,7 @@
-import { registerSW } from 'virtual:pwa-register'
-
-// Immediate registration allows installability checks as soon as the app loads.
-registerSW({ immediate: true })
+if (import.meta.env.PROD) {
+  import('virtual:pwa-register').then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  }).catch((err) => {
+    console.warn('[PWA] Service worker registration failed:', err);
+  });
+}
