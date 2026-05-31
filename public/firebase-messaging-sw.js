@@ -15,9 +15,11 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
 // Activate immediately without waiting for existing tabs to close.
-// Required when VitePWA's sw.js is already controlling the same scope.
+// Do NOT call clients.claim() here — VitePWA's sw.js owns the scope controller
+// and its autoUpdate mode reloads the page on controllerchange events.
+// The FCM SW only needs to be active (not the controller) to receive push events.
 self.addEventListener('install', (e) => e.waitUntil(self.skipWaiting()));
-self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (e) => e.waitUntil(Promise.resolve()));
 
 // ---------------------------------------------------------------------------
 // 2. Initialise the Firebase app
