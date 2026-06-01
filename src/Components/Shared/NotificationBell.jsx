@@ -195,6 +195,7 @@ function EnableNotificationsBanner({ status, onEnable }) {
 export default function NotificationBell() {
   const {
     notifications, unreadCount, markRead, markAllRead,
+    deleteNotification, clearAllNotifications,
     notificationStatus, requestPermission,
   } = useNotifications();
   const [open, setOpen] = useState(false);
@@ -333,21 +334,39 @@ export default function NotificationBell() {
                 </span>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#059669', fontSize: 12, fontWeight: 600,
-                  padding: '4px 8px', borderRadius: 8,
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#d1fae5'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-              >
-                Mark all read ✓
-              </button>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#059669', fontSize: 12, fontWeight: 600,
+                    padding: '4px 8px', borderRadius: 8,
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#d1fae5'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                >
+                  Mark all read ✓
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={clearAllNotifications}
+                  title="Clear all notifications"
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#ef4444', fontSize: 12, fontWeight: 600,
+                    padding: '4px 8px', borderRadius: 8,
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Enable Notifications Banner (shows only when permission isn't granted) */}
@@ -371,84 +390,130 @@ export default function NotificationBell() {
               notifications.map((notif) => {
                 const meta = TYPE_META[notif.notification_type] || TYPE_META.general;
                 return (
-                  <button
+                  <div
                     key={notif.id}
-                    onClick={() => handleItemClick(notif)}
                     style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 12,
-                      padding: '12px 16px',
-                      border: 'none',
+                      position: 'relative',
                       borderBottom: '1px solid rgba(0,0,0,0.05)',
-                      background: notif.is_read
-                        ? 'transparent'
-                        : 'linear-gradient(90deg, rgba(5,150,105,0.05) 0%, transparent 100%)',
-                      cursor: notif.data?.click_url ? 'pointer' : 'default',
-                      textAlign: 'left',
-                      transition: 'background 0.15s',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#f9fafb';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = notif.is_read
-                        ? 'transparent'
-                        : 'linear-gradient(90deg, rgba(5,150,105,0.05) 0%, transparent 100%)';
-                    }}
+                    className="notif-item"
                   >
-                    {/* Icon */}
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                      background: meta.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18,
-                    }}>
-                      {meta.icon}
-                    </div>
+                    <button
+                      onClick={() => handleItemClick(notif)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                        padding: '12px 40px 12px 16px',
+                        border: 'none',
+                        background: notif.is_read
+                          ? 'transparent'
+                          : 'linear-gradient(90deg, rgba(5,150,105,0.05) 0%, transparent 100%)',
+                        cursor: notif.data?.click_url ? 'pointer' : 'default',
+                        textAlign: 'left',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f9fafb';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = notif.is_read
+                          ? 'transparent'
+                          : 'linear-gradient(90deg, rgba(5,150,105,0.05) 0%, transparent 100%)';
+                      }}
+                    >
+                      {/* Icon */}
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                        background: meta.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 18,
+                      }}>
+                        {meta.icon}
+                      </div>
 
-                    {/* Content */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontWeight: notif.is_read ? 500 : 700,
-                        fontSize: 13, color: '#111827',
-                        marginBottom: 3,
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {notif.title}
-                      </div>
-                      <div style={{
-                        fontSize: 12, color: '#6b7280', lineHeight: 1.4,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}>
-                        {notif.body}
-                      </div>
-                      <div style={{
-                        marginTop: 4, fontSize: 11, color: '#9ca3af',
-                        display: 'flex', alignItems: 'center', gap: 6,
-                      }}>
-                        <span style={{
-                          background: meta.bg, color: meta.color,
-                          borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 600,
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontWeight: notif.is_read ? 500 : 700,
+                          fontSize: 13, color: '#111827',
+                          marginBottom: 3,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
-                          {meta.label}
-                        </span>
-                        <span>{timeAgo(notif.created_at)}</span>
+                          {notif.title}
+                        </div>
+                        <div style={{
+                          fontSize: 12, color: '#6b7280', lineHeight: 1.4,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}>
+                          {notif.body}
+                        </div>
+                        <div style={{
+                          marginTop: 4, fontSize: 11, color: '#9ca3af',
+                          display: 'flex', alignItems: 'center', gap: 6,
+                        }}>
+                          <span style={{
+                            background: meta.bg, color: meta.color,
+                            borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 600,
+                          }}>
+                            {meta.label}
+                          </span>
+                          <span>{timeAgo(notif.created_at)}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Unread dot */}
-                    {!notif.is_read && (
-                      <div style={{
-                        width: 8, height: 8, borderRadius: 4,
-                        background: '#059669', flexShrink: 0, marginTop: 4,
-                      }} />
-                    )}
-                  </button>
+                      {/* Unread dot */}
+                      {!notif.is_read && (
+                        <div style={{
+                          width: 8, height: 8, borderRadius: 4,
+                          background: '#059669', flexShrink: 0, marginTop: 4,
+                        }} />
+                      )}
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      className="notif-delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(notif.id);
+                      }}
+                      title="Delete notification"
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        right: 10,
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9ca3af',
+                        fontSize: 16,
+                        lineHeight: 1,
+                        padding: '4px 6px',
+                        borderRadius: 6,
+                        opacity: 0,
+                        transition: 'opacity 0.15s, color 0.15s, background 0.15s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#ef4444';
+                        e.currentTarget.style.background = '#fee2e2';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#9ca3af';
+                        e.currentTarget.style.background = 'none';
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 );
               })
             )}
@@ -463,7 +528,7 @@ export default function NotificationBell() {
               background: '#fafafa',
             }}>
               <span style={{ fontSize: 12, color: '#9ca3af' }}>
-                Showing last {notifications.length} notifications
+                {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
               </span>
             </div>
           )}
@@ -495,6 +560,7 @@ export default function NotificationBell() {
         #notification-dropdown::-webkit-scrollbar-thumb {
           background: rgba(5,150,105,0.25); border-radius: 3px;
         }
+        .notif-item:hover .notif-delete-btn { opacity: 1 !important; }
       `}
       </style>
     </div>

@@ -290,6 +290,24 @@ export async function unregisterNotificationToken(authToken) {
 }
 
 /**
+ * Closes all pending OS-level notifications in the browser notification center.
+ * Call this on page load so that background notifications vanish once the user opens the app.
+ */
+export async function clearOSNotifications() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) {
+      if (reg.active) {
+        reg.active.postMessage({ type: 'CLEAR_NOTIFICATIONS' });
+      }
+    }
+  } catch {
+    // non-fatal
+  }
+}
+
+/**
  * Subscribes to foreground push messages forwarded by the service worker via postMessage.
  *
  * The service worker sends { type: 'PUSH_MESSAGE', data: { title, body, type, click_url, ... } }

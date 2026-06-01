@@ -18,11 +18,14 @@ import {
   requestNotificationPermission,
   getNotificationStatus,
   onForegroundMessage,
+  clearOSNotifications,
 } from '../../lib/webpush.js';
 import {
   API_NOTIFICATIONS,
   API_NOTIFICATION_READ,
   API_NOTIFICATION_READ_ALL,
+  API_NOTIFICATION_DELETE,
+  API_NOTIFICATION_CLEAR_ALL,
 } from '../../config/api.js';
 
 const NotificationContext = createContext(null);
@@ -106,6 +109,39 @@ export function NotificationProvider({ children }) {
     }
   }, [authToken]);
 
+  // ── Delete a single notification ──────────────────────────────────────────
+  const deleteNotification = useCallback(async (id) => {
+    if (!authToken) return;
+    try {
+      await fetch(API_NOTIFICATION_DELETE(id), {
+        method: 'DELETE',
+        headers: { Authorization: `Token ${authToken}` },
+      });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setUnreadCount((c) => {
+        const notif = notifications.find((n) => n.id === id);
+        return notif && !notif.is_read ? Math.max(0, c - 1) : c;
+      });
+    } catch (err) {
+      console.error('[Notifications] Failed to delete notification:', err);
+    }
+  }, [authToken, notifications]);
+
+  // ── Clear all notifications ───────────────────────────────────────────────
+  const clearAllNotifications = useCallback(async () => {
+    if (!authToken) return;
+    try {
+      await fetch(API_NOTIFICATION_CLEAR_ALL, {
+        method: 'DELETE',
+        headers: { Authorization: `Token ${authToken}` },
+      });
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('[Notifications] Failed to clear all notifications:', err);
+    }
+  }, [authToken]);
+
   // ── Request permission (must be triggered by user interaction) ────────────
   const requestPermission = useCallback(async () => {
     if (!authToken) return { success: false, reason: 'no_auth' };
@@ -117,6 +153,9 @@ export function NotificationProvider({ children }) {
   // ── Silent FCM registration + foreground listener (on mount) ──────────────
   useEffect(() => {
     if (!authToken) return;
+
+    // Dismiss any OS-level notifications from the browser notification center
+    clearOSNotifications();
 
     // Silently register token if permission is already granted
     // (no prompt — safe to call on page load)
@@ -182,6 +221,8 @@ export function NotificationProvider({ children }) {
         fetchNotifications,
         markRead,
         markAllRead,
+        deleteNotification,
+        clearAllNotifications,
         notificationStatus: notifStatus,
         requestPermission,
       }}

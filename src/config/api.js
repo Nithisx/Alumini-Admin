@@ -150,8 +150,10 @@ export const getMediaUrl = (uri) => {
 // ── Notifications & Web Push ──────────────────────────────────────────────────
 export const API_PUSH_REGISTER         = `${API_BASE}/push/register/`;
 export const API_PUSH_UNREGISTER       = `${API_BASE}/push/unregister/`;
-export const API_NOTIFICATIONS         = `${API_BASE}/notifications/`;
-export const API_NOTIFICATION_READ     = (id) => `${API_BASE}/notifications/${id}/read/`;
-export const API_NOTIFICATION_READ_ALL = `${API_BASE}/notifications/read-all/`;
+export const API_NOTIFICATIONS            = `${API_BASE}/notifications/`;
+export const API_NOTIFICATION_READ        = (id) => `${API_BASE}/notifications/${id}/read/`;
+export const API_NOTIFICATION_READ_ALL    = `${API_BASE}/notifications/read-all/`;
+export const API_NOTIFICATION_DELETE      = (id) => `${API_BASE}/notifications/${id}/`;
+export const API_NOTIFICATION_CLEAR_ALL   = `${API_BASE}/notifications/clear-all/`;
 
 
