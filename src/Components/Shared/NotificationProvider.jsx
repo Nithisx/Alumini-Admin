@@ -18,7 +18,7 @@ import {
   requestNotificationPermission,
   getNotificationStatus,
   onForegroundMessage,
-} from '../../lib/firebase.js';
+} from '../../lib/webpush.js';
 import {
   API_NOTIFICATIONS,
   API_NOTIFICATION_READ,

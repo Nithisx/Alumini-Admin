@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { unregisterNotificationToken } from "../../lib/firebase";
+import { unregisterNotificationToken } from "../../lib/webpush";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileAlt,

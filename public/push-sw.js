@@ -1,18 +1,17 @@
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+/**
+ * push-sw.js — Dev-only native Web Push service worker.
+ *
+ * Registered by webpush.js in DEV mode (VitePWA's sw.js is disabled in dev).
+ * In PROD, Workbox's src/sw.js handles the same events.
+ *
+ * Push payload format expected from the backend:
+ *   { title, body, type, click_url, image }
+ */
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
-
-precacheAndRoute(self.__WB_MANIFEST);
-cleanupOutdatedCaches();
-
-// ── Native Web Push ───────────────────────────────────────────────────────────
-//
-// Backend sends a JSON payload: { title, body, type, click_url, image }
-// • When the app tab is visible   → forward to the page via postMessage (toast)
-// • When the app tab is not visible → show a native OS notification
 
 self.addEventListener('push', (event) => {
   let data = {};
@@ -26,13 +25,16 @@ self.addEventListener('push', (event) => {
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
+        // Forward to all open tabs so they can show an in-app toast
         for (const client of clientList) {
           client.postMessage({ type: 'PUSH_MESSAGE', data });
         }
 
+        // Only show the native notification when no tab has focus
         const hasFocusedClient = clientList.some(
           (c) => c.visibilityState === 'visible'
         );
+
         if (hasFocusedClient) return;
 
         return self.registration.showNotification(

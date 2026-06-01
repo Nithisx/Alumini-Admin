@@ -909,7 +909,7 @@ const Chat = () => {
 
   return (
     <div
-      className="fixed left-0 right-0 top-14 bottom-0 overflow-hidden bg-gray-50"
+      className="fixed left-0 right-0 top-14 bottom-0 pb-14 lg:pb-0 overflow-hidden bg-gray-50"
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* Context Menu */}

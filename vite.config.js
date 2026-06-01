@@ -23,7 +23,6 @@ export default defineConfig(({ mode }) => {
         },
         manifest: {
           id: '/',
-          gcm_sender_id: '1093673972115',
           name: 'KAHE Alumini',
           short_name: 'KAHE Alumini',
           description: 'KAHE Alumni network and administration portal.',
