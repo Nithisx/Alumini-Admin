@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import { unregisterNotificationToken } from "../../lib/webpush";
+import { performLogout } from "../../lib/logout.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileAlt,
@@ -31,16 +30,7 @@ export default function StaffHeader() {
     return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
-  const handleLogout = () => {
-    const token = localStorage.getItem("Token");
-    unregisterNotificationToken(token).catch(() => {});
-    localStorage.removeItem("Token");
-    localStorage.removeItem("Role");
-    toast.success("Logged out successfully!");
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 800);
-  };
+  const handleLogout = performLogout;
 
   const navItems = [
     { path: "/staff/dashboard", icon: faFileAlt, label: "Home" },

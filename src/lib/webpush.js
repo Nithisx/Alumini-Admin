@@ -19,7 +19,9 @@
  */
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-const STORAGE_KEY      = 'pushSubscription'; // JSON: { endpoint, p256dh, auth }
+// Scoped per auth-token so two different accounts on the same browser each get
+// their own cache entry and always re-register with the correct user on login.
+const storageKey = (authToken) => `pushSubscription_${authToken}`;
 
 // ── Device helpers ────────────────────────────────────────────────────────────
 
@@ -138,8 +140,9 @@ async function registerSubscriptionWithBackend(sub, authToken) {
   const p256dh   = arrayBufferToBase64url(sub.getKey('p256dh'));
   const auth     = arrayBufferToBase64url(sub.getKey('auth'));
   const cacheKey = JSON.stringify({ endpoint: sub.endpoint, p256dh, auth });
+  const key      = storageKey(authToken);
 
-  if (localStorage.getItem(STORAGE_KEY) === cacheKey) return;
+  if (localStorage.getItem(key) === cacheKey) return;
 
   const { API_PUSH_REGISTER } = await import('../config/api.js');
   const res = await fetch(API_PUSH_REGISTER, {
@@ -151,7 +154,7 @@ async function registerSubscriptionWithBackend(sub, authToken) {
     body: JSON.stringify({ endpoint: sub.endpoint, p256dh, auth, device_type: 'web' }),
   });
 
-  if (res.ok) localStorage.setItem(STORAGE_KEY, cacheKey);
+  if (res.ok) localStorage.setItem(key, cacheKey);
 }
 
 async function acquireAndRegisterSubscription(authToken) {
@@ -250,14 +253,16 @@ export async function requestNotificationPermission(authToken) {
  * @param {string} authToken — Django auth token
  */
 export async function unregisterNotificationToken(authToken) {
-  const cached = localStorage.getItem(STORAGE_KEY);
-  if (!cached || !authToken) return;
+  if (!authToken) return;
+  const key    = storageKey(authToken);
+  const cached = localStorage.getItem(key);
+  if (!cached) return;
 
   let endpoint;
   try {
     endpoint = JSON.parse(cached).endpoint;
   } catch {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(key);
     return;
   }
 
@@ -286,7 +291,24 @@ export async function unregisterNotificationToken(authToken) {
     // Backend will expire the stale subscription eventually.
   }
 
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(key);
+}
+
+/**
+ * Returns the cached push endpoint for the given auth token, or null if not registered.
+ * Used by the logout flow to pass the endpoint to the backend atomically.
+ *
+ * @param {string} authToken
+ * @returns {string|null}
+ */
+export function getCachedEndpoint(authToken) {
+  if (!authToken) return null;
+  try {
+    const cached = localStorage.getItem(storageKey(authToken));
+    return cached ? JSON.parse(cached).endpoint : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

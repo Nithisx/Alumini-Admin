@@ -496,7 +496,7 @@ export default function NotificationBell() {
                         lineHeight: 1,
                         padding: '4px 6px',
                         borderRadius: 6,
-                        opacity: 0,
+                        opacity: 1,
                         transition: 'opacity 0.15s, color 0.15s, background 0.15s',
                         display: 'flex',
                         alignItems: 'center',

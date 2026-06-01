@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileAlt, faCalendarCheck, faPhotoFilm, faSignOutAlt,
@@ -8,7 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../assets/KAHEAA.svg";
 import NotificationBell from "../Shared/NotificationBell.jsx";
-import { unregisterNotificationToken } from "../../lib/webpush";
+import { performLogout } from "../../lib/logout.js";
 
 export default function AlumniHeader() {
   const [pathname, setPathname] = useState(window.location.pathname);
@@ -20,14 +20,7 @@ export default function AlumniHeader() {
     return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
-  const handleLogout = () => {
-    const token = localStorage.getItem("Token");
-    unregisterNotificationToken(token).catch(() => {});
-    localStorage.removeItem("Token");
-    localStorage.removeItem("Role");
-    toast.success("Logged out successfully!");
-    setTimeout(() => { window.location.href = "/login"; }, 800);
-  };
+  const handleLogout = performLogout;
 
   const navItems = [
     { path: "/alumni/dashboard", icon: faFileAlt, label: "Home" },
