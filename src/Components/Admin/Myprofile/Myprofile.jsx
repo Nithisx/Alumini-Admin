@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react"
 import { toast } from "react-toastify";
-import axios from "axios"
+import axios from "../../../lib/axiosInstance"
 import SuggestionInput from "../../Shared/SuggestionInput"
 import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS } from "../../../config/api"
 import {

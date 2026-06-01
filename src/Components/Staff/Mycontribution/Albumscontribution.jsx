@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
-import axios from "axios";
+import axios from "../../../lib/axiosInstance";
 import { Calendar, Image, Eye, Edit, Trash2, Save, X, Upload } from "lucide-react";
 import { getMyPosts } from "../../../lib/mypostsCache";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import axios from "axios";
+import axios from "../lib/axiosInstance";
 import kahelogo from "../assets/KAHEAA.svg";
 
 const api = axios.create({

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import axios from "../lib/axiosInstance";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
 import { supabase } from "../lib/supabase";

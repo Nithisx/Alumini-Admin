@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../../lib/axiosInstance";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

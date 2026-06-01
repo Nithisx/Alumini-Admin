@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
+import axios from "../../../lib/axiosInstance";
 import * as XLSX from "xlsx";
 import Pagination from "../../Shared/Pagination";
 import MultiSelectAutocomplete, { HighlightMatch } from "../../Shared/MultiSelectAutocomplete";

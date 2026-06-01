@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../../lib/axiosInstance';
 import EngagementPanel from '../../Shared/EngagementPanel';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

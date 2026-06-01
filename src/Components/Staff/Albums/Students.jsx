@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
+import axios from "../../../lib/axiosInstance";
 
 const StudentImageUpload = () => {
   const [students, setStudents] = useState([]);  // Store students

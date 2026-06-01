@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import axios from "../../../lib/axiosInstance";
 import {
   Search, Plus, Edit, Trash2, Globe, Phone, Mail, MapPin,
   Users, ChevronDown, ChevronRight, Building, Package, Settings,
