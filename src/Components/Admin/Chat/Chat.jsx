@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Search, Send, ArrowLeft, Plus, Users, MessageSquare,
   Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
@@ -269,6 +270,8 @@ const Chat = () => {
   const [mediaPreview, setMediaPreview] = useState(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const messagesEndRef    = useRef(null);
   const socketRef         = useRef(null);
   const globalSocketRef   = useRef(null);
@@ -278,6 +281,7 @@ const Chat = () => {
   const longPressTimer    = useRef(null);
   const fileInputRef      = useRef(null);
   const editInputRef      = useRef(null);
+  const autoSelectedRef   = useRef(false);
 
   useEffect(() => { currentUserIdRef.current = currentUser?.id || null; }, [currentUser]);
 
@@ -295,6 +299,19 @@ const Chat = () => {
     localStorage.setItem("chat_agreement_accepted", "true");
     setShowAgreement(false);
   };
+
+  useEffect(() => {
+    if (autoSelectedRef.current) return;
+    const roomId = searchParams.get("room");
+    if (!roomId || !rooms.length) return;
+    const target = rooms.find((r) => String(r.id) === String(roomId));
+    if (target) {
+      autoSelectedRef.current = true;
+      selectChat(target);
+      setSearchParams({}, { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rooms]);
 
   useEffect(() => {
     connectGlobalSocket();
@@ -353,7 +370,6 @@ const Chat = () => {
           setRooms((prev) => {
             const idx = prev.findIndex((r) => String(r.id) === String(data.room_id));
             if (idx === -1) { loadRooms(); return prev; }
-            const isOpen   = String(selectedChatIdRef.current) === String(data.room_id);
             const fromSelf = String(data.sender_id) === String(currentUserIdRef.current);
             const updated  = prev.map((r, i) =>
               i === idx
@@ -363,7 +379,7 @@ const Chat = () => {
                     lastMessageTime: data.last_message_time ?? r.lastMessageTime,
                     lastMessageSenderId: data.last_message_sender_id ?? r.lastMessageSenderId,
                     lastMessageStatus: data.last_message_status ?? r.lastMessageStatus,
-                    unreadCount: isOpen || fromSelf ? 0 : (r.unreadCount || 0) + 1,
+                    ...(fromSelf ? { unreadCount: 0 } : {}),
                   }
                 : r
             );
@@ -391,12 +407,21 @@ const Chat = () => {
           return;
         }
 
-        if (data.action === "incoming_message") {
-          if (data.room_id && String(selectedChatIdRef.current) !== String(data.room_id)) {
-            setRooms((prev) => prev.map((r) =>
-              String(r.id) === String(data.room_id) ? { ...r, unreadCount: (r.unreadCount || 0) + 1 } : r
-            ));
-          }
+        if (data.action === "incoming_message" && data.room_id) {
+          setRooms((prev) => {
+            const isOpen = String(selectedChatIdRef.current) === String(data.room_id);
+            const updated = prev.map((r) =>
+              String(r.id) === String(data.room_id) ? {
+                ...r,
+                ...(data.last_message != null     ? { lastMessage: data.last_message }          : {}),
+                ...(data.last_message_time != null ? { lastMessageTime: data.last_message_time } : {}),
+                ...(data.sender_id != null        ? { lastMessageSenderId: data.sender_id }     : {}),
+                unreadCount: isOpen ? (r.unreadCount || 0) : (r.unreadCount || 0) + 1,
+              } : r
+            );
+            updated.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
+            return updated;
+          });
           return;
         }
 

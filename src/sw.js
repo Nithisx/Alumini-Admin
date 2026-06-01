@@ -42,7 +42,7 @@ self.addEventListener('push', (event) => {
             icon:               '/pwa-192x192-v2.png',
             badge:              '/notification-badge.png',
             image:              data.image || undefined,
-            tag:                data.type  || 'general',
+            tag:                (data.type === 'chat' && data.room_id) ? `chat-${data.room_id}` : (data.type || 'general'),
             renotify:           true,
             requireInteraction: false,
             data:               { click_url: data.click_url || '/' },
