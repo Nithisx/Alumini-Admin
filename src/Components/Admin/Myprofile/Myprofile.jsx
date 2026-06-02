@@ -4,6 +4,8 @@ import React, { useEffect, useState, useRef, useCallback } from "react"
 import { toast } from "react-toastify";
 import axios from "../../../lib/axiosInstance"
 import SuggestionInput from "../../Shared/SuggestionInput"
+import ImageViewerModal from "../../Shared/ImageViewerModal"
+import ImageCropModal from "../../Shared/ImageCropModal"
 import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS } from "../../../config/api"
 import {
   ArrowLeft,
@@ -179,6 +181,19 @@ const ProfileScreen = () => {
     confirm: false,
   })
 
+  // Image viewer modal state
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerImageUrl, setViewerImageUrl] = useState("")
+  const [viewerAltText, setViewerAltText] = useState("")
+
+  // Image crop modal state
+  const [cropModalOpen, setCropModalOpen] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState(null)
+  const [cropField, setCropField] = useState(null)
+  const [cropAspectRatio, setCropAspectRatio] = useState(1)
+  const [cropShape, setCropShape] = useState("rect")
+  const [cropTitle, setCropTitle] = useState("Crop Image")
+
   // Suggestions state
   const [apiSuggestions, setApiSuggestions] = useState({
     usernames: [],
@@ -306,30 +321,59 @@ const ProfileScreen = () => {
     fetchProfile()
   }, [])
 
+  // Opens the image viewer modal
+  const openImageViewer = (url, alt) => {
+    if (!url || url === DEFAULT_PROFILE_IMAGE || url === DEFAULT_COVER_IMAGE) return
+    setViewerImageUrl(url)
+    setViewerAltText(alt || "Photo")
+    setViewerOpen(true)
+  }
+
+  // Opens crop modal instead of directly uploading
   const handleImageUpload = (field, event) => {
     const file = event.target.files[0]
     if (!file) return
+    // Reset the input so the same file can be re-selected
+    event.target.value = ""
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB")
       return
     }
 
-    // Store the actual file for later upload
-    setProfile((prev) => ({
-      ...prev,
-      [`${field}_file`]: file,
-    }))
-
-    // Also set the preview image
+    // Read file as data URL and open crop modal
     const reader = new FileReader()
     reader.onload = (e) => {
-      setProfile((prev) => ({
-        ...prev,
-        [field]: e.target.result,
-      }))
+      setCropImageSrc(e.target.result)
+      setCropField(field)
+      if (field === "profile_photo") {
+        setCropAspectRatio(1)
+        setCropShape("round")
+        setCropTitle("Crop Profile Photo")
+      } else {
+        setCropAspectRatio(16 / 5)
+        setCropShape("rect")
+        setCropTitle("Crop Cover Photo")
+      }
+      setCropModalOpen(true)
     }
     reader.readAsDataURL(file)
+  }
+
+  // Called when user confirms the crop
+  const handleCropDone = (croppedBlob, croppedPreviewUrl) => {
+    const field = cropField
+    const croppedFile = new File([croppedBlob], `${field}_cropped.jpg`, { type: "image/jpeg" })
+
+    setProfile((prev) => ({
+      ...prev,
+      [`${field}_file`]: croppedFile,
+      [field]: croppedPreviewUrl,
+    }))
+
+    setCropModalOpen(false)
+    setCropImageSrc(null)
+    setCropField(null)
   }
 
   const handleSave = async () => {
@@ -1738,13 +1782,25 @@ const ProfileScreen = () => {
         <div className="bg-white border-b border-gray-100">
           {/* Cover photo */}
           <div
-            className="h-36 sm:h-44 bg-gray-200 bg-cover bg-center"
+            className="h-36 sm:h-44 bg-gray-200 bg-cover bg-center clickable-cover-photo"
             style={{ backgroundImage: `url(${profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE})` }}
+            onClick={() => openImageViewer(
+              profile.cover_photo ? getMediaUrl(profile.cover_photo) : DEFAULT_COVER_IMAGE,
+              "Cover Photo"
+            )}
+            title="Click to view cover photo"
           />
           {/* Avatar + actions row */}
           <div className="px-4 pb-4">
             <div className="flex items-end justify-between -mt-12 mb-3">
-              <div className="ring-4 ring-white rounded-full shadow-md">
+              <div
+                className="ring-4 ring-white rounded-full shadow-md clickable-photo"
+                onClick={() => openImageViewer(
+                  profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE,
+                  `${profile.first_name} ${profile.last_name}`
+                )}
+                title="Click to view profile photo"
+              >
                 <img
                   src={profile.profile_photo ? getMediaUrl(profile.profile_photo) : DEFAULT_PROFILE_IMAGE}
                   alt="Profile"
@@ -1865,6 +1921,25 @@ const ProfileScreen = () => {
           <Edit className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={viewerOpen}
+        imageUrl={viewerImageUrl}
+        altText={viewerAltText}
+        onClose={() => setViewerOpen(false)}
+      />
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        imageSrc={cropImageSrc}
+        aspectRatio={cropAspectRatio}
+        cropShape={cropShape}
+        title={cropTitle}
+        onClose={() => { setCropModalOpen(false); setCropImageSrc(null); }}
+        onCropDone={handleCropDone}
+      />
     </div>
   )
 }

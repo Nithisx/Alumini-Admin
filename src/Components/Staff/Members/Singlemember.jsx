@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
+import ImageViewerModal from "../../Shared/ImageViewerModal";
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
 
@@ -75,6 +76,18 @@ export default function SingleMember() {
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Personal");
+
+  // Image viewer modal state
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImageUrl, setViewerImageUrl] = useState("");
+  const [viewerAltText, setViewerAltText] = useState("");
+
+  const openImageViewer = (url, alt) => {
+    if (!url) return;
+    setViewerImageUrl(url);
+    setViewerAltText(alt || "Photo");
+    setViewerOpen(true);
+  };
 
   /* ── helpers ── */
   const navigateToMembersList = () => {
@@ -318,7 +331,7 @@ export default function SingleMember() {
     <div className="min-h-screen bg-gray-50 pb-16">
       {/* ── cover banner ── */}
       <div
-        className="relative h-40 sm:h-52 bg-gray-200"
+        className="relative h-40 sm:h-52 bg-gray-200 clickable-cover-photo"
         style={{
           backgroundImage: cover_photo
             ? `url(${getMediaUrl(cover_photo)}), url(${COVER_PLACEHOLDER_IMAGE})`
@@ -326,6 +339,11 @@ export default function SingleMember() {
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
+        onClick={() => openImageViewer(
+          cover_photo ? getMediaUrl(cover_photo) : COVER_PLACEHOLDER_IMAGE,
+          "Cover Photo"
+        )}
+        title="Click to view cover photo"
       >
         <div className="absolute inset-0 bg-black/25" />
       </div>
@@ -338,8 +356,13 @@ export default function SingleMember() {
             <img
               src={member.profile_photo ? getMediaUrl(member.profile_photo) : getProfilePlaceholderByGender(gender)}
               alt={username}
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-md object-cover bg-white"
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-md object-cover bg-white clickable-photo"
               onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(gender); }}
+              onClick={() => openImageViewer(
+                member.profile_photo ? getMediaUrl(member.profile_photo) : getProfilePlaceholderByGender(gender),
+                `${first_name} ${last_name}`
+              )}
+              title="Click to view profile photo"
             />
             {/* active dot */}
             <span className={`absolute bottom-1.5 right-1.5 w-4 h-4 rounded-full border-2 border-white ${is_active ? "bg-green-500" : "bg-red-400"}`} />
@@ -409,6 +432,14 @@ export default function SingleMember() {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={viewerOpen}
+        imageUrl={viewerImageUrl}
+        altText={viewerAltText}
+        onClose={() => setViewerOpen(false)}
+      />
     </div>
   );
 }

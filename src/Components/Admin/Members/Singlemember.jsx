@@ -8,6 +8,8 @@ import {
   COURSE_BRANCH_MAPPING,
 } from "../../../constants/academicOptions";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
+import ImageViewerModal from "../../Shared/ImageViewerModal";
+import ImageCropModal from "../../Shared/ImageCropModal";
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
 
@@ -135,6 +137,22 @@ export default function SingleMember() {
   const [addCourseForm, setAddCourseForm] = useState({ course: "", branch: "", college_name: "", passed_out_year: "" });
   const [addCourseLoading, setAddCourseLoading] = useState(false);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
+
+  // Image viewer modal state
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImageUrl, setViewerImageUrl] = useState("");
+  const [viewerAltText, setViewerAltText] = useState("");
+
+  // Image crop modal state
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+
+  const openImageViewer = (url, alt) => {
+    if (!url) return;
+    setViewerImageUrl(url);
+    setViewerAltText(alt || "Photo");
+    setViewerOpen(true);
+  };
 
   /* ── helpers ── */
   const navigateToMembersList = () => {
@@ -346,13 +364,31 @@ export default function SingleMember() {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      setChangedFields((cur) => new Set([...cur, "profile_photo"]));
-      const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target.result);
-      reader.readAsDataURL(file);
+    if (!file) return;
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
     }
+
+    // Read file and open crop modal
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCropImageSrc(ev.target.result);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropDone = (croppedBlob, croppedPreviewUrl) => {
+    const croppedFile = new File([croppedBlob], "profile_photo_cropped.jpg", { type: "image/jpeg" });
+    setSelectedImage(croppedFile);
+    setImagePreview(croppedPreviewUrl);
+    setChangedFields((cur) => new Set([...cur, "profile_photo"]));
+    setCropModalOpen(false);
+    setCropImageSrc(null);
   };
 
   const resetImageSelection = () => { setSelectedImage(null); setImagePreview(null); };
@@ -813,7 +849,7 @@ export default function SingleMember() {
 
       {/* ── cover banner ── */}
       <div
-        className="relative h-40 sm:h-52 bg-green-700"
+        className="relative h-40 sm:h-52 bg-green-700 clickable-cover-photo"
         style={{
           backgroundImage: cover_photo
             ? `url(${getMediaUrl(cover_photo)}), url(${COVER_PLACEHOLDER_IMAGE})`
@@ -821,6 +857,11 @@ export default function SingleMember() {
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
+        onClick={() => openImageViewer(
+          cover_photo ? getMediaUrl(cover_photo) : COVER_PLACEHOLDER_IMAGE,
+          "Cover Photo"
+        )}
+        title="Click to view cover photo"
       >
         <div className="absolute inset-0 bg-black/25" />
       </div>
@@ -833,8 +874,17 @@ export default function SingleMember() {
             <img
               src={imagePreview || (member.profile_photo ? getMediaUrl(member.profile_photo) : getProfilePlaceholderByGender(gender))}
               alt={username}
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-md object-cover bg-white"
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-md object-cover bg-white clickable-photo"
               onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(gender); }}
+              onClick={() => {
+                if (!isEditing) {
+                  openImageViewer(
+                    imagePreview || (member.profile_photo ? getMediaUrl(member.profile_photo) : getProfilePlaceholderByGender(gender)),
+                    `${first_name} ${last_name}`
+                  );
+                }
+              }}
+              title={isEditing ? "Click camera to change photo" : "Click to view profile photo"}
             />
             {/* active dot */}
             <span className={`absolute bottom-1.5 right-1.5 w-4 h-4 rounded-full border-2 border-white ${is_active ? "bg-green-500" : "bg-red-400"}`} />
@@ -1043,6 +1093,25 @@ export default function SingleMember() {
           </div>
         </div>
       )}
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={viewerOpen}
+        imageUrl={viewerImageUrl}
+        altText={viewerAltText}
+        onClose={() => setViewerOpen(false)}
+      />
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        imageSrc={cropImageSrc}
+        aspectRatio={1}
+        cropShape="round"
+        title="Crop Profile Photo"
+        onClose={() => { setCropModalOpen(false); setCropImageSrc(null); }}
+        onCropDone={handleCropDone}
+      />
     </div>
   );
 }

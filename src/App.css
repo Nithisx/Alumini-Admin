@@ -152,3 +152,280 @@ html, body, #root {
     overflow: hidden;
   }
 } */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Image Viewer Modal — full-screen photo popup
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.image-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: imageViewerFadeIn 0.25s ease-out;
+  cursor: zoom-out;
+}
+
+.image-viewer-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.image-viewer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.image-viewer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 90vh;
+  animation: imageViewerZoomIn 0.3s ease-out;
+  cursor: default;
+}
+
+.image-viewer-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  object-fit: contain;
+  user-select: none;
+}
+
+@keyframes imageViewerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes imageViewerZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Image Crop Modal — crop & resize overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.image-crop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: imageViewerFadeIn 0.2s ease-out;
+  padding: 1rem;
+}
+
+.image-crop-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: imageViewerZoomIn 0.25s ease-out;
+}
+
+.image-crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.image-crop-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.image-crop-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-crop-close-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.image-crop-area {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  background: #111;
+}
+
+@media (min-width: 640px) {
+  .image-crop-area {
+    height: 380px;
+  }
+}
+
+.image-crop-controls {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.image-crop-control-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.image-crop-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #d1fae5, #059669);
+  outline: none;
+  cursor: pointer;
+}
+
+.image-crop-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #059669;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.image-crop-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.image-crop-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #059669;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+  cursor: pointer;
+}
+
+.image-crop-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.image-crop-cancel-btn {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-crop-cancel-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.image-crop-done-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #059669, #047857);
+  border: none;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.image-crop-done-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #047857, #065f46);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.image-crop-done-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Make profile & cover photos clickable */
+.clickable-photo {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-photo:hover {
+  opacity: 0.9;
+  filter: brightness(1.05);
+}
+
+.clickable-cover-photo {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.clickable-cover-photo:hover {
+  filter: brightness(1.1);
+}
