@@ -76,7 +76,7 @@ export default function AdminHeader() {
             method: 'GET',
             headers: { 'Authorization': `Token ${token}` },
           });
-          if (response.status === 401 || response.status === 403) {
+          if (response.status === 401) {
             localStorage.removeItem('Token');
             localStorage.removeItem('Role');
             window.location.href = '/login';

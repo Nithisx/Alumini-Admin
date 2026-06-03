@@ -140,7 +140,6 @@ const Signup = () => {
         } else if (data.status === "new_user") {
           sessionStorage.setItem("oauth_access_token", session.access_token);
           sessionStorage.setItem("oauth_avatar_url", data.avatar_url || "");
-          await supabase.auth.signOut();
           navigated = true;
           navigate("/oauth-signup", {
             state: {
