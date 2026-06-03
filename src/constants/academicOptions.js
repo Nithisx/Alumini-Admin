@@ -3,6 +3,7 @@ export const COLLEGE_NAMES = [
   "FOADP-Faculty of Architecture, Designing and Planning",
   "FOE-Faculty of Engineering",
   "FOP-Faculty of Pharmacy",
+  "KPC-Karpagam Polytechnic College",
   "KAHE",
 ];
 
@@ -31,6 +32,14 @@ export const COURSES = [
   "Master of Planning",
   "Master of Science",
   "Master of Social Work",
+  "DME",
+  "DME & Tool & Die",
+  "DCE",
+  "DCOE",
+  "DECE",
+  "DEEE",
+  "DIT",
+  "DAE",
   "Pharm. D",
   "Ph.D",
 ];
