@@ -8,10 +8,12 @@ import "./App.css";
 import Loader from "./Pages/Loder";
 
 export default function App() {
-  // Show the Karpagam Alumni loading screen on every initial site open / refresh.
-  // This initializer runs once per full page load (not on in-app route changes),
-  // so the loader greets users when they open the site, then fades after the timer.
-  const [appLoading, setAppLoading] = useState(true);
+  // Show the Karpagam Alumni loading screen only on the landing page ("/" or
+  // "/home"). Runs once per full page load (not on in-app route changes).
+  const [appLoading, setAppLoading] = useState(() => {
+    const pathname = window.location.pathname;
+    return pathname === "/" || pathname === "/home";
+  });
 
   useEffect(() => {
     if (!appLoading) return;
