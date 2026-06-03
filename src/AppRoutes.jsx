@@ -15,6 +15,7 @@ import ShareRedirect from './Pages/ShareRedirect';
 import { normalizeRoleForBase } from './lib/authRole';
 import InstallAppPrompt from './Components/Shared/InstallAppPrompt';
 import FCMDiagnostics from './Components/Shared/FCMDiagnostics';
+import PageTransition from './Components/Shared/PageTransition';
 
 // Layouts
 import AdminLayout from './Components/Admin/AdminLayout';
@@ -44,10 +45,14 @@ function GuestOnly({ children }) {
   return token ? <AuthRedirect /> : children;
 }
 
-const AppRoutes = () => {
+// Animates between top-level sections, keyed by the first path segment so that
+// navigating within a layout (e.g. /admin/dashboard → /admin/members) does not
+// remount the whole layout — that nested transition is handled inside each layout.
+function AnimatedRoutes() {
+  const location = useLocation();
+  const segment = `/${location.pathname.split('/')[1] || ''}`;
   return (
-    <Router>
-      <InstallAppPrompt />
+    <PageTransition transitionKey={segment}>
       <Routes>
         {/* Initial Route — redirect authenticated users to their dashboard */}
         <Route path="/" element={<GuestOnly><Home /></GuestOnly>} />
@@ -100,6 +105,15 @@ const AppRoutes = () => {
         <Route path="/fcm-diagnostics" element={<FCMDiagnostics />} />
         <Route path="*" element={<AuthRedirect />} />
       </Routes>
+    </PageTransition>
+  );
+}
+
+const AppRoutes = () => {
+  return (
+    <Router>
+      <InstallAppPrompt />
+      <AnimatedRoutes />
     </Router>
   );
 };

@@ -429,3 +429,404 @@ html, body, #root {
 .clickable-cover-photo:hover {
   filter: brightness(1.1);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UI ENRICHMENT LAYER
+   Global polish applied app-wide — enriched typography, animated graphics,
+   card depth + shine, button micro-interactions and entrance motion.
+   Theme (emerald/green + navy + gray) is intentionally preserved; this layer
+   only adds richness on top of the existing colors and layout.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ---- 1. Enriched typography -------------------------------------------------- */
+:root {
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Sora", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  letter-spacing: -0.011em;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* ---- 2. Animated graphical backdrop (subtle, behind everything) -------------- */
+.App {
+  position: relative;
+  isolation: isolate;
+}
+
+.App::before,
+.App::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.5;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.App::before {
+  width: 46vw;
+  height: 46vw;
+  max-width: 620px;
+  max-height: 620px;
+  top: -14vw;
+  left: -10vw;
+  background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.18), transparent 70%);
+  animation: blobDriftA 24s ease-in-out infinite;
+}
+
+.App::after {
+  width: 40vw;
+  height: 40vw;
+  max-width: 560px;
+  max-height: 560px;
+  bottom: -12vw;
+  right: -8vw;
+  background: radial-gradient(circle at 70% 70%, rgba(45, 212, 191, 0.16), rgba(56, 189, 248, 0.12) 55%, transparent 72%);
+  animation: blobDriftB 30s ease-in-out infinite;
+}
+
+@keyframes blobDriftA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(8vw, 6vh) scale(1.12); }
+  66%      { transform: translate(-4vw, 10vh) scale(0.95); }
+}
+
+@keyframes blobDriftB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-7vw, -7vh) scale(1.15); }
+}
+
+/* ---- 3. Reusable keyframe library ------------------------------------------- */
+@keyframes uiFadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes uiFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes uiPopIn {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes uiFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes uiShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes uiGradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes uiPulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0); }
+  50%      { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.10); }
+}
+
+/* Animated gradient text — for bg-clip-text headings (e.g. the hero accent). */
+@keyframes uiTextGradient {
+  to { background-position: 200% center; }
+}
+.text-gradient-animate {
+  background-size: 200% auto;
+  animation: uiTextGradient 5s ease-in-out infinite alternate;
+}
+
+/* Per-line text entrance with staggered delay via --d (set inline). */
+@keyframes uiTextRise {
+  from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.text-rise {
+  animation: uiTextRise 0.7s var(--ease-smooth) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Opt-in utility classes (use anywhere) */
+.anim-fade-in-up { animation: uiFadeInUp 0.6s var(--ease-smooth) both; }
+.anim-fade-in    { animation: uiFadeIn 0.6s var(--ease-smooth) both; }
+.anim-pop-in     { animation: uiPopIn 0.5s var(--ease-spring) both; }
+.anim-float      { animation: uiFloat 4s ease-in-out infinite; }
+.anim-pulse-glow { animation: uiPulseGlow 2.6s ease-in-out infinite; }
+
+/* ---- 4. Page / section entrance --------------------------------------------- */
+/* Route-level entrance is handled by <PageTransition> (framer-motion) so the
+   animation re-fires on every navigation, not just on first mount. */
+
+/* ---- 5. Card enrichment (depth + lift) -------------------------------------- */
+/* Targets card-like elements: rounded + shadow, excluding full-screen overlays. */
+.App :where(div, section, article, li, a)[class*="rounded-2xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]),
+.App :where(div, section, article, li, a)[class*="rounded-xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]) {
+  transition: transform 0.35s var(--ease-smooth), box-shadow 0.35s var(--ease-smooth);
+}
+
+.App :where(div, section, article, li, a)[class*="rounded-2xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]):hover,
+.App :where(div, section, article, li, a)[class*="rounded-xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]):hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 12px 28px -8px rgba(15, 23, 42, 0.16),
+    0 4px 10px -4px rgba(16, 185, 129, 0.10);
+}
+
+/* ---- 6. Button micro-interactions (theme-safe, no layout shift) ------------- */
+button:not(:disabled),
+a[class*="rounded"][class*="bg-"] {
+  transition: transform 0.18s var(--ease-smooth), box-shadow 0.25s var(--ease-smooth),
+    filter 0.2s var(--ease-smooth), background-color 0.2s var(--ease-smooth);
+}
+button:not(:disabled):active {
+  transform: scale(0.96);
+}
+/* Soft glow lift only for prominent filled buttons */
+button:not(:disabled)[class*="bg-emerald"]:hover,
+button:not(:disabled)[class*="bg-green"]:hover,
+button:not(:disabled)[class*="bg-blue"]:hover,
+button:not(:disabled)[class*="bg-indigo"]:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.45);
+}
+
+/* ---- 7. Avatars / round images — gentle interactive pop --------------------- */
+img[class*="rounded-full"] {
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-smooth);
+}
+img[class*="rounded-full"]:hover {
+  transform: scale(1.06);
+}
+
+/* ---- 8. Enriched loading spinner glow --------------------------------------- */
+[class*="animate-spin"][class*="rounded-full"][class*="border-t"] {
+  box-shadow: 0 0 18px -2px rgba(16, 185, 129, 0.35);
+}
+
+/* ---- 9. Premium scrollbar --------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.45) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.55), rgba(20, 184, 166, 0.55));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(5, 150, 105, 0.85), rgba(13, 148, 136, 0.85));
+  background-clip: padding-box;
+}
+
+/* ---- 10. Scroll-reveal (added by uiAnimations.js, never hides content) ------ */
+.reveal-init {
+  opacity: 0;
+  transform: translateY(22px);
+  will-change: opacity, transform;
+}
+.reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.7s var(--ease-smooth), transform 0.7s var(--ease-smooth);
+}
+
+/* ---- 12. Branded hero/banner graphics --------------------------------------
+   Targets the app's emerald/green gradient hero blocks (rounded-2xl + white
+   text) and layers an animated dot-grid + slow light sheen *behind* the text,
+   using z-index:-1 within an isolated stacking context so content stays on top
+   and the original gradient/colors are untouched. */
+.App [class*="bg-gradient-to-r"][class*="text-white"][class*="rounded-2xl"]:is(
+    [class*="from-emerald"], [class*="from-green"], [class*="from-teal"]
+  ) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.App [class*="bg-gradient-to-r"][class*="text-white"][class*="rounded-2xl"]:is(
+    [class*="from-emerald"], [class*="from-green"], [class*="from-teal"]
+  )::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.16) 1.4px, transparent 1.6px),
+    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.18), transparent 45%);
+  background-size: 22px 22px, 100% 100%;
+  pointer-events: none;
+  animation: heroDotDrift 18s linear infinite;
+}
+
+.App [class*="bg-gradient-to-r"][class*="text-white"][class*="rounded-2xl"]:is(
+    [class*="from-emerald"], [class*="from-green"], [class*="from-teal"]
+  )::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  z-index: -1;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+  animation: heroSheen 7s ease-in-out infinite;
+}
+
+@keyframes heroDotDrift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 44px 44px, 0 0; }
+}
+
+@keyframes heroSheen {
+  0%        { left: -60%; }
+  45%, 100% { left: 130%; }
+}
+
+/* ---- 13. Round brand badges (avatar circles + stat icons) ------------------
+   Gradient avatar circles and the solid-color stat icons get a glossy top
+   highlight plus a light sheen that sweeps on hover. Decorative layers sit at
+   z-index:-1 in an isolated context, so the white initials/SVG icon stay on
+   top and the ring/shadow (drawn outside the box) is unaffected. */
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  ) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  )::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.4), transparent 55%);
+  pointer-events: none;
+}
+
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  )::after {
+  content: "";
+  position: absolute;
+  top: -120%;
+  left: -10%;
+  z-index: -1;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  transform: skewX(-20deg) translateX(-260%);
+  transition: transform 0.7s var(--ease-smooth);
+  pointer-events: none;
+}
+
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  ):hover::after {
+  transform: skewX(-20deg) translateX(320%);
+}
+
+/* ---- 14. White navbar — faint animated brand accent ------------------------
+   A thin emerald→teal gradient line drifts along the bottom of the top nav,
+   and the active item gains a soft animated underline. Colors/layout intact. */
+.App nav[class*="fixed"][class*="top-0"] {
+  position: fixed; /* already fixed; ensures ::after anchors correctly */
+}
+
+.App nav[class*="fixed"][class*="top-0"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.55),
+    rgba(20, 184, 166, 0.55),
+    rgba(16, 185, 129, 0.55),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: uiGradientShift 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.App nav :is(a, button)[class*="bg-emerald-50"][class*="text-emerald-700"] {
+  position: relative;
+}
+.App nav :is(a, button)[class*="bg-emerald-50"][class*="text-emerald-700"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  height: 2px;
+  width: 0;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #10b981, #14b8a6);
+  transform: translateX(-50%);
+  animation: navUnderlineGrow 0.4s var(--ease-smooth) forwards;
+  pointer-events: none;
+}
+
+@keyframes navUnderlineGrow {
+  from { width: 0; opacity: 0; }
+  to   { width: 60%; opacity: 1; }
+}
+
+/* ---- 11. Accessibility: respect reduced-motion ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal-init { opacity: 1; transform: none; }
+  .App::before, .App::after { animation: none; }
+}

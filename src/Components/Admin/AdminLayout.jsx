@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import PageTransition from '../Shared/PageTransition';
 
 // Admin UI Components
 import AdminHeader from './AdminHeader';
@@ -31,6 +32,7 @@ import MemberImport from "./MemberImport/MemberImport";
 import { NotificationProvider } from "../Shared/NotificationProvider.jsx";
 import NotificationPromptModal from "../Shared/NotificationPromptModal.jsx";
 const AdminLayout = () => {
+  const location = useLocation();
   return (
     <NotificationProvider>
       <NotificationPromptModal />
@@ -40,6 +42,7 @@ const AdminLayout = () => {
 
         {/* Main Content */}
         <main className="role-content w-full min-w-0 p-0 pb-14 lg:pb-0">
+          <PageTransition transitionKey={location.pathname}>
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="register-request" element={<RegisterRequestPage />} />
@@ -70,6 +73,7 @@ const AdminLayout = () => {
             <Route path="import-members" element={<MemberImport />} />
             {/* Add more admin routes if needed */}
           </Routes>
+          </PageTransition>
         </main>
       </div>
     </NotificationProvider>

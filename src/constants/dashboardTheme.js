@@ -21,7 +21,7 @@ export const DASHBOARD_THEME = {
   statLabel: "text-xs text-gray-500 mt-0.5",
 
   sectionHeader: "flex items-center justify-between mb-3",
-  sectionTitle: "text-base font-bold text-gray-900",
+  sectionTitle: "reveal-title text-base font-bold text-gray-900",
   sectionAction: "text-sm font-semibold text-emerald-600 hover:text-emerald-700",
 
   mediaGrid: "grid grid-cols-3 gap-0.5 rounded-xl overflow-hidden",

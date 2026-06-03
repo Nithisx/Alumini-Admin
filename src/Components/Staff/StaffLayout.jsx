@@ -1,5 +1,6 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import PageTransition from "../Shared/PageTransition";
 
 // Staff UI Components
 import StaffHeader from "./StaffHeader";
@@ -28,6 +29,7 @@ import { NotificationProvider } from "../Shared/NotificationProvider.jsx";
 import NotificationPromptModal from "../Shared/NotificationPromptModal.jsx";
 
 const StaffLayout = () => {
+  const location = useLocation();
   return (
     <NotificationProvider>
       <NotificationPromptModal />
@@ -37,6 +39,7 @@ const StaffLayout = () => {
 
         {/* Main Content */}
         <main className="role-content w-full min-w-0 p-0 pb-14 lg:pb-0">
+          <PageTransition transitionKey={location.pathname}>
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="event" element={<AddEvent />} />
@@ -63,6 +66,7 @@ const StaffLayout = () => {
             <Route path="chapters/:type/:value" element={<ChapterDetail />} />
             {/* Add more routes as needed */}
           </Routes>
+          </PageTransition>
         </main>
       </div>
     </NotificationProvider>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+import PageTransition from "../Shared/PageTransition";
 
 // Staff UI Components
 import AdminHeader from "./AluminiHeader";
@@ -39,6 +40,7 @@ const AlumniLayout = () => {
 
         {/* Main Content */}
         <main className={`role-content w-full min-w-0 p-0 ${isChat ? "" : "pb-14 lg:pb-0"}`}>
+          <PageTransition transitionKey={location.pathname} className={isChat ? "h-full" : undefined}>
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="event" element={<AddEvent />} />
@@ -63,6 +65,7 @@ const AlumniLayout = () => {
             <Route path="chapters/:type/:value" element={<ChapterDetail />} />
             {/* Add more routes as needed */}
           </Routes>
+          </PageTransition>
         </main>
       </div>
     </NotificationProvider>

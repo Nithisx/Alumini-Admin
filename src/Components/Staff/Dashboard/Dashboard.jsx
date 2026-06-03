@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import Footer from "../../../Pages/about_components/Footer";
 import ChapterDistributionSection from "../../Shared/ChapterDistributionSection";
 import { DASHBOARD_THEME } from "../../../constants/dashboardTheme";
+import CountUp from "../../Shared/CountUp";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -177,7 +178,7 @@ const HomePage = () => {
                 </svg>
               </div>
               <div className="text-center">
-                <p className={DASHBOARD_THEME.statCount}>{s.value}</p>
+                <p className={DASHBOARD_THEME.statCount}><CountUp value={s.value} /></p>
                 <p className={DASHBOARD_THEME.statLabel}>{s.label}</p>
               </div>
             </button>
