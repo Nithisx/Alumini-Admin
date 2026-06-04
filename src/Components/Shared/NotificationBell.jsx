@@ -37,6 +37,61 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
+// ── Reason-specific guidance for the bell dropdown banner ─────────────────────
+const BANNER_REASON_CARDS = {
+  unsupported: {
+    icon: '⚠️',
+    title: 'Browser Not Supported',
+    body: 'Your browser does not support push notifications. Try using Google Chrome, Microsoft Edge, or Firefox for the best experience.',
+    color: '#92400e',
+    bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+    border: 'rgba(217,119,6,0.15)',
+  },
+  ios_not_pwa: {
+    icon: '📲',
+    title: 'Add to Home Screen First',
+    body: 'On iPhone / iPad, push notifications only work when installed as an app. Tap Share (□↑) → "Add to Home Screen", then open the app from there.',
+    color: '#1e40af',
+    bg: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)',
+    border: 'rgba(59,130,246,0.15)',
+  },
+  denied: {
+    icon: '🚫',
+    title: 'Notifications Blocked',
+    body: 'Notifications have been blocked by your browser.\n\n• Chrome: Click the lock icon (🔒) → Site Settings → Allow Notifications\n• Firefox: Click the lock icon → Permissions\n• Safari: Preferences → Websites → Notifications → Allow',
+    color: '#991b1b',
+    bg: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)',
+    border: 'rgba(239,68,68,0.15)',
+  },
+  dismissed: {
+    icon: '🔕',
+    title: 'Permission Not Granted',
+    body: 'You dismissed the notification prompt. You can try again by clicking the button below.',
+    color: '#92400e',
+    bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+    border: 'rgba(217,119,6,0.15)',
+    retryable: true,
+  },
+  token_failed: {
+    icon: '⚙️',
+    title: 'Setup Failed',
+    body: 'Permission was granted but setup couldn\'t complete. Try disabling ad-blockers or privacy shields, then refresh the page.',
+    color: '#b45309',
+    bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+    border: 'rgba(217,119,6,0.15)',
+    retryable: true,
+  },
+  error: {
+    icon: '❌',
+    title: 'Something Went Wrong',
+    body: 'We couldn\'t set up push notifications. Check your browser\'s privacy settings or ad-blocker and try again.',
+    color: '#991b1b',
+    bg: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)',
+    border: 'rgba(239,68,68,0.15)',
+    retryable: true,
+  },
+};
+
 // ── Enable Notifications Banner ───────────────────────────────────────────────
 function EnableNotificationsBanner({ status, onEnable }) {
   const [loading, setLoading] = useState(false);
@@ -44,6 +99,7 @@ function EnableNotificationsBanner({ status, onEnable }) {
 
   const handleEnable = async () => {
     setLoading(true);
+    setResult(null);
     const res = await onEnable();
     setResult(res);
     setLoading(false);
@@ -52,110 +108,126 @@ function EnableNotificationsBanner({ status, onEnable }) {
   // Already granted — don't show
   if (status.permission === 'granted') return null;
 
-  // iOS not installed as PWA
-  if (status.isIOS && !status.isPWA) {
-    return (
-      <div style={{
-        padding: '12px 16px',
-        background: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
-        borderBottom: '1px solid rgba(217,119,6,0.15)',
-        display: 'flex', gap: 10, alignItems: 'flex-start',
-      }}>
-        <span style={{ fontSize: 22 }}>📲</span>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#92400e', marginBottom: 3 }}>
-            Enable Push Notifications
-          </div>
-          <div style={{ fontSize: 12, color: '#a16207', lineHeight: 1.4 }}>
-            To receive notifications on your iPhone/iPad, tap
-            <strong> Share </strong> → <strong> Add to Home Screen</strong>.
-            Then open the app from your home screen.
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ── Determine which card to show ────────────────────────────────────────────
 
-  // Permission denied — tell user to change in settings
-  if (status.permission === 'denied') {
-    return (
-      <div style={{
-        padding: '12px 16px',
-        background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)',
-        borderBottom: '1px solid rgba(239,68,68,0.15)',
-        display: 'flex', gap: 10, alignItems: 'flex-start',
-      }}>
-        <span style={{ fontSize: 22 }}>🚫</span>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#991b1b', marginBottom: 3 }}>
-            Notifications Blocked
-          </div>
-          <div style={{ fontSize: 12, color: '#b91c1c', lineHeight: 1.4 }}>
-            Notifications are blocked by your browser. Please update your browser or device settings to allow them.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Browser doesn't support notifications
-  if (!status.supported) {
-    return (
-      <div style={{
-        padding: '12px 16px',
-        background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
-        borderBottom: '1px solid rgba(0,0,0,0.08)',
-        display: 'flex', gap: 10, alignItems: 'flex-start',
-      }}>
-        <span style={{ fontSize: 22 }}>⚠️</span>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#374151', marginBottom: 3 }}>
-            Not Supported
-          </div>
-          <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.4 }}>
-            Your browser does not support push notifications.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error result
+  // 1) If we have a failed result, show reason-specific error card
   if (result && !result.success) {
-    const messages = {
-      dismissed: 'You dismissed the notification prompt. Click below to try again.',
-      token_failed: 'Could not generate a notification token. Please try again.',
-      error: result.message || 'Something went wrong. Please try again.',
-    };
+    const card = BANNER_REASON_CARDS[result.reason] || BANNER_REASON_CARDS.error;
     return (
       <div style={{
         padding: '12px 16px',
-        background: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
-        borderBottom: '1px solid rgba(217,119,6,0.15)',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 22 }}>⚠️</span>
-          <div style={{ fontSize: 12, color: '#a16207', lineHeight: 1.4 }}>
-            {messages[result.reason] || messages.error}
+          <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+              {card.title}
+            </div>
+            <div style={{
+              fontSize: 12, color: card.color, lineHeight: 1.45,
+              whiteSpace: 'pre-line', opacity: 0.85,
+            }}>
+              {card.body}
+            </div>
           </div>
         </div>
-        <button
-          onClick={handleEnable}
-          disabled={loading}
-          style={{
-            background: '#059669', color: '#fff', border: 'none', borderRadius: 8,
-            padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            opacity: loading ? 0.6 : 1,
-          }}
-        >
-          {loading ? 'Enabling…' : 'Try Again'}
-        </button>
+        {card.retryable && (
+          <button
+            onClick={handleEnable}
+            disabled={loading}
+            style={{
+              background: '#059669', color: '#fff', border: 'none', borderRadius: 8,
+              padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              opacity: loading ? 0.6 : 1,
+              transition: 'opacity 0.15s, transform 0.1s',
+              alignSelf: 'flex-start',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.03)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            {loading ? 'Retrying…' : 'Try Again'}
+          </button>
+        )}
       </div>
     );
   }
 
-  // Default: permission is 'default' — show enable button
+  // 2) iOS not installed as PWA (static, no retry)
+  if (status.isIOS && !status.isPWA) {
+    const card = BANNER_REASON_CARDS.ios_not_pwa;
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+            {card.title}
+          </div>
+          <div style={{ fontSize: 12, color: card.color, lineHeight: 1.45, opacity: 0.85 }}>
+            {card.body}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3) Permission denied — show detailed browser-specific guidance
+  if (status.permission === 'denied') {
+    const card = BANNER_REASON_CARDS.denied;
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+            {card.title}
+          </div>
+          <div style={{
+            fontSize: 12, color: card.color, lineHeight: 1.45,
+            whiteSpace: 'pre-line', opacity: 0.85,
+          }}>
+            {card.body}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4) Browser doesn't support notifications
+  if (!status.supported) {
+    const card = BANNER_REASON_CARDS.unsupported;
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+            {card.title}
+          </div>
+          <div style={{ fontSize: 12, color: card.color, lineHeight: 1.45, opacity: 0.85 }}>
+            {card.body}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 5) Default: permission is 'default' — show enable button
   return (
     <div style={{
       padding: '12px 16px',

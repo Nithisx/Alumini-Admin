@@ -864,8 +864,12 @@ const Chat = () => {
   };
 
   // ── Room list ──────────────────────────────────────────────────────────────
+  const roomHasMessages = (r) => Boolean(
+    r.lastMessage || r.last_message?.text ||
+    r.lastMessageTime || r.last_message_time || r.last_message?.timestamp
+  );
   const getSortedRooms = () => {
-    const filtered = rooms.filter((r) => !r.is_community);
+    const filtered = rooms.filter((r) => !r.is_community && (roomHasMessages(r) || String(r.id) === String(selectedChat?.id)));
     return communityRoom ? [communityRoom, ...filtered] : filtered;
   };
 

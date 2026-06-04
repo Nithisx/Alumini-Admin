@@ -237,7 +237,7 @@ const AlbumsPage = () => {
                       <img
                         src={`https://api.karpagamalumni.in${album.cover_image}`}
                         alt={album.title}
-                        className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain p-1 grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100">

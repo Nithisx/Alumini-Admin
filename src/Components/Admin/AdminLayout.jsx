@@ -12,17 +12,20 @@ import AlbumDetailPage from './Albums/Albumsdetails';
 import StudentImageUpload from './Albums/Students';
 import Map from './Map.jsx/Map';
 import NewsRoom from './News/News';
-import SingleNews from './News/Singlenews';
 import Members from './Members/Members';
-import SingleMember from './Members/Singlemember';
 import Dashboard from './Dashboard/Dashboard';
 import Birthday from "./Birthday/Birthday";
-import Singleevents from './Events/Singleevents';
 import EditEvent from './Events/Editevent';
 import BusinessDirectory from './Business/BusinessDirectory';
 import BusinessDetail from './Business/BusinessDetail';
-import BusinessView from './Business/BusinessView';
 import Myprofile from "./Myprofile/Myprofile";
+import {
+  EventDetailView,
+  NewsDetailView,
+  MemberDetailView,
+  BusinessDetailView,
+  JobDetailView,
+} from "../Shared/detail";
 import Mycontribution from "./Mycontribution/Mycontributation";
 import SendMail from "./mail/sendmail";
 import Chart from "./Chat/Chat"
@@ -52,18 +55,19 @@ const AdminLayout = () => {
             <Route path="students" element={<StudentImageUpload />} />
             <Route path="map" element={<Map />} />
             <Route path="news" element={<NewsRoom />} />
-            <Route path="news/:id" element={<SingleNews />} />
+            <Route path="news/:id" element={<NewsDetailView basePath="/admin" />} />
             <Route path="members" element={<Members />} />
-            <Route path="members/:name" element={<SingleMember />} />
+            <Route path="members/:name" element={<MemberDetailView basePath="/admin" />} />
             <Route path="jobs" element={<Addpost />} />
+            <Route path="jobs/:id" element={<JobDetailView basePath="/admin" />} />
             <Route path="birthday" element={<Birthday />} />
-            <Route path="event/:id" element={<Singleevents />} />
+            <Route path="event/:id" element={<EventDetailView basePath="/admin" />} />
             <Route path="event/:id/edit" element={<EditEvent />} />
             <Route path="business" element={<BusinessDirectory />} />
             <Route path="business/add" element={<BusinessDetail />} />
             <Route path="business/edit/:id" element={<BusinessDetail />} />
             <Route path="business/:id" element={<BusinessDetail />} />
-            <Route path="business/view/:id" element={<BusinessView />} />
+            <Route path="business/view/:id" element={<BusinessDetailView basePath="/admin" />} />
             <Route path="my-profile" element={<Myprofile />} />
             <Route path="my-contribution" element={<Mycontribution />} />
             <Route path="sendmail" element={<SendMail />} />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
@@ -185,7 +186,11 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, currentUserId, canModer
 
       {/* Job content body */}
       <div className="px-4 pb-3">
-        <h3 className="text-base font-bold text-gray-900 mb-0.5">{post.role}</h3>
+        <h3 className="text-base font-bold text-gray-900 mb-0.5">
+          <Link to={`${post.id}`} className="hover:text-emerald-600 hover:underline transition-colors">
+            {post.role}
+          </Link>
+        </h3>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mb-2">
           <span className="flex items-center gap-1">
             <FontAwesomeIcon icon={faBuilding} className="text-green-600 text-xs" />

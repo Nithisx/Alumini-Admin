@@ -267,7 +267,7 @@ export default function Home() {
                 <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100">
                   {album.cover_image ? (
                     <img src={`${MEDIA_BASE_URL}${album.cover_image}`} alt={album.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <svg className="w-10 h-10 text-amber-300" fill="currentColor" viewBox="0 0 24 24">

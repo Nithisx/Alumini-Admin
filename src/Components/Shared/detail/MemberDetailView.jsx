@@ -1,46 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import ConfirmModal from "../../Shared/ConfirmModal";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  COLLEGE_NAMES,
-  COURSES,
-  COURSE_BRANCH_MAPPING,
-} from "../../../constants/academicOptions";
+import { motion, useReducedMotion } from "framer-motion";
+import ConfirmModal from "../ConfirmModal";
+import ImageViewerModal from "../ImageViewerModal";
+import ImageCropModal from "../ImageCropModal";
+import ScrambleText from "../ScrambleText";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
-import ImageViewerModal from "../../Shared/ImageViewerModal";
-import ImageCropModal from "../../Shared/ImageCropModal";
+import { COLLEGE_NAMES, COURSES, COURSE_BRANCH_MAPPING } from "../../../constants/academicOptions";
+import { API_BASE as API_ROOT, getMediaUrl } from "./media";
+import useViewerProfile from "./useViewerProfile";
+import { Icons } from "./primitives";
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
-
-const TOKEN = localStorage.getItem("Token");
-const API_BASE = "https://api.karpagamalumni.in/api/v1/profile/";
-const API_DEACTIVATE_USER = "https://api.karpagamalumni.in/api/v1/deactivate-user/";
-const API_DELETE_USER = "https://api.karpagamalumni.in/api/v1/delete-user/";
-const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
-const getAdminCoursesUrl = (userId) => `https://api.karpagamalumni.in/api/v1/profile/${userId}/courses/`;
-const getAdminCourseUrl = (userId, courseId) => `https://api.karpagamalumni.in/api/v1/profile/${userId}/courses/${courseId}/`;
+const TOKEN = () => localStorage.getItem("Token");
+const API_PROFILE = `${API_ROOT}/profile/`;
+const API_DEACTIVATE_USER = `${API_ROOT}/deactivate-user/`;
+const API_DELETE_USER = `${API_ROOT}/delete-user/`;
+const getAdminCoursesUrl = (userId) => `${API_ROOT}/profile/${userId}/courses/`;
+const getAdminCourseUrl = (userId, courseId) => `${API_ROOT}/profile/${userId}/courses/${courseId}/`;
 const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
 const COVER_PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1556888335-95371827d5fb?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
-const getMediaUrl = (uri) => {
-  if (!uri) return "";
-  if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || uri.startsWith("data:") || uri.startsWith("blob:")) return uri;
-  return uri.startsWith("/") ? `${MEDIA_BASE_URL}${uri}` : `${MEDIA_BASE_URL}/${uri}`;
-};
-
-const ROLES = ["Student", "Alumni", "Staff"];
-const CHAPTERS = ["KAHE CHAPTER CHENNAI","KAHE CHAPTER COIMBATORE","KAHE CHAPTER TRICHY"];
 const TABS = ["Personal", "Professional Summary", "Contact Info", "Social"];
 
 /* ─── small helpers ──────────────────────────────────────────────────────── */
-
 const FieldRow = ({ icon, label, children }) => (
   <div className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-0">
-    <div className="flex-shrink-0 w-5 h-5 mt-0.5 text-green-600">{icon}</div>
+    <div className="flex-shrink-0 w-5 h-5 mt-0.5 text-emerald-600">{icon}</div>
     <div className="flex-1 min-w-0">
-      <p className="text-xs font-semibold uppercase tracking-wider text-green-600 mb-0.5">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-0.5">{label}</p>
       <div className="text-sm text-gray-800">{children}</div>
     </div>
   </div>
@@ -52,7 +42,7 @@ const EditInput = ({ value, onChange, type = "text", placeholder = "", className
     value={value}
     onChange={(e) => onChange(e.target.value)}
     placeholder={placeholder}
-    className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white ${className}`}
+    className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white ${className}`}
   />
 );
 
@@ -60,7 +50,7 @@ const EditSelect = ({ value, onChange, children }) => (
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
   >
     {children}
   </select>
@@ -82,40 +72,18 @@ const getPrimaryCourse = (user) => {
   return courses.find((course) => course?.is_primary) || courses[0] || null;
 };
 
-/* ─── SVG icons ──────────────────────────────────────────────────────────── */
-const Icons = {
-  person: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>,
-  at: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M14.243 5.757a6 6 0 10-.986 9.284 1 1 0 111.087 1.678A8 8 0 1118 10a3 3 0 01-4.8 2.401A4 4 0 1114 10a1 1 0 102 0c0-1.537-.586-3.07-1.757-4.243zM12 10a2 2 0 10-4 0 2 2 0 004 0z" clipRule="evenodd"/></svg>,
-  email: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>,
-  info: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/></svg>,
-  calendar: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/></svg>,
-  gender: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>,
-  lock: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>,
-  briefcase: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/></svg>,
-  building: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd"/></svg>,
-  chart: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>,
-  tag: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/></svg>,
-  pin: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/></svg>,
-  home: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>,
-  phone: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>,
-  link: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd"/></svg>,
-  pencil: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>,
-  chat: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd"/></svg>,
-  back: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>,
-  check: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>,
-  x: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>,
-  trash: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/></svg>,
-  ban: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd"/></svg>,
-  activate: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>,
-  camera: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/></svg>,
-  education: <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/></svg>,
-};
-
 /* ─── main component ─────────────────────────────────────────────────────── */
-
-export default function SingleMember() {
+/**
+ * MemberDetailView — standard member profile, used by all roles.
+ * Read-only for everyone; admin (isAdmin) additionally gets inline edit,
+ * deactivate, delete, and course CRUD.
+ * @param {string} basePath e.g. "/alumni"
+ */
+export default function MemberDetailView({ basePath = "" }) {
   const { name } = useParams();
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
+  const { isAdmin } = useViewerProfile();
 
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -138,12 +106,10 @@ export default function SingleMember() {
   const [addCourseLoading, setAddCourseLoading] = useState(false);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
 
-  // Image viewer modal state
+  // Image viewer + crop modal state
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState("");
   const [viewerAltText, setViewerAltText] = useState("");
-
-  // Image crop modal state
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState(null);
 
@@ -154,12 +120,11 @@ export default function SingleMember() {
     setViewerOpen(true);
   };
 
-  /* ── helpers ── */
+  /* ── nav helpers ── */
   const navigateToMembersList = () => {
     const returnUrl = sessionStorage.getItem(MEMBERS_RETURN_URL_KEY);
-    navigate(returnUrl || "/admin/members");
+    navigate(returnUrl || `${basePath}/members`);
   };
-
   const handleBackToMembers = () => {
     if (window.history.state?.idx > 0) { navigate(-1); return; }
     navigateToMembersList();
@@ -167,8 +132,8 @@ export default function SingleMember() {
 
   /* ── fetch ── */
   useEffect(() => {
-    fetch(`${API_BASE}${name}`, {
-      headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+    fetch(`${API_PROFILE}${name}`, {
+      headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
     })
       .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
       .then((data) => {
@@ -177,22 +142,15 @@ export default function SingleMember() {
         if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
           setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
         }
-        // Profile response already embeds user_courses — use it directly
-        // to avoid a redundant second API call. Fall back to fetch only if absent.
-        if (Array.isArray(data.user_courses)) {
-          setUserCourses(data.user_courses);
-        } else {
-          fetchUserCourses(data.id);
-        }
+        if (Array.isArray(data.user_courses)) setUserCourses(data.user_courses);
+        else fetchUserCourses(data.id);
       })
       .finally(() => setLoading(false));
   }, [name]);
 
   const fetchUserCourses = async (userId) => {
     try {
-      const res = await fetch(getAdminCoursesUrl(userId), {
-        headers: { Authorization: `Token ${TOKEN}` },
-      });
+      const res = await fetch(getAdminCoursesUrl(userId), { headers: { Authorization: `Token ${TOKEN()}` } });
       if (res.ok) {
         const data = await res.json();
         setUserCourses(Array.isArray(data) ? data : []);
@@ -206,7 +164,7 @@ export default function SingleMember() {
     try {
       const res = await fetch(getAdminCoursesUrl(member.id), {
         method: "POST",
-        headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
         body: JSON.stringify(addCourseForm),
       });
       const data = await res.json();
@@ -230,7 +188,7 @@ export default function SingleMember() {
     try {
       const res = await fetch(getAdminCourseUrl(member.id, courseId), {
         method: "DELETE",
-        headers: { Authorization: `Token ${TOKEN}` },
+        headers: { Authorization: `Token ${TOKEN()}` },
       });
       if (res.ok || res.status === 204) {
         setUserCourses((prev) => prev.filter((c) => c.id !== courseId));
@@ -301,9 +259,9 @@ export default function SingleMember() {
         }
       });
 
-      const response = await fetch(`${API_BASE}${member.id}/update/`, {
+      const response = await fetch(`${API_PROFILE}${member.id}/update/`, {
         method: "PUT",
-        headers: { Authorization: `Token ${TOKEN}` },
+        headers: { Authorization: `Token ${TOKEN()}` },
         body: formData,
       });
       const data = await response.json();
@@ -365,15 +323,11 @@ export default function SingleMember() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    // Reset input so the same file can be re-selected
     e.target.value = "";
-
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }
-
-    // Read file and open crop modal
     const reader = new FileReader();
     reader.onload = (ev) => {
       setCropImageSrc(ev.target.result);
@@ -401,7 +355,7 @@ export default function SingleMember() {
     try {
       const res = await fetch(API_DEACTIVATE_USER, {
         method: "POST",
-        headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: member.id }),
       });
       const data = await res.json();
@@ -422,7 +376,7 @@ export default function SingleMember() {
     try {
       const res = await fetch(API_DELETE_USER, {
         method: "POST",
-        headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: member.id }),
       });
       const data = await res.json();
@@ -433,14 +387,13 @@ export default function SingleMember() {
   };
 
   const handlechat = async () => {
-    const token = localStorage.getItem("Token");
     try {
       const res = await fetch("https://api.karpagamalumni.in/chat/rooms/", {
         method: "POST",
-        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
         body: JSON.stringify({ target_user_id: member.id }),
       });
-      if (res.ok) navigate("/admin/chat");
+      if (res.ok) navigate(`${basePath}/chat`);
     } catch {}
   };
 
@@ -449,7 +402,7 @@ export default function SingleMember() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-emerald-600 border-t-transparent mb-4"></div>
           <p className="text-gray-500 font-medium">Loading member profile…</p>
         </div>
       </div>
@@ -463,7 +416,7 @@ export default function SingleMember() {
           <div className="text-5xl mb-4">⚠️</div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">Member Not Found</h2>
           <p className="text-gray-500 text-sm">The requested member profile could not be found.</p>
-          <button onClick={handleBackToMembers} className="mt-5 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+          <button onClick={handleBackToMembers} className="mt-5 bg-emerald-600 text-white px-5 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
             Go back
           </button>
         </div>
@@ -481,30 +434,18 @@ export default function SingleMember() {
   } = member;
 
   const displayName = [salutation, first_name, last_name].filter(Boolean).join(" ");
-  const primaryCourse = getPrimaryCourse(member);
 
   /* ── tab content renderer ── */
   const renderTabContent = () => {
     switch (activeTab) {
-      /* ── Personal ── */
       case "Personal":
         return (
           <div>
             <FieldRow icon={Icons.person} label="Full Name">
               {isEditing ? (
                 <div className="flex gap-2 flex-wrap">
-                  <EditInput
-                    value={editedMember.first_name || ""}
-                    onChange={(v) => handleInputChange("first_name", v)}
-                    placeholder="First Name"
-                    className="flex-1 min-w-[120px]"
-                  />
-                  <EditInput
-                    value={editedMember.last_name || ""}
-                    onChange={(v) => handleInputChange("last_name", v)}
-                    placeholder="Last Name"
-                    className="flex-1 min-w-[120px]"
-                  />
+                  <EditInput value={editedMember.first_name || ""} onChange={(v) => handleInputChange("first_name", v)} placeholder="First Name" className="flex-1 min-w-[120px]" />
+                  <EditInput value={editedMember.last_name || ""} onChange={(v) => handleInputChange("last_name", v)} placeholder="Last Name" className="flex-1 min-w-[120px]" />
                 </div>
               ) : (
                 <span>{displayName || "—"}</span>
@@ -516,12 +457,7 @@ export default function SingleMember() {
                 <div>
                   <div className="flex items-center">
                     <span className="text-gray-400 mr-1 text-sm">@</span>
-                    <EditInput
-                      value={editedMember.username || ""}
-                      onChange={(v) => handleInputChange("username", v)}
-                      placeholder="username"
-                      className={usernameError ? "border-red-400" : ""}
-                    />
+                    <EditInput value={editedMember.username || ""} onChange={(v) => handleInputChange("username", v)} placeholder="username" className={usernameError ? "border-red-400" : ""} />
                   </div>
                   {usernameError && <p className="text-red-500 text-xs mt-1">{usernameError}</p>}
                 </div>
@@ -540,13 +476,7 @@ export default function SingleMember() {
 
             <FieldRow icon={Icons.info} label="Bio">
               {isEditing ? (
-                <textarea
-                  value={editedMember.bio || ""}
-                  onChange={(e) => handleInputChange("bio", e.target.value)}
-                  placeholder="Enter bio…"
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-                />
+                <textarea value={editedMember.bio || ""} onChange={(e) => handleInputChange("bio", e.target.value)} placeholder="Enter bio…" rows={3} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
               ) : (
                 <span className="whitespace-pre-line">{bio || <em className="text-gray-400">Not provided</em>}</span>
               )}
@@ -572,74 +502,56 @@ export default function SingleMember() {
                 <span>{gender || "—"}</span>
               )}
             </FieldRow>
+
+            <FieldRow icon={Icons.tag} label="Role"><span>{role || "—"}</span></FieldRow>
+            <FieldRow icon={Icons.tag} label="Chapter"><span>{chapter || "—"}</span></FieldRow>
           </div>
         );
 
-      /* ── Professional Summary ── */
       case "Professional Summary":
         return (
           <div>
             <FieldRow icon={Icons.education} label="Education">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-gray-400">Course enrollments</span>
-                  <button
-                    onClick={() => setShowAddCourseModal(true)}
-                    className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium border border-green-300 rounded-md px-2 py-1 hover:bg-green-50 transition-colors"
-                  >
-                    + Add Course
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-400">Course enrollments</span>
+                    <button onClick={() => setShowAddCourseModal(true)} className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-800 font-medium border border-emerald-300 rounded-md px-2 py-1 hover:bg-emerald-50 transition-colors">
+                      + Add Course
+                    </button>
+                  </div>
+                )}
                 <div className="space-y-2">
                   {userCourses.map((c) => (
-                    <div key={c.id} className="bg-green-50 rounded-lg px-3 py-2 relative group border border-green-100">
+                    <div key={c.id} className="bg-emerald-50 rounded-lg px-3 py-2 relative group border border-emerald-100">
                       <p className="text-sm text-gray-800 font-medium pr-6">
                         {[c.course, c.branch].filter(Boolean).join(" — ")}
-                        {c.is_primary && <span className="ml-2 text-xs bg-green-200 text-green-700 px-1.5 py-0.5 rounded-full">Primary</span>}
+                        {c.is_primary && <span className="ml-2 text-xs bg-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded-full">Primary</span>}
                       </p>
                       {c.college_name && <p className="text-xs text-gray-500 mt-0.5">{c.college_name}</p>}
                       {(c.course_start_year || c.course_end_year) && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          Study duration: {[c.course_start_year, c.course_end_year].filter(Boolean).join(" – ")}
-                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">Study duration: {[c.course_start_year, c.course_end_year].filter(Boolean).join(" – ")}</p>
                       )}
                       {c.passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {c.passed_out_year}</p>}
                       {c.roll_no && <p className="text-xs text-gray-400 mt-0.5">Roll no: {c.roll_no}</p>}
-                      {!c.is_primary && (
-                        <button
-                          onClick={() => handleDeleteCourse(c.id)}
-                          disabled={deletingCourseId === c.id}
-                          className="absolute top-2 right-2 text-red-400 hover:text-red-600 disabled:opacity-50"
-                          title="Remove course"
-                        >
-                          {deletingCourseId === c.id
-                            ? <span className="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                            : Icons.x}
+                      {isAdmin && !c.is_primary && (
+                        <button onClick={() => handleDeleteCourse(c.id)} disabled={deletingCourseId === c.id} className="absolute top-2 right-2 text-red-400 hover:text-red-600 disabled:opacity-50" title="Remove course">
+                          {deletingCourseId === c.id ? <span className="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" /> : Icons.x}
                         </button>
                       )}
                     </div>
                   ))}
-                  {userCourses.length === 0 && (
-                    <p className="text-xs text-gray-400 italic">No course enrollments yet</p>
-                  )}
+                  {userCourses.length === 0 && <p className="text-xs text-gray-400 italic">No course enrollments yet</p>}
                 </div>
               </div>
             </FieldRow>
 
             <FieldRow icon={Icons.building} label="Company">
-              {isEditing ? (
-                <EditInput value={editedMember.company || ""} onChange={(v) => handleInputChange("company", v)} placeholder="Company name" />
-              ) : (
-                <span>{company || <em className="text-gray-400">Not provided</em>}</span>
-              )}
+              {isEditing ? <EditInput value={editedMember.company || ""} onChange={(v) => handleInputChange("company", v)} placeholder="Company name" /> : <span>{company || <em className="text-gray-400">Not provided</em>}</span>}
             </FieldRow>
 
             <FieldRow icon={Icons.briefcase} label="Position">
-              {isEditing ? (
-                <EditInput value={editedMember.position || ""} onChange={(v) => handleInputChange("position", v)} placeholder="Job title / position" />
-              ) : (
-                <span>{position || <em className="text-gray-400">Not provided</em>}</span>
-              )}
+              {isEditing ? <EditInput value={editedMember.position || ""} onChange={(v) => handleInputChange("position", v)} placeholder="Job title / position" /> : <span>{position || <em className="text-gray-400">Not provided</em>}</span>}
             </FieldRow>
 
             <FieldRow icon={Icons.chart} label="Work Experience">
@@ -655,11 +567,7 @@ export default function SingleMember() {
 
             <FieldRow icon={Icons.briefcase} label="Current Work">
               {isEditing ? (
-                <EditInput
-                  value={typeof editedMember.current_work === "string" && editedMember.current_work.startsWith('"') ? JSON.parse(editedMember.current_work) : editedMember.current_work || ""}
-                  onChange={(v) => handleInputChange("current_work", v)}
-                  placeholder="Current workplace"
-                />
+                <EditInput value={typeof editedMember.current_work === "string" && editedMember.current_work.startsWith('"') ? JSON.parse(editedMember.current_work) : editedMember.current_work || ""} onChange={(v) => handleInputChange("current_work", v)} placeholder="Current workplace" />
               ) : (
                 <span>{(() => {
                   if (!current_work) return <em className="text-gray-400">Not provided</em>;
@@ -675,23 +583,14 @@ export default function SingleMember() {
               {isEditing ? (
                 <EditInput value={editedMember.worked_in === undefined ? "" : editedMember.worked_in} onChange={(v) => handleInputChange("worked_in", v)} placeholder="Previous workplaces" />
               ) : (
-                <span>{worked_in || member.Worked_in
-                  ? (worked_in || (Array.isArray(member.Worked_in) ? member.Worked_in.join(", ") : member.Worked_in))
-                  : <em className="text-gray-400">Not provided</em>}</span>
+                <span>{worked_in || member.Worked_in ? (worked_in || (Array.isArray(member.Worked_in) ? member.Worked_in.join(", ") : member.Worked_in)) : <em className="text-gray-400">Not provided</em>}</span>
               )}
             </FieldRow>
 
             <FieldRow icon={Icons.tag} label="Professional Skills">
               {isEditing ? (
                 <div>
-                  <EditInput
-                    placeholder="Skills separated by commas"
-                    value={editedMember.professional_skills_text || (Array.isArray(editedMember.professional_skills) ? editedMember.professional_skills.join(", ") : "")}
-                    onChange={(v) => {
-                      handleInputChange("professional_skills_text", v);
-                      handleInputChange("professional_skills", v.split(",").map((s) => s.trim()).filter(Boolean));
-                    }}
-                  />
+                  <EditInput placeholder="Skills separated by commas" value={editedMember.professional_skills_text || (Array.isArray(editedMember.professional_skills) ? editedMember.professional_skills.join(", ") : "")} onChange={(v) => { handleInputChange("professional_skills_text", v); handleInputChange("professional_skills", v.split(",").map((s) => s.trim()).filter(Boolean)); }} />
                   <p className="text-xs text-gray-400 mt-1">e.g. React, Node.js, UI Design</p>
                 </div>
               ) : (
@@ -702,14 +601,7 @@ export default function SingleMember() {
             <FieldRow icon={Icons.building} label="Industries Worked In">
               {isEditing ? (
                 <div>
-                  <EditInput
-                    placeholder="Industries separated by commas"
-                    value={editedMember.industries_worked_in_text || (Array.isArray(editedMember.industries_worked_in) ? editedMember.industries_worked_in.join(", ") : "")}
-                    onChange={(v) => {
-                      handleInputChange("industries_worked_in_text", v);
-                      handleInputChange("industries_worked_in", v.split(",").map((s) => s.trim()).filter(Boolean));
-                    }}
-                  />
+                  <EditInput placeholder="Industries separated by commas" value={editedMember.industries_worked_in_text || (Array.isArray(editedMember.industries_worked_in) ? editedMember.industries_worked_in.join(", ") : "")} onChange={(v) => { handleInputChange("industries_worked_in_text", v); handleInputChange("industries_worked_in", v.split(",").map((s) => s.trim()).filter(Boolean)); }} />
                   <p className="text-xs text-gray-400 mt-1">e.g. IT, Healthcare, Education</p>
                 </div>
               ) : (
@@ -720,14 +612,7 @@ export default function SingleMember() {
             <FieldRow icon={Icons.briefcase} label="Roles Played">
               {isEditing ? (
                 <div>
-                  <EditInput
-                    placeholder="Roles separated by commas"
-                    value={editedMember.roles_played_text || (Array.isArray(editedMember.roles_played) ? editedMember.roles_played.join(", ") : "")}
-                    onChange={(v) => {
-                      handleInputChange("roles_played_text", v);
-                      handleInputChange("roles_played", v.split(",").map((s) => s.trim()).filter(Boolean));
-                    }}
-                  />
+                  <EditInput placeholder="Roles separated by commas" value={editedMember.roles_played_text || (Array.isArray(editedMember.roles_played) ? editedMember.roles_played.join(", ") : "")} onChange={(v) => { handleInputChange("roles_played_text", v); handleInputChange("roles_played", v.split(",").map((s) => s.trim()).filter(Boolean)); }} />
                   <p className="text-xs text-gray-400 mt-1">e.g. Developer, Team Lead, Product Manager</p>
                 </div>
               ) : (
@@ -737,24 +622,15 @@ export default function SingleMember() {
           </div>
         );
 
-      /* ── Contact Info ── */
       case "Contact Info":
         return (
           <div>
             <FieldRow icon={Icons.phone} label="Phone">
-              {isEditing ? (
-                <EditInput type="tel" value={editedMember.phone || ""} onChange={(v) => handleInputChange("phone", v)} />
-              ) : (
-                <span>{phone || <em className="text-gray-400">Not provided</em>}</span>
-              )}
+              {isEditing ? <EditInput type="tel" value={editedMember.phone || ""} onChange={(v) => handleInputChange("phone", v)} /> : <span>{phone || <em className="text-gray-400">Not provided</em>}</span>}
             </FieldRow>
 
             <FieldRow icon={Icons.email} label="Secondary Email">
-              {isEditing ? (
-                <EditInput type="email" value={editedMember.secondary_email || ""} onChange={(v) => handleInputChange("secondary_email", v)} />
-              ) : (
-                <span>{secondary_email || <em className="text-gray-400">Not provided</em>}</span>
-              )}
+              {isEditing ? <EditInput type="email" value={editedMember.secondary_email || ""} onChange={(v) => handleInputChange("secondary_email", v)} /> : <span>{secondary_email || <em className="text-gray-400">Not provided</em>}</span>}
             </FieldRow>
 
             <FieldRow icon={Icons.pin} label="Current Location">
@@ -773,16 +649,11 @@ export default function SingleMember() {
             </FieldRow>
 
             <FieldRow icon={Icons.home} label="Home Town">
-              {isEditing ? (
-                <EditInput value={editedMember.home_town || ""} onChange={(v) => handleInputChange("home_town", v)} placeholder="Home town" />
-              ) : (
-                <span>{home_town || <em className="text-gray-400">Not provided</em>}</span>
-              )}
+              {isEditing ? <EditInput value={editedMember.home_town || ""} onChange={(v) => handleInputChange("home_town", v)} placeholder="Home town" /> : <span>{home_town || <em className="text-gray-400">Not provided</em>}</span>}
             </FieldRow>
           </div>
         );
 
-      /* ── Social ── */
       case "Social": {
         const sl = isEditing ? (editedMember.social_links || {}) : social_links;
         const socialFields = [
@@ -798,14 +669,9 @@ export default function SingleMember() {
             {socialFields.map(({ key, label }) => (
               <FieldRow key={key} icon={Icons.link} label={label}>
                 {isEditing ? (
-                  <EditInput
-                    type="text"
-                    value={editedMember.social_links?.[key] || ""}
-                    onChange={(v) => handleInputChange("social_links", { ...editedMember.social_links, [key]: v })}
-                    placeholder={`${label} URL`}
-                  />
+                  <EditInput type="text" value={editedMember.social_links?.[key] || ""} onChange={(v) => handleInputChange("social_links", { ...editedMember.social_links, [key]: v })} placeholder={`${label} URL`} />
                 ) : sl[key] ? (
-                  <a href={sl[key]} target="_blank" rel="noreferrer" className="text-green-600 hover:underline break-all">{sl[key]}</a>
+                  <a href={sl[key]} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline break-all">{sl[key]}</a>
                 ) : (
                   <em className="text-gray-400">Not provided</em>
                 )}
@@ -823,13 +689,11 @@ export default function SingleMember() {
   /* ── render ── */
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      {/* ── confirm modals ── */}
+      {/* ── confirm modals (admin) ── */}
       <ConfirmModal
         isOpen={showDeactivateConfirm}
         title={member?.is_active ? "Deactivate User" : "Activate User"}
-        message={member?.is_active
-          ? `${member.first_name} ${member.last_name} will no longer be able to access their account.`
-          : `Reactivate ${member?.first_name} ${member?.last_name}'s account?`}
+        message={member?.is_active ? `${member.first_name} ${member.last_name} will no longer be able to access their account.` : `Reactivate ${member?.first_name} ${member?.last_name}'s account?`}
         danger={!!member?.is_active}
         confirmText={member?.is_active ? "Deactivate" : "Activate"}
         onConfirm={() => { doDeactivateUser(); setShowDeactivateConfirm(false); }}
@@ -849,7 +713,7 @@ export default function SingleMember() {
 
       {/* ── cover banner ── */}
       <div
-        className="relative h-40 sm:h-52 bg-green-700 clickable-cover-photo"
+        className="relative h-40 sm:h-52 bg-gradient-to-br from-emerald-600 to-green-700 clickable-cover-photo"
         style={{
           backgroundImage: cover_photo
             ? `url(${getMediaUrl(cover_photo)}), url(${COVER_PLACEHOLDER_IMAGE})`
@@ -857,17 +721,19 @@ export default function SingleMember() {
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
-        onClick={() => openImageViewer(
-          cover_photo ? getMediaUrl(cover_photo) : COVER_PLACEHOLDER_IMAGE,
-          "Cover Photo"
-        )}
+        onClick={() => openImageViewer(cover_photo ? getMediaUrl(cover_photo) : COVER_PLACEHOLDER_IMAGE, "Cover Photo")}
         title="Click to view cover photo"
       >
         <div className="absolute inset-0 bg-black/25" />
       </div>
 
       {/* ── profile identity strip ── */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      <motion.div
+        className="max-w-3xl mx-auto px-4 sm:px-6"
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+      >
         <div className="relative -mt-14 sm:-mt-16 flex items-end justify-between pb-3 border-b border-gray-200">
           {/* avatar */}
           <div className="relative">
@@ -878,17 +744,12 @@ export default function SingleMember() {
               onError={(e) => { e.target.onerror = null; e.target.src = getProfilePlaceholderByGender(gender); }}
               onClick={() => {
                 if (!isEditing) {
-                  openImageViewer(
-                    imagePreview || (member.profile_photo ? getMediaUrl(member.profile_photo) : getProfilePlaceholderByGender(gender)),
-                    `${first_name} ${last_name}`
-                  );
+                  openImageViewer(imagePreview || (member.profile_photo ? getMediaUrl(member.profile_photo) : getProfilePlaceholderByGender(gender)), `${first_name} ${last_name}`);
                 }
               }}
               title={isEditing ? "Click camera to change photo" : "Click to view profile photo"}
             />
-            {/* active dot */}
-            <span className={`absolute bottom-1.5 right-1.5 w-4 h-4 rounded-full border-2 border-white ${is_active ? "bg-green-500" : "bg-red-400"}`} />
-            {/* camera overlay in edit mode */}
+            <span className={`absolute bottom-1.5 right-1.5 w-4 h-4 rounded-full border-2 border-white ${is_active ? "bg-emerald-500" : "bg-red-400"}`} />
             {isEditing && (
               <label htmlFor="profile-image-input" className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer">
                 <span className="text-white">{Icons.camera}</span>
@@ -897,56 +758,36 @@ export default function SingleMember() {
             )}
           </div>
 
-          {/* edit / action buttons — top right */}
+          {/* action buttons — top right */}
           <div className="pb-2">
             {!isEditing ? (
               <div className="flex flex-wrap gap-2 justify-end">
-                <button
-                  onClick={handlechat}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm"
-                >
+                <button onClick={handlechat} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm">
                   {Icons.chat} Chat
                 </button>
-                <button
-                  onClick={handleEditClick}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-green-600 text-green-700 hover:bg-green-50 rounded-lg transition-colors"
-                >
-                  {Icons.pencil} Edit profile
-                </button>
-                <button
-                  onClick={handleDeactivateUser}
-                  disabled={deactivating}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-colors shadow-sm disabled:opacity-60 ${is_active ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"}`}
-                >
-                  {deactivating
-                    ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    : is_active ? Icons.ban : Icons.activate}
-                  {is_active ? "Deactivate" : "Activate"}
-                </button>
-                <button
-                  onClick={handleDeleteUser}
-                  disabled={deleting}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-60"
-                >
-                  {deleting
-                    ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    : Icons.trash}
-                  Delete
-                </button>
+                {isAdmin && (
+                  <>
+                    <button onClick={handleEditClick} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
+                      {Icons.edit} Edit profile
+                    </button>
+                    <button onClick={handleDeactivateUser} disabled={deactivating} className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-colors shadow-sm disabled:opacity-60 ${is_active ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"}`}>
+                      {deactivating ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : is_active ? Icons.ban : Icons.activate}
+                      {is_active ? "Deactivate" : "Activate"}
+                    </button>
+                    <button onClick={handleDeleteUser} disabled={deleting} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-60">
+                      {deleting ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : Icons.trash}
+                      Delete
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex gap-2">
                 <button onClick={handleCancelEdit} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                   {Icons.x} Cancel
                 </button>
-                <button
-                  onClick={handleSaveEdit}
-                  disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-60"
-                >
-                  {saving
-                    ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving…</>
-                    : <>{Icons.check} Save Changes</>}
+                <button onClick={handleSaveEdit} disabled={saving} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-60">
+                  {saving ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving…</> : <>{Icons.check} Save Changes</>}
                 </button>
               </div>
             )}
@@ -955,7 +796,7 @@ export default function SingleMember() {
 
         {/* new-image hint */}
         {isEditing && selectedImage && (
-          <div className="mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+          <div className="mt-2 flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
             <span className="font-medium">New photo selected:</span> {selectedImage.name}
             <button onClick={resetImageSelection} className="ml-auto text-red-500 hover:text-red-700 font-medium">Remove</button>
           </div>
@@ -963,42 +804,37 @@ export default function SingleMember() {
 
         {/* name, username, badges */}
         <div className="mt-3 mb-1">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">{displayName}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+            <ScrambleText text={displayName || username} duration={1000} />
+          </h1>
           <p className="text-sm text-gray-400 mt-0.5">@{username}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             {role && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2.5 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                 {Icons.briefcase} {role}
               </span>
             )}
-            {chapter && (
-              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full">{chapter}</span>
-            )}
-            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+            {chapter && <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full">{chapter}</span>}
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${is_active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}>
               {is_active ? "● Active" : "● Inactive"}
             </span>
           </div>
         </div>
 
         {/* back link */}
-        <button
-          onClick={handleBackToMembers}
-          className="mt-2 mb-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-600 transition-colors"
-        >
+        <button onClick={handleBackToMembers} className="mt-2 mb-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-emerald-600 transition-colors">
           {Icons.back} Back to members
         </button>
 
-        {/* ── tab nav ── */}
+        {/* tab nav */}
         <div className="border-b border-gray-200 mb-0">
-          <nav className="flex gap-0 -mb-px">
+          <nav className="flex gap-0 -mb-px overflow-x-auto">
             {TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? "border-green-600 text-green-700"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab ? "border-emerald-600 text-emerald-700" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 {tab}
@@ -1007,13 +843,19 @@ export default function SingleMember() {
           </nav>
         </div>
 
-        {/* ── tab body ── */}
-        <div className="bg-white rounded-b-xl shadow-sm border border-t-0 border-gray-100 px-4 sm:px-6 py-2 mb-8">
+        {/* tab body */}
+        <motion.div
+          key={activeTab}
+          initial={reduce ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-b-xl shadow-sm border border-t-0 border-gray-100 px-4 sm:px-6 py-2 mb-8"
+        >
           {renderTabContent()}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* ── Add Course Modal ── */}
+      {/* ── Add Course Modal (admin) ── */}
       {showAddCourseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
@@ -1025,11 +867,7 @@ export default function SingleMember() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Course *</label>
-                <select
-                  value={addCourseForm.course}
-                  onChange={(e) => setAddCourseForm((f) => ({ ...f, course: e.target.value, branch: "" }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                >
+                <select value={addCourseForm.course} onChange={(e) => setAddCourseForm((f) => ({ ...f, course: e.target.value, branch: "" }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                   <option value="">Select Course</option>
                   {COURSES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -1038,11 +876,7 @@ export default function SingleMember() {
               {addCourseForm.course && COURSE_BRANCH_MAPPING[addCourseForm.course] && (
                 <div>
                   <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Branch / Stream</label>
-                  <select
-                    value={addCourseForm.branch}
-                    onChange={(e) => setAddCourseForm((f) => ({ ...f, branch: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                  >
+                  <select value={addCourseForm.branch} onChange={(e) => setAddCourseForm((f) => ({ ...f, branch: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                     <option value="">Select Branch</option>
                     {COURSE_BRANCH_MAPPING[addCourseForm.course].map((b) => <option key={b} value={b}>{b}</option>)}
                   </select>
@@ -1051,11 +885,7 @@ export default function SingleMember() {
 
               <div>
                 <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">College</label>
-                <select
-                  value={addCourseForm.college_name}
-                  onChange={(e) => setAddCourseForm((f) => ({ ...f, college_name: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                >
+                <select value={addCourseForm.college_name} onChange={(e) => setAddCourseForm((f) => ({ ...f, college_name: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                   <option value="">Select College</option>
                   {COLLEGE_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -1063,55 +893,23 @@ export default function SingleMember() {
 
               <div>
                 <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Passed Out Year</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 2024"
-                  value={addCourseForm.passed_out_year}
-                  onChange={(e) => setAddCourseForm((f) => ({ ...f, passed_out_year: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
+                <input type="number" placeholder="e.g. 2024" value={addCourseForm.passed_out_year} onChange={(e) => setAddCourseForm((f) => ({ ...f, passed_out_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
             </div>
 
             <div className="flex gap-2 mt-5 justify-end">
-              <button
-                onClick={() => setShowAddCourseModal(false)}
-                className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddCourse}
-                disabled={addCourseLoading}
-                className="px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-60 flex items-center gap-1.5"
-              >
-                {addCourseLoading
-                  ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Adding…</>
-                  : "Add Course"}
+              <button onClick={() => setShowAddCourseModal(false)} className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50">Cancel</button>
+              <button onClick={handleAddCourse} disabled={addCourseLoading} className="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-60 flex items-center gap-1.5">
+                {addCourseLoading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Adding…</> : "Add Course"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Image Viewer Modal */}
-      <ImageViewerModal
-        isOpen={viewerOpen}
-        imageUrl={viewerImageUrl}
-        altText={viewerAltText}
-        onClose={() => setViewerOpen(false)}
-      />
-
-      {/* Image Crop Modal */}
-      <ImageCropModal
-        isOpen={cropModalOpen}
-        imageSrc={cropImageSrc}
-        aspectRatio={1}
-        cropShape="round"
-        title="Crop Profile Photo"
-        onClose={() => { setCropModalOpen(false); setCropImageSrc(null); }}
-        onCropDone={handleCropDone}
-      />
+      {/* Image Viewer + Crop modals */}
+      <ImageViewerModal isOpen={viewerOpen} imageUrl={viewerImageUrl} altText={viewerAltText} onClose={() => setViewerOpen(false)} />
+      <ImageCropModal isOpen={cropModalOpen} imageSrc={cropImageSrc} aspectRatio={1} cropShape="round" title="Crop Profile Photo" onClose={() => { setCropModalOpen(false); setCropImageSrc(null); }} onCropDone={handleCropDone} />
     </div>
   );
 }

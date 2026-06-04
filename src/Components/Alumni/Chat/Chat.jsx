@@ -585,7 +585,14 @@ const Chat = () => {
     return items;
   };
 
-  const getSortedRooms = () => { const f = rooms.filter((r) => !r.is_community); return communityRoom ? [communityRoom, ...f] : f; };
+  const roomHasMessages = (r) => Boolean(
+    r.lastMessage || r.last_message?.text ||
+    r.lastMessageTime || r.last_message_time || r.last_message?.timestamp
+  );
+  const getSortedRooms = () => {
+    const f = rooms.filter((r) => !r.is_community && (roomHasMessages(r) || String(r.id) === String(selectedChat?.id)));
+    return communityRoom ? [communityRoom, ...f] : f;
+  };
   const otherUserId   = selectedChat?.other_user?.id;
   const otherPresence = otherUserId ? presenceMap[String(otherUserId)] : null;
 
