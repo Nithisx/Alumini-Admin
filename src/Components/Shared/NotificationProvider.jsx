@@ -232,8 +232,33 @@ export function NotificationProvider({ children }) {
   );
 }
 
+// Inert fallback so headers (which embed NotificationBell) can render on
+// standalone public pages — About, Privacy, Terms, Contact — that are not
+// wrapped in <NotificationProvider>. Without this the bell's useNotifications()
+// would throw and blank the page for logged-in users.
+const noop = () => {};
+const NO_PROVIDER_FALLBACK = Object.freeze({
+  notifications: [],
+  unreadCount: 0,
+  loading: false,
+  fetchNotifications: noop,
+  markRead: noop,
+  markAllRead: noop,
+  deleteNotification: noop,
+  clearAllNotifications: noop,
+  notificationStatus: { permission: 'default', supported: false },
+  requestPermission: () => Promise.resolve({ permission: 'default' }),
+});
+
 export function useNotifications() {
   const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error('useNotifications must be used inside <NotificationProvider>');
+  if (!ctx) {
+    if (import.meta.env?.DEV) {
+      console.warn(
+        'useNotifications() used outside <NotificationProvider>; using inert fallback.'
+      );
+    }
+    return NO_PROVIDER_FALLBACK;
+  }
   return ctx;
 }

@@ -4,6 +4,7 @@ import Image2 from "../images/image2.jpg";
 import Image3 from "../images/image3.jpg";
 import { useNavigate } from "react-router-dom";
 import { normalizeRoleForBase } from "../lib/authRole";
+import ScrambleText from "../Components/Shared/ScrambleText";
 const AlumniHeroSection = ({ data }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
@@ -55,10 +56,21 @@ const AlumniHeroSection = ({ data }) => {
 
             <div className="space-y-6">
               <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-slate-900 leading-tight">
-                <span className="text-rise inline-block" style={{ "--d": "180ms" }}>{heroHeadingPrefix}</span>
-                <span className="text-rise text-gradient-animate block bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500 bg-clip-text text-transparent mt-2" style={{ "--d": "320ms" }}>
-                  {heroHeadingAccent}
-                </span>
+                <ScrambleText
+                  as="span"
+                  text={heroHeadingPrefix}
+                  className="inline-block"
+                  duration={1300}
+                  delay={150}
+                />
+                <ScrambleText
+                  as="span"
+                  text={heroHeadingAccent}
+                  gradient
+                  className="text-gradient-animate block bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500 bg-clip-text text-transparent mt-2"
+                  duration={1700}
+                  delay={650}
+                />
               </h1>
 
               <p className="text-rise text-base sm:text-xl lg:text-2xl text-slate-600 leading-relaxed max-w-2xl" style={{ "--d": "480ms" }}>
