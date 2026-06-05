@@ -24,6 +24,11 @@ export default function CountUp({ value, duration = 1400, className }) {
       return;
     }
 
+    // Re-animate whenever the target value changes (e.g. a list count goes from
+    // 0 while loading to its real value once data arrives). Without this reset
+    // the one-shot guard below would leave the display stuck at the first value.
+    started.current = false;
+
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia &&

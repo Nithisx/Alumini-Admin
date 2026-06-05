@@ -6,6 +6,7 @@ import axios from "../../../lib/axiosInstance"
 import SuggestionInput from "../../Shared/SuggestionInput"
 import ImageViewerModal from "../../Shared/ImageViewerModal"
 import ImageCropModal from "../../Shared/ImageCropModal"
+import { LoadingScreen, ErrorScreen } from "../../Shared/ui"
 import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS } from "../../../config/api"
 import {
   ArrowLeft,
@@ -1751,28 +1752,11 @@ const ProfileScreen = () => {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
-          <p className="text-gray-400 text-sm font-medium">Loading profile…</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading profile…" />
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center p-5">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <p className="text-red-500 text-center mb-3 text-base">{error}</p>
-          <button onClick={fetchProfile} className="bg-green-600 text-white px-5 py-2 rounded-lg font-bold">
-            Retry
-          </button>
-        </div>
-      </div>
-    )
+    return <ErrorScreen message={error} onRetry={fetchProfile} retryLabel="Retry" />
   }
 
   return (

@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Search, Map, Layers, Users, RefreshCw, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LoadingScreen, ErrorScreen } from '../../Shared/ui';
 
 // Base URL for media files
 const API_BASE_URL = 'https://api.karpagamalumni.in/api/v1';
@@ -95,27 +96,14 @@ const MapComponent = () => {
       ]
       : [10.921, 76.978];
 
-  if (loading) return (
-    <div className="flex flex-col justify-center items-center bg-gray-50" style={{ height: "calc(100vh - 56px)" }}>
-      <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3" />
-      <p className="text-sm text-gray-500">Loading map data…</p>
-    </div>
-  );
+  if (loading) return <LoadingScreen message="Loading map data…" />;
 
-  if (error) return (
-    <div className="flex flex-col justify-center items-center bg-gray-50 px-4" style={{ height: "calc(100vh - 56px)" }}>
-      <AlertCircle size={40} className="text-red-400 mb-3" />
-      <p className="text-sm text-red-600 mb-4">{error}</p>
-      <button onClick={fetchLocations} className="px-4 py-2 bg-emerald-600 text-white text-sm rounded-xl flex items-center gap-2 hover:bg-emerald-700 transition">
-        <RefreshCw size={16} /> Retry
-      </button>
-    </div>
-  );
+  if (error) return <ErrorScreen message={error} onRetry={fetchLocations} retryLabel="Retry" />;
 
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 56px)" }}>
-      {/* Sticky sub-header */}
-      <div className="bg-white border-b border-gray-200 z-30">
+      {/* Sub-header */}
+      <div className="glass-header border-b border-gray-200/70 z-30">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
           <h1 className="text-base font-bold text-gray-900 flex-shrink-0 flex items-center gap-1.5">
             <Map size={16} className="text-emerald-600" /> Alumni Map

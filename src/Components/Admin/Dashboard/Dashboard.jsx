@@ -5,6 +5,7 @@ import Footer from "../../../Pages/about_components/Footer";
 import ChapterDistributionSection from "../../Shared/ChapterDistributionSection";
 import { DASHBOARD_THEME } from "../../../constants/dashboardTheme";
 import CountUp from "../../Shared/CountUp";
+import { LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -90,31 +91,9 @@ const HomePage = () => {
     setTouchStartY(null);
   };
 
-  if (loading) return (
-    <div className={DASHBOARD_THEME.loadingPage}>
-      <div className={DASHBOARD_THEME.loadingWrap}>
-        <div className={DASHBOARD_THEME.loadingSpinner} />
-        <p className={DASHBOARD_THEME.loadingText}>Loading your feed...</p>
-      </div>
-    </div>
-  );
+  if (loading) return <LoadingScreen message="Loading your feed..." />;
 
-  if (error) return (
-    <div className={DASHBOARD_THEME.loadingPage}>
-      <div className={DASHBOARD_THEME.errorPanel}>
-        <div className={DASHBOARD_THEME.errorIconWrap}>
-          <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className={DASHBOARD_THEME.errorTitle}>Something went wrong</h3>
-        <p className={DASHBOARD_THEME.errorBody}>{error}</p>
-        <button onClick={() => window.location.reload()} className={DASHBOARD_THEME.retryButton}>
-          Try Again
-        </button>
-      </div>
-    </div>
-  );
+  if (error) return <ErrorScreen message={error} onRetry={() => window.location.reload()} />;
 
   const formatDate = (d) => new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(d));
   const formatDateTime = (d) => {
@@ -165,10 +144,12 @@ const HomePage = () => {
       <div className={DASHBOARD_THEME.content}>
 
         {/* ── Stats strip (Instagram Stories style) ── */}
-        <div className={DASHBOARD_THEME.statsGrid}>
+        <MotionList className={DASHBOARD_THEME.statsGrid} stagger={0.08}>
           {stats.map((s) => (
-            <button
+            <MotionItem
+              as="button"
               key={s.label}
+              variant="scaleIn"
               onClick={() => navigate(s.path)}
               className={DASHBOARD_THEME.statButton}
             >
@@ -181,9 +162,9 @@ const HomePage = () => {
                 <p className={DASHBOARD_THEME.statCount}><CountUp value={s.value} /></p>
                 <p className={DASHBOARD_THEME.statLabel}>{s.label}</p>
               </div>
-            </button>
+            </MotionItem>
           ))}
-        </div>
+        </MotionList>
 
         {/* ── Latest Albums (folder grid) ── */}
         <section>
@@ -193,9 +174,9 @@ const HomePage = () => {
               See all
             </button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <MotionList className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {data.latest_album_images?.slice(0, 6).map((album) => (
-              <div
+              <MotionItem
                 key={album.id}
                 onClick={() => navigate(`/admin/albums/${album.id}/`)}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
@@ -216,9 +197,9 @@ const HomePage = () => {
                 <div className="px-3 py-2">
                   <p className="text-sm font-semibold text-gray-800 truncate">{album.title}</p>
                 </div>
-              </div>
+              </MotionItem>
             ))}
-          </div>
+          </MotionList>
         </section>
 
         {/* ── Featured News (Instagram post card style) ── */}
@@ -295,12 +276,12 @@ const HomePage = () => {
               See all
             </button>
           </div>
-          <div className={DASHBOARD_THEME.eventList}>
+          <MotionList className={DASHBOARD_THEME.eventList}>
             {Array.isArray(data.upcoming_events) && data.upcoming_events.map((event) => {
               const calendarUrl = getGoogleCalendarUrl(event);
 
               return (
-                <div
+                <MotionItem
                   key={event.id}
                   onClick={() => navigate(`/admin/event/${event.id}`)}
                   className={DASHBOARD_THEME.eventCard}
@@ -345,10 +326,10 @@ const HomePage = () => {
                       </a>
                     )}
                   </div>
-                </div>
+                </MotionItem>
               );
             })}
-          </div>
+          </MotionList>
         </section>
 
         {/* ── Chapter Distribution + Sidebar Panels ── */}

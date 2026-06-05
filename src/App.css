@@ -684,6 +684,68 @@ img[class*="rounded-full"]:hover {
   transition: opacity 0.7s var(--ease-smooth), transform 0.7s var(--ease-smooth);
 }
 
+/* ---- 10b. Shared UI kit utilities (Shared/ui/*) ----------------------------- */
+
+/* Translucent "glass" page headers (PageHeader.jsx). Opacity-only entrance keeps
+   it safe above position:fixed descendants — no transform/filter containing block
+   beyond the backdrop-filter, which is scoped to the bar itself. */
+.glass-header {
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+}
+
+/* Shimmer skeleton loaders (Skeleton.jsx) — reuses the uiShimmer keyframe. */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #eef0f3 25%, #e3e7ec 37%, #eef0f3 63%);
+  background-size: 400% 100%;
+  animation: uiShimmer 1.4s ease-in-out infinite;
+}
+
+/* Gradient hero banner decoration (PageHero.jsx): animated dot-grid + light
+   sheen for any accent color, layered behind content (content is z-10). */
+.ui-hero-deco::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.16) 1.4px, transparent 1.6px),
+    radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.20), transparent 45%);
+  background-size: 22px 22px, 100% 100%;
+  pointer-events: none;
+  animation: heroDotDrift 18s linear infinite;
+}
+.ui-hero-deco::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  z-index: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+  animation: heroSheen 7s ease-in-out infinite;
+}
+
+/* Standard white card surface */
+.card-surface {
+  background-color: #fff;
+  border: 1px solid rgb(243 244 246);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
 /* ---- 12. Branded hero/banner graphics --------------------------------------
    Targets the app's emerald/green gradient hero blocks (rounded-2xl + white
    text) and layers an animated dot-grid + slow light sheen *behind* the text,

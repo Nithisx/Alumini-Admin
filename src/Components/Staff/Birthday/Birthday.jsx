@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import { PageHeader, PageHero, StatPill, EmptyState, LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
 
 const Birthday = () => {
   const [birthdays, setBirthdays] = useState([]);
@@ -83,22 +84,9 @@ const Birthday = () => {
     return has ? "birthday-tile" : null;
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
-        <p className="text-gray-400 text-sm">Loading birthdays…</p>
-      </div>
-    </div>
-  );
+  if (loading) return <LoadingScreen message="Loading birthdays…" />;
 
-  if (error) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100 text-center max-w-sm">
-        <p className="text-red-500 font-medium">{error}</p>
-      </div>
-    </div>
-  );
+  if (error) return <ErrorScreen message={error} />;
 
   const BirthdayCard = ({ user, showDays = false }) => {
     const displayName = getDisplayName(user);
@@ -151,15 +139,21 @@ const Birthday = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
-      {/* ── Sticky header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-2">
-          <span className="text-xl">🎂</span>
-          <h1 className="text-base font-bold text-gray-900">Birthday Calendar</h1>
-        </div>
-      </div>
+      <PageHeader
+        section="birthday"
+        icon={<span>🎂</span>}
+        title="Birthdays"
+        maxWidth="max-w-4xl"
+      />
 
       <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        <PageHero
+          section="birthday"
+          icon={<span>🎂</span>}
+          title="Birthday Calendar"
+          subtitle="Celebrate your fellow alumni — never miss a special day."
+          stats={<StatPill value={upcomingBirthdays.length} label="Upcoming" />}
+        />
         {/* ── Calendar + selected date ── */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-50">
@@ -208,13 +202,20 @@ const Birthday = () => {
             <h2 className="text-sm font-bold text-gray-900">Upcoming Birthdays</h2>
           </div>
           {upcomingBirthdays.length === 0 ? (
-            <div className="text-center py-10 bg-white rounded-2xl border border-gray-100 shadow-sm">
-              <p className="text-gray-400 text-sm">No upcoming birthdays</p>
-            </div>
+            <EmptyState
+              section="birthday"
+              icon={<span>🎂</span>}
+              title="No upcoming birthdays"
+              description="Check back soon for upcoming celebrations."
+            />
           ) : (
-            <div className="space-y-2">
-              {upcomingBirthdays.map((u) => <BirthdayCard key={`up-${u.id}`} user={u} showDays />)}
-            </div>
+            <MotionList className="space-y-2">
+              {upcomingBirthdays.map((u) => (
+                <MotionItem key={`up-${u.id}`}>
+                  <BirthdayCard user={u} showDays />
+                </MotionItem>
+              ))}
+            </MotionList>
           )}
         </section>
       </div>

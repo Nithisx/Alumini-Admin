@@ -7,6 +7,7 @@ import {
 import { getMyPosts } from "../../../lib/mypostsCache";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
 import { DocumentList } from "../../Shared/DocumentPreview";
+import JobStatusTag from "../../Shared/JobStatusTag";
 
 const BASE_URL = "https://api.karpagamalumni.in/api/v1";
 const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
@@ -253,7 +254,7 @@ const EditJobModal = ({ job, isOpen, onClose, onSave }) => {
 };
 
 
-const JobCard = ({ item, onDelete, onUpdate }) => {
+const JobCard = ({ item, onDelete, onUpdate, onStatusChange }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -336,6 +337,12 @@ const JobCard = ({ item, onDelete, onUpdate }) => {
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-sm font-bold text-gray-900">{item.company_name}</h3>
           <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">{item.role}</span>
+          <JobStatusTag
+            status={item.status}
+            jobId={item.id}
+            canManage
+            onChange={(next) => onStatusChange?.(item.id, next)}
+          />
         </div>
         <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
           {item.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-emerald-500" />{item.location}</span>}
@@ -395,7 +402,9 @@ const Jobs = () => {
         const token = localStorage.getItem("Token");
         const data = await getMyPosts(token);
         setJobs(data.jobs || []);
-      } catch { } finally { setLoading(false); }
+      } catch {
+        // ignore load failure — the empty state will be shown
+      } finally { setLoading(false); }
     })();
   }, []);
 
@@ -499,7 +508,15 @@ const Jobs = () => {
   return (
     <div className="space-y-3 p-0">
       {jobs.map((job) => (
-        <JobCard key={job.id} item={job} onDelete={deleteJob} onUpdate={updateJob} />
+        <JobCard
+          key={job.id}
+          item={job}
+          onDelete={deleteJob}
+          onUpdate={updateJob}
+          onStatusChange={(id, next) =>
+            setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: next } : j)))
+          }
+        />
       ))}
     </div>
   );

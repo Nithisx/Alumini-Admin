@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { API_BASE } from "../../../config/api";
+import { PageHero } from "../../Shared/ui";
 
 const API_IMPORT   = `${API_BASE}/members/import/`;
 const API_TEMPLATE = `${API_BASE}/members/import/`;   // GET on same endpoint
@@ -163,15 +164,17 @@ export default function MemberImport() {
       <div className="max-w-3xl mx-auto space-y-6">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-            Import Members
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Upload a CSV or Excel file to bulk-onboard alumni and staff into the portal.
-            Each new member's initial password is set to their Date of Birth (DDMMYYYY).
-          </p>
-        </div>
+        <PageHero
+          section="import"
+          icon={
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+          }
+          title="Import Members"
+          subtitle="Upload a CSV or Excel file to bulk-onboard alumni and staff. Each new member's initial password is their Date of Birth (DDMMYYYY)."
+        />
 
         {/* ── Step 1 — download template ─────────────────────────────────── */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">

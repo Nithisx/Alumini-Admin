@@ -8,6 +8,7 @@ import {
   faFolder, faFolderOpen, faPlus, faTimes, faTrash, faImage,
   faCheck, faSpinner, faSearch, faEllipsisV, faEdit, faCalendarAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonGrid } from "../../Shared/ui";
 
 const AlbumsPage = () => {
   const navigate = useNavigate();
@@ -157,63 +158,66 @@ const AlbumsPage = () => {
         onCancel={() => setConfirmDelete(null)}
       />
 
-      {/* ── Sticky header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Albums</h1>
-            <div className="relative flex-1">
-              <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search albums…"
-                className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-              />
-            </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex-shrink-0 w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition"
-            >
-              <FontAwesomeIcon icon={faPlus} />
-            </button>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        section="albums"
+        icon={<FontAwesomeIcon icon={faFolder} />}
+        title="Albums"
+        maxWidth="max-w-3xl"
+        search={
+          <>
+            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search albums…"
+              className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            />
+          </>
+        }
+        actions={
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition"
+          >
+            <FontAwesomeIcon icon={faPlus} />
+          </button>
+        }
+      />
 
-      <div className="max-w-3xl mx-auto px-4 py-4">
+      <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+        <PageHero
+          section="albums"
+          icon={<FontAwesomeIcon icon={faFolderOpen} />}
+          title="Photo Albums"
+          subtitle="Memories from events, reunions and campus life."
+          stats={<StatPill value={albums.length} label="Albums" />}
+        />
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm animate-pulse overflow-hidden">
-                <div className="aspect-[4/3] bg-gray-200" />
-                <div className="p-3 space-y-1.5">
-                  <div className="h-3 bg-gray-200 rounded w-2/3" />
-                  <div className="h-2 bg-gray-100 rounded w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <SkeletonGrid count={6} cols="grid-cols-2 sm:grid-cols-3" />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <FontAwesomeIcon icon={faFolderOpen} className="text-5xl text-gray-200 mb-4" />
-            <p className="text-gray-500 font-medium">{searchTerm ? "No albums match your search" : "No albums yet"}</p>
-            {!searchTerm && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="mt-4 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
-              >
-                Create First Album
-              </button>
-            )}
-          </div>
+          <EmptyState
+            section="albums"
+            icon={<FontAwesomeIcon icon={faFolderOpen} />}
+            title={searchTerm ? "No albums match your search" : "No albums yet"}
+            description={searchTerm ? "Try a different search term." : "Create your first album to get started."}
+            action={
+              !searchTerm ? (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-5 py-2.5 bg-pink-600 text-white rounded-xl text-sm font-semibold hover:bg-pink-700 transition"
+                >
+                  Create First Album
+                </button>
+              ) : null
+            }
+          />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <MotionList className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {filtered.map((album) => {
               const canManage = isOwner(album);
               return (
-                <div
+                <MotionItem
                   key={album.id}
                   className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
                 >
@@ -286,10 +290,10 @@ const AlbumsPage = () => {
                       </div>
                     )}
                   </div>
-                </div>
+                </MotionItem>
               );
             })}
-          </div>
+          </MotionList>
         )}
       </div>
 

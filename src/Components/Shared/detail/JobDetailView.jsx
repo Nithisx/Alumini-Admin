@@ -8,6 +8,7 @@ import { API_BASE, getMediaUrl } from "./media";
 import EngagementPanel from "../EngagementPanel";
 import ConfirmModal from "../ConfirmModal";
 import HeroActions from "./HeroActions";
+import JobStatusTag from "../JobStatusTag";
 
 /**
  * JobDetailView — standard view for a single job post (new page), all roles.
@@ -70,6 +71,14 @@ export default function JobDetailView({ basePath = "" }) {
 
   const meta = job
     ? [
+        <JobStatusTag
+          key="status"
+          status={job.status}
+          jobId={job.id}
+          canManage={canManage}
+          size="lg"
+          onChange={(next) => setJob((prev) => ({ ...prev, status: next }))}
+        />,
         job.company_name && <MetaChip key="co" icon={Icons.building}>{job.company_name}</MetaChip>,
         job.location && <MetaChip key="loc" icon={Icons.pin}>{job.location}</MetaChip>,
         job.job_type && <MetaChip key="type" icon={Icons.briefcase}>{job.job_type}</MetaChip>,

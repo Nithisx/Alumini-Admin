@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarAlt, faClock, faMapMarkerAlt, faSearch, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import EngagementPanel from "../../Shared/EngagementPanel";
 import { DocumentList } from "../../Shared/DocumentPreview";
+import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
 
 const AuthorizedImage = ({ url, alt, className }) => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -146,55 +147,54 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
-      {/* ── Instagram-style sticky page header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Events</h1>
-            <div className="relative flex-1">
-              <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search events…"
-                className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        section="events"
+        icon={<FontAwesomeIcon icon={faCalendarAlt} />}
+        title="Events"
+        search={
+          <>
+            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search events…"
+              className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all"
+            />
+          </>
+        }
+      />
 
       {/* ── Feed ── */}
       <div className="max-w-2xl mx-auto px-0 sm:px-4 py-4 space-y-6">
+        <div className="px-4 sm:px-0">
+          <PageHero
+            section="events"
+            icon={<FontAwesomeIcon icon={faCalendarAlt} />}
+            title="Events"
+            subtitle="Reunions, meetups and alumni gatherings — all in one place."
+            stats={<StatPill value={events.length} label="Total events" />}
+          />
+        </div>
         {isLoading ? (
-          /* Skeleton cards */
-          [1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
-              <div className="h-64 bg-gray-200" />
-              <div className="p-4 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-100 rounded w-1/2" />
-              </div>
-            </div>
-          ))
+          <SkeletonFeed count={3} />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 mx-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-300 text-2xl" />
-            </div>
-            <p className="text-gray-500 font-medium">No events found</p>
-            <p className="text-gray-400 text-sm mt-1">Try a different search term</p>
-          </div>
+          <EmptyState
+            section="events"
+            icon={<FontAwesomeIcon icon={faCalendarAlt} />}
+            title="No events found"
+            description="Try a different search term."
+          />
         ) : (
-          filtered.map((event) => {
+          <MotionList className="space-y-6">
+            {filtered.map((event) => {
             const imgPath = event.images?.[0]?.image;
             const imgUrl = imgPath ? `https://api.karpagamalumni.in${imgPath}` : null;
             const resolvedId = resolveEventId(event);
             const calendarUrl = getGoogleCalendarUrl(event);
             
             return (
-              <div
+              <MotionItem
                 key={event.id}
                 className="bg-white sm:rounded-2xl border-y sm:border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
@@ -311,9 +311,10 @@ export default function Events() {
                     />
                   )}
                 </div>
-              </div>
+              </MotionItem>
             );
-          })
+            })}
+          </MotionList>
         )}
       </div>
     </div>

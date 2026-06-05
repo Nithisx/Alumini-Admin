@@ -6,6 +6,7 @@ import AddNewsModal from "./Addnewsmodel";
 import EditNewsModal from "./Editnewsmodal";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
+import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
 
 const TOKEN = () => localStorage.getItem("Token");
 const BASE_URL = "https://api.karpagamalumni.in";
@@ -124,33 +125,34 @@ export default function NewsList() {
         onClose={() => setEditingNewsId(null)}
         onSuccess={() => { setEditingNewsId(null); fetchNews(); }}
       />
-      {/* Sticky header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">News</h1>
-            <div className="relative flex-1">
-              <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search news…"
-                className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all"
-              />
-            </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex-shrink-0 w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition text-base font-bold"
-              title="Add news"
-            >
-              +
-            </button>
-          </div>
-
-          {/* Category pills */}
-          {categories.length > 1 && (
-            <div className="flex gap-2 mt-2 overflow-x-auto pb-0.5 no-scrollbar">
+      <PageHeader
+        section="news"
+        icon={<FontAwesomeIcon icon={faNewspaper} />}
+        title="News"
+        search={
+          <>
+            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search news…"
+              className="w-full bg-gray-100 rounded-xl pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all"
+            />
+          </>
+        }
+        actions={
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition text-base font-bold"
+            title="Add news"
+          >
+            +
+          </button>
+        }
+        below={
+          categories.length > 1 ? (
+            <div className="flex gap-2 overflow-x-auto pb-0.5 no-scrollbar">
               {categories.map((cat) => (
                 <button
                   key={cat}
@@ -165,37 +167,36 @@ export default function NewsList() {
                 </button>
               ))}
             </div>
-          )}
-        </div>
-      </div>
+          ) : null
+        }
+      />
 
       {/* Feed */}
       <div className="max-w-2xl mx-auto px-0 sm:px-4 py-4 space-y-6">
+        <div className="px-4 sm:px-0">
+          <PageHero
+            section="news"
+            icon={<FontAwesomeIcon icon={faNewspaper} />}
+            title="News Room"
+            subtitle="Latest announcements, achievements and stories from the alumni community."
+            stats={<StatPill value={posts.length} label="Articles" />}
+          />
+        </div>
         {isLoading ? (
-          [1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
-              <div className="h-64 bg-gray-200" />
-              <div className="p-4 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-100 rounded w-1/2" />
-              </div>
-            </div>
-          ))
+          <SkeletonFeed count={3} />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 mx-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FontAwesomeIcon icon={faNewspaper} className="text-gray-300 text-2xl" />
-            </div>
-            <p className="text-gray-500 font-medium">No news found</p>
-            <p className="text-gray-400 text-sm mt-1">
-              {searchTerm ? "Try a different search term" : "No articles in this category yet"}
-            </p>
-          </div>
+          <EmptyState
+            section="news"
+            icon={<FontAwesomeIcon icon={faNewspaper} />}
+            title="No news found"
+            description={searchTerm ? "Try a different search term." : "No articles in this category yet."}
+          />
         ) : (
-          filtered.map((post) => {
+          <MotionList className="space-y-6">
+            {filtered.map((post) => {
             const imgUrl = getImageUrl(post.thumbnail);
             return (
-              <div
+              <MotionItem
                 key={post.id}
                 className="bg-white sm:rounded-2xl border-y sm:border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
@@ -281,9 +282,10 @@ export default function NewsList() {
                     currentUserId={currentUserId}
                   />
                 </div>
-              </div>
+              </MotionItem>
             );
-          })
+            })}
+          </MotionList>
         )}
       </div>
 

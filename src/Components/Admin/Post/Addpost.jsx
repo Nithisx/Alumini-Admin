@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
@@ -9,6 +9,8 @@ import {
   formatFileSize,
   validateDocumentFile,
 } from "../../../lib/documentValidation";
+import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
+import JobStatusTag from "../../Shared/JobStatusTag";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -134,12 +136,19 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component — social feed style (full-width, like Facebook/Instagram)
-const JobCard = ({ post, onRequestDelete, onRequestEdit, currentUserId, canModerate }) => {
+const JobCard = ({ post, onRequestDelete, onRequestEdit, onStatusChange, currentUserId, canModerate }) => {
   const isOwn = String(post.user?.id ?? "") === String(currentUserId ?? "");
   const canManage = isOwn || canModerate;
+  const navigate = useNavigate();
+  const jobBase = `/${useLocation().pathname.split("/")[1] || ""}`;
+  const openDetail = () => navigate(`${jobBase}/jobs/${post.id}`);
+  const stop = (e) => e.stopPropagation();
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div
+      onClick={openDetail}
+      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer transition-shadow hover:shadow-md"
+    >
       {/* Header with user info + actions */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -165,7 +174,7 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, currentUserId, canModer
           </div>
         </div>
         {canManage && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1" onClick={stop}>
             <button
               onClick={() => onRequestEdit(post)}
               className="text-gray-400 hover:text-blue-500 transition-colors p-1 rounded"
@@ -186,11 +195,15 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, currentUserId, canModer
 
       {/* Job content body */}
       <div className="px-4 pb-3">
-        <h3 className="text-base font-bold text-gray-900 mb-0.5">
-          <Link to={`${post.id}`} className="hover:text-emerald-600 hover:underline transition-colors">
-            {post.role}
-          </Link>
-        </h3>
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+          <h3 className="text-base font-bold text-gray-900">{post.role}</h3>
+          <JobStatusTag
+            status={post.status}
+            jobId={post.id}
+            canManage={canManage}
+            onChange={(next) => onStatusChange?.(post.id, next)}
+          />
+        </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mb-2">
           <span className="flex items-center gap-1">
             <FontAwesomeIcon icon={faBuilding} className="text-green-600 text-xs" />
@@ -219,19 +232,25 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, currentUserId, canModer
       </div>
 
       {/* Full-width image */}
-      <ImageGallery images={post.images || []} />
+      <div onClick={stop}>
+        <ImageGallery images={post.images || []} />
+      </div>
 
       {/* Attached documents */}
-      <DocumentList documents={post.documents} />
+      <div onClick={stop}>
+        <DocumentList documents={post.documents} />
+      </div>
 
       {/* Engagement: like / comment / share */}
-      <EngagementPanel
-        contentType="jobs"
-        contentId={post.id}
-        postOwnerId={post.user?.id ?? null}
-        canModerate={canModerate}
-        currentUserId={currentUserId}
-      />
+      <div onClick={stop}>
+        <EngagementPanel
+          contentType="jobs"
+          contentId={post.id}
+          postOwnerId={post.user?.id ?? null}
+          canModerate={canModerate}
+          currentUserId={currentUserId}
+        />
+      </div>
     </div>
   );
 };
@@ -281,7 +300,8 @@ const JobFeed = () => {
       });
       const data = await response.json();
       setPosts(normalizeJobsList(data));
-    } catch (err) {
+    } catch {
+      // request failed — leave the feed as-is and stop the loader
     } finally {
       setLoading(false);
     }
@@ -361,7 +381,7 @@ const JobFeed = () => {
       } else {
         toast.error("Failed to delete post. Please try again.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete post. Please try again.");
     }
   };
@@ -505,7 +525,22 @@ const JobFeed = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen pb-20 lg:pb-6">
+    <div className="bg-gray-50 min-h-screen pb-20 lg:pb-6">
+      <PageHeader
+        section="jobs"
+        icon={<FontAwesomeIcon icon={faBriefcase} />}
+        title="Jobs"
+        maxWidth="max-w-5xl"
+        actions={
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors"
+          >
+            <FontAwesomeIcon icon={faPlus} className="text-xs" />
+            Post
+          </button>
+        }
+      />
       <ConfirmModal
         isOpen={!!confirmDeleteId}
         title="Delete Job Post"
@@ -607,6 +642,15 @@ const JobFeed = () => {
       <div className="max-w-5xl mx-auto px-4 py-0 flex flex-col lg:flex-row gap-6 items-start">
         {/* Main feed column */}
         <div className="w-full lg:flex-1 min-w-0">
+          <div className="mb-4">
+            <PageHero
+              section="jobs"
+              icon={<FontAwesomeIcon icon={faBriefcase} />}
+              title="Job Board"
+              subtitle="Discover and share career opportunities across the alumni network."
+              stats={<StatPill value={posts.length} label="Open roles" />}
+            />
+          </div>
           {/* Create post prompt */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3 mb-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -629,39 +673,39 @@ const JobFeed = () => {
 
           {/* Posts feed */}
           {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="flex flex-col items-center gap-3">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-green-600"></div>
-                <p className="text-gray-500 text-sm">Loading jobs...</p>
-              </div>
-            </div>
+            <SkeletonFeed count={3} />
           ) : posts.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FontAwesomeIcon icon={faBriefcase} className="text-xl text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">No Jobs Yet</h3>
-              <p className="text-gray-500 text-sm mb-4">Be the first to share a job opportunity!</p>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-              >
-                Post a Job
-              </button>
-            </div>
+            <EmptyState
+              section="jobs"
+              icon={<FontAwesomeIcon icon={faBriefcase} />}
+              title="No jobs yet"
+              description="Be the first to share a job opportunity!"
+              action={
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="bg-blue-600 text-white px-5 py-2 rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
+                >
+                  Post a Job
+                </button>
+              }
+            />
           ) : (
-            <div className="space-y-4">
+            <MotionList className="space-y-4">
               {posts.map((post) => (
-                <JobCard
-                  key={post.id}
-                  post={post}
-                  onRequestDelete={setConfirmDeleteId}
-                  onRequestEdit={openEditModal}
-                  currentUserId={currentUserId}
-                  canModerate={canModerate}
-                />
+                <MotionItem key={post.id}>
+                  <JobCard
+                    post={post}
+                    onRequestDelete={setConfirmDeleteId}
+                    onRequestEdit={openEditModal}
+                    onStatusChange={(id, next) =>
+                      setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, status: next } : p)))
+                    }
+                    currentUserId={currentUserId}
+                    canModerate={canModerate}
+                  />
+                </MotionItem>
               ))}
-            </div>
+            </MotionList>
           )}
         </div>
 

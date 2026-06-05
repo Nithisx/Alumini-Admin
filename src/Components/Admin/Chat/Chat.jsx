@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { getMediaUrl } from "../../../config/api";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
+import { createResilientSocket } from "../../Shared/chat/resilientSocket";
 
 const API_HOST = "https://api.karpagamalumni.in";
 const WS_HOST  = "api.karpagamalumni.in";
@@ -315,45 +316,37 @@ const Chat = () => {
 
   useEffect(() => {
     connectGlobalSocket();
-    return () => { closeSocket(); closeGlobalSocket(); };
+    // Revive dead sockets when the tab regains focus or the network returns —
+    // mobile/laptop sleep and proxy idle-timeouts otherwise leave them silent.
+    const reviveSockets = () => {
+      globalSocketRef.current?.reviveIfNeeded();
+      socketRef.current?.reviveIfNeeded();
+    };
+    const onVisible = () => { if (document.visibilityState === "visible") reviveSockets(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", reviveSockets);
+    window.addEventListener("focus", reviveSockets);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", reviveSockets);
+      window.removeEventListener("focus", reviveSockets);
+      closeSocket(); closeGlobalSocket();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const closeSocket = () => {
-    const ws = socketRef.current;
-    if (ws) {
-      try { ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null; ws.close(); } catch (_) {}
-      socketRef.current = null;
-    }
-  };
-
-  const closeGlobalSocket = () => {
-    const ws = globalSocketRef.current;
-    if (ws) {
-      try { ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null; ws.close(); } catch (_) {}
-      globalSocketRef.current = null;
-    }
-  };
+  const closeSocket = () => { socketRef.current?.close(); socketRef.current = null; };
+  const closeGlobalSocket = () => { globalSocketRef.current?.close(); globalSocketRef.current = null; };
 
   // ── Global WebSocket ───────────────────────────────────────────────────────
   const connectGlobalSocket = () => {
-    const token = getToken();
-    if (!token) return;
+    if (!getToken()) return;
     closeGlobalSocket();
-
-    const wsUrl = `wss://${WS_HOST}/ws/chat/?token=${encodeURIComponent(token)}`;
-    let ws;
-    try { ws = new WebSocket(wsUrl); } catch { restBootstrapFallback(); return; }
-    globalSocketRef.current = ws;
-
-    ws.onopen = () => {
-      try { ws.send(JSON.stringify({ action: "bootstrap" })); } catch (_) {}
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
+    const sock = createResilientSocket({
+      getUrl: () => { const t = getToken(); return t ? `wss://${WS_HOST}/ws/chat/?token=${encodeURIComponent(t)}` : null; },
+      onOpen: () => sock.send({ action: "bootstrap" }),
+      onDown: () => restBootstrapFallback(),
+      onMessage: (data) => {
         if (data.action === "bootstrap") {
           if (Array.isArray(data.rooms)) setRooms(data.rooms);
           if (data.community?.id) {
@@ -442,17 +435,10 @@ const Chat = () => {
           }
           return;
         }
-      } catch (_) {}
-    };
-
-    ws.onerror = () => { restBootstrapFallback(); };
-    ws.onclose = (e) => {
-      globalSocketRef.current = null; // allow reconnect check to pass
-      if (e.code === 1006 || !e.wasClean) {
-        restBootstrapFallback();
-        setTimeout(() => { if (!globalSocketRef.current) connectGlobalSocket(); }, 4000);
-      }
-    };
+      },
+    });
+    globalSocketRef.current = sock;
+    sock.connect();
   };
 
   const restBootstrapFallback = () => { loadRooms(); getCurrentUser(); loadCommunityChat(); };
@@ -580,24 +566,22 @@ const Chat = () => {
 
   // ── WebSocket (per-room) ───────────────────────────────────────────────────
   const connectWebSocket = useCallback((roomId, isCommunity = false) => {
-    const token = getToken();
-    if (!token) return;
+    if (!getToken()) return;
     closeSocket();
     setIsConnected(false);
     setMessages([]);
 
-    const wsUrl = isCommunity
-      ? `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(token)}`
-      : `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(token)}`;
-    const ws = new WebSocket(wsUrl);
-    socketRef.current = ws;
-
-    ws.onopen = () => { setIsConnected(true); };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
+    const sock = createResilientSocket({
+      getUrl: () => {
+        const t = getToken();
+        if (!t) return null;
+        return isCommunity
+          ? `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(t)}`
+          : `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(t)}`;
+      },
+      onOpen: () => setIsConnected(true),
+      onDown: () => { setIsConnected(false); loadMessagesHTTP(roomId); },
+      onMessage: (data) => {
         if (data.action === "message_history" && Array.isArray(data.messages)) {
           const normalized = data.messages.map((m) => ({
             ...m,
@@ -676,15 +660,10 @@ const Chat = () => {
           ));
           return;
         }
-      } catch (_) {}
-    };
-
-    ws.onerror = () => { setIsConnected(false); loadMessagesHTTP(roomId); };
-    ws.onclose = (e) => {
-      socketRef.current = null;
-      setIsConnected(false);
-      if (e.code === 1006 || !e.wasClean) loadMessagesHTTP(roomId);
-    };
+      },
+    });
+    socketRef.current = sock;
+    sock.connect();
   }, [markSeen]);
 
   const selectChat = useCallback((chat, spectating = false) => {
@@ -927,7 +906,7 @@ const Chat = () => {
   if (!token) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow p-8 max-w-sm w-full text-center">
+        <div className="anim-pop-in bg-white rounded-2xl shadow p-8 max-w-sm w-full text-center">
           <MessageSquare className="mx-auto h-12 w-12 text-gray-300 mb-4" />
           <h2 className="text-lg font-bold text-gray-800 mb-1">Authentication Required</h2>
           <p className="text-sm text-gray-500">Please log in to access chat.</p>

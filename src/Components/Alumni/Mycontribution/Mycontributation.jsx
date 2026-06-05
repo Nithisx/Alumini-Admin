@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Briefcase, Calendar, Newspaper, Building, Image } from "lucide-react";
+import { Briefcase, Calendar, Newspaper, Building, Image, Upload } from "lucide-react";
 import Jobs from "./Jobcontribution";
 import Events from "./Eventcontributation";
 import News from "./Newscontribution";
 import Bussiness from "./Businesscontribution";
 import Albums from "./Albumscontribution";
 import { clearMyPostsCache } from "../../../lib/mypostsCache";
+import { PageHeader } from "../../Shared/ui";
 
 const tabs = [
   { key: "jobs", label: "Jobs", icon: Briefcase },
@@ -27,11 +28,12 @@ const MyContributions = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">
-      {/* Sticky header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <h1 className="text-base font-bold text-gray-900 mb-3">My Contributions</h1>
-          {/* Tab bar */}
+      <PageHeader
+        section="uploads"
+        icon={<Upload className="w-4 h-4" />}
+        title="My Uploads"
+        maxWidth="max-w-3xl"
+        below={
           <div className="flex overflow-x-auto scrollbar-hide gap-1 pb-0.5">
             {tabs.map(({ key, label, icon: Icon }) => (
               <button
@@ -48,8 +50,8 @@ const MyContributions = () => {
               </button>
             ))}
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="max-w-3xl mx-auto">
         {cacheReady && (

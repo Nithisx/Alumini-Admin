@@ -7,6 +7,7 @@ import {
   Search, Plus, Edit, Trash2, Globe, Phone, Mail, MapPin,
   Users, ChevronDown, ChevronRight, Building, Package, Settings,
 } from "lucide-react";
+import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonList } from "../../Shared/ui";
 
 const BusinessDirectory = () => {
   const [businesses, setBusinesses] = useState([]);
@@ -131,39 +132,50 @@ const BusinessDirectory = () => {
         onCancel={() => setConfirmDeleteId(null)}
       />
 
-      {/* ── Sticky page header ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-base font-bold text-gray-900 flex-shrink-0">Business</h1>
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search businesses…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-              />
-            </div>
+      <PageHeader
+        section="business"
+        icon={<Building className="w-4 h-4" />}
+        title="Business"
+        maxWidth="max-w-5xl"
+        search={
+          <>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search businesses…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            />
+          </>
+        }
+        actions={
+          <>
             <button
               onClick={() => setShowSidebar(!showSidebar)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition ${showSidebar ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition ${showSidebar ? "bg-indigo-50 border-indigo-300 text-indigo-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
             >
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Filter</span>
             </button>
             <Link
               to="/admin/business/add"
-              className="flex-shrink-0 w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition"
+              className="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition"
             >
               <Plus className="w-4 h-4" />
             </Link>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="max-w-5xl mx-auto px-4 py-4">
+      <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
+        <PageHero
+          section="business"
+          icon={<Building className="w-5 h-5" />}
+          title="Business Directory"
+          subtitle="Discover and connect with alumni-owned businesses and services."
+          stats={<StatPill value={businesses.length} label="Listings" />}
+        />
         <div className="flex gap-4">
           {/* ── Sidebar (slide in on mobile, static on desktop) ── */}
           {(showSidebar) && (
@@ -199,31 +211,22 @@ const BusinessDirectory = () => {
             </p>
 
             {loading ? (
-              [1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 animate-pulse">
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 bg-gray-200 rounded-xl flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-1/2" />
-                      <div className="h-3 bg-gray-100 rounded w-3/4" />
-                      <div className="h-3 bg-gray-100 rounded w-1/3" />
-                    </div>
-                  </div>
-                </div>
-              ))
+              <SkeletonList count={4} />
             ) : filteredBusinesses.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                <Building className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-500 font-medium">No businesses found</p>
-                <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
-              </div>
+              <EmptyState
+                section="business"
+                icon={<Building className="w-7 h-7" />}
+                title="No businesses found"
+                description="Try adjusting your search or filters."
+              />
             ) : (
-              filteredBusinesses.map((business) => (
-                <Link
-                  key={business.id}
-                  to={`/admin/business/view/${business.id}`}
-                  className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-                >
+              <MotionList className="space-y-3">
+                {filteredBusinesses.map((business) => (
+                  <MotionItem key={business.id}>
+                    <Link
+                      to={`/admin/business/view/${business.id}`}
+                      className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                    >
                   <div className="flex gap-4 p-4">
                     {/* Logo */}
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
@@ -290,7 +293,9 @@ const BusinessDirectory = () => {
                     </div>
                   </div>
                 </Link>
-              ))
+                  </MotionItem>
+                ))}
+              </MotionList>
             )}
           </div>
         </div>
