@@ -7,7 +7,7 @@ import ImageViewerModal from "../ImageViewerModal";
 import ImageCropModal from "../ImageCropModal";
 import ScrambleText from "../ScrambleText";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
-import { COLLEGE_NAMES, COURSES, COURSE_BRANCH_MAPPING } from "../../../constants/academicOptions";
+import { COLLEGE_NAMES, COURSES, COURSE_BRANCH_MAPPING, getCoursesForCollege } from "../../../constants/academicOptions";
 import { API_BASE as API_ROOT, getMediaUrl } from "./media";
 import useViewerProfile from "./useViewerProfile";
 import { Icons } from "./primitives";
@@ -869,7 +869,7 @@ export default function MemberDetailView({ basePath = "" }) {
                 <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Course *</label>
                 <select value={addCourseForm.course} onChange={(e) => setAddCourseForm((f) => ({ ...f, course: e.target.value, branch: "" }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                   <option value="">Select Course</option>
-                  {COURSES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {getCoursesForCollege(addCourseForm.college_name).map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
 
@@ -885,7 +885,7 @@ export default function MemberDetailView({ basePath = "" }) {
 
               <div>
                 <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">College</label>
-                <select value={addCourseForm.college_name} onChange={(e) => setAddCourseForm((f) => ({ ...f, college_name: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                <select value={addCourseForm.college_name} onChange={(e) => setAddCourseForm((f) => ({ ...f, college_name: e.target.value, course: "", branch: "" }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                   <option value="">Select College</option>
                   {COLLEGE_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>

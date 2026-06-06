@@ -38,6 +38,7 @@ import { getMediaUrl } from "../../../config/api";
     COURSES,
     COURSE_BRANCH_MAPPING,
     STAFF_ONLY_COLLEGE,
+    getCoursesForCollege,
   } from "../../../constants/academicOptions";
 
 export default function RegisterRequest() {
@@ -285,6 +286,10 @@ export default function RegisterRequest() {
       const updated = { ...prev, [field]: value };
       if (field === "role" && value === "Staff") updated.college_name = "KAHE";
       if (field === "role" && value !== "Staff" && updated.college_name === "KAHE") updated.college_name = "";
+      if (field === "college_name") {
+        updated.course = "";
+        updated.branch = "";
+      }
       return updated;
     });
   };
@@ -378,6 +383,8 @@ export default function RegisterRequest() {
 
     // Course dropdown
     if (kind === "select-course") {
+      const currentCollege = isEditing ? (editDraft["college_name"] ?? req["college_name"] ?? "") : (req["college_name"] ?? "");
+      const courseOptions = getCoursesForCollege(currentCollege);
       return (
         <div key={key} className="text-sm">
           <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
@@ -390,7 +397,7 @@ export default function RegisterRequest() {
             }}
           >
             <option value="">— Select Course —</option>
-            {COURSES.map((opt) => (
+            {courseOptions.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
           </select>

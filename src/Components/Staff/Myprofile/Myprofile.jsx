@@ -9,6 +9,7 @@ import ImageCropModal from "../../Shared/ImageCropModal"
 import { LoadingScreen, ErrorScreen } from "../../Shared/ui"
 import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS, API_USER_COURSES, API_USER_COURSE } from "../../../config/api"
 import { COURSES, COURSE_BRANCH_MAPPING, COLLEGE_NAMES } from "../../../constants/academicOptions"
+import { getCoursesForCollege } from "../../../constants/academicOptions"
 import {
   ArrowLeft,
   Edit,
@@ -2065,7 +2066,7 @@ const ProfileScreen = () => {
                     className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   >
                     <option value="">Select course</option>
-                    {COURSES.map((c) => (
+                    {getCoursesForCollege(addCourseForm.college_name).map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
@@ -2091,7 +2092,7 @@ const ProfileScreen = () => {
                   <label className="block text-xs font-bold text-green-900 mb-1">College</label>
                   <select
                     value={addCourseForm.college_name}
-                    onChange={(e) => setAddCourseForm((p) => ({ ...p, college_name: e.target.value }))}
+                    onChange={(e) => setAddCourseForm((p) => ({ ...p, college_name: e.target.value, course: "", branch: "" }))}
                     className="w-full border border-green-300 rounded-lg p-2.5 text-sm text-green-900 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   >
                     <option value="">Select college</option>

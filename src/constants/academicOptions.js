@@ -9,7 +9,22 @@ export const COLLEGE_NAMES = [
 
 export const STAFF_ONLY_COLLEGE = "KAHE";
 
-export const COURSES = [
+export const POLYTECHNIC_COLLEGE = "KPC-Karpagam Polytechnic College";
+
+// Diploma courses — only for Karpagam Polytechnic College (KPC)
+export const POLYTECHNIC_COURSES = [
+  "DME",
+  "DME & Tool & Die",
+  "DCE",
+  "DCOE",
+  "DECE",
+  "DEEE",
+  "DIT",
+  "DAE",
+];
+
+// Courses available for all other colleges (non-polytechnic)
+export const NON_POLYTECHNIC_COURSES = [
   "Bachelor of Architecture",
   "Bachelor of Arts",
   "Bachelor of Business Administration",
@@ -32,17 +47,24 @@ export const COURSES = [
   "Master of Planning",
   "Master of Science",
   "Master of Social Work",
-  "DME",
-  "DME & Tool & Die",
-  "DCE",
-  "DCOE",
-  "DECE",
-  "DEEE",
-  "DIT",
-  "DAE",
   "Pharm. D",
   "Ph.D",
 ];
+
+// All courses combined (kept for backward compatibility)
+export const COURSES = [...NON_POLYTECHNIC_COURSES, ...POLYTECHNIC_COURSES];
+
+/**
+ * Returns the appropriate course list based on the selected college.
+ * - KPC (Polytechnic) → only diploma courses
+ * - All other colleges → non-polytechnic courses
+ * - No college selected → all courses
+ */
+export const getCoursesForCollege = (collegeName) => {
+  if (!collegeName) return COURSES;
+  if (collegeName === POLYTECHNIC_COLLEGE) return POLYTECHNIC_COURSES;
+  return NON_POLYTECHNIC_COURSES;
+};
 
 export const COURSE_BRANCH_MAPPING = {
   "Bachelor of Architecture": ["General"],
@@ -158,6 +180,15 @@ export const COURSE_BRANCH_MAPPING = {
     "Physics",
   ],
   "Master of Social Work": ["General"],
+  "DME": ["General"],
+  "DME & Tool & Die": ["General"],
+  "DCE": ["General"],
+  "DCOE": ["General"],
+  "DECE": ["General"],
+  "DEEE": ["General"],
+  "DIT": ["General"],
+  "DAE": ["General"],
+  "Pharm. D": ["General"],
   "Ph.D": [
     "Aeronautical Engineering",
     "Aerospace Engineering",

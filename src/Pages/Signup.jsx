@@ -7,6 +7,7 @@ import {
   COURSES,
   COURSE_BRANCH_MAPPING,
   STAFF_ONLY_COLLEGE,
+  getCoursesForCollege,
 } from "../constants/academicOptions";
 
 const api_base = "https://api.karpagamalumni.in/api/v1";
@@ -289,10 +290,18 @@ const Signup = () => {
       : COLLEGE_NAMES.filter((college) => college !== STAFF_ONLY_COLLEGE);
   }, [formData.role]);
 
+  const availableCourses = useMemo(() => {
+    return getCoursesForCollege(formData.college_name);
+  }, [formData.college_name]);
+
   const updateField = useCallback((field, value) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
       if (field === "course") {
+        newData.branch = "";
+      }
+      if (field === "college_name") {
+        newData.course = "";
         newData.branch = "";
       }
       if (field === "role" && value !== "Staff" && prev.college_name === STAFF_ONLY_COLLEGE) {
@@ -915,7 +924,7 @@ const Signup = () => {
                   />
                   <SelectField
                     label="Course"
-                    options={COURSES}
+                    options={availableCourses}
                     value={formData.course}
                     onChange={(v) => updateField("course", v)}
                     error={fieldErrors.course}
