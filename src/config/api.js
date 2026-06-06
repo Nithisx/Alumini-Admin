@@ -32,6 +32,7 @@ export const API_USER_COURSE    = (id) => `${API_BASE}/user-courses/${id}/`;
 // Admin: manage courses on behalf of a user
 export const API_ADMIN_USER_COURSES = (userId) => `${API_BASE}/profile/${userId}/courses/`;
 export const API_ADMIN_USER_COURSE  = (userId, courseId) => `${API_BASE}/profile/${userId}/courses/${courseId}/`;
+export const API_ADMIN_USER_UPDATE  = (userId) => `${API_BASE}/profile/${userId}/update/`;
 
 // Members
 export const API_MEMBERS        = `${API_BASE}/members/`;
@@ -46,6 +47,7 @@ export const API_ALBUMS         = `${API_BASE}/albums/`;
 export const API_BUSINESS       = `${API_BASE}/business/`;
 export const API_NEWS           = `${API_BASE}/news/`;
 export const API_HOME           = `${API_BASE}/home/`;
+export const API_DEVELOPER_SHOWCASE = `${API_BASE}/developer-showcase/`;
 
 // Stats
 export const API_STATISTICS     = `${API_BASE}/user-statistics/`;
@@ -113,6 +115,7 @@ export const API_CHAT_ROOM_MESSAGE   = (roomId, msgId) => `${CHAT_HOST}/chat/roo
 export const API_CHAT_MARK_SEEN      = (roomId) => `${CHAT_HOST}/chat/rooms/${roomId}/seen/`;
 export const API_CHAT_SEARCH         = `${CHAT_HOST}/chat/search/`;
 export const API_CHAT_COMMUNITY      = `${CHAT_HOST}/chat/community/`;
+export const API_CHAT_COMMUNITY_MESSAGES = `${CHAT_HOST}/chat/community/messages/`;
 export const API_CHAT_ME             = `${CHAT_HOST}/chat/user/me/`;
 export const API_CHAT_PRESENCE       = (userId) => `${CHAT_HOST}/chat/presence/${userId}/`;
 export const API_CHAT_PRESENCE_BULK  = `${CHAT_HOST}/chat/presence/bulk/`;
@@ -120,8 +123,8 @@ export const API_PORTAL_SHARE        = `${API_BASE}/share/portal/`;
 
 export const WS_CHAT_URL = (roomId, token) =>
   `${WS_BASE}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(token)}`;
-export const WS_COMMUNITY_URL = (token) =>
-  `${WS_BASE}/ws/community-chat/?token=${encodeURIComponent(token)}`;
+export const WS_COMMUNITY_URL = (token, room = "general") =>
+  `${WS_BASE}/ws/community-chat/?token=${encodeURIComponent(token)}&room=${encodeURIComponent(room)}`;
 
 // Media helper — resolves a relative media path to a full URL
 export const getMediaUrl = (uri) => {
@@ -155,5 +158,11 @@ export const API_NOTIFICATION_READ        = (id) => `${API_BASE}/notifications/$
 export const API_NOTIFICATION_READ_ALL    = `${API_BASE}/notifications/read-all/`;
 export const API_NOTIFICATION_DELETE      = (id) => `${API_BASE}/notifications/${id}/`;
 export const API_NOTIFICATION_CLEAR_ALL   = `${API_BASE}/notifications/clear-all/`;
+
+// ── Developer Endorsements ────────────────────────────────────────────────────
+export const API_ENDORSEMENTS            = `${API_BASE}/endorsements/`;
+export const API_ENDORSEMENT_USER        = (userId) => `${API_BASE}/endorsements/user/${userId}/`;
+export const API_ENDORSEMENT_DELETE      = (id) => `${API_BASE}/endorsements/${id}/`;
+
 
 

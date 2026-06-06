@@ -199,15 +199,15 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 95vw;
+  max-height: 96vh;
   animation: imageViewerZoomIn 0.3s ease-out;
   cursor: default;
 }
 
 .image-viewer-img {
-  max-width: 90vw;
-  max-height: 85vh;
+  max-width: 95vw;
+  max-height: 92vh;
   border-radius: 0.75rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   object-fit: contain;

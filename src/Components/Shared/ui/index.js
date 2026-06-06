@@ -8,8 +8,16 @@ export { default as PageHeader } from "./PageHeader";
 export { default as PageHero } from "./PageHero";
 export { default as StatPill } from "./StatPill";
 export { default as EmptyState } from "./EmptyState";
+export { default as ErrorState } from "./ErrorState";
 export { default as SectionHeader } from "./SectionHeader";
 export { LoadingScreen, ErrorScreen } from "./StateScreens";
+export {
+  getErrorInfo,
+  getErrorMessage,
+  getErrorKind,
+  throwForStatus,
+  ERROR_KIND,
+} from "../../../lib/errorMessage";
 export {
   Skeleton,
   SkeletonText,

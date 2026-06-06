@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import AppRoutes from "./AppRoutes";
 import ErrorBoundary from "./Components/Shared/ErrorBoundary";
+import NetworkStatusBanner from "./Components/Shared/NetworkStatusBanner";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className="App">
+        <NetworkStatusBanner />
         {appLoading && <Loader />}
         <AppRoutes />
         <ToastContainer

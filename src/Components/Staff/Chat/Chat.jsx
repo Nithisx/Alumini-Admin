@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Search, Send, ArrowLeft, Plus, Users, MessageSquare,
   Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
-  Clock, Pencil, X, Info, Copy, Paperclip, CornerUpLeft,
+  Clock, Pencil, X, Info, Copy, Paperclip, CornerUpLeft, Code,
 } from "lucide-react";
 import { getMediaUrl } from "../../../config/api";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
@@ -82,12 +82,14 @@ const Avatar = ({ src, name, gender, size = 10, isCommunity = false }) => {
   const [imgError, setImgError] = useState(false);
   useEffect(() => { setImgError(false); }, [src]);
   const cls = `w-${size} h-${size} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
-  if (isCommunity)
+  if (isCommunity) {
+    const isDev = name === "Developer Community";
     return (
-      <div className={`${cls} bg-gradient-to-br from-indigo-500 to-violet-600`}>
-        <Globe className="w-5 h-5 text-white" />
+      <div className={`${cls} bg-gradient-to-br ${isDev ? "from-emerald-500 to-teal-600" : "from-indigo-500 to-violet-600"}`}>
+        {isDev ? <Code className="w-5 h-5 text-white" /> : <Globe className="w-5 h-5 text-white" />}
       </div>
     );
+  }
   const resolvedSrc = !imgError && src ? photoUrl(src) : getProfilePlaceholderByGender(gender);
   return <img src={resolvedSrc} alt={name || "User"} className={`${cls} object-cover`} onError={() => setImgError(true)} />;
 };
@@ -170,7 +172,7 @@ const Chat = () => {
   const [isConnected, setIsConnected]         = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [roomToDelete, setRoomToDelete]       = useState(null);
-  const [communityRoom, setCommunityRoom]     = useState(null);
+  const [communityRooms, setCommunityRooms]   = useState([]);
   const [showAgreement, setShowAgreement]     = useState(
     () => !localStorage.getItem("chat_agreement_accepted")
   );
@@ -257,7 +259,11 @@ const Chat = () => {
       onMessage: (data) => {
         if (data.action === "bootstrap") {
           if (Array.isArray(data.rooms)) setRooms(data.rooms);
-          if (data.community?.id) setCommunityRoom({ ...data.community, is_community: true, name: "Community Chat" });
+          if (Array.isArray(data.communities)) {
+            setCommunityRooms(data.communities.map((c) => ({ ...c, is_community: true })));
+          } else if (data.community?.id) {
+            setCommunityRooms([{ ...data.community, is_community: true, name: "Community Chat" }]);
+          }
           if (data.presence) setPresenceMap((prev) => ({ ...prev, ...data.presence }));
           if (data.me) setCurrentUser(data.me);
           return;
@@ -347,7 +353,14 @@ const Chat = () => {
     if (!token) return;
     try {
       const r = await fetch(`${API_HOST}/chat/community/`, { headers: authH() });
-      if (r.ok) { const d = await r.json(); if (d?.id) setCommunityRoom({ ...d, is_community: true, name: "Community Chat" }); }
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d)) {
+          setCommunityRooms(d.map((c) => ({ ...c, is_community: true })));
+        } else if (d?.id) {
+          setCommunityRooms([{ ...d, is_community: true, name: "Community Chat" }]);
+        }
+      }
     } catch (_) {}
   };
 
@@ -388,7 +401,7 @@ const Chat = () => {
     try { const r = await fetch(`${API_HOST}/chat/presence/${userId}/`, { headers: authH() }); if (r.ok) { const d = await r.json(); setPresenceMap((prev) => ({ ...prev, [userId]: d })); } } catch (_) {}
   }, []);
 
-  const connectWebSocket = useCallback((roomId, isCommunity = false) => {
+  const connectWebSocket = useCallback((roomId, isCommunity = false, roomName = "") => {
     if (!getToken()) return;
     closeSocket();
     setIsConnected(false);
@@ -398,9 +411,11 @@ const Chat = () => {
       getUrl: () => {
         const t = getToken();
         if (!t) return null;
-        return isCommunity
-          ? `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(t)}`
-          : `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(t)}`;
+        if (isCommunity) {
+          const roomType = roomName === "Developer Community" ? "developer" : "general";
+          return `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(t)}&room=${roomType}`;
+        }
+        return `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(t)}`;
       },
       onOpen: () => setIsConnected(true),
       onDown: () => { setIsConnected(false); loadMessagesHTTP(roomId); },
@@ -473,7 +488,7 @@ const Chat = () => {
     setEditingId(null);
     setCtxMenu(null);
     setInfoMsg(null);
-    connectWebSocket(chat.id, Boolean(chat.is_community));
+    connectWebSocket(chat.id, Boolean(chat.is_community), chat.name);
     setRooms((prev) => prev.map((r) => String(r.id) === String(chat.id) ? { ...r, unreadCount: 0 } : r));
     if (!chat.is_community && chat.other_user?.id && !presenceMap[chat.other_user.id]) fetchPresence(chat.other_user.id);
   }, [connectWebSocket, fetchPresence, presenceMap]);
@@ -591,7 +606,7 @@ const Chat = () => {
   );
   const getSortedRooms = () => {
     const f = rooms.filter((r) => !r.is_community && (roomHasMessages(r) || String(r.id) === String(selectedChat?.id)));
-    return communityRoom ? [communityRoom, ...f] : f;
+    return communityRooms.length > 0 ? [...communityRooms, ...f] : f;
   };
   const otherUserId   = selectedChat?.other_user?.id;
   const otherPresence = otherUserId ? presenceMap[String(otherUserId)] : null;

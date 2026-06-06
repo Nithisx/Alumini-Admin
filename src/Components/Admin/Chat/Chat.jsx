@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Search, Send, ArrowLeft, Plus, Users, MessageSquare,
   Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
-  Clock, Pencil, X, MoreVertical, Info, Shield, Copy, Paperclip, CornerUpLeft,
+  Clock, Pencil, X, MoreVertical, Info, Shield, Copy, Paperclip, CornerUpLeft, Code,
 } from "lucide-react";
 import { getMediaUrl } from "../../../config/api";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
@@ -110,12 +110,14 @@ const Avatar = ({ src, name, gender, size = 10, isCommunity = false }) => {
   useEffect(() => { setImgError(false); }, [src]);
 
   const cls = `w-${size} h-${size} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`;
-  if (isCommunity)
+  if (isCommunity) {
+    const isDev = name === "Developer Community";
     return (
-      <div className={`${cls} bg-gradient-to-br from-indigo-500 to-violet-600`}>
-        <Globe className="w-5 h-5 text-white" />
+      <div className={`${cls} bg-gradient-to-br ${isDev ? "from-emerald-500 to-teal-600" : "from-indigo-500 to-violet-600"}`}>
+        {isDev ? <Code className="w-5 h-5 text-white" /> : <Globe className="w-5 h-5 text-white" />}
       </div>
     );
+  }
 
   const resolvedSrc = !imgError && src ? photoUrl(src) : getProfilePlaceholderByGender(gender);
   return (
@@ -247,7 +249,7 @@ const Chat = () => {
   const [isConnected, setIsConnected]         = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [roomToDelete, setRoomToDelete]       = useState(null);
-  const [communityRoom, setCommunityRoom]     = useState(null);
+  const [communityRooms, setCommunityRooms]   = useState([]);
   const [showAgreement, setShowAgreement]     = useState(
     () => !localStorage.getItem("chat_agreement_accepted")
   );
@@ -349,8 +351,10 @@ const Chat = () => {
       onMessage: (data) => {
         if (data.action === "bootstrap") {
           if (Array.isArray(data.rooms)) setRooms(data.rooms);
-          if (data.community?.id) {
-            setCommunityRoom({ ...data.community, is_community: true, name: "Community Chat" });
+          if (Array.isArray(data.communities)) {
+            setCommunityRooms(data.communities.map((c) => ({ ...c, is_community: true })));
+          } else if (data.community?.id) {
+            setCommunityRooms([{ ...data.community, is_community: true, name: "Community Chat" }]);
           }
           if (data.presence && typeof data.presence === "object") {
             setPresenceMap((prev) => ({ ...prev, ...data.presence }));
@@ -473,8 +477,12 @@ const Chat = () => {
     try {
       const r = await fetch(`${API_HOST}/chat/community/`, { headers: authH() });
       if (r.ok) {
-        const data = await r.json();
-        if (data?.id) setCommunityRoom({ ...data, is_community: true, name: "Community Chat" });
+        const d = await r.json();
+        if (Array.isArray(d)) {
+          setCommunityRooms(d.map((c) => ({ ...c, is_community: true })));
+        } else if (d?.id) {
+          setCommunityRooms([{ ...d, is_community: true, name: "Community Chat" }]);
+        }
       }
     } catch (_) {}
   };
@@ -565,7 +573,7 @@ const Chat = () => {
   }, []);
 
   // ── WebSocket (per-room) ───────────────────────────────────────────────────
-  const connectWebSocket = useCallback((roomId, isCommunity = false) => {
+  const connectWebSocket = useCallback((roomId, isCommunity = false, roomName = "") => {
     if (!getToken()) return;
     closeSocket();
     setIsConnected(false);
@@ -575,9 +583,11 @@ const Chat = () => {
       getUrl: () => {
         const t = getToken();
         if (!t) return null;
-        return isCommunity
-          ? `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(t)}`
-          : `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(t)}`;
+        if (isCommunity) {
+          const roomType = roomName === "Developer Community" ? "developer" : "general";
+          return `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(t)}&room=${roomType}`;
+        }
+        return `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(t)}`;
       },
       onOpen: () => setIsConnected(true),
       onDown: () => { setIsConnected(false); loadMessagesHTTP(roomId); },
@@ -675,7 +685,7 @@ const Chat = () => {
     setInfoMsg(null);
     setReplyTo(null);
     setMediaPreview(null);
-    connectWebSocket(chat.id, Boolean(chat.is_community));
+    connectWebSocket(chat.id, Boolean(chat.is_community), chat.name);
     setRooms((prev) => prev.map((r) =>
       String(r.id) === String(chat.id) ? { ...r, unreadCount: 0 } : r
     ));
@@ -849,7 +859,7 @@ const Chat = () => {
   );
   const getSortedRooms = () => {
     const filtered = rooms.filter((r) => !r.is_community && (roomHasMessages(r) || String(r.id) === String(selectedChat?.id)));
-    return communityRoom ? [communityRoom, ...filtered] : filtered;
+    return communityRooms.length > 0 ? [...communityRooms, ...filtered] : filtered;
   };
 
   const filteredAllRooms = allRooms.filter((r) => {

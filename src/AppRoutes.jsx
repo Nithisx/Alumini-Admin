@@ -8,6 +8,8 @@ import OAuthSignupComplete from './Pages/OAuthSignupComplete';
 import Home from './Pages/home';
 import About from './Pages/about';
 import Contact from './Pages/Contact';
+import Developers from './Pages/DevelopersShowcase';
+import DeveloperCommunity from './Pages/DeveloperCommunityLive';
 import PrivacyPolicy from './Pages/PrivacyPolicyPage';
 import TermsOfService from './Pages/TermsOfService';
 import ResetPassword from './Pages/ResetPassword';
@@ -60,6 +62,8 @@ function AnimatedRoutes() {
         {/* Public Routes */}
         <Route path="/home" element={<GuestOnly><Home /></GuestOnly>} />
         <Route path="/about" element={<About />} />
+        <Route path="/developers" element={<Developers />} />
+        <Route path="/developer-community" element={<DeveloperCommunity />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />

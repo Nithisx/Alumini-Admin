@@ -166,6 +166,34 @@ const HomePage = () => {
           ))}
         </MotionList>
 
+        {/* ── Ready to connect card ── */}
+        <section className="mb-8 rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl">
+              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+                Ready to connect with the network?
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-emerald-50/90">
+                Explore member profiles, continue conversations, and stay updated from your dashboard.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                onClick={() => navigate("/admin/members/")}
+              >
+                Browse Members
+              </button>
+              <button
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15"
+                onClick={() => navigate("/admin/chat")}
+              >
+                Open Chat
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* ── Latest Albums (folder grid) ── */}
         <section>
           <div className={DASHBOARD_THEME.sectionHeader}>
@@ -417,24 +445,31 @@ const HomePage = () => {
           </div>
         </div>
 
-        <section className="bg-gradient-to-r from-emerald-700 to-green-700 rounded-2xl p-6 sm:p-8 text-white" id="contact-section">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Ready to connect with the network?</h2>
-          <p className="text-emerald-50 mb-6 max-w-2xl">
-            Explore member profiles, continue conversations, and stay updated from your dashboard.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              className="px-5 py-2.5 bg-white text-emerald-700 font-semibold rounded-xl hover:bg-emerald-50 transition"
-              onClick={() => navigate("/admin/members/")}
-            >
-              Browse Members
-            </button>
-            <button
-              className="px-5 py-2.5 border border-emerald-200 text-white font-semibold rounded-xl hover:bg-emerald-600 transition"
-              onClick={() => navigate("/admin/chat")}
-            >
-              Open Chat
-            </button>
+        {/* ── Developer showcase card ── */}
+        <section className="rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40" id="contact-section">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl">
+              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+                Meet the team, explore the showcase, and join the developer community.
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-emerald-50/90">
+                The portal is maintained by alumni developers who keep the platform evolving. Learn who they are and connect with them directly.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => navigate("/developers")}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50"
+              >
+                Meet the developers
+              </button>
+              <button
+                onClick={() => navigate("/developer-community")}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15"
+              >
+                Join community
+              </button>
+            </div>
           </div>
         </section>
       </div>

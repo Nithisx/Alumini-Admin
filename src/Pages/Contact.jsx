@@ -166,6 +166,26 @@ const Contact = () => {
                 </form>
               </div>
             </div>
+
+            {/* About This Portal Section */}
+            <div className="mt-8 bg-green-50 rounded-2xl border border-green-100 p-6">
+              <h3 className="text-xl font-bold text-green-800 mb-2">
+                About This Portal
+              </h3>
+              <p className="text-gray-700 mb-4">
+                This alumni portal was developed by KAHE alumni developers who are passionate
+                about connecting our community. Want to know more about the team behind this platform?
+              </p>
+              <a
+                href="/developers"
+                className="inline-flex items-center text-green-600 font-semibold hover:text-green-700 transition"
+              >
+                Meet the Developers
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
       </div>
