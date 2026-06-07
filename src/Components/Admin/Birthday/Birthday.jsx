@@ -16,9 +16,13 @@ const Birthday = () => {
   const getMonthDay = (dateLike) => {
     if (!dateLike) return { month: null, day: null };
 
-    if (typeof dateLike === "string" && /^\d{4}-\d{2}-\d{2}/.test(dateLike)) {
-      const [, month, day] = dateLike.split("-");
-      return { month: Number(month) - 1, day: Number(day) };
+    if (typeof dateLike === "string") {
+      // support both date-only (YYYY-MM-DD) and ISO datetimes (YYYY-MM-DDTHH:MM:SSZ)
+      const datePart = dateLike.slice(0, 10); // YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        const [, month, day] = datePart.split("-");
+        return { month: Number(month) - 1, day: Number(day) };
+      }
     }
 
     const parsed = new Date(dateLike);
@@ -29,6 +33,17 @@ const Birthday = () => {
   const isSameMonthDay = (dateLike, targetDate) => {
     const { month, day } = getMonthDay(dateLike);
     return month === targetDate.getMonth() && day === targetDate.getDate();
+  };
+
+  const computeDaysUntilBirthday = (dateLike) => {
+    const { month, day } = getMonthDay(dateLike);
+    if (month == null || day == null) return Infinity;
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    let target = new Date(startOfToday.getFullYear(), month, day);
+    if (target < startOfToday) target = new Date(startOfToday.getFullYear() + 1, month, day);
+    const diff = Math.round((target - startOfToday) / (1000 * 60 * 60 * 24));
+    return diff;
   };
 
   const getDisplayName = (user) => {
@@ -58,14 +73,19 @@ const Birthday = () => {
           headers: { Authorization: `Token ${token}` },
         });
         if (!r.ok) throw new Error("Failed to fetch birthdays");
-        setBirthdays(await r.json());
+        const data = await r.json();
+        const items = Array.isArray(data) ? data : Array.isArray(data.results) ? data.results : [];
+        const mapped = items.map((u) => ({ ...u, days_until_birthday: computeDaysUntilBirthday(u.date_of_birth) }));
+        // eslint-disable-next-line no-console
+        console.debug("admin birthdays fetched:", mapped.length);
+        setBirthdays(mapped);
       } catch (err) { setError(err.message); }
       finally { setLoading(false); }
     })();
   }, [token]);
 
   const upcomingBirthdays = birthdays
-    .filter((u) => u.days_until_birthday > 0)
+    .filter((u) => typeof u.days_until_birthday === "number" && u.days_until_birthday >= 0)
     .sort((a, b) => a.days_until_birthday - b.days_until_birthday);
   const birthdayDates = birthdays.map((u) => getMonthDay(u.date_of_birth));
 
@@ -209,13 +229,15 @@ const Birthday = () => {
               description="Check back soon for upcoming celebrations."
             />
           ) : (
-            <MotionList className="space-y-2">
-              {upcomingBirthdays.map((u) => (
-                <MotionItem key={`up-${u.id}`}>
-                  <BirthdayCard user={u} showDays />
-                </MotionItem>
-              ))}
-            </MotionList>
+                  <div className="space-y-2">
+  {upcomingBirthdays.map((u) => (
+    <BirthdayCard
+      key={`up-${u.id}`}
+      user={u}
+      showDays
+    />
+  ))}
+</div>
           )}
         </section>
       </div>
