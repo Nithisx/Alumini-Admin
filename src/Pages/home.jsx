@@ -42,9 +42,12 @@ export default function Home() {
     return role ? `/${role}` : null;
   }, [token]);
 
-  const toProtectedPath = (suffix) => {
-    if (!roleBasePath) return "/login";
-    return `${roleBasePath}${suffix}`;
+  const handleProtectedNavigation = (suffix) => {
+    if (roleBasePath) {
+      navigate(`${roleBasePath}${suffix}`);
+    } else {
+      navigate("/login", { state: { from: { pathname: suffix, isRelative: true } } });
+    }
   };
 
   const formatDate = (dateValue) => {
@@ -93,7 +96,7 @@ export default function Home() {
         setCountryDistribution(countryResult);
         setCityStateDistribution(cityStateResult);
         setLoading(false);
-      } catch (fetchError) {
+      } catch {
         setError("Failed to fetch data. Please try again later.");
         setLoading(false);
       }
@@ -195,28 +198,28 @@ export default function Home() {
       label: "Members",
       value: data.total_users,
       color: "bg-emerald-500",
-      path: toProtectedPath("/members"),
+      path: "/members",
       icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
     },
     {
       label: "Upcoming Events",
       value: data.upcoming_event,
       color: "bg-violet-500",
-      path: toProtectedPath("/event"),
+      path: "/event",
       icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
     },
     {
       label: "Albums",
       value: data.albums_count,
       color: "bg-pink-500",
-      path: toProtectedPath("/albums"),
+      path: "/albums",
       icon: "M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z",
     },
     {
       label: "News",
       value: data.new_users,
       color: "bg-amber-500",
-      path: toProtectedPath("/news"),
+      path: "/news",
       icon: "M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z",
     },
   ];
@@ -264,7 +267,7 @@ export default function Home() {
           {stats.map((stat) => (
             <button
               key={stat.label}
-              onClick={() => navigate(stat.path)}
+              onClick={() => handleProtectedNavigation(stat.path)}
               className={DASHBOARD_THEME.statButton}
             >
               <div className={`${DASHBOARD_THEME.statIcon} ${stat.color}`}>
@@ -283,7 +286,7 @@ export default function Home() {
         <section>
           <div className={DASHBOARD_THEME.sectionHeader}>
             <h2 className={DASHBOARD_THEME.sectionTitle}>Photo Gallery</h2>
-            <button onClick={() => navigate(toProtectedPath("/albums"))} className={DASHBOARD_THEME.sectionAction}>
+            <button onClick={() => handleProtectedNavigation("/albums")} className={DASHBOARD_THEME.sectionAction}>
               See all
             </button>
           </div>
@@ -291,7 +294,7 @@ export default function Home() {
             {data.latest_album_images?.slice(0, 6).map((album) => (
               <div
                 key={album.id}
-                onClick={() => navigate(toProtectedPath(`/albums/${album.id}`))}
+                onClick={() => handleProtectedNavigation(`/albums/${album.id}`)}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100">
@@ -319,7 +322,7 @@ export default function Home() {
           <section id="news-section">
             <div className={DASHBOARD_THEME.sectionHeader}>
               <h2 className={DASHBOARD_THEME.sectionTitle}>Latest News</h2>
-              <button onClick={() => navigate(toProtectedPath("/news"))} className={DASHBOARD_THEME.sectionAction}>
+              <button onClick={() => handleProtectedNavigation("/news")} className={DASHBOARD_THEME.sectionAction}>
                 See all
               </button>
             </div>
@@ -381,7 +384,7 @@ export default function Home() {
         <section id="events-section">
           <div className={DASHBOARD_THEME.sectionHeader}>
             <h2 className={DASHBOARD_THEME.sectionTitle}>Upcoming Events</h2>
-            <button onClick={() => navigate(toProtectedPath("/event"))} className={DASHBOARD_THEME.sectionAction}>
+            <button onClick={() => handleProtectedNavigation("/event")} className={DASHBOARD_THEME.sectionAction}>
               See all
             </button>
           </div>
@@ -389,7 +392,7 @@ export default function Home() {
             {Array.isArray(data.upcoming_events) && data.upcoming_events.map((event) => (
               <div
                 key={event.id}
-                onClick={() => navigate(toProtectedPath(`/event/${event.id}`))}
+                onClick={() => handleProtectedNavigation(`/event/${event.id}`)}
                 className={DASHBOARD_THEME.eventCard}
               >
                 {event.images?.[0]?.image && (
@@ -433,7 +436,7 @@ export default function Home() {
           <section>
             <div className={DASHBOARD_THEME.sectionHeader}>
               <h2 className={DASHBOARD_THEME.sectionTitle}>New Members</h2>
-              <button onClick={() => navigate(toProtectedPath("/members"))} className={DASHBOARD_THEME.sectionAction}>
+              <button onClick={() => handleProtectedNavigation("/members")} className={DASHBOARD_THEME.sectionAction}>
                 See all
               </button>
             </div>
@@ -441,7 +444,7 @@ export default function Home() {
               {data.latest_members.map((member) => (
                 <div
                   key={member.id}
-                  onClick={() => navigate(toProtectedPath(`/members/${member.username}`))}
+                  onClick={() => handleProtectedNavigation(`/members/${member.username}`)}
                   className={DASHBOARD_THEME.memberRow}
                 >
                   {member.profile_photo ? (

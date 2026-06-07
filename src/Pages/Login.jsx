@@ -30,16 +30,39 @@ export default function LoginPage() {
         (location.state.from.search || "") +
         (location.state.from.hash || "");
       const authPaths = ["/login", "/signup", "/oauth-signup"];
-      if (!authPaths.includes(location.state.from.pathname)) {
-        sessionStorage.setItem("login_redirect_to", fromPath);
+      if (location.state.from.isRelative || !authPaths.includes(location.state.from.pathname)) {
+        if (location.state.from.isRelative) {
+          sessionStorage.setItem("login_redirect_relative", fromPath);
+        } else {
+          sessionStorage.setItem("login_redirect_to", fromPath);
+        }
       }
     }
   }, [location.state]);
 
   const redirectAfterLogin = useCallback((roleKey) => {
     const redirectTo = sessionStorage.getItem("login_redirect_to");
+    const redirectRelative = sessionStorage.getItem("login_redirect_relative");
+    
     sessionStorage.removeItem("login_redirect_to");
-    navigate(redirectTo || defaultDashboard(roleKey), { replace: true });
+    sessionStorage.removeItem("login_redirect_relative");
+
+    const targetRolePrefix = (roleKey === "alumni" || roleKey === "student") ? "alumni" : roleKey;
+
+    if (redirectRelative) {
+      navigate(`/${targetRolePrefix}${redirectRelative}`, { replace: true });
+    } else if (redirectTo) {
+      // Check if redirectTo starts with a role prefix
+      const match = redirectTo.match(/^\/(admin|staff|alumni|student)(\/.*)?$/);
+      if (match) {
+        const remainingPath = match[2] || "";
+        navigate(`/${targetRolePrefix}${remainingPath}`, { replace: true });
+      } else {
+        navigate(redirectTo, { replace: true });
+      }
+    } else {
+      navigate(defaultDashboard(roleKey), { replace: true });
+    }
   }, [navigate]);
 
   const [form, setForm] = useState({ username: "", password: "" });
