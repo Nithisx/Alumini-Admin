@@ -19,7 +19,7 @@ import React, { useEffect, useRef } from "react";
  */
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!<>-_\\/[]{}=+*^?#§";
 const COLORS = ["#10b981", "#0ea5e9", "#f59e0b", "#ec4899", "#8b5cf6", "#14b8a6", "#ef4444"];
-const SPACE = " ";
+const SPACE = " ";
 
 export default function ScrambleText({
   text,
@@ -27,7 +27,7 @@ export default function ScrambleText({
   gradient = false,
   duration = 1500,
   delay = 0,
-  as: Tag = "span",
+  as: Tag = "span", // eslint-disable-line no-unused-vars
 }) {
   const ref = useRef(null);
 

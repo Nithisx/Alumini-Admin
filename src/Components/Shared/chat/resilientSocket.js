@@ -32,7 +32,7 @@ export function createResilientSocket({ getUrl, onOpen, onMessage, onDown }) {
 
   const detach = () => {
     if (!ws) return;
-    try { ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null; ws.close(); } catch (_) {}
+    try { ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null; ws.close(); } catch { /* ignore */ }
     ws = null;
   };
 
@@ -45,7 +45,7 @@ export function createResilientSocket({ getUrl, onOpen, onMessage, onDown }) {
       if (!ws || ws.readyState !== WebSocket.OPEN) { revive(); return; }
       if (pongSupported && awaitingPong)            { revive(); return; } // missed pong → zombie
       awaitingPong = true;
-      try { ws.send(JSON.stringify({ action: "ping" })); } catch (_) { revive(); }
+      try { ws.send(JSON.stringify({ action: "ping" })); } catch { revive(); }
     }, PING_INTERVAL_MS);
   };
 
@@ -62,20 +62,20 @@ export function createResilientSocket({ getUrl, onOpen, onMessage, onDown }) {
     const url = getUrl();
     if (!url) return;
     let sock;
-    try { sock = new WebSocket(url); } catch (_) { scheduleReconnect(); return; }
+    try { sock = new WebSocket(url); } catch { scheduleReconnect(); return; }
     ws = sock;
-    sock.onopen = () => { attempt = 0; startPing(); try { onOpen && onOpen(); } catch (_) {} };
+    sock.onopen = () => { attempt = 0; startPing(); try { onOpen && onOpen(); } catch { /* ignore */ } };
     sock.onmessage = (event) => {
       let data;
-      try { data = JSON.parse(event.data); } catch (_) { return; }
+      try { data = JSON.parse(event.data); } catch { return; }
       if (data && data.action === "pong") { pongSupported = true; awaitingPong = false; return; }
-      try { onMessage && onMessage(data); } catch (_) {}
+      try { onMessage && onMessage(data); } catch { /* ignore */ }
     };
     sock.onerror = () => {};
     sock.onclose = () => {
       clearTimers();
       ws = null;
-      try { onDown && onDown(); } catch (_) {}
+      try { onDown && onDown(); } catch { /* ignore */ }
       scheduleReconnect();
     };
   }
@@ -92,7 +92,7 @@ export function createResilientSocket({ getUrl, onOpen, onMessage, onDown }) {
     send(payload) {
       if (!ws || ws.readyState !== WebSocket.OPEN) return false;
       try { ws.send(typeof payload === "string" ? payload : JSON.stringify(payload)); return true; }
-      catch (_) { return false; }
+      catch { return false; }
     },
   };
 }

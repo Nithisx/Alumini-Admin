@@ -223,8 +223,7 @@ const ProfileScreen = () => {
           zipcodes: json.data?.locationSuggestions?.zipcodes || json.data?.locationSuggestions?.pincodes || prev.zipcodes,
         }));
       }
-    } catch (err) {
-    } finally {
+    } catch { /* ignore */ } finally {
       setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
     }
   }, []);
@@ -265,7 +264,7 @@ const ProfileScreen = () => {
         if (typeof value === "string" && value.trim()) {
           try {
             return JSON.parse(value)
-          } catch (e) {
+          } catch {
             return fallback
           }
         }

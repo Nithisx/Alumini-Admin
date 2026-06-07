@@ -675,8 +675,7 @@ export default function MembersPage() {
           setSelectedMembers(allMemberIds);
           setSelectAll(true);
         }
-      } catch (error) {
-      } finally {
+      } catch { /* ignore */ } finally {
         setSelectAllLoading(false);
       }
     }

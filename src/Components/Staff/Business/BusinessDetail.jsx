@@ -107,8 +107,7 @@ const BusinessDetail = () => {
         );
 
         setCategories(response.data.map(cat => cat.category));
-      } catch (error) {
-      }
+      } catch { /* ignore */ }
     };
 
     fetchCategories();
@@ -294,15 +293,6 @@ const BusinessDetail = () => {
     }
   };
 
-  const handleGoBack = () => {
-    if (window.history.state?.idx > 0) {
-      navigate(-1);
-      return;
-    }
-
-    navigate(businessListPath);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -323,18 +313,9 @@ const BusinessDetail = () => {
         onCancel={() => setConfirmDeleteImageId(null)}
       />
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <button
-            onClick={handleGoBack}
-            className="mr-4 text-gray-600 hover:text-gray-800"
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-            Go back
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {isNewBusiness ? 'Add New Business' : 'Edit Business'}
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">
+          {isNewBusiness ? 'Add New Business' : 'Edit Business'}
+        </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

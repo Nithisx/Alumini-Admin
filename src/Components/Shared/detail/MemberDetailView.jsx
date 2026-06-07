@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion"; // eslint-disable-line no-unused-vars
 import ConfirmModal from "../ConfirmModal";
 import ImageViewerModal from "../ImageViewerModal";
 import ImageCropModal from "../ImageCropModal";
@@ -93,6 +93,7 @@ export default function MemberDetailView({ basePath = "" }) {
   const [changedFields, setChangedFields] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [usernameError, setUsernameError] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [availableBranches, setAvailableBranches] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -155,7 +156,7 @@ export default function MemberDetailView({ basePath = "" }) {
         const data = await res.json();
         setUserCourses(Array.isArray(data) ? data : []);
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const handleAddCourse = async () => {
@@ -176,7 +177,7 @@ export default function MemberDetailView({ basePath = "" }) {
       await fetchUserCourses(member.id);
       setShowAddCourseModal(false);
       setAddCourseForm({ course: "", branch: "", college_name: "", passed_out_year: "" });
-    } catch (_) {
+    } catch {
       toast.error("Failed to add course");
     } finally {
       setAddCourseLoading(false);
@@ -197,7 +198,7 @@ export default function MemberDetailView({ basePath = "" }) {
         const data = await res.json().catch(() => ({}));
         toast.error(data?.error || "Failed to remove course");
       }
-    } catch (_) {
+    } catch {
       toast.error("Failed to remove course");
     } finally {
       setDeletingCourseId(null);
@@ -394,7 +395,7 @@ export default function MemberDetailView({ basePath = "" }) {
         body: JSON.stringify({ target_user_id: member.id }),
       });
       if (res.ok) navigate(`${basePath}/chat`);
-    } catch {}
+    } catch { /* ignore chat init errors */ }
   };
 
   /* ── loading / not found ── */
@@ -572,7 +573,7 @@ export default function MemberDetailView({ basePath = "" }) {
                 <span>{(() => {
                   if (!current_work) return <em className="text-gray-400">Not provided</em>;
                   if (typeof current_work === "string" && current_work.startsWith('"') && current_work.endsWith('"')) {
-                    try { return JSON.parse(current_work); } catch {}
+                    try { return JSON.parse(current_work); } catch { /* ignore parse error */ }
                   }
                   return current_work;
                 })()}</span>

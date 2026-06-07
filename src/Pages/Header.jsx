@@ -80,21 +80,6 @@ const Header = () => {
     }
   };
 
-  const handleMouseEnter = () => {
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    setAboutDropdownOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    // Set a longer timeout to close the dropdown after a delay
-    timeoutRef.current = setTimeout(() => {
-      setAboutDropdownOpen(false);
-    }, 600); // 600ms delay before closing
-  };
 
   // Clean up timeout on unmount
   useEffect(() => {

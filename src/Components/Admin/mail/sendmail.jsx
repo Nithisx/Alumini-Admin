@@ -84,8 +84,7 @@ const SendMail = () => {
       if (response.data && response.data.suggestions) {
         setEmailSuggestions(response.data.suggestions);
       }
-    } catch (error) {
-    } finally {
+    } catch { /* ignore */ } finally {
       setLoadingSuggestions(false);
     }
   };

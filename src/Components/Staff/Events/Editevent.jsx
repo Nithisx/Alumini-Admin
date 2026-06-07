@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendarAlt, faMapMarkerAlt, faClock, faTag,
-  faImage, faTimesCircle, faSpinner, faTimes, faArrowLeft,
+  faImage, faTimesCircle, faSpinner, faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 
 const BASE_URL = "https://api.karpagamalumni.in";

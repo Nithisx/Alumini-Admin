@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion"; // eslint-disable-line no-unused-vars
 
 /* ─── shared motion variants ─────────────────────────────────────────────── */
 // A container staggers its children; each child fades + slides up. Views and

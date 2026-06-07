@@ -7,14 +7,12 @@ import {
   faFileLines,
   faTimesCircle,
   faTimes,
-  faUpload,
   faSpinner,
   faCalendarAlt,
   faMapMarkerAlt,
   faClock,
   faCalendarPlus,
-  faTag,
-  faSortAmountDown
+  faTag
 } from "@fortawesome/free-solid-svg-icons";
 import Events from "./Events";
 import {

@@ -336,8 +336,8 @@ const Chat = () => {
   const getCurrentUser = async () => {
     const token = getToken();
     if (!token) return;
-    try { const r = await fetch(`${API_HOST}/chat/user/me/`, { headers: authH() }); if (r.ok) { setCurrentUser(await r.json()); return; } } catch (_) {}
-    try { const r = await fetch(`${API_HOST}/api/v1/user/me/`, { headers: authH() }); if (r.ok) setCurrentUser(await r.json()); } catch (_) {}
+    try { const r = await fetch(`${API_HOST}/chat/user/me/`, { headers: authH() }); if (r.ok) { setCurrentUser(await r.json()); return; } } catch { /* ignore */ }
+    try { const r = await fetch(`${API_HOST}/api/v1/user/me/`, { headers: authH() }); if (r.ok) setCurrentUser(await r.json()); } catch { /* ignore */ }
   };
 
   const loadRooms = async () => {
@@ -345,7 +345,7 @@ const Chat = () => {
     if (!token) return;
     setLoading(true);
     try { const r = await fetch(`${API_HOST}/chat/rooms/`, { headers: authH() }); if (r.ok) setRooms(await r.json()); }
-    catch (_) {} finally { setLoading(false); }
+    catch {} finally { setLoading(false); }
   };
 
   const loadCommunityChat = async () => {
@@ -361,44 +361,44 @@ const Chat = () => {
           setCommunityRooms([{ ...d, is_community: true, name: "Community Chat" }]);
         }
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const searchUsers = async (q) => {
     if (!q.trim()) { setSearchResults([]); return; }
-    try { const r = await fetch(`${API_HOST}/chat/search/?q=${encodeURIComponent(q)}`, { headers: authH() }); if (r.ok) setSearchResults(await r.json()); } catch (_) {}
+    try { const r = await fetch(`${API_HOST}/chat/search/?q=${encodeURIComponent(q)}`, { headers: authH() }); if (r.ok) setSearchResults(await r.json()); } catch { /* ignore */ }
   };
 
   const createRoom = async (userId) => {
     try {
       const r = await fetch(`${API_HOST}/chat/rooms/`, { method: "POST", headers: authH(), body: JSON.stringify({ target_user_id: userId }) });
       if (r.ok) { const room = await r.json(); setRooms((prev) => [room, ...prev.filter((x) => x.id !== room.id)]); selectChat(room); setShowSearch(false); setSearchQuery(""); setSearchResults([]); }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const deleteRoom = async (roomId) => {
     try {
       const r = await fetch(`${API_HOST}/chat/rooms/?room_id=${encodeURIComponent(roomId)}`, { method: "DELETE", headers: authH() });
       if (r.ok) { setRooms((prev) => prev.filter((x) => x.id !== roomId)); if (selectedChat?.id === roomId) { setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false); } setShowDeleteModal(false); setRoomToDelete(null); }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const loadMessagesHTTP = async (roomId) => {
     try {
       const r = await fetch(`${API_HOST}/chat/rooms/${encodeURIComponent(roomId)}/messages/`, { headers: authH() });
       if (r.ok) setMessages((await r.json()).map((m) => ({ ...m, time: m.time || fmtTime(m.timestamp) || "" })));
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const markSeen = useCallback(async (roomId, upToMsgId, isCommunity = false) => {
     if (!roomId && !isCommunity) return;
     const endpoint = isCommunity ? `${API_HOST}/chat/community/seen/` : `${API_HOST}/chat/rooms/${roomId}/seen/`;
-    try { await fetch(endpoint, { method: "POST", headers: authH(), body: JSON.stringify(upToMsgId ? { message_id: upToMsgId } : {}) }); } catch (_) {}
+    try { await fetch(endpoint, { method: "POST", headers: authH(), body: JSON.stringify(upToMsgId ? { message_id: upToMsgId } : {}) }); } catch { /* ignore */ }
   }, []);
 
   const fetchPresence = useCallback(async (userId) => {
     if (!userId) return;
-    try { const r = await fetch(`${API_HOST}/chat/presence/${userId}/`, { headers: authH() }); if (r.ok) { const d = await r.json(); setPresenceMap((prev) => ({ ...prev, [userId]: d })); } } catch (_) {}
+    try { const r = await fetch(`${API_HOST}/chat/presence/${userId}/`, { headers: authH() }); if (r.ok) { const d = await r.json(); setPresenceMap((prev) => ({ ...prev, [userId]: d })); } } catch { /* ignore */ }
   }, []);
 
   const connectWebSocket = useCallback((roomId, isCommunity = false, roomName = "") => {
@@ -552,7 +552,7 @@ const Chat = () => {
           setUploadingMedia(false);
           return;
         }
-      } catch (_) {
+      } catch {
         setUploadingMedia(false);
         return;
       }

@@ -35,7 +35,7 @@ const MyContributions = () => {
         maxWidth="max-w-3xl"
         below={
           <div className="flex overflow-x-auto scrollbar-hide gap-1 pb-0.5">
-            {tabs.map(({ key, label, icon: Icon }) => (
+            {tabs.map(({ key, label, icon: Icon }) => ( // eslint-disable-line no-unused-vars
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}

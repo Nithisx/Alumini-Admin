@@ -3,7 +3,6 @@ import { toast } from "react-toastify";
 import axios from "../../../lib/axiosInstance";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faTrash,
     faPlus,
     faUserCircle,
     faSpinner,
@@ -24,8 +23,6 @@ const getAuthToken = async () => {
 const AdminFeed = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState("");
 
     // New post form state (moved from Post component)
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,7 +37,6 @@ const AdminFeed = () => {
     const [isLoadingModal, setIsLoadingModal] = useState(false); // Loading state for modal submit
     const fileInputRef = useRef(null);
     const [selectedImage, setSelectedImage] = useState(null);
-    const [selectedImageName, setSelectedImageName] = useState("");
 
     const fetchJobs = async () => {
         setLoading(true);
@@ -197,31 +193,31 @@ const AdminFeed = () => {
         }
     };
 
-    //   const deletePost = async (postId) => {
-    //     setError("");
-    //     try {
-    //       const token = await getAuthToken();
-    //       if (!token) {
-    //         throw new Error("Authentication token not found.");
-    //       }
+    //   const deletePost = async (postId) => {
+    //     setError("");
+    //     try {
+    //       const token = await getAuthToken();
+    //       if (!token) {
+    //         throw new Error("Authentication token not found.");
+    //       }
 
-    //       const response = await fetch(`${API_URL}${postId}/`, {
-    //         method: "DELETE",
-    //         headers: {
-    //           Authorization: `Token ${token}`,
-    //         },
-    //       });
+    //       const response = await fetch(`${API_URL}${postId}/`, {
+    //         method: "DELETE",
+    //         headers: {
+    //           Authorization: `Token ${token}`,
+    //         },
+    //       });
 
-    //       if (response.ok) {
-    //         setPosts(posts.filter((post) => post.id !== postId));
-    //       } else {
-    //         const errorData = await response.text();
-    //         throw new Error(`Failed to delete post: ${response.statusText} (${response.status})`);
-    //       }
-    //     } catch (error) {
-    //       setError(error.message || "Failed to delete post. Please try again.");
-    //     }
-    //   };
+    //       if (response.ok) {
+    //         setPosts(posts.filter((post) => post.id !== postId));
+    //       } else {
+    //         const errorData = await response.text();
+    //         throw new Error(`Failed to delete post: ${response.statusText} (${response.status})`);
+    //       }
+    //     } catch (error) {
+    //       setError(error.message || "Failed to delete post. Please try again.");
+    //     }
+    //   };
 
     return (
         <div className="relative min-h-screen bg-gray-50">
@@ -313,8 +309,8 @@ const AdminFeed = () => {
             <button
                 onClick={() => setIsModalOpen(true)}
                 className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg
-                   hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                   flex items-center justify-center transition-all duration-300 hover:scale-110"
+                   hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                   flex items-center justify-center transition-all duration-300 hover:scale-110"
             >
                 <FontAwesomeIcon icon={faPlus} className="text-xl" />
             </button>
@@ -436,7 +432,7 @@ const AdminFeed = () => {
                                 {!uploadedFile ? (
                                     <div
                                         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                              ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-400"}`}
+                              ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-400"}`}
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
                                         onDrop={handleDrop}
@@ -519,9 +515,9 @@ const AdminFeed = () => {
                                 <button
                                     type="submit"
                                     className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg
-                            hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
-                            flex items-center justify-center min-w-[80px]
-                            ${isLoadingModal ? "opacity-75 cursor-not-allowed" : ""}`}
+                            hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
+                            flex items-center justify-center min-w-[80px]
+                            ${isLoadingModal ? "opacity-75 cursor-not-allowed" : ""}`}
                                     disabled={isLoadingModal}
                                 >
                                     {isLoadingModal ? (

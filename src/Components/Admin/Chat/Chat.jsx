@@ -454,11 +454,11 @@ const Chat = () => {
     try {
       const r = await fetch(`${API_HOST}/chat/user/me/`, { headers: authH() });
       if (r.ok) { setCurrentUser(await r.json()); return; }
-    } catch (_) {}
+    } catch { /* ignore */ }
     try {
       const r = await fetch(`${API_HOST}/api/v1/user/me/`, { headers: authH() });
       if (r.ok) setCurrentUser(await r.json());
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const loadRooms = async () => {
@@ -468,7 +468,7 @@ const Chat = () => {
     try {
       const r = await fetch(`${API_HOST}/chat/rooms/`, { headers: authH() });
       if (r.ok) setRooms(await r.json());
-    } catch (_) {} finally { setLoading(false); }
+    } catch { /* ignore */ } finally { setLoading(false); }
   };
 
   const loadCommunityChat = async () => {
@@ -484,7 +484,7 @@ const Chat = () => {
           setCommunityRooms([{ ...d, is_community: true, name: "Community Chat" }]);
         }
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const loadAllRooms = async () => {
@@ -492,7 +492,7 @@ const Chat = () => {
     try {
       const r = await fetch(`${API_HOST}/chat/admin/rooms/`, { headers: authH() });
       if (r.ok) setAllRooms(await r.json());
-    } catch (_) {} finally { setAllRoomsLoading(false); }
+    } catch { /* ignore */ } finally { setAllRoomsLoading(false); }
   };
 
   const searchUsers = async (q) => {
@@ -500,7 +500,7 @@ const Chat = () => {
     try {
       const r = await fetch(`${API_HOST}/chat/search/?q=${encodeURIComponent(q)}`, { headers: authH() });
       if (r.ok) setSearchResults(await r.json());
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const createRoom = async (userId) => {
@@ -515,7 +515,7 @@ const Chat = () => {
         selectChat(room);
         setShowSearch(false); setSearchQuery(""); setSearchResults([]);
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const deleteRoom = async (roomId) => {
@@ -531,7 +531,7 @@ const Chat = () => {
         }
         setShowDeleteModal(false); setRoomToDelete(null);
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const loadMessagesHTTP = async (roomId) => {
@@ -544,7 +544,7 @@ const Chat = () => {
           time: m.time || fmtTime(m.timestamp) || fmtTime(m.delivered_at) || "",
         })));
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const markSeen = useCallback(async (roomId, upToMsgId, isCommunity = false) => {
@@ -558,7 +558,7 @@ const Chat = () => {
         headers: authH(),
         body: JSON.stringify(upToMsgId ? { message_id: upToMsgId } : {}),
       });
-    } catch (_) {}
+    } catch { /* ignore */ }
   }, []);
 
   const fetchPresence = useCallback(async (userId) => {
@@ -569,7 +569,7 @@ const Chat = () => {
         const data = await r.json();
         setPresenceMap((prev) => ({ ...prev, [userId]: data }));
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   }, []);
 
   // ── WebSocket (per-room) ───────────────────────────────────────────────────
@@ -719,7 +719,7 @@ const Chat = () => {
           setUploadingMedia(false);
           return;
         }
-      } catch (_) {
+      } catch {
         setUploadingMedia(false);
         return;
       }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import Cropper from "react-easy-crop"
 import { X, ZoomIn, ZoomOut, RotateCw, Check, Loader } from "lucide-react"
 

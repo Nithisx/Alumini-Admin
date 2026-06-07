@@ -95,7 +95,9 @@ export default function MembersPage() {
 
   const [loading, setLoading] = useState(true);
   const [filtersLoading, setFiltersLoading] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [selectAllLoading, setSelectAllLoading] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [exportLoading, setExportLoading] = useState(false);
 
   // Pagination states
@@ -296,6 +298,7 @@ export default function MembersPage() {
     manualSearchTrigger, // Keep manual search trigger
   ]);
 
+  // eslint-disable-next-line no-unused-vars
   const handleMemberSelect = (memberId) => {
     const newSelected = new Set(selectedMembers);
     if (newSelected.has(memberId)) {
@@ -374,6 +377,7 @@ export default function MembersPage() {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleSelectAll = async () => {
     if (selectAll) {
       setSelectedMembers(new Set());
@@ -390,13 +394,13 @@ export default function MembersPage() {
           setSelectedMembers(allMemberIds);
           setSelectAll(true);
         }
-      } catch (error) {
-      } finally {
+      } catch { /* ignore */ } finally {
         setSelectAllLoading(false);
       }
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const exportToExcel = async () => {
     if (selectedMembers.size === 0) {
       toast.error("Please select at least one member to export.");
@@ -659,6 +663,7 @@ export default function MembersPage() {
   };
 
   // Handle sorting changes
+  // eslint-disable-next-line no-unused-vars
   const handleSortChange = (field) => {
     if (field === sortField) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");

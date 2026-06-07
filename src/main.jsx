@@ -8,7 +8,7 @@ import { initUiAnimations } from './lib/uiAnimations';
 // Guard PWA registration so missing Vite PWA plugin doesn't break the app
 try {
   import('./pwaRegistration');
-} catch (e) {
+} catch {
   // ignore; this keeps the app running when the virtual module isn't available
 }
 

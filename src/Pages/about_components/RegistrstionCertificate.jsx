@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDownload, faExpand, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 // Import your certificate image
 // You may need to adjust this import path based on your actual image location

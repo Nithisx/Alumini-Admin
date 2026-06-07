@@ -5,7 +5,7 @@ import Image3 from "../images/image3.jpg";
 import { useNavigate } from "react-router-dom";
 import { normalizeRoleForBase } from "../lib/authRole";
 import ScrambleText from "../Components/Shared/ScrambleText";
-const AlumniHeroSection = ({ data }) => {
+const AlumniHeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
   const token = localStorage.getItem("Token");

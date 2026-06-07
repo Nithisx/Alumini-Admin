@@ -215,8 +215,7 @@ const ProfileScreen = () => {
           zipcodes: json.data?.locationSuggestions?.zipcodes || json.data?.locationSuggestions?.pincodes || prev.zipcodes,
         }));
       }
-    } catch (err) {
-    } finally {
+    } catch { /* ignore */ } finally {
       setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
     }
   }, []);
@@ -280,7 +279,7 @@ const ProfileScreen = () => {
         if (typeof value === "string" && value.trim()) {
           try {
             return JSON.parse(value)
-          } catch (e) {
+          } catch {
             return fallback
           }
         }
@@ -342,7 +341,7 @@ const ProfileScreen = () => {
         const data = await res.json()
         setCourses(Array.isArray(data) ? data : [])
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
   }
 
   const handleAddCourse = async () => {
@@ -365,7 +364,7 @@ const ProfileScreen = () => {
       await fetchCourses()
       setShowAddCourseModal(false)
       setAddCourseForm({ course: "", branch: "", stream: "", roll_no: "", college_name: "", course_start_year: "", course_end_year: "", passed_out_year: "" })
-    } catch (_) {
+    } catch {
       toast.error("Failed to add course")
     } finally {
       setAddCourseLoading(false)
@@ -387,7 +386,7 @@ const ProfileScreen = () => {
         const data = await res.json().catch(() => ({}))
         toast.error(data?.error || "Failed to remove course")
       }
-    } catch (_) {
+    } catch {
       toast.error("Failed to remove course")
     } finally {
       setDeletingCourseId(null)

@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion"; // eslint-disable-line no-unused-vars
 
 /**
  * PageTransition — wraps routed content so each navigation crossfades in.

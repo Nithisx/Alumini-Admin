@@ -5,11 +5,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../../lib/axiosInstance";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { useBreadcrumb } from "../../Shared/BreadcrumbContext";
 
 const AlbumDetailPage = () => {
   const { albumId } = useParams();
   const navigate = useNavigate();
+  const { setBreadcrumbLabel } = useBreadcrumb();
   const [eventImages, setEventImages] = useState([]);
+  const [albumTitle, setAlbumTitle] = useState("");
   const [formData, setFormData] = useState({ title: "", images: [] });
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -90,6 +93,16 @@ const AlbumDetailPage = () => {
           headers: { Authorization: `Token ${token}` },
         });
         setEventImages(imagesRes.data);
+        // Try to get album title for breadcrumb
+        try {
+          const albumRes = await axios.get(`${BASE_URL}/albums/${albumId}/`, {
+            headers: { Authorization: `Token ${token}` },
+          });
+          if (albumRes.data?.title) {
+            setAlbumTitle(albumRes.data.title);
+            setBreadcrumbLabel(albumId, albumRes.data.title);
+          }
+        } catch { /* album title is best-effort */ }
       } catch {
       } finally {
         setLoading(false);
@@ -193,10 +206,6 @@ const AlbumDetailPage = () => {
     setFullscreenImage(eventImages[prevIndex]);
   };
 
-  const handleGoBack = () => {
-    if (window.history.state?.idx > 0) { navigate(-1); return; }
-    navigate('/admin/albums');
-  };
 
   return (
     <div className="p-4">
@@ -209,17 +218,6 @@ const AlbumDetailPage = () => {
         onConfirm={() => { doDeleteImage(confirmDeleteId); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
-      <div className="mb-4">
-        <button
-          onClick={handleGoBack}
-          className="inline-flex items-center gap-2 font-medium text-green-700 hover:text-green-900 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Go back
-        </button>
-      </div>
       {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
       ) : (

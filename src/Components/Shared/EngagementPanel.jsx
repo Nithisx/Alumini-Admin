@@ -454,7 +454,7 @@ const PortalIcon = ({ size = 20 }) => (
 
 // ── Portal Share Modal ────────────────────────────────────────────────────────
 
-const PortalShareModal = ({ open, onClose, shareUrl, shareMessage, shareToken, contentType, contentId }) => {
+const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-line no-unused-vars
   const [query, setQuery]             = useState("");
   const [results, setResults]         = useState([]);
   const [searching, setSearching]     = useState(false);
@@ -476,7 +476,7 @@ const PortalShareModal = ({ open, onClose, shareUrl, shareMessage, shareToken, c
         { headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" } }
       );
       if (r.ok) setResults(await r.json());
-    } catch (_) {} finally { setSearching(false); }
+    } catch { /* ignore */ } finally { setSearching(false); }
   }, []);
 
   useEffect(() => {
@@ -500,7 +500,7 @@ const PortalShareModal = ({ open, onClose, shareUrl, shareMessage, shareToken, c
       } else {
         toast.error("Failed to send.");
       }
-    } catch (_) { toast.error("Failed to send."); } finally { setSending(null); }
+    } catch { toast.error("Failed to send."); } finally { setSending(null); }
   };
 
   const sendToCommunity = async () => {
@@ -515,7 +515,7 @@ const PortalShareModal = ({ open, onClose, shareUrl, shareMessage, shareToken, c
       });
       if (r.ok) { setShareToAll(true); toast.success("Shared to Community Chat!"); }
       else toast.error("Failed to share to community.");
-    } catch (_) { toast.error("Failed to share to community."); } finally { setSendingAll(false); }
+    } catch { toast.error("Failed to share to community."); } finally { setSendingAll(false); }
   };
 
   if (!open) return null;
@@ -932,7 +932,9 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
   const [copied, setCopied] = useState(false);
   const [totalShares, setTotalShares] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  // eslint-disable-next-line no-unused-vars
   const [shareMode, setShareMode] = useState("link");
+  // eslint-disable-next-line no-unused-vars
   const [sharePlatform, setSharePlatform] = useState("generic");
   const [shareMessage, setShareMessage] = useState("Check this post");
   const [shareTargets, setShareTargets] = useState([]);

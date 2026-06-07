@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion"; // eslint-disable-line no-unused-vars
 import ScrambleText from "../ScrambleText";
 import { containerVariants, itemVariants, Icons } from "./primitives";
 
@@ -74,7 +74,7 @@ export default function DetailScaffold({
   children,
 }) {
   const navigate = useNavigate();
-  const reduce = useReducedMotion();
+  useReducedMotion();
 
   const handleBack = () => {
     if (onBack) return onBack();
@@ -127,16 +127,6 @@ export default function DetailScaffold({
         <div className="relative container mx-auto px-4 py-7">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <motion.button
-                onClick={handleBack}
-                initial={reduce ? false : { opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="inline-flex items-center gap-1 mb-4 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors text-sm font-medium"
-              >
-                <span className="w-4 h-4">{Icons.back}</span>
-                {backLabel}
-              </motion.button>
 
               {title && (
                 <h1 className="text-2xl sm:text-3xl font-bold leading-tight break-words">

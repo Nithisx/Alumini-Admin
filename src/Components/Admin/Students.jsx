@@ -16,8 +16,7 @@ const StudentImageUpload = () => {
           headers: { Authorization: `Token ${token}` },
         });
         setStudents(response.data);  // Set students in state
-      } catch (error) {
-      }
+      } catch { /* ignore */ }
     };
 
     fetchStudents();

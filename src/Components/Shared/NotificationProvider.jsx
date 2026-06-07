@@ -48,7 +48,6 @@ const TYPE_ICONS = {
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications]     = useState([]);
   const [unreadCount,   setUnreadCount]        = useState(0);
-  const [loading,       setLoading]            = useState(false);
   const [notifStatus,   setNotifStatus]        = useState(() => getNotificationStatus());
   const pollingRef = useRef(null);
   const navigate   = useNavigate();
@@ -72,7 +71,7 @@ export function NotificationProvider({ children }) {
       const list = Array.isArray(data) ? data : (data.results || []);
       setNotifications(list);
       setUnreadCount(list.filter((n) => !n.is_read).length);
-    } catch (err) {
+    } catch {
       // silent — don't spam console on poll failure
     }
   }, [authToken]);
@@ -217,7 +216,6 @@ export function NotificationProvider({ children }) {
       value={{
         notifications,
         unreadCount,
-        loading,
         fetchNotifications,
         markRead,
         markAllRead,

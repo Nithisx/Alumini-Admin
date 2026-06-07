@@ -181,7 +181,7 @@ export default function OAuthSignupComplete() {
           pincodes: json.data?.locationSuggestions?.pincodes || prev.pincodes,
         }));
       }
-    } catch {}
+    } catch { /* ignore suggestion fetch errors */ }
     finally {
       setLoadingSuggestions((prev) => ({ ...prev, [type]: false }));
     }
@@ -579,30 +579,38 @@ export default function OAuthSignupComplete() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-6">
-                  <SuggestionInput
-                    label="Country Code"
-                    value={formData.country_code}
-                    onChange={(v) => {
-                      updateField("country_code", v);
-                      debouncedFetch("countryCodes", { country: formData.country });
-                    }}
-                    onFocus={() => fetchSuggestions("countryCodes", { country: formData.country })}
-                    placeholder="+91"
-                    error={fieldErrors.country_code}
-                    suggestions={apiSuggestions.countryCodes.map((c) => c.countryCode)}
-                    loading={loadingSuggestions.countryCodes}
-                  />
-                  <div className="sm:col-span-2">
-                    <InputField
-                      label="Phone"
+                <div className="mt-6 space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Phone <span className="text-red-500">*</span>
+                  </label>
+                  <div className={`flex rounded-md shadow-sm border ${fieldErrors.phone || fieldErrors.country_code ? "border-red-300" : "border-gray-300"} focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors overflow-visible`}>
+                    <div className="relative flex-shrink-0">
+                      <SuggestionInput
+                        value={formData.country_code}
+                        onChange={(v) => {
+                          updateField("country_code", v);
+                          debouncedFetch("countryCodes", { country: formData.country });
+                        }}
+                        onFocus={() => fetchSuggestions("countryCodes", { country: formData.country })}
+                        placeholder="+91"
+                        error={""}
+                        suggestions={apiSuggestions.countryCodes.map((c) => c.countryCode)}
+                        loading={loadingSuggestions.countryCodes}
+                        className="w-24"
+                        inputClassName="border-0 border-r border-gray-300 rounded-none rounded-l-md shadow-none focus:ring-0 focus:border-gray-300 bg-gray-50"
+                      />
+                    </div>
+                    <input
                       type="tel"
+                      className="flex-1 px-3 py-2 border-0 rounded-r-md text-sm placeholder-gray-400 focus:outline-none focus:ring-0"
                       value={formData.phone}
-                      onChange={(v) => updateField("phone", v)}
+                      onChange={(e) => updateField("phone", e.target.value)}
                       placeholder="Enter your phone number"
-                      error={fieldErrors.phone}
                     />
                   </div>
+                  {(fieldErrors.country_code || fieldErrors.phone) && (
+                    <p className="text-sm text-red-600">{fieldErrors.country_code || fieldErrors.phone}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">

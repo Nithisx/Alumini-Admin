@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import PageTransition from '../Shared/PageTransition';
+import Breadcrumb from '../Shared/Breadcrumb';
+import { BreadcrumbProvider } from '../Shared/BreadcrumbContext';
 
 // Admin UI Components
 import AdminHeader from './AdminHeader';
@@ -39,12 +41,14 @@ const AdminLayout = () => {
   return (
     <NotificationProvider>
       <NotificationPromptModal />
+      <BreadcrumbProvider>
       <div>
         {/* Admin Header */}
         <AdminHeader />
 
         {/* Main Content */}
         <main className="role-content w-full min-w-0 p-0 pb-14 lg:pb-0">
+          <Breadcrumb />
           <PageTransition transitionKey={location.pathname}>
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
@@ -80,6 +84,7 @@ const AdminLayout = () => {
           </PageTransition>
         </main>
       </div>
+      </BreadcrumbProvider>
     </NotificationProvider>
   );
 };

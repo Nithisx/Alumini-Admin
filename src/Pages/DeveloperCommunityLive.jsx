@@ -111,7 +111,6 @@ export default function DeveloperCommunityLive() {
   const [currentUser, setCurrentUser] = useState(null);
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(null);
   const [expandedDeveloper, setExpandedDeveloper] = useState(null);
@@ -205,12 +204,10 @@ export default function DeveloperCommunityLive() {
   useEffect(() => {
     if (!token) return undefined;
 
-    setConnecting(true);
     const socket = createResilientSocket({
       getUrl: () => WS_COMMUNITY_URL(token, "developer"),
       onOpen: () => {
         setConnected(true);
-        setConnecting(false);
       },
       onDown: () => setConnected(false),
       onMessage: (payload) => {

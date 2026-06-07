@@ -5,10 +5,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../../lib/axiosInstance";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { useBreadcrumb } from "../../Shared/BreadcrumbContext";
 
 const AlbumDetailPage = () => {
   const { albumId } = useParams();
   const navigate = useNavigate();
+  const { setBreadcrumbLabel } = useBreadcrumb();
   const [eventImages, setEventImages] = useState([]);
   const [formData, setFormData] = useState({ title: "", images: [] });
   const [showForm, setShowForm] = useState(false);
@@ -120,7 +122,7 @@ const AlbumDetailPage = () => {
         const role = (profile?.role || "").toLowerCase();
         setCanModerate(Boolean(profile?.is_staff) || role === "admin" || role === "staff");
 
-        // Derive album owner from images first (AlbumImageSerializer.get_user returns album owner)
+        // Derive album owner from images first
         const ownerFromImages =
           images[0]?.user?.id != null
             ? String(images[0].user.id)
@@ -143,10 +145,14 @@ const AlbumDetailPage = () => {
               album.created_by ??
               album.owner;
             if (ownerId) setAlbumOwnerId(String(ownerId));
+            // Register album title for breadcrumb
+            if (album.title) setBreadcrumbLabel(albumId, album.title);
           } catch {
             // album owner could not be determined
           }
         }
+        // Also attempt to register title from images metadata if not yet set
+        if (images[0]?.album_title) setBreadcrumbLabel(albumId, images[0].album_title);
       } catch {
       } finally {
         setLoading(false);
@@ -250,10 +256,6 @@ const AlbumDetailPage = () => {
     setFullscreenImage(eventImages[prevIndex]);
   };
 
-  const handleGoBack = () => {
-    if (window.history.state?.idx > 0) { navigate(-1); return; }
-    navigate('/alumni/albums');
-  };
 
   return (
     <div className="p-4">
@@ -266,17 +268,6 @@ const AlbumDetailPage = () => {
         onConfirm={() => { doDeleteImage(confirmDeleteId); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
-      <div className="mb-4">
-        <button
-          onClick={handleGoBack}
-          className="inline-flex items-center gap-2 font-medium text-green-700 hover:text-green-900 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Go back
-        </button>
-      </div>
       {loading ? (
         <p className="text-center text-gray-500">Loading...</p>
       ) : (

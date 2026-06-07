@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"; // eslint-disable-line no-unused-vars
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { AnimatedCard } from "./primitives";
 

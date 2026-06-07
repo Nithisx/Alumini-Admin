@@ -1,6 +1,8 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import PageTransition from "../Shared/PageTransition";
+import Breadcrumb from "../Shared/Breadcrumb";
+import { BreadcrumbProvider } from "../Shared/BreadcrumbContext";
 
 // Staff UI Components
 import AdminHeader from "./AluminiHeader";
@@ -37,12 +39,14 @@ const AlumniLayout = () => {
   return (
     <NotificationProvider>
       <NotificationPromptModal />
+      <BreadcrumbProvider>
       <div>
         {/* Admin Header (Sidebar) */}
         <AdminHeader />
 
         {/* Main Content */}
         <main className={`role-content w-full min-w-0 p-0 ${isChat ? "" : "pb-14 lg:pb-0"}`}>
+          <Breadcrumb />
           <PageTransition transitionKey={location.pathname} className={isChat ? "h-full" : undefined}>
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
@@ -72,6 +76,7 @@ const AlumniLayout = () => {
           </PageTransition>
         </main>
       </div>
+      </BreadcrumbProvider>
     </NotificationProvider>
   );
 };
