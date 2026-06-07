@@ -49,5 +49,5 @@ export async function performLogout() {
   localStorage.removeItem('Role');
 
   toast.success('Logged out successfully!');
-  setTimeout(() => { window.location.href = '/login'; }, 800);
+  setTimeout(() => { window.location.href = '/home'; }, 800);
 }

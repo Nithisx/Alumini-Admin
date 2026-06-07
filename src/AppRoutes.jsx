@@ -53,6 +53,15 @@ function GuestOnly({ children }) {
 function AnimatedRoutes() {
   const location = useLocation();
   const segment = `/${location.pathname.split('/')[1] || ''}`;
+
+  // Clear redirect path if navigating to any non-auth page
+  React.useEffect(() => {
+    const authPaths = ['/login', '/signup', '/oauth-signup'];
+    if (!authPaths.includes(location.pathname)) {
+      sessionStorage.removeItem('login_redirect_to');
+    }
+  }, [location.pathname]);
+
   return (
     <PageTransition transitionKey={segment}>
       <Routes>

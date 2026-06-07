@@ -21,11 +21,26 @@ function defaultDashboard(roleKey) {
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || null;
+
+  // Save the redirect path if it exists in location state
+  useEffect(() => {
+    if (location.state?.from) {
+      const fromPath =
+        location.state.from.pathname +
+        (location.state.from.search || "") +
+        (location.state.from.hash || "");
+      const authPaths = ["/login", "/signup", "/oauth-signup"];
+      if (!authPaths.includes(location.state.from.pathname)) {
+        sessionStorage.setItem("login_redirect_to", fromPath);
+      }
+    }
+  }, [location.state]);
 
   const redirectAfterLogin = useCallback((roleKey) => {
-    navigate(from || defaultDashboard(roleKey), { replace: true });
-  }, [from, navigate]);
+    const redirectTo = sessionStorage.getItem("login_redirect_to");
+    sessionStorage.removeItem("login_redirect_to");
+    navigate(redirectTo || defaultDashboard(roleKey), { replace: true });
+  }, [navigate]);
 
   const [form, setForm] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
