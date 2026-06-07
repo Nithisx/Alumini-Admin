@@ -166,29 +166,29 @@ const HomePage = () => {
           ))}
         </MotionList>
 
-        {/* ── Ready to connect card ── */}
-        <section className="mb-8 rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40">
+        {/* ── Developer showcase card ── */}
+        <section className="mb-8 rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40" id="contact-section">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
-                Ready to connect with the network?
+                Meet the team, explore the showcase, and join the developer community.
               </h2>
               <p className="mt-3 text-sm leading-7 text-emerald-50/90">
-                Explore member profiles, continue conversations, and stay updated from your dashboard.
+                The portal is maintained by alumni developers who keep the platform evolving. Learn who they are and connect with them directly.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
                 className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50"
-                onClick={() => navigate("/admin/members/")}
+                onClick={() => navigate("/developers")}
               >
-                Browse Members
+                Meet the developers
               </button>
               <button
                 className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15"
-                onClick={() => navigate("/admin/chat")}
+                onClick={() => navigate("/developer-community")}
               >
-                Open Chat
+                Join community
               </button>
             </div>
           </div>
@@ -445,29 +445,29 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* ── Developer showcase card ── */}
-        <section className="rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40" id="contact-section">
+        {/* ── Ready to connect card ── */}
+        <section className="rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
-                Meet the team, explore the showcase, and join the developer community.
+                Ready to connect with the network?
               </h2>
               <p className="mt-3 text-sm leading-7 text-emerald-50/90">
-                The portal is maintained by alumni developers who keep the platform evolving. Learn who they are and connect with them directly.
+                Explore member profiles, continue conversations, and stay updated from your dashboard.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => navigate("/developers")}
                 className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                onClick={() => navigate("/admin/members/")}
               >
-                Meet the developers
+                Browse Members
               </button>
               <button
-                onClick={() => navigate("/developer-community")}
                 className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15"
+                onClick={() => navigate("/admin/chat")}
               >
-                Join community
+                Open Chat
               </button>
             </div>
           </div>

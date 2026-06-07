@@ -422,22 +422,22 @@ const HomePage = () => {
         </div>
 
         <section className="bg-gradient-to-r from-emerald-700 to-green-700 rounded-2xl p-6 sm:p-8 text-white" id="contact-section">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Ready to connect with the network?</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Meet the team, explore the showcase, and join the developer community.</h2>
           <p className="text-emerald-50 mb-6 max-w-2xl">
-            Explore member profiles, continue conversations, and stay updated from your dashboard.
+            The portal is maintained by alumni developers who keep the platform evolving. Learn who they are and connect with them directly.
           </p>
           <div className="flex flex-wrap gap-3">
             <button
               className="px-5 py-2.5 bg-white text-emerald-700 font-semibold rounded-xl hover:bg-emerald-50 transition"
-              onClick={() => navigate("/alumni/members/")}
+              onClick={() => navigate("/developers")}
             >
-              Browse Members
+              Meet the developers
             </button>
             <button
               className="px-5 py-2.5 border border-emerald-200 text-white font-semibold rounded-xl hover:bg-emerald-600 transition"
-              onClick={() => navigate("/alumni/chat")}
+              onClick={() => navigate("/developer-community")}
             >
-              Open Chat
+              Join community
             </button>
           </div>
         </section>

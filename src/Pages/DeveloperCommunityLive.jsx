@@ -11,8 +11,6 @@ import {
   Sparkles,
   Trash2,
   Users,
-  Wifi,
-  WifiOff,
 } from "lucide-react";
 import Header from "./Header";
 import Footer from "./about_components/Footer";
@@ -308,7 +306,7 @@ export default function DeveloperCommunityLive() {
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[360px]">
+              <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
                 <div className="rounded-2xl bg-emerald-50 p-4 text-center">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">Developers</p>
                   <p className="mt-2 text-2xl font-bold text-slate-900">{developers.length}</p>
@@ -316,13 +314,6 @@ export default function DeveloperCommunityLive() {
                 <div className="rounded-2xl bg-slate-50 p-4 text-center">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Messages</p>
                   <p className="mt-2 text-2xl font-bold text-slate-900">{messages.length}</p>
-                </div>
-                <div className="rounded-2xl bg-sky-50 p-4 text-center">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">Live status</p>
-                  <p className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-slate-900">
-                    {connected ? <Wifi className="h-4 w-4 text-emerald-600" /> : <WifiOff className="h-4 w-4 text-slate-400" />}
-                    {connected ? "Connected" : connecting ? "Connecting" : "Offline"}
-                  </p>
                 </div>
               </div>
             </div>
@@ -355,7 +346,7 @@ export default function DeveloperCommunityLive() {
               <section className="rounded-[2rem] border border-white/70 bg-white p-6 shadow-sm shadow-emerald-100/40">
                 <div className="flex items-center gap-3 text-emerald-700">
                   <Sparkles className="h-5 w-5" />
-                  <h2 className="text-lg font-bold text-slate-900">Featured developers</h2>
+                  <h2 className="text-lg font-bold text-slate-900">Developers</h2>
                 </div>
                 <div className="mt-5 space-y-4">
                   {developers.map((developer) => (
@@ -386,10 +377,6 @@ export default function DeveloperCommunityLive() {
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Community feed</h2>
                   <p className="text-sm text-slate-500">Realtime updates for the developer circle.</p>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-                  {connected ? <Wifi className="h-4 w-4 text-emerald-600" /> : <WifiOff className="h-4 w-4 text-slate-400" />}
-                  {connected ? "Live" : "Waiting"}
                 </div>
               </div>
 
