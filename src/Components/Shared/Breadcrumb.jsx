@@ -88,8 +88,9 @@ const HomeIcon = () => (
 );
 
 const ChevronIcon = () => (
-  <svg className="bc-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 4l4 4-4 4" />
+  <svg className="bc-chevron" viewBox="0 0 22 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4l4 4-4 4" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4l4 4-4 4" />
   </svg>
 );
 
@@ -123,11 +124,6 @@ function CrumbCurrent({ crumb, index }) {
       style={{ "--bc-i": index }}
       aria-current="page"
     >
-      {/* Animated >> indicator */}
-      <span className="bc-dbl-chevron" aria-hidden="true">
-        <span className="bc-dbl-chevron__a">›</span>
-        <span className="bc-dbl-chevron__b">›</span>
-      </span>
       <span className="bc-label bc-label--current">
         {crumb.label}
         <span className="bc-cursor" aria-hidden="true" />

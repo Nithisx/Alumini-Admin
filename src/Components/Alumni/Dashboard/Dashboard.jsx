@@ -151,7 +151,7 @@ const HomePage = () => {
               key={s.label}
               variant="scaleIn"
               onClick={() => navigate(s.path)}
-              className={DASHBOARD_THEME.statButton}
+              className={`${DASHBOARD_THEME.statButton} active:scale-95`}
             >
               <div className={`${DASHBOARD_THEME.statIcon} ${s.color}`}>
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,7 +184,7 @@ const HomePage = () => {
                 <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100">
                   {album.cover_image ? (
                     <img src={`${MEDIA_BASE_URL}${album.cover_image}`} alt={album.title}
-                      className="w-full h-full object-cover sm:grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" />
+                      className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <svg className="w-10 h-10 text-amber-300" fill="currentColor" viewBox="0 0 24 24">
@@ -213,11 +213,15 @@ const HomePage = () => {
             </div>
             <div
               className={`relative overflow-hidden ${DASHBOARD_THEME.panelCard}`}
+              style={{ minHeight: '200px' }}
               onTouchStart={handleNewsTouchStart}
               onTouchEnd={handleNewsTouchEnd}
             >
               {data.featured_news.map((news, index) => (
-                <div key={news.id} style={{ display: index === newsSlide ? "block" : "none" }}>
+                <div
+                  key={news.id}
+                  className={`news-slide ${index === newsSlide ? 'news-slide--visible' : 'news-slide--hidden'}`}
+                >
                   {/* Post header */}
                   <div className="flex items-center gap-3 p-4">
                     <img
@@ -245,22 +249,34 @@ const HomePage = () => {
                 </div>
               ))}
               {newsCount > 1 && (
-                <button
-                  type="button"
-                  aria-label="Next news"
-                  onClick={goToNextNews}
-                  className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    aria-label="Previous news"
+                    onClick={goToPrevNews}
+                    className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next news"
+                    onClick={goToNextNews}
+                    className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
               )}
               {/* Dot indicators */}
-              <div className="flex justify-center gap-1.5 pb-4">
+              <div className="flex justify-center gap-2 pb-4 pt-2">
                 {data.featured_news.map((_, i) => (
                   <button key={i} onClick={() => setNewsSlide(i)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all ${i === newsSlide ? "bg-emerald-600 w-4" : "bg-gray-300"}`}
+                    className={`h-2 rounded-full transition-all duration-300 ${i === newsSlide ? "bg-emerald-500 w-6" : "bg-gray-200 hover:bg-gray-300 w-2"}`}
                   />
                 ))}
               </div>
@@ -345,7 +361,7 @@ const HomePage = () => {
           {/* Right Sidebar Columns (New Members & Batch Mates) */}
           {/* Note the flex-col structure using Tailwind's order utilities for responsiveness */}
           <div className="order-1 lg:order-2 flex flex-col gap-6">
-            
+
             {/* ── New Members ── */}
             <section className="order-2 lg:order-1">
               <div className={DASHBOARD_THEME.sectionHeader}>
