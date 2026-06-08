@@ -247,7 +247,21 @@ const HomePage = () => {
               onTouchEnd={handleNewsTouchEnd}
             >
               {data.featured_news.map((news, index) => (
-                <div key={news.id} style={{ display: index === newsSlide ? "block" : "none" }}>
+                <div
+                  key={news.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open news: ${news.title}`}
+                  onClick={() => navigate(`/staff/news/${news.id}/`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/staff/news/${news.id}/`);
+                    }
+                  }}
+                  style={{ display: index === newsSlide ? "block" : "none" }}
+                  className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                >
                   {/* Post header */}
                   <div className="flex items-center gap-3 p-4">
                     <img
@@ -278,7 +292,10 @@ const HomePage = () => {
                 <button
                   type="button"
                   aria-label="Next news"
-                  onClick={goToNextNews}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToNextNews();
+                  }}
                   className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +306,7 @@ const HomePage = () => {
               {/* Dot indicators */}
               <div className="flex justify-center gap-1.5 pb-4">
                 {data.featured_news.map((_, i) => (
-                  <button key={i} onClick={() => setNewsSlide(i)}
+                  <button key={i} onClick={(e) => { e.stopPropagation(); setNewsSlide(i); }}
                     className={`w-1.5 h-1.5 rounded-full transition-all ${i === newsSlide ? "bg-emerald-600 w-4" : "bg-gray-300"}`}
                   />
                 ))}
