@@ -6,6 +6,7 @@ import ChapterDistributionSection from "../../Shared/ChapterDistributionSection"
 import { DASHBOARD_THEME } from "../../../constants/dashboardTheme";
 import CountUp from "../../Shared/CountUp";
 import { LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
+import { buildBatchMateMembersUrl } from "../../../lib/membersUrl";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -20,6 +21,7 @@ const HomePage = () => {
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
   const token = localStorage.getItem("Token");
   const newsCount = data?.featured_news?.length || 0;
+  const batchMatesUrl = buildBatchMateMembersUrl("/alumni/members/", data?.batch_mates?.[0]);
 
   const navigate = useCallback((path) => { window.location.href = path; }, []);
 
@@ -402,7 +404,7 @@ const HomePage = () => {
               <section className="order-1 lg:order-2">
                 <div className={DASHBOARD_THEME.sectionHeader}>
                   <h2 className={DASHBOARD_THEME.sectionTitle}>Batch Mates</h2>
-                  <button onClick={() => navigate("/alumni/members/")} className={DASHBOARD_THEME.sectionAction}>
+                  <button onClick={() => navigate(batchMatesUrl)} className={DASHBOARD_THEME.sectionAction}>
                     See all
                   </button>
                 </div>

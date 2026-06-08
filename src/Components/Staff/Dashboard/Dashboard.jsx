@@ -6,6 +6,7 @@ import ChapterDistributionSection from "../../Shared/ChapterDistributionSection"
 import { DASHBOARD_THEME } from "../../../constants/dashboardTheme";
 import CountUp from "../../Shared/CountUp";
 import { LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
+import { buildBatchMateMembersUrl } from "../../../lib/membersUrl";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -20,6 +21,7 @@ const HomePage = () => {
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
   const token = localStorage.getItem("Token");
   const newsCount = data?.featured_news?.length || 0;
+  const batchMatesUrl = buildBatchMateMembersUrl("/staff/members/", data?.batch_mates?.[0]);
 
   const navigate = useCallback((path) => { window.location.href = path; }, []);
 
@@ -403,6 +405,43 @@ const HomePage = () => {
               ))}
             </div>
           </section>
+
+          {/* Batch Mates */}
+          {data?.batch_mates?.length > 0 && (
+            <section className="order-3 lg:col-span-1">
+              <div className={DASHBOARD_THEME.sectionHeader}>
+                <h2 className={DASHBOARD_THEME.sectionTitle}>Batch Mates</h2>
+                <button onClick={() => navigate(batchMatesUrl)} className={DASHBOARD_THEME.sectionAction}>
+                  See all
+                </button>
+              </div>
+              <div className={DASHBOARD_THEME.memberList}>
+                {data.batch_mates.map((mate) => (
+                  <div
+                    key={mate.id}
+                    onClick={() => navigate(`/staff/members/${mate.username}/`)}
+                    className={DASHBOARD_THEME.memberRow}
+                  >
+                    {mate.profile_photo ? (
+                      <img src={`${MEDIA_BASE_URL}${mate.profile_photo}`} alt={mate.first_name}
+                        className={DASHBOARD_THEME.memberAvatar} />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white font-bold text-sm">
+                        {mate.first_name?.[0]}{mate.last_name?.[0]}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{mate.first_name} {mate.last_name}</p>
+                      <p className="text-xs text-gray-400 truncate">{mate.course || "Student"}</p>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
         {/* ── Ready to connect card ── */}
