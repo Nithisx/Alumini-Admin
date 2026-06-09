@@ -6,6 +6,7 @@ import ChapterDistributionSection from "../../Shared/ChapterDistributionSection"
 import { DASHBOARD_THEME } from "../../../constants/dashboardTheme";
 import CountUp from "../../Shared/CountUp";
 import { LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
+import { buildBatchMateMembersUrl } from "../../../lib/membersUrl";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -20,6 +21,7 @@ const HomePage = () => {
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
   const token = localStorage.getItem("Token");
   const newsCount = data?.featured_news?.length || 0;
+  const batchMatesUrl = buildBatchMateMembersUrl("/admin/members/", data?.batch_mates?.[0]);
 
   const navigate = useCallback((path) => { window.location.href = path; }, []);
 
@@ -245,7 +247,21 @@ const HomePage = () => {
               onTouchEnd={handleNewsTouchEnd}
             >
               {data.featured_news.map((news, index) => (
-                <div key={news.id} style={{ display: index === newsSlide ? "block" : "none" }}>
+                <div
+                  key={news.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open news: ${news.title}`}
+                  onClick={() => navigate(`/admin/news/${news.id}/`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/admin/news/${news.id}/`);
+                    }
+                  }}
+                  style={{ display: index === newsSlide ? "block" : "none" }}
+                  className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                >
                   {/* Post header */}
                   <div className="flex items-center gap-3 p-4">
                     <img
@@ -276,7 +292,10 @@ const HomePage = () => {
                 <button
                   type="button"
                   aria-label="Next news"
-                  onClick={goToNextNews}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToNextNews();
+                  }}
                   className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -287,7 +306,7 @@ const HomePage = () => {
               {/* Dot indicators */}
               <div className="flex justify-center gap-1.5 pb-4">
                 {data.featured_news.map((_, i) => (
-                  <button key={i} onClick={() => setNewsSlide(i)}
+                  <button key={i} onClick={(e) => { e.stopPropagation(); setNewsSlide(i); }}
                     className={`w-1.5 h-1.5 rounded-full transition-all ${i === newsSlide ? "bg-emerald-600 w-4" : "bg-gray-300"}`}
                   />
                 ))}
@@ -411,7 +430,7 @@ const HomePage = () => {
               <section className="order-1 lg:order-2">
                 <div className={DASHBOARD_THEME.sectionHeader}>
                   <h2 className={DASHBOARD_THEME.sectionTitle}>Batch Mates</h2>
-                  <button onClick={() => navigate("/admin/members/")} className={DASHBOARD_THEME.sectionAction}>
+                  <button onClick={() => navigate(batchMatesUrl)} className={DASHBOARD_THEME.sectionAction}>
                     See all
                   </button>
                 </div>

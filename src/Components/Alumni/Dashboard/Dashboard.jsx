@@ -6,6 +6,7 @@ import ChapterDistributionSection from "../../Shared/ChapterDistributionSection"
 import { DASHBOARD_THEME } from "../../../constants/dashboardTheme";
 import CountUp from "../../Shared/CountUp";
 import { LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
+import { buildBatchMateMembersUrl } from "../../../lib/membersUrl";
 
 const HomePage = () => {
   const [data, setData] = useState(null);
@@ -20,6 +21,7 @@ const HomePage = () => {
   const MEDIA_BASE_URL = "https://api.karpagamalumni.in";
   const token = localStorage.getItem("Token");
   const newsCount = data?.featured_news?.length || 0;
+  const batchMatesUrl = buildBatchMateMembersUrl("/alumni/members/", data?.batch_mates?.[0]);
 
   const navigate = useCallback((path) => { window.location.href = path; }, []);
 
@@ -221,6 +223,17 @@ const HomePage = () => {
                 <div
                   key={news.id}
                   className={`news-slide ${index === newsSlide ? 'news-slide--visible' : 'news-slide--hidden'}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open news: ${news.title}`}
+                  onClick={() => navigate(`/alumni/news/${news.id}/`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/alumni/news/${news.id}/`);
+                    }
+                  }}
+                  className={`news-slide ${index === newsSlide ? 'news-slide--visible' : 'news-slide--hidden'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2`}
                 >
                   {/* Post header */}
                   <div className="flex items-center gap-3 p-4">
@@ -253,7 +266,10 @@ const HomePage = () => {
                   <button
                     type="button"
                     aria-label="Previous news"
-                    onClick={goToPrevNews}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToPrevNews();
+                    }}
                     className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -263,7 +279,10 @@ const HomePage = () => {
                   <button
                     type="button"
                     aria-label="Next news"
-                    onClick={goToNextNews}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToNextNews();
+                    }}
                     className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +294,7 @@ const HomePage = () => {
               {/* Dot indicators */}
               <div className="flex justify-center gap-2 pb-4 pt-2">
                 {data.featured_news.map((_, i) => (
-                  <button key={i} onClick={() => setNewsSlide(i)}
+                  <button key={i} onClick={(e) => { e.stopPropagation(); setNewsSlide(i); }}
                     className={`h-2 rounded-full transition-all duration-300 ${i === newsSlide ? "bg-emerald-500 w-6" : "bg-gray-200 hover:bg-gray-300 w-2"}`}
                   />
                 ))}
@@ -402,7 +421,7 @@ const HomePage = () => {
               <section className="order-1 lg:order-2">
                 <div className={DASHBOARD_THEME.sectionHeader}>
                   <h2 className={DASHBOARD_THEME.sectionTitle}>Batch Mates</h2>
-                  <button onClick={() => navigate("/alumni/members/")} className={DASHBOARD_THEME.sectionAction}>
+                  <button onClick={() => navigate(batchMatesUrl)} className={DASHBOARD_THEME.sectionAction}>
                     See all
                   </button>
                 </div>
