@@ -162,14 +162,12 @@ export function NotificationProvider({ children }) {
       .then(() => refreshStatus())
       .catch(() => {});
 
-    // Listen for messages arriving while the tab is active
-    const unsubscribe = onForegroundMessage((payload) => {
-      const data  = payload.data || {};
+    // Helper to display in-app toast for foreground notifications
+    const showToastNotification = (data) => {
       const title = data.title || 'New Notification';
       const body  = data.body  || '';
       const type  = data.type  || 'general';
 
-      // Show a styled toast
       toast.info(
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <span style={{ fontSize: 22 }}>{TYPE_ICONS[type] || '🔔'}</span>
@@ -195,12 +193,31 @@ export function NotificationProvider({ children }) {
 
       // Refresh notification list to show the new one
       fetchNotifications();
+    };
+
+    // Listen for messages arriving while the tab is active (Web Push)
+    const unsubscribe = onForegroundMessage((payload) => {
+      showToastNotification(payload.data || {});
     });
+
+    // Handle incoming window message event from React Native WebView
+    const handleNativeMessage = (event) => {
+      try {
+        const payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (payload?.type === 'PUSH_NOTIFICATION') {
+          showToastNotification(payload.data || {});
+        }
+      } catch (err) {
+        // Not a JSON message or not for us
+      }
+    };
+    window.addEventListener('message', handleNativeMessage);
 
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
+      window.removeEventListener('message', handleNativeMessage);
     };
-  }, [authToken, fetchNotifications, refreshStatus]);
+  }, [authToken, fetchNotifications, refreshStatus, navigate]);
 
   // ── Initial fetch + polling ───────────────────────────────────────────────
   useEffect(() => {

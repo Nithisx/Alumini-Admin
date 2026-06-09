@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Pages
 import LoginPage from './Pages/Login';
@@ -123,6 +123,7 @@ function AnimatedRoutes() {
 }
 
 const AppRoutes = () => {
+  const Router = window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
   return (
     <Router>
       <InstallAppPrompt />
