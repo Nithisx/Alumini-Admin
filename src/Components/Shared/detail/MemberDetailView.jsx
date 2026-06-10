@@ -103,9 +103,35 @@ export default function MemberDetailView({ basePath = "" }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [userCourses, setUserCourses] = useState([]);
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
-  const [addCourseForm, setAddCourseForm] = useState({ course: "", branch: "", college_name: "", passed_out_year: "" });
+  const [addCourseForm, setAddCourseForm] = useState({
+    course: "",
+    branch: "",
+    stream: "",
+    roll_no: "",
+    college_name: "",
+    course_start_year: "",
+    course_end_year: "",
+    passed_out_year: "",
+    is_primary: false
+  });
   const [addCourseLoading, setAddCourseLoading] = useState(false);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
+
+  // Edit course states
+  const [showEditCourseModal, setShowEditCourseModal] = useState(false);
+  const [editingCourseId, setEditingCourseId] = useState(null);
+  const [editCourseLoading, setEditCourseLoading] = useState(false);
+  const [editCourseForm, setEditCourseForm] = useState({
+    course: "",
+    branch: "",
+    stream: "",
+    roll_no: "",
+    college_name: "",
+    course_start_year: "",
+    course_end_year: "",
+    passed_out_year: "",
+    is_primary: false
+  });
 
   // Image viewer + crop modal state
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -131,24 +157,6 @@ export default function MemberDetailView({ basePath = "" }) {
     navigateToMembersList();
   };
 
-  /* ── fetch ── */
-  useEffect(() => {
-    fetch(`${API_PROFILE}${name}`, {
-      headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
-      .then((data) => {
-        setMember(data);
-        setEditedMember(data);
-        if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
-          setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
-        }
-        if (Array.isArray(data.user_courses)) setUserCourses(data.user_courses);
-        else fetchUserCourses(data.id);
-      })
-      .finally(() => setLoading(false));
-  }, [name]);
-
   const fetchUserCourses = async (userId) => {
     try {
       const res = await fetch(getAdminCoursesUrl(userId), { headers: { Authorization: `Token ${TOKEN()}` } });
@@ -158,6 +166,33 @@ export default function MemberDetailView({ basePath = "" }) {
       }
     } catch { /* ignore */ }
   };
+
+  /* ── fetch ── */
+  const fetchMemberDetails = async () => {
+    try {
+      const res = await fetch(`${API_PROFILE}${name}`, {
+        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMember(data);
+        setEditedMember(data);
+        if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
+          setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
+        }
+        if (Array.isArray(data.user_courses)) {
+          setUserCourses(data.user_courses);
+        } else {
+          await fetchUserCourses(data.id);
+        }
+      }
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    fetchMemberDetails().finally(() => setLoading(false));
+  }, [name]);
 
   const handleAddCourse = async () => {
     if (!addCourseForm.course) { toast.error("Course is required"); return; }
@@ -174,13 +209,63 @@ export default function MemberDetailView({ basePath = "" }) {
         return;
       }
       toast.success("Course added successfully");
-      await fetchUserCourses(member.id);
+      await fetchMemberDetails();
       setShowAddCourseModal(false);
-      setAddCourseForm({ course: "", branch: "", college_name: "", passed_out_year: "" });
+      setAddCourseForm({
+        course: "",
+        branch: "",
+        stream: "",
+        roll_no: "",
+        college_name: "",
+        course_start_year: "",
+        course_end_year: "",
+        passed_out_year: "",
+        is_primary: false
+      });
     } catch {
       toast.error("Failed to add course");
     } finally {
       setAddCourseLoading(false);
+    }
+  };
+
+  const handleEditCourseClick = (course) => {
+    setEditingCourseId(course.id);
+    setEditCourseForm({
+      course: course.course || "",
+      branch: course.branch || "",
+      stream: course.stream || "",
+      roll_no: course.roll_no || "",
+      college_name: course.college_name || "",
+      course_start_year: course.course_start_year || "",
+      course_end_year: course.course_end_year || "",
+      passed_out_year: course.passed_out_year || "",
+      is_primary: !!course.is_primary
+    });
+    setShowEditCourseModal(true);
+  };
+
+  const handleEditCourse = async () => {
+    if (!editCourseForm.course) { toast.error("Course is required"); return; }
+    setEditCourseLoading(true);
+    try {
+      const res = await fetch(getAdminCourseUrl(member.id, editingCourseId), {
+        method: "PUT",
+        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
+        body: JSON.stringify(editCourseForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.non_field_errors?.[0] || data?.error || data?.detail || "Failed to update course");
+        return;
+      }
+      toast.success("Course updated successfully");
+      await fetchMemberDetails();
+      setShowEditCourseModal(false);
+    } catch {
+      toast.error("Failed to update course");
+    } finally {
+      setEditCourseLoading(false);
     }
   };
 
@@ -192,8 +277,8 @@ export default function MemberDetailView({ basePath = "" }) {
         headers: { Authorization: `Token ${TOKEN()}` },
       });
       if (res.ok || res.status === 204) {
-        setUserCourses((prev) => prev.filter((c) => c.id !== courseId));
         toast.success("Course removed");
+        await fetchMemberDetails();
       } else {
         const data = await res.json().catch(() => ({}));
         toast.error(data?.error || "Failed to remove course");
@@ -525,7 +610,7 @@ export default function MemberDetailView({ basePath = "" }) {
                 <div className="space-y-2">
                   {userCourses.map((c) => (
                     <div key={c.id} className="bg-emerald-50 rounded-lg px-3 py-2 relative group border border-emerald-100">
-                      <p className="text-sm text-gray-800 font-medium pr-6">
+                      <p className="text-sm text-gray-800 font-medium pr-16">
                         {[c.course, c.branch].filter(Boolean).join(" — ")}
                         {c.is_primary && <span className="ml-2 text-xs bg-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded-full">Primary</span>}
                       </p>
@@ -535,10 +620,15 @@ export default function MemberDetailView({ basePath = "" }) {
                       )}
                       {c.passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {c.passed_out_year}</p>}
                       {c.roll_no && <p className="text-xs text-gray-400 mt-0.5">Roll no: {c.roll_no}</p>}
-                      {isAdmin && !c.is_primary && (
-                        <button onClick={() => handleDeleteCourse(c.id)} disabled={deletingCourseId === c.id} className="absolute top-2 right-2 text-red-400 hover:text-red-600 disabled:opacity-50" title="Remove course">
-                          {deletingCourseId === c.id ? <span className="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" /> : Icons.x}
-                        </button>
+                      {isAdmin && (
+                        <div className="absolute top-2 right-2 flex items-center gap-2">
+                          <button onClick={() => handleEditCourseClick(c)} className="text-gray-400 hover:text-emerald-600 transition-colors" title="Edit course">
+                            {Icons.edit}
+                          </button>
+                          <button onClick={() => handleDeleteCourse(c.id)} disabled={deletingCourseId === c.id} className="text-red-400 hover:text-red-600 disabled:opacity-50 transition-colors" title="Remove course">
+                            {deletingCourseId === c.id ? <span className="inline-block w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" /> : Icons.trash}
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
@@ -874,15 +964,20 @@ export default function MemberDetailView({ basePath = "" }) {
                 </select>
               </div>
 
-              {addCourseForm.course && COURSE_BRANCH_MAPPING[addCourseForm.course] && (
+              {addCourseForm.course && COURSE_BRANCH_MAPPING[addCourseForm.course] && COURSE_BRANCH_MAPPING[addCourseForm.course].length > 0 && (
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Branch / Stream</label>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Branch</label>
                   <select value={addCourseForm.branch} onChange={(e) => setAddCourseForm((f) => ({ ...f, branch: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                     <option value="">Select Branch</option>
                     {COURSE_BRANCH_MAPPING[addCourseForm.course].map((b) => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
               )}
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Stream</label>
+                <input type="text" placeholder="e.g. Science / Commerce" value={addCourseForm.stream} onChange={(e) => setAddCourseForm((f) => ({ ...f, stream: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
 
               <div>
                 <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">College</label>
@@ -893,8 +988,28 @@ export default function MemberDetailView({ basePath = "" }) {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Passed Out Year</label>
-                <input type="number" placeholder="e.g. 2024" value={addCourseForm.passed_out_year} onChange={(e) => setAddCourseForm((f) => ({ ...f, passed_out_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Roll Number</label>
+                <input type="text" placeholder="e.g. 21CO01" value={addCourseForm.roll_no} onChange={(e) => setAddCourseForm((f) => ({ ...f, roll_no: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Start Year</label>
+                  <input type="number" placeholder="e.g. 2021" value={addCourseForm.course_start_year} onChange={(e) => setAddCourseForm((f) => ({ ...f, course_start_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">End Year</label>
+                  <input type="number" placeholder="e.g. 2024" value={addCourseForm.course_end_year} onChange={(e) => setAddCourseForm((f) => ({ ...f, course_end_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Passed Out</label>
+                  <input type="number" placeholder="e.g. 2024" value={addCourseForm.passed_out_year} onChange={(e) => setAddCourseForm((f) => ({ ...f, passed_out_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input type="checkbox" id="add-is-primary" checked={addCourseForm.is_primary} onChange={(e) => setAddCourseForm((f) => ({ ...f, is_primary: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                <label htmlFor="add-is-primary" className="text-sm font-medium text-gray-700">Mark as primary course</label>
               </div>
             </div>
 
@@ -902,6 +1017,83 @@ export default function MemberDetailView({ basePath = "" }) {
               <button onClick={() => setShowAddCourseModal(false)} className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50">Cancel</button>
               <button onClick={handleAddCourse} disabled={addCourseLoading} className="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-60 flex items-center gap-1.5">
                 {addCourseLoading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Adding…</> : "Add Course"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Course Modal (admin) ── */}
+      {showEditCourseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-800">Edit Course Enrollment</h2>
+              <button onClick={() => setShowEditCourseModal(false)} className="text-gray-400 hover:text-gray-600">{Icons.x}</button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Course *</label>
+                <select value={editCourseForm.course} onChange={(e) => setEditCourseForm((f) => ({ ...f, course: e.target.value, branch: "" }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                  <option value="">Select Course</option>
+                  {getCoursesForCollege(editCourseForm.college_name).map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              {editCourseForm.course && COURSE_BRANCH_MAPPING[editCourseForm.course] && COURSE_BRANCH_MAPPING[editCourseForm.course].length > 0 && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Branch</label>
+                  <select value={editCourseForm.branch} onChange={(e) => setEditCourseForm((f) => ({ ...f, branch: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                    <option value="">Select Branch</option>
+                    {COURSE_BRANCH_MAPPING[editCourseForm.course].map((b) => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Stream</label>
+                <input type="text" placeholder="e.g. Science / Commerce" value={editCourseForm.stream} onChange={(e) => setEditCourseForm((f) => ({ ...f, stream: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">College</label>
+                <select value={editCourseForm.college_name} onChange={(e) => setEditCourseForm((f) => ({ ...f, college_name: e.target.value, course: "", branch: "" }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                  <option value="">Select College</option>
+                  {COLLEGE_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Roll Number</label>
+                <input type="text" placeholder="e.g. 21CO01" value={editCourseForm.roll_no} onChange={(e) => setEditCourseForm((f) => ({ ...f, roll_no: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Start Year</label>
+                  <input type="number" placeholder="e.g. 2021" value={editCourseForm.course_start_year} onChange={(e) => setEditCourseForm((f) => ({ ...f, course_start_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">End Year</label>
+                  <input type="number" placeholder="e.g. 2024" value={editCourseForm.course_end_year} onChange={(e) => setEditCourseForm((f) => ({ ...f, course_end_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Passed Out</label>
+                  <input type="number" placeholder="e.g. 2024" value={editCourseForm.passed_out_year} onChange={(e) => setEditCourseForm((f) => ({ ...f, passed_out_year: e.target.value }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input type="checkbox" id="edit-is-primary" checked={editCourseForm.is_primary} onChange={(e) => setEditCourseForm((f) => ({ ...f, is_primary: e.target.checked }))} className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                <label htmlFor="edit-is-primary" className="text-sm font-medium text-gray-700">Mark as primary course</label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-5 justify-end">
+              <button onClick={() => setShowEditCourseModal(false)} className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50">Cancel</button>
+              <button onClick={handleEditCourse} disabled={editCourseLoading} className="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-60 flex items-center gap-1.5">
+                {editCourseLoading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving…</> : "Save Changes"}
               </button>
             </div>
           </div>

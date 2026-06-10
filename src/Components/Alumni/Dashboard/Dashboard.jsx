@@ -222,7 +222,6 @@ const HomePage = () => {
               {data.featured_news.map((news, index) => (
                 <div
                   key={news.id}
-                  className={`news-slide ${index === newsSlide ? 'news-slide--visible' : 'news-slide--hidden'}`}
                   role="button"
                   tabIndex={0}
                   aria-label={`Open news: ${news.title}`}
