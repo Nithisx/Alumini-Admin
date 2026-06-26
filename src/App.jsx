@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import Loader from "./Pages/Loder";
 
+
 export default function App() {
   // Show the Karpagam Alumni loading screen only on the landing page ("/" or
   // "/home"). Runs once per full page load (not on in-app route changes).

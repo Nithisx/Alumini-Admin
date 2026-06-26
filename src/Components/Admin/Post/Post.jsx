@@ -37,6 +37,8 @@ const AdminFeed = () => {
     const [isLoadingModal, setIsLoadingModal] = useState(false); // Loading state for modal submit
     const fileInputRef = useRef(null);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedImageName, setSelectedImageName] = useState("");
+    const [error, setError] = useState("");
 
     const fetchJobs = async () => {
         setLoading(true);

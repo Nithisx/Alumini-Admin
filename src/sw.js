@@ -35,6 +35,11 @@ self.addEventListener('push', (event) => {
         );
         if (hasFocusedClient) return;
 
+        const uniqueId = data.event_id || data.job_id || data.news_id
+          || data.business_id || data.parent_id
+          || `${data.type}-${Date.now()}`;
+        const tag = `${data.type || 'general'}-${uniqueId}`;
+
         return self.registration.showNotification(
           data.title || 'Karpagam Alumni',
           {
@@ -42,7 +47,7 @@ self.addEventListener('push', (event) => {
             icon:               '/pwa-192x192-v2.png',
             badge:              '/notification-badge.png',
             image:              data.image || undefined,
-            tag:                (data.type === 'chat' && data.room_id) ? `chat-${data.room_id}` : (data.type || 'general'),
+            tag:                tag,
             renotify:           true,
             requireInteraction: false,
             data:               { click_url: data.click_url || '/' },
