@@ -37,7 +37,7 @@ self.addEventListener('push', (event) => {
 
         const uniqueId = data.event_id || data.job_id || data.news_id
           || data.business_id || data.parent_id
-          || `${data.type}-${Date.now()}`;
+          || `${data.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const tag = `${data.type || 'general'}-${uniqueId}`;
 
         return self.registration.showNotification(
