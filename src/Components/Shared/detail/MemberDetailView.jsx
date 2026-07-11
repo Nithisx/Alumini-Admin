@@ -14,6 +14,7 @@ import useViewerProfile from "./useViewerProfile";
 import { Icons } from "./primitives";
 import Can from "../Can";
 import UserPermissionsPanel from "../../Features/RBAC/UserPermissionsPanel";
+import RoleEditor from "../../Features/RBAC/RoleEditor";
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
 const TOKEN = () => localStorage.getItem("Token");
@@ -778,7 +779,16 @@ export default function MemberDetailView({ basePath = "" }) {
       case "Permissions":
         return (
           <Can perm="rbac.manage">
-            <UserPermissionsPanel userId={member.id} userRole={role} />
+            <>
+              <Can allOf={["rbac.manage", "users.change_role"]}>
+                <RoleEditor
+                  userId={member.id}
+                  currentRole={role}
+                  onRoleChanged={(newRole) => setMember((m) => (m ? { ...m, role: newRole } : m))}
+                />
+              </Can>
+              <UserPermissionsPanel userId={member.id} userRole={role} />
+            </>
           </Can>
         );
 
