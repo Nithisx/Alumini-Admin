@@ -1,12 +1,67 @@
-# React + Vite
+# Alumini-ops — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + Vite + Tailwind PWA (deployed on Vercel), refactored from the legacy
+`Alumini-Admin` app. The emerald brand theme, every feature, and all role
+dashboards are preserved; the refactor adds a backend-driven config bootstrap,
+JWT auth with the role in the token payload, and RBAC permission gating.
 
-Currently, two official plugins are available:
+## What changed vs the legacy frontend
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **No secrets in the bundle.** The only build-time value is `VITE_API_ORIGIN`.
+  The VAPID key, Supabase URL + anon key, and WS base are fetched at boot from
+  the backend (`GET /api/v1/config/`) — see `src/config/runtimeConfig.js`,
+  awaited in `src/main.jsx` before first render.
+- **JWT auth, role in the token.** Login stores the backend's `jwt`; the role is
+  decoded from its payload (`src/lib/authToken.js`), not a separate `Role` key.
+  `src/lib/axiosInstance.js` attaches `Authorization: Bearer <jwt>` (or legacy
+  `Token <key>`) to every request — one chokepoint, whole-app coverage.
+- **RBAC gating.** `src/stores/permissionStore.js` (MobX) holds the caller's
+  effective permissions from `GET /api/v1/me/permissions/`. Gate UI with
+  `permissionStore.hasPerm('x.y')` or the `<Can perm="…">` component
+  (`src/Components/Shared/Can.jsx`). The Admin *Roles & Permissions* page
+  (`src/Components/Admin/RBAC/RolesPermissionsPage.jsx`) edits the matrix.
+- **Security headers** (CSP, HSTS, X-Frame-Options, Referrer-Policy,
+  Permissions-Policy) in `vercel.json`.
 
-## Expanding the ESLint configuration
+State: existing Redux slices (audit, login-requests) are unchanged; new
+cross-cutting state uses MobX stores (config, permissions), per the SonyDev
+convention.
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Environment
+
+Only one variable is required — the backend origin. Everything else comes from
+the config bootstrap.
+
+```
+VITE_API_ORIGIN=https://api.karpagamalumni.in
+# dev only:
+VITE_API_PROXY_TARGET=http://127.0.0.1:8000   # backend for the /api dev proxy
+VITE_APP_MOBILE=false                          # 'true' for Capacitor/WebView builds
+```
+
+## Develop
+
+```bash
+npm install
+npm run dev        # http://localhost:3000 ; /api proxied to VITE_API_PROXY_TARGET
+```
+
+With the backend running locally, the dev server proxies `/api` to it (no CORS),
+the config bootstrap loads through that proxy, and login issues a JWT.
+
+## Build
+
+```bash
+npm run build      # → dist/  (PWA service worker generated)
+```
+
+## Auth flow
+
+```
+Login → backend returns { jwt, token, role, permissions }
+      → storeLoginCredential() saves jwt under "Token"
+      → permissionStore.seedFromLogin() populates the permission set
+Requests → axiosInstance attaches "Bearer <jwt>"
+Role     → decoded from the JWT payload (authToken.getRole())
+Logout   → clears token + permissionStore, unregisters push
+```

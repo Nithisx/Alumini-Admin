@@ -1,23 +1,16 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
-const ProtectedRoute = ({ requiredRole, children }) => {
+// Gates the authenticated app tree behind a valid session only — which pages
+// a user can actually reach is decided by the RBAC permission matrix inside
+// RoleLayout (GuardedElement), not by a role check here.
+const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('Token');
-  const role = localStorage.getItem('Role');
+  const location = useLocation();
 
-  // If no token, redirect to home
   if (!token) {
-    return <Navigate to="/home" replace />;
-  }
-
-  // Check if role matches (handle both string and array of roles)
-  const hasAccess = Array.isArray(requiredRole) 
-    ? requiredRole.includes(role) 
-    : role === requiredRole;
-
-  // If token exists but roles don't match, redirect to login
-  if (!hasAccess) {
-    return <Navigate to="/login" replace />;
+    // Save the page they wanted so login can redirect back
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;

@@ -1,50 +1,99 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import Footer from "../Pages/about_components/Footer.jsx";
+import ChapterDistributionSection from "../Components/Shared/ChapterDistributionSection.jsx";
+import { DASHBOARD_THEME } from "../constants/dashboardTheme";
 import Header from "./Header.jsx";
 import Herosection from "./Herosection.jsx";
-import Image1 from "../images/image1.jpeg";
-import Image2 from "../images/image2.jpg";
-import Image3 from "../images/image3.jpg";
-import Footer from "../Pages/about_components/Footer.jsx";
-import Loader from "./Loder.jsx";
+import { API_BASE, API_ORIGIN } from "../config/api";
+
+const BASE_URL = API_BASE;
+const MEDIA_BASE_URL = API_ORIGIN;
+
 export default function Home() {
+  const navigate = useNavigate();
   const [data, setData] = useState({
     upcoming_events: [],
     latest_album_images: [],
     latest_members: [],
-    chapters: [],
     featured_news: [],
     total_users: 0,
+    upcoming_event: 0,
+    albums_count: 0,
     new_users: 0,
+  });
+  const [countryDistribution, setCountryDistribution] = useState({ chapters: [] });
+  const [cityStateDistribution, setCityStateDistribution] = useState({
+    city_chapters: [],
+    state_chapters: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [newsSlide, setNewsSlide] = useState(0);
-  const [showLoader, setShowLoader] = useState(true);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchStartY, setTouchStartY] = useState(null);
 
-  useEffect(() => {
-    // Hide loader after 4 seconds
-    const timer = setTimeout(() => {
-      setShowLoader(false);
-    }, 4000);
+  const token = localStorage.getItem("Token");
+  const newsCount = data.featured_news.length;
+  const isAuthed = Boolean(token);
+  const roleBasePath = useMemo(() => (isAuthed ? "" : null), [isAuthed]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  const handleProtectedNavigation = (suffix) => {
+    if (isAuthed) {
+      navigate(suffix);
+    } else {
+      navigate("/login", { state: { from: { pathname: suffix, isRelative: true } } });
+    }
+  };
+
+  const formatDate = (dateValue) => {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return "TBA";
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(date);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("https://xyndrix.me/api/home/");
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
+        const [homeResponse, countryResponse, cityStateResponse] = await Promise.all([
+          fetch(`${BASE_URL}/home/`),
+          fetch(`${BASE_URL}/country-distribution/`),
+          fetch(`${BASE_URL}/city-state-chapters/`),
+        ]);
+
+        if (!homeResponse.ok || !countryResponse.ok || !cityStateResponse.ok) {
+          throw new Error("Failed to fetch home data");
         }
-        const result = await response.json();
-        setData(result);
+
+        const homeResult = await homeResponse.json();
+        const countryResult = await countryResponse.json();
+        const cityStateResult = await cityStateResponse.json();
+
+        setData((prev) => ({
+          ...prev,
+          ...homeResult,
+          upcoming_events: Array.isArray(homeResult.upcoming_events)
+            ? homeResult.upcoming_events
+            : [],
+          latest_album_images: Array.isArray(homeResult.latest_album_images)
+            ? homeResult.latest_album_images
+            : [],
+          latest_members: Array.isArray(homeResult.latest_members)
+            ? homeResult.latest_members
+            : [],
+          featured_news: Array.isArray(homeResult.featured_news)
+            ? homeResult.featured_news
+            : [],
+        }));
+        setCountryDistribution(countryResult);
+        setCityStateDistribution(cityStateResult);
         setLoading(false);
-      } catch (error) {
+      } catch {
         setError("Failed to fetch data. Please try again later.");
         setLoading(false);
       }
@@ -53,27 +102,52 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Auto-slide for hero carousel
   useEffect(() => {
-    if (data.latest_album_images.length > 0) {
-      const timer = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % data.latest_album_images.length);
-      }, 5000);
-      return () => clearInterval(timer);
-    }
-  }, [data.latest_album_images.length]);
+    if (newsCount === 0) return;
 
-  // Auto-slide for news carousel
-  useEffect(() => {
-    if (data.featured_news.length > 0) {
-      const timer = setInterval(() => {
-        setNewsSlide((prev) => (prev + 1) % data.featured_news.length);
-      }, 6000);
-      return () => clearInterval(timer);
-    }
-  }, [data.featured_news.length]);
+    const timer = setInterval(() => {
+      setNewsSlide((prev) => (prev + 1) % newsCount);
+    }, 6000);
 
-  // Scroll to element if hash is present in URL
+    return () => clearInterval(timer);
+  }, [newsCount]);
+
+  const goToNextNews = useCallback(() => {
+    if (newsCount < 2) return;
+    setNewsSlide((prev) => (prev + 1) % newsCount);
+  }, [newsCount]);
+
+  const goToPrevNews = useCallback(() => {
+    if (newsCount < 2) return;
+    setNewsSlide((prev) => (prev - 1 + newsCount) % newsCount);
+  }, [newsCount]);
+
+  const handleNewsTouchStart = (e) => {
+    const touch = e.touches[0];
+    setTouchStartX(touch.clientX);
+    setTouchStartY(touch.clientY);
+  };
+
+  const handleNewsTouchEnd = (e) => {
+    if (touchStartX === null || touchStartY === null) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(deltaX) > minSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) {
+        goToNextNews();
+      } else {
+        goToPrevNews();
+      }
+    }
+
+    setTouchStartX(null);
+    setTouchStartY(null);
+  };
+
   useEffect(() => {
     if (window.location.hash) {
       const id = window.location.hash.substring(1);
@@ -86,15 +160,12 @@ export default function Home() {
     }
   }, []);
 
-  if (showLoader) {
-    return <Loader />;
-  }
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="text-center">
-          <div className="w-20 h-20 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading Alumni Portal...</p>
+      <div className={DASHBOARD_THEME.loadingPage}>
+        <div className={DASHBOARD_THEME.loadingWrap}>
+          <div className={DASHBOARD_THEME.loadingSpinner} />
+          <p className={DASHBOARD_THEME.loadingText}>Loading your feed...</p>
         </div>
       </div>
     );
@@ -102,640 +173,332 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="p-8 bg-red-50 rounded-xl border border-red-200 max-w-md text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+      <div className={DASHBOARD_THEME.loadingPage}>
+        <div className={DASHBOARD_THEME.errorPanel}>
+          <div className={DASHBOARD_THEME.errorIconWrap}>
+            <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-red-800 mb-2">
-            Connection Error
-          </h3>
-          <p className="text-red-700">{error}</p>
+          <h3 className={DASHBOARD_THEME.errorTitle}>Something went wrong</h3>
+          <p className={DASHBOARD_THEME.errorBody}>{error}</p>
+          <button onClick={() => window.location.reload()} className={DASHBOARD_THEME.retryButton}>
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
+  const stats = [
+    {
+      label: "Members",
+      value: data.total_users,
+      color: "bg-emerald-500",
+      path: "/members",
+      icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
+    },
+    {
+      label: "Upcoming Events",
+      value: data.upcoming_event,
+      color: "bg-violet-500",
+      path: "/event",
+      icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+    },
+    {
+      label: "Albums",
+      value: data.albums_count,
+      color: "bg-pink-500",
+      path: "/albums",
+      icon: "M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z",
+    },
+    {
+      label: "News",
+      value: data.new_users,
+      color: "bg-amber-500",
+      path: "/news",
+      icon: "M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z",
+    },
+  ];
+
   return (
-    <>
+    <div className={DASHBOARD_THEME.page}>
       <Header />
-      <Herosection />
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-70">
-        {/* Statistics Section */}
-        <section className="py-20 ">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.total_users.toLocaleString()}
-                  </h3>
-                  <p className="text-gray-600 font-medium">Total Alumni</p>
-                </div>
-              </div>
 
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.new_users.toLocaleString()}
-                  </h3>
-                  <p className="text-gray-600 font-medium">New Members</p>
-                </div>
-              </div>
+      <div className={DASHBOARD_THEME.hero}>
+        <Herosection />
+      </div>
 
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.chapters.length}
-                  </h3>
-                  <p className="text-gray-600 font-medium">Active Chapters</p>
-                </div>
-              </div>
-
-              <div className="text-center group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-4xl font-bold text-gray-900 mb-2">
-                    {data.upcoming_events}
-                  </h3>
-                  <p className="text-gray-600 font-medium"> Events</p>
-                </div>
-              </div>
+      <div className={DASHBOARD_THEME.content}>
+        {/* ── Ready to connect card (moved to top) ── */}
+        <section className="mb-8 rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl">
+              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+                Ready to connect with the network?
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-emerald-50/90">
+                Sign in to explore members, chapters, and community updates in your personalized dashboard.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                onClick={() => navigate(isAuthed ? "/dashboard" : "/login")}
+              >
+                {isAuthed ? "Go to Dashboard" : "Login"}
+              </button>
+              {!token && (
+                <button
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15"
+                  onClick={() => navigate("/signup")}
+                >
+                  Register
+                </button>
+              )}
             </div>
           </div>
         </section>
 
-        {/* Featured News Slider */}
-        {data.featured_news.length > 0 && (
-          <section className="py-20 " id="news-section">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                  Latest News & Updates
-                </h2>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                  Stay informed with the latest achievements and stories from
-                  our alumni community
-                </p>
+        <div className={DASHBOARD_THEME.statsGrid}>
+          {stats.map((stat) => (
+            <button
+              key={stat.label}
+              onClick={() => handleProtectedNavigation(stat.path)}
+              className={DASHBOARD_THEME.statButton}
+            >
+              <div className={`${DASHBOARD_THEME.statIcon} ${stat.color}`}>
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d={stat.icon} />
+                </svg>
               </div>
+              <div className="text-center">
+                <p className={DASHBOARD_THEME.statCount}>{stat.value || 0}</p>
+                <p className={DASHBOARD_THEME.statLabel}>{stat.label}</p>
+              </div>
+            </button>
+          ))}
+        </div>
 
-              <div className="relative max-w-6xl mx-auto">
-                <div className="overflow-hidden rounded-3xl shadow-2xl">
-                  {data.featured_news.map((news, index) => (
-                    <div
-                      key={news.id}
-                      className={`transition-transform duration-700 ease-in-out ${
-                        index === newsSlide
-                          ? "translate-x-0"
-                          : index < newsSlide
-                          ? "-translate-x-full"
-                          : "translate-x-full"
-                      }`}
-                      style={{
-                        display: index === newsSlide ? "block" : "none",
-                      }}
-                    >
-                      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
-                        <div className="relative">
-                          <img
-                            src={`https://xyndrix.me/api${news.thumbnail}`}
-                            alt={news.title}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute top-4 left-4">
-                            <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                              {news.category}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="p-12 flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white">
-                          <div className="mb-4">
-                            <span className="text-blue-600 font-semibold text-sm">
-                              {format(
-                                new Date(news.published_on),
-                                "MMMM dd yyyy"
-                              )}
-                            </span>
-                          </div>
-                          <h3 className="text-3xl font-bold text-gray-900 mb-6 leading-tight">
-                            {news.title}
-                          </h3>
-                          <p className="text-gray-700 text-lg mb-8 leading-relaxed">
-                            {news.content}
-                          </p>
-                          <div className="flex items-center">
-                            <img
-                              src={`https://xyndrix.me/api${news.user.profile_photo}`}
-                              alt={`${news.user.first_name} ${news.user.last_name}`}
-                              className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-blue-200"
-                            />
-                            <div>
-                              <p className="font-semibold text-gray-900">{`${news.user.first_name} ${news.user.last_name}`}</p>
-                              <p className="text-gray-600 text-sm">
-                                Alumni Contributor
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+        <section>
+          <div className={DASHBOARD_THEME.sectionHeader}>
+            <h2 className={DASHBOARD_THEME.sectionTitle}>Photo Gallery</h2>
+            <button onClick={() => handleProtectedNavigation("/albums")} className={DASHBOARD_THEME.sectionAction}>
+              See all
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {data.latest_album_images?.slice(0, 6).map((album) => (
+              <div
+                key={album.id}
+                onClick={() => handleProtectedNavigation(`/albums/${album.id}`)}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100">
+                  {album.cover_image ? (
+                    <img src={`${MEDIA_BASE_URL}${album.cover_image}`} alt={album.title}
+                      className="w-full h-full object-cover sm:grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg className="w-10 h-10 text-amber-300" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z" />
+                      </svg>
                     </div>
-                  ))}
+                  )}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-
-                {/* Navigation buttons */}
-                <button
-                  onClick={() =>
-                    setNewsSlide(
-                      (prev) =>
-                        (prev - 1 + data.featured_news.length) %
-                        data.featured_news.length
-                    )
-                  }
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-300"
-                >
-                  <svg
-                    className="w-6 h-6 text-gray-700"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() =>
-                    setNewsSlide(
-                      (prev) => (prev + 1) % data.featured_news.length
-                    )
-                  }
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-300"
-                >
-                  <svg
-                    className="w-6 h-6 text-gray-700"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Slide indicators */}
-                <div className="flex justify-center mt-8 space-x-2">
-                  {data.featured_news.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setNewsSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === newsSlide ? "bg-blue-600" : "bg-gray-300"
-                      }`}
-                    />
-                  ))}
+                <div className="px-3 py-2">
+                  <p className="text-sm font-semibold text-gray-800 truncate">{album.title}</p>
                 </div>
               </div>
+            ))}
+          </div>
+        </section>
+
+        {data.featured_news?.length > 0 && (
+          <section id="news-section">
+            <div className={DASHBOARD_THEME.sectionHeader}>
+              <h2 className={DASHBOARD_THEME.sectionTitle}>Latest News</h2>
+              <button onClick={() => handleProtectedNavigation("/news")} className={DASHBOARD_THEME.sectionAction}>
+                See all
+              </button>
             </div>
-          </section>
-        )}
-
-        {/* Upcoming Events */}
-        {data.upcoming_events.length > 0 && (
-          <section className="py-20 " id="events-section">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                  Events
-                </h2>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                  Join us for exciting events and networking opportunities
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                {data.upcoming_events.map((event) => (
-                  <div
-                    key={event.id}
-                    className="bg-white rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group"
-                  >
-                    <div className="relative h-64 overflow-hidden">
-                      {event.images && event.images.length > 0 ? (
-                        <img
-                          src={`https://xyndrix.me/api${event.images[0].image}`}
-                          alt={event.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                          <svg
-                            className="w-16 h-16 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                      <div className="absolute top-4 left-4">
-                        <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          {event.tag}
-                        </span>
-                      </div>
-                      <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {format(new Date(event.from_date_time), "MMM d")}
-                        </p>
-                      </div>
+            <div
+              className={`relative overflow-hidden ${DASHBOARD_THEME.panelCard}`}
+              onTouchStart={handleNewsTouchStart}
+              onTouchEnd={handleNewsTouchEnd}
+            >
+              {data.featured_news.map((news, index) => (
+                <div key={news.id} style={{ display: index === newsSlide ? "block" : "none" }}>
+                  <div className="flex items-center gap-3 p-4">
+                    <img
+                      src={`${MEDIA_BASE_URL}${news.user.profile_photo}`}
+                      alt={`${news.user.first_name}`}
+                      className="w-9 h-9 rounded-full object-cover ring-2 ring-emerald-200"
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{news.user.first_name} {news.user.last_name}</p>
+                      <p className="text-xs text-gray-400">{format(new Date(news.published_on), "MMM d, yyyy")}</p>
                     </div>
-
-                    <div className="p-8">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                        {event.title}
-                      </h3>
-                      <p className="text-gray-600 mb-6 leading-relaxed">
-                        {event.description}
-                      </p>
-
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center text-gray-700">
-                          <svg
-                            className="w-5 h-5 mr-3 text-blue-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                          <span className="font-medium">{event.venue}</span>
-                        </div>
-                        <div className="flex items-center text-gray-700">
-                          <svg
-                            className="w-5 h-5 mr-3 text-green-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <span className="font-medium">
-                            {format(new Date(event.from_date_time), "h:mm a")} -{" "}
-                            {format(new Date(event.end_date_time), "h:mm a")}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    <span className="ml-auto text-xs bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-full">{news.category}</span>
                   </div>
+                  <img
+                    src={`${MEDIA_BASE_URL}${news.thumbnail}`}
+                    alt={news.title}
+                    className="w-full h-auto max-h-[80vh] object-contain bg-gray-50"
+                  />
+                  <div className="p-4">
+                    <p className="text-sm font-bold text-gray-900 mb-1">{news.title}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{news.content}</p>
+                  </div>
+                </div>
+              ))}
+              {newsCount > 1 && (
+                <button
+                  type="button"
+                  aria-label="Next news"
+                  onClick={goToNextNews}
+                  className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-10 h-10 rounded-full bg-white/90 text-emerald-700 shadow-md hover:bg-white transition"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+              <div className="flex justify-center gap-1.5 pb-4">
+                {data.featured_news.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setNewsSlide(index)}
+                    className={`w-1.5 h-1.5 rounded-full transition-all ${index === newsSlide ? "bg-emerald-600 w-4" : "bg-gray-300"}`}
+                  />
                 ))}
               </div>
             </div>
           </section>
         )}
 
-        {/* Latest Members Section */}
-        <section className="py-20" id="member-section">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
-                Latest Members
-              </h2>
-              <p className="text-xl text-black max-w-2xl mx-auto">
-                Meet our distinguished alumni making a difference worldwide
-              </p>
-            </div>
+        <section id="events-section">
+          <div className={DASHBOARD_THEME.sectionHeader}>
+            <h2 className={DASHBOARD_THEME.sectionTitle}>Upcoming Events</h2>
+            <button onClick={() => handleProtectedNavigation("/event")} className={DASHBOARD_THEME.sectionAction}>
+              See all
+            </button>
+          </div>
+          <div className={DASHBOARD_THEME.eventList}>
+            {Array.isArray(data.upcoming_events) && data.upcoming_events.map((event) => (
+              <div
+                key={event.id}
+                onClick={() => handleProtectedNavigation(`/event/${event.id}`)}
+                className={DASHBOARD_THEME.eventCard}
+              >
+                {event.images?.[0]?.image && (
+                  <img
+                    src={`${MEDIA_BASE_URL}${event.images[0].image}`}
+                    alt={event.title}
+                    className="w-full h-auto max-h-[80vh] object-contain bg-gray-50"
+                  />
+                )}
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-bold text-gray-900 line-clamp-2 flex-1">{event.title}</h3>
+                    <span className="text-xs bg-violet-50 text-violet-700 font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
+                      {formatDate(event.from_date_time)}
+                    </span>
+                  </div>
+                  {event.venue && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <p className="text-xs text-gray-500 truncate">{event.venue}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {data.latest_members.slice(0, 6).map((member) => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="member-section">
+          <section className="lg:col-span-2">
+            <ChapterDistributionSection
+              countryDistribution={countryDistribution}
+              cityStateDistribution={cityStateDistribution}
+              chapterBasePath={roleBasePath ?? undefined}
+              sectionClassName="py-0"
+            />
+          </section>
+
+          <section>
+            <div className={DASHBOARD_THEME.sectionHeader}>
+              <h2 className={DASHBOARD_THEME.sectionTitle}>New Members</h2>
+              <button onClick={() => handleProtectedNavigation("/members")} className={DASHBOARD_THEME.sectionAction}>
+                See all
+              </button>
+            </div>
+            <div className={DASHBOARD_THEME.memberList}>
+              {data.latest_members.map((member) => (
                 <div
                   key={member.id}
-                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-green-100"
+                  onClick={() => handleProtectedNavigation(`/members/${member.username}`)}
+                  className={DASHBOARD_THEME.memberRow}
                 >
-                  <div className="text-center">
-                    <div className="relative inline-block mb-6">
-                      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gradient-to-r from-green-300 to-green-400 p-1">
-                        <div className="w-full h-full rounded-full overflow-hidden">
-                          {member.profile_photo ? (
-                            <img
-                              src={`https://xyndrix.me/api${member.profile_photo}`}
-                              alt={`${member.first_name} ${member.last_name}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-green-300 to-green-400 flex items-center justify-center">
-                              <span className="text-2xl font-bold text-white">
-                                {member.first_name.charAt(0)}
-                                {member.last_name.charAt(0)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full border-4 border-white flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
+                  {member.profile_photo ? (
+                    <img
+                      src={`${MEDIA_BASE_URL}${member.profile_photo}`}
+                      alt={member.first_name}
+                      className={DASHBOARD_THEME.memberAvatar}
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                      {member.first_name?.[0]}{member.last_name?.[0]}
                     </div>
-
-                    <h3 className="text-xl font-bold text-black mb-2">{`${member.first_name} ${member.last_name}`}</h3>
-                    <p className="text-black font-semibold mb-2">
-                      {member.current_work}
-                    </p>
-                    <p className="text-black mb-4">
-                      {member.city}, {member.state}
-                    </p>
-                    <p className="text-sm text-black mb-6">
-                      Class of {member.passed_out_year}
-                    </p>
-                    <p className="text-black font-semibold mb-2">
-                      {member.role}
-                    </p>
-                    <div className="flex justify-center space-x-3">
-                      {member.social_links?.website_link && (
-                        <a
-                          href={`https://${member.social_links.website_link}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 hover:text-green-700 transition-colors"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                            />
-                          </svg>
-                        </a>
-                      )}
-                      <button className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 hover:text-green-700 transition-colors">
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-                        </svg>
-                      </button>
-                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{member.first_name} {member.last_name}</p>
+                    <p className="text-xs text-gray-400 truncate">{member.role || "Alumni"}</p>
                   </div>
+                  <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
                 </div>
               ))}
             </div>
+          </section>
+        </div>
 
-            <div className="text-center mt-12">
+        {/* ── Developer showcase card (moved to bottom) ── */}
+        <section className="rounded-[2rem] border border-emerald-100 bg-gradient-to-r from-emerald-700 to-green-700 p-6 text-white shadow-lg shadow-emerald-200/40" id="contact-section">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl">
+              <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+                Meet the team, explore the showcase, and join the developer community.
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-emerald-50/90">
+                The portal is maintained by alumni developers who keep the platform evolving. Learn who they are and connect with them directly.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
               <button
-                className="px-8 py-4 bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold rounded-full hover:from-green-500 hover:to-green-600 transform hover:scale-105 transition-all duration-300 shadow-lg"
-                onClick={() => {
-                  const token = localStorage.getItem("token");
-                  const role = localStorage.getItem("role");
-                  if (!token || !role) {
-                    window.location.href = "/login";
-                  } else if (role === "admin") {
-                    window.location.href = "/admin/members";
-                  } else if (role === "staff") {
-                    window.location.href = "/staff/members";
-                  } else if (role === "alumni") {
-                    window.location.href = "/alumni/members";
-                  } else {
-                    window.location.href = "/login";
-                  }
-                }}
+                onClick={() => navigate("/developers")}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50"
               >
-                View All Alumni
+                Meet the developers
+              </button>
+              <button
+                onClick={() => navigate("/developer-community")}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15"
+              >
+                Join community
               </button>
             </div>
           </div>
         </section>
-
-        {/* Chapters Section */}
-        <section className="py-20 " id="chapters-section">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-green-900 mb-4">
-                Global Chapters
-              </h2>
-              <p className="text-xl text-green-700 max-w-2xl mx-auto">
-                Connect with alumni chapters around the world
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {data.chapters.slice(0, 6).map((chapter, index) => (
-                <div
-                  key={index}
-                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-100"
-                >
-                  <div className="flex items-center mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-300 to-green-300 rounded-full flex items-center justify-center mr-4">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-green-00 leading-tight">
-                        {chapter.chapter.replace("&#039;", "'")}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                      <span className="text-green-700 font-semibold">
-                        {chapter.member_count} Members
-                      </span>
-                    </div>
-                    <span className="text-green-700 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">
-                      Active
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Call to Action */}
-        <section
-          className="py-20  text-green-900 relative overflow-hidden"
-          id="contact-section"
-        >
-          <div className="absolute inset-0 bg-green-100/40"></div>
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                Ready to Connect?
-              </h2>
-              <p className="text-xl md:text-2xl mb-12 text-green-700 leading-relaxed">
-                Join thousands of alumni who are already part of our thriving
-                community. Network, learn, and grow together.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <div>
-                  <div className="text-3xl font-bold mb-2">24/7</div>
-                  <div className="text-green-700">Community Support</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold mb-2">100+</div>
-                  <div className="text-green-700">Events Annually</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold mb-2">Global</div>
-                  <div className="text-green-700">Network Access</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full -translate-x-32 -translate-y-32"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-400/10 rounded-full translate-x-48 translate-y-48"></div>
-        </section>
-        <Footer />
       </div>
-    </>
+
+
+      <Footer />
+    </div>
   );
 }

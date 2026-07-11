@@ -1,0 +1,640 @@
+/**
+ * NotificationBell — header notification icon with dropdown panel.
+ *
+ * Shows an animated bell icon with an unread badge count.
+ * Clicking opens a glassmorphism dropdown with scrollable notification list,
+ * per-notification read-on-click, and a "Mark all read" button.
+ *
+ * If push notifications aren't enabled yet, shows a prompt to enable them.
+ */
+
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useNotifications } from './NotificationProvider.jsx';
+
+// ── Type metadata ─────────────────────────────────────────────────────────────
+const TYPE_META = {
+  event:                { icon: '📅', label: 'Event',           color: '#7c3aed', bg: '#ede9fe' },
+  job:                  { icon: '💼', label: 'Job',             color: '#0369a1', bg: '#e0f2fe' },
+  news:                 { icon: '📰', label: 'News',            color: '#b45309', bg: '#fef3c7' },
+  business:             { icon: '🏢', label: 'Business',        color: '#047857', bg: '#d1fae5' },
+  birthday:             { icon: '🎂', label: 'Birthday',        color: '#be185d', bg: '#fce7f3' },
+  comment:              { icon: '💬', label: 'Comment',         color: '#0891b2', bg: '#cffafe' },
+  chat:                 { icon: '💬', label: 'Chat',            color: '#0891b2', bg: '#cffafe' },
+  registration_request: { icon: '👤', label: 'Registration',   color: '#d97706', bg: '#fef3c7' },
+  general:              { icon: '🔔', label: 'Alert',           color: '#4f46e5', bg: '#e0e7ff' },
+};
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins  = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+// ── Reason-specific guidance for the bell dropdown banner ─────────────────────
+const BANNER_REASON_CARDS = {
+  unsupported: {
+    icon: '⚠️',
+    title: 'Browser Not Supported',
+    body: 'Your browser does not support push notifications. Try using Google Chrome, Microsoft Edge, or Firefox for the best experience.',
+    color: '#92400e',
+    bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+    border: 'rgba(217,119,6,0.15)',
+  },
+  ios_not_pwa: {
+    icon: '📲',
+    title: 'Add to Home Screen First',
+    body: 'On iPhone / iPad, push notifications only work when installed as an app. Tap Share (□↑) → "Add to Home Screen", then open the app from there.',
+    color: '#1e40af',
+    bg: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)',
+    border: 'rgba(59,130,246,0.15)',
+  },
+  denied: {
+    icon: '🚫',
+    title: 'Notifications Blocked',
+    body: 'Notifications have been blocked by your browser.\n\n• Chrome: Click the lock icon (🔒) → Site Settings → Allow Notifications\n• Firefox: Click the lock icon → Permissions\n• Safari: Preferences → Websites → Notifications → Allow',
+    color: '#991b1b',
+    bg: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)',
+    border: 'rgba(239,68,68,0.15)',
+  },
+  dismissed: {
+    icon: '🔕',
+    title: 'Permission Not Granted',
+    body: 'You dismissed the notification prompt. You can try again by clicking the button below.',
+    color: '#92400e',
+    bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+    border: 'rgba(217,119,6,0.15)',
+    retryable: true,
+  },
+  token_failed: {
+    icon: '⚙️',
+    title: 'Setup Failed',
+    body: 'Permission was granted but setup couldn\'t complete. Try disabling ad-blockers or privacy shields, then refresh the page.',
+    color: '#b45309',
+    bg: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
+    border: 'rgba(217,119,6,0.15)',
+    retryable: true,
+  },
+  error: {
+    icon: '❌',
+    title: 'Something Went Wrong',
+    body: 'We couldn\'t set up push notifications. Check your browser\'s privacy settings or ad-blocker and try again.',
+    color: '#991b1b',
+    bg: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)',
+    border: 'rgba(239,68,68,0.15)',
+    retryable: true,
+  },
+};
+
+// ── Enable Notifications Banner ───────────────────────────────────────────────
+function EnableNotificationsBanner({ status, onEnable }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult]   = useState(null);
+
+  const handleEnable = async () => {
+    setLoading(true);
+    setResult(null);
+    const res = await onEnable();
+    setResult(res);
+    setLoading(false);
+  };
+
+  // Already granted — don't show
+  if (status.permission === 'granted') return null;
+
+  // ── Determine which card to show ────────────────────────────────────────────
+
+  // 1) If we have a failed result, show reason-specific error card
+  if (result && !result.success) {
+    const card = BANNER_REASON_CARDS[result.reason] || BANNER_REASON_CARDS.error;
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
+        display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+              {card.title}
+            </div>
+            <div style={{
+              fontSize: 12, color: card.color, lineHeight: 1.45,
+              whiteSpace: 'pre-line', opacity: 0.85,
+            }}>
+              {card.body}
+            </div>
+          </div>
+        </div>
+        {card.retryable && (
+          <button
+            onClick={handleEnable}
+            disabled={loading}
+            style={{
+              background: '#059669', color: '#fff', border: 'none', borderRadius: 8,
+              padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              opacity: loading ? 0.6 : 1,
+              transition: 'opacity 0.15s, transform 0.1s',
+              alignSelf: 'flex-start',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.03)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            {loading ? 'Retrying…' : 'Try Again'}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // 2) iOS not installed as PWA (static, no retry)
+  if (status.isIOS && !status.isPWA) {
+    const card = BANNER_REASON_CARDS.ios_not_pwa;
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+            {card.title}
+          </div>
+          <div style={{ fontSize: 12, color: card.color, lineHeight: 1.45, opacity: 0.85 }}>
+            {card.body}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3) Permission denied — show detailed browser-specific guidance
+  if (status.permission === 'denied') {
+    const card = BANNER_REASON_CARDS.denied;
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+            {card.title}
+          </div>
+          <div style={{
+            fontSize: 12, color: card.color, lineHeight: 1.45,
+            whiteSpace: 'pre-line', opacity: 0.85,
+          }}>
+            {card.body}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4) Browser doesn't support notifications
+  if (!status.supported) {
+    const card = BANNER_REASON_CARDS.unsupported;
+    return (
+      <div style={{
+        padding: '12px 16px',
+        background: card.bg,
+        borderBottom: `1px solid ${card.border}`,
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>{card.icon}</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: card.color, marginBottom: 3 }}>
+            {card.title}
+          </div>
+          <div style={{ fontSize: 12, color: card.color, lineHeight: 1.45, opacity: 0.85 }}>
+            {card.body}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 5) Default: permission is 'default' — show enable button
+  return (
+    <div style={{
+      padding: '12px 16px',
+      background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)',
+      borderBottom: '1px solid rgba(5,150,105,0.12)',
+      display: 'flex', gap: 10, alignItems: 'center',
+    }}>
+      <span style={{ fontSize: 22 }}>🔔</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, color: '#065f46', marginBottom: 2 }}>
+          Stay Updated
+        </div>
+        <div style={{ fontSize: 12, color: '#047857', lineHeight: 1.3 }}>
+          Enable push notifications to never miss important updates.
+        </div>
+      </div>
+      <button
+        id="enable-notifications-btn"
+        onClick={handleEnable}
+        disabled={loading}
+        style={{
+          background: '#059669', color: '#fff', border: 'none', borderRadius: 8,
+          padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          whiteSpace: 'nowrap', flexShrink: 0,
+          opacity: loading ? 0.6 : 1,
+          transition: 'opacity 0.15s, transform 0.1s',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.03)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+      >
+        {loading ? 'Enabling…' : 'Enable'}
+      </button>
+    </div>
+  );
+}
+
+export default function NotificationBell() {
+  const {
+    notifications, unreadCount, markRead, markAllRead,
+    deleteNotification, clearAllNotifications,
+    notificationStatus, requestPermission,
+  } = useNotifications();
+  const [open, setOpen] = useState(false);
+  const ref  = useRef(null);
+  const navigate = useNavigate();
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleItemClick = (notif) => {
+    if (!notif.is_read) markRead(notif.id);
+    const url = notif.data?.click_url;
+    if (url) {
+      // Use React Router for same-origin paths (SPA navigation, no full reload)
+      if (url.startsWith('/')) {
+        navigate(url);
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    }
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
+      {/* ── Bell Button ── */}
+      <button
+        id="notification-bell-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          border: 'none',
+          background: open ? '#f0fdf4' : 'transparent',
+          cursor: 'pointer',
+          transition: 'background 0.2s',
+          padding: 0,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = '#f0fdf4'; }}
+        onMouseLeave={(e) => { if (!open) e.currentTarget.style.background = 'transparent'; }}
+      >
+        {/* Bell SVG */}
+        <svg
+          width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke={open || unreadCount > 0 ? '#059669' : '#6b7280'}
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          style={{
+            animation: unreadCount > 0 ? 'notif-ring 2.5s ease-in-out infinite' : 'none',
+            transformOrigin: 'top center',
+          }}
+        >
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+
+        {/* Unread badge */}
+        {unreadCount > 0 && (
+          <span
+            style={{
+              position: 'absolute',
+              top: 4, right: 4,
+              minWidth: 18, height: 18,
+              borderRadius: 9,
+              background: '#ef4444',
+              color: '#fff',
+              fontSize: 10,
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 4px',
+              boxShadow: '0 0 0 2px #fff',
+              animation: 'notif-badge-pop 0.3s ease',
+            }}
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* ── Dropdown Panel ── */}
+      {open && (
+        <div
+          id="notification-dropdown"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 10px)',
+            right: 0,
+            width: 360,
+            maxWidth: '92vw',
+            maxHeight: 480,
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'rgba(255,255,255,0.97)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(5,150,105,0.15)',
+            borderRadius: 18,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 20px rgba(5,150,105,0.1)',
+            zIndex: 9999,
+            overflow: 'hidden',
+            animation: 'notif-slide-in 0.2s ease',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 16px 12px',
+            borderBottom: '1px solid rgba(5,150,105,0.1)',
+            background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>🔔</span>
+              <span style={{ fontWeight: 700, fontSize: 15, color: '#065f46' }}>
+                Notifications
+              </span>
+              {unreadCount > 0 && (
+                <span style={{
+                  background: '#059669', color: '#fff',
+                  borderRadius: 10, fontSize: 11, fontWeight: 600,
+                  padding: '2px 8px',
+                }}>
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#059669', fontSize: 12, fontWeight: 600,
+                    padding: '4px 8px', borderRadius: 8,
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#d1fae5'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                >
+                  Mark all read ✓
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={clearAllNotifications}
+                  title="Clear all notifications"
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#ef4444', fontSize: 12, fontWeight: 600,
+                    padding: '4px 8px', borderRadius: 8,
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Enable Notifications Banner (shows only when permission isn't granted) */}
+          <EnableNotificationsBanner
+            status={notificationStatus}
+            onEnable={requestPermission}
+          />
+
+          {/* Scrollable list */}
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {notifications.length === 0 ? (
+              <div style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'center', padding: '48px 24px', gap: 12,
+                color: '#9ca3af',
+              }}>
+                <span style={{ fontSize: 40 }}>🔕</span>
+                <span style={{ fontSize: 14 }}>No notifications yet</span>
+              </div>
+            ) : (
+              notifications.map((notif) => {
+                const meta = TYPE_META[notif.notification_type] || TYPE_META.general;
+                return (
+                  <div
+                    key={notif.id}
+                    style={{
+                      position: 'relative',
+                      borderBottom: '1px solid rgba(0,0,0,0.05)',
+                    }}
+                    className="notif-item"
+                  >
+                    <button
+                      onClick={() => handleItemClick(notif)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                        padding: '12px 40px 12px 16px',
+                        border: 'none',
+                        background: notif.is_read
+                          ? 'transparent'
+                          : 'linear-gradient(90deg, rgba(5,150,105,0.05) 0%, transparent 100%)',
+                        cursor: notif.data?.click_url ? 'pointer' : 'default',
+                        textAlign: 'left',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f9fafb';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = notif.is_read
+                          ? 'transparent'
+                          : 'linear-gradient(90deg, rgba(5,150,105,0.05) 0%, transparent 100%)';
+                      }}
+                    >
+                      {/* Icon */}
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                        background: meta.bg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 18,
+                      }}>
+                        {meta.icon}
+                      </div>
+
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontWeight: notif.is_read ? 500 : 700,
+                          fontSize: 13, color: '#111827',
+                          marginBottom: 3,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {notif.title}
+                        </div>
+                        <div style={{
+                          fontSize: 12, color: '#6b7280', lineHeight: 1.4,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}>
+                          {notif.body}
+                        </div>
+                        <div style={{
+                          marginTop: 4, fontSize: 11, color: '#9ca3af',
+                          display: 'flex', alignItems: 'center', gap: 6,
+                        }}>
+                          <span style={{
+                            background: meta.bg, color: meta.color,
+                            borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 600,
+                          }}>
+                            {meta.label}
+                          </span>
+                          <span>{timeAgo(notif.created_at)}</span>
+                        </div>
+                      </div>
+
+                      {/* Unread dot */}
+                      {!notif.is_read && (
+                        <div style={{
+                          width: 8, height: 8, borderRadius: 4,
+                          background: '#059669', flexShrink: 0, marginTop: 4,
+                        }} />
+                      )}
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      className="notif-delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(notif.id);
+                      }}
+                      title="Delete notification"
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        right: 10,
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9ca3af',
+                        fontSize: 16,
+                        lineHeight: 1,
+                        padding: '4px 6px',
+                        borderRadius: 6,
+                        opacity: 1,
+                        transition: 'opacity 0.15s, color 0.15s, background 0.15s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#ef4444';
+                        e.currentTarget.style.background = '#fee2e2';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#9ca3af';
+                        e.currentTarget.style.background = 'none';
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <div style={{
+              padding: '10px 16px',
+              borderTop: '1px solid rgba(5,150,105,0.1)',
+              textAlign: 'center',
+              background: '#fafafa',
+            }}>
+              <span style={{ fontSize: 12, color: '#9ca3af' }}>
+                {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── CSS keyframes (injected once) ── */}
+      <style>{`
+        @keyframes notif-ring {
+          0%, 100% { transform: rotate(0deg); }
+          10%       { transform: rotate(14deg); }
+          20%       { transform: rotate(-11deg); }
+          30%       { transform: rotate(9deg); }
+          40%       { transform: rotate(-7deg); }
+          50%       { transform: rotate(4deg); }
+          60%       { transform: rotate(0deg); }
+        }
+        @keyframes notif-badge-pop {
+          0%   { transform: scale(0); }
+          70%  { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+        @keyframes notif-slide-in {
+          from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        #notification-dropdown::-webkit-scrollbar { width: 6px; }
+        #notification-dropdown::-webkit-scrollbar-track { background: transparent; }
+        #notification-dropdown::-webkit-scrollbar-thumb {
+          background: rgba(5,150,105,0.25); border-radius: 3px;
+        }
+        .notif-item:hover .notif-delete-btn { opacity: 1 !important; }
+      `}
+      </style>
+    </div>
+  );
+}

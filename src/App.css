@@ -1,5 +1,105 @@
 @import "tailwindcss";
 
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.App {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.install-toast {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.install-toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.install-toast-title {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.install-toast-subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.install-toast-actions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.install-toast-btn {
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  padding: 0.38rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.install-toast-btn-primary {
+  color: #ffffff;
+  background: #059669;
+}
+
+.install-toast-btn-primary:hover {
+  background: #047857;
+}
+
+.install-toast-btn-secondary {
+  color: #475569;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.install-toast-btn-secondary:hover {
+  background: #f1f5f9;
+}
+
+@media (max-width: 640px) {
+  .install-toast-actions {
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+}
+
+.role-content {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Expand common page wrappers across roles while preserving modal/dialog max-widths. */
+.role-content :where(
+  [class*="max-w-2xl"][class*="mx-auto"],
+  [class*="max-w-3xl"][class*="mx-auto"],
+  [class*="max-w-4xl"][class*="mx-auto"],
+  [class*="max-w-5xl"][class*="mx-auto"],
+  [class*="max-w-7xl"][class*="mx-auto"],
+  [class*="max-w-[1600px]"][class*="mx-auto"]
+) {
+  max-width: 100%;
+}
+
+@media (min-width: 1280px) {
+  .role-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
 /* @layer utilities {
   .navy-50 {
     background-color: #f8fafc;
@@ -52,3 +152,1144 @@
     overflow: hidden;
   }
 } */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Image Viewer Modal — full-screen photo popup
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.image-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: imageViewerFadeIn 0.25s ease-out;
+  cursor: zoom-out;
+}
+
+.image-viewer-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.image-viewer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.image-viewer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 95vw;
+  max-height: 96vh;
+  animation: imageViewerZoomIn 0.3s ease-out;
+  cursor: default;
+}
+
+.image-viewer-img {
+  max-width: 95vw;
+  max-height: 92vh;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  object-fit: contain;
+  user-select: none;
+}
+
+@keyframes imageViewerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes imageViewerZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Image Crop Modal — crop & resize overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.image-crop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: imageViewerFadeIn 0.2s ease-out;
+  padding: 1rem;
+}
+
+.image-crop-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: imageViewerZoomIn 0.25s ease-out;
+}
+
+.image-crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.image-crop-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.image-crop-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-crop-close-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.image-crop-area {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  background: #111;
+}
+
+@media (min-width: 640px) {
+  .image-crop-area {
+    height: 380px;
+  }
+}
+
+.image-crop-controls {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.image-crop-control-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.image-crop-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #d1fae5, #059669);
+  outline: none;
+  cursor: pointer;
+}
+
+.image-crop-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #059669;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.image-crop-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.image-crop-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #059669;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+  cursor: pointer;
+}
+
+.image-crop-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.image-crop-cancel-btn {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-crop-cancel-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.image-crop-done-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #059669, #047857);
+  border: none;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.image-crop-done-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #047857, #065f46);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.image-crop-done-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Make profile & cover photos clickable */
+.clickable-photo {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-photo:hover {
+  opacity: 0.9;
+  filter: brightness(1.05);
+}
+
+.clickable-cover-photo {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.clickable-cover-photo:hover {
+  filter: brightness(1.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UI ENRICHMENT LAYER
+   Global polish applied app-wide — enriched typography, animated graphics,
+   card depth + shine, button micro-interactions and entrance motion.
+   Theme (emerald/green + navy + gray) is intentionally preserved; this layer
+   only adds richness on top of the existing colors and layout.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ---- 1. Enriched typography -------------------------------------------------- */
+:root {
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Sora", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  letter-spacing: -0.011em;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* ---- 2. Animated graphical backdrop (subtle, behind everything) -------------- */
+.App {
+  position: relative;
+  isolation: isolate;
+}
+
+.App::before,
+.App::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.5;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.App::before {
+  width: 46vw;
+  height: 46vw;
+  max-width: 620px;
+  max-height: 620px;
+  top: -14vw;
+  left: -10vw;
+  background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.18), transparent 70%);
+  animation: blobDriftA 24s ease-in-out infinite;
+}
+
+.App::after {
+  width: 40vw;
+  height: 40vw;
+  max-width: 560px;
+  max-height: 560px;
+  bottom: -12vw;
+  right: -8vw;
+  background: radial-gradient(circle at 70% 70%, rgba(45, 212, 191, 0.16), rgba(56, 189, 248, 0.12) 55%, transparent 72%);
+  animation: blobDriftB 30s ease-in-out infinite;
+}
+
+@keyframes blobDriftA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(8vw, 6vh) scale(1.12); }
+  66%      { transform: translate(-4vw, 10vh) scale(0.95); }
+}
+
+@keyframes blobDriftB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-7vw, -7vh) scale(1.15); }
+}
+
+/* ---- 3. Reusable keyframe library ------------------------------------------- */
+@keyframes uiFadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes uiFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes uiPopIn {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes uiFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes uiShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes uiGradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes uiPulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0); }
+  50%      { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.10); }
+}
+
+/* Animated gradient text — for bg-clip-text headings (e.g. the hero accent). */
+@keyframes uiTextGradient {
+  to { background-position: 200% center; }
+}
+.text-gradient-animate {
+  background-size: 200% auto;
+  animation: uiTextGradient 5s ease-in-out infinite alternate;
+}
+
+/* Scramble/decode text (ScrambleText.jsx): glyphs start blurred + jittered in a
+   monospace face with varied colors, then smoothly settle into the element's
+   final font, size and color. */
+.sc-char {
+  display: inline-block;
+  white-space: pre;
+  transition: filter 0.45s var(--ease-smooth), transform 0.45s var(--ease-spring),
+    opacity 0.45s var(--ease-smooth), color 0.45s var(--ease-smooth);
+}
+.sc-scrambling {
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  filter: blur(5px);
+  opacity: 0.65;
+  transform: translateY(3px) rotate(var(--sc-rot, 0deg)) scale(0.92);
+}
+.sc-done {
+  filter: blur(0);
+  opacity: 1;
+  transform: none;
+}
+/* Element-level scramble (gradient text): blurs as a whole, then resolves. */
+.sc-el-scrambling {
+  filter: blur(6px);
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  transition: filter 0.5s var(--ease-smooth);
+}
+.sc-el-done {
+  filter: blur(0);
+  transition: filter 0.5s var(--ease-smooth);
+}
+
+/* Per-line text entrance with staggered delay via --d (set inline). */
+@keyframes uiTextRise {
+  from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.text-rise {
+  animation: uiTextRise 0.7s var(--ease-smooth) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Section / page titles — opacity+rise entrance (opacity-only safe above fixed children). */
+@keyframes uiRevealTitle {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal-title {
+  animation: uiRevealTitle 0.55s var(--ease-smooth) both;
+}
+
+/* ---- News carousel slide transitions ------------------------------------- */
+/* Wrap slides in .news-carousel-track; each .news-slide fades on show/hide. */
+.news-slide {
+  transition: opacity 0.4s var(--ease-smooth), transform 0.4s var(--ease-smooth);
+}
+.news-slide--hidden {
+  opacity: 0;
+  transform: translateX(24px) scale(0.98);
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+.news-slide--visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+  position: relative;
+}
+
+/* Stat icon glow on hover (complements Tailwind group-hover:scale-105) */
+.stat-icon-glow:hover,
+.group:hover .stat-icon-glow {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18), 0 8px 20px -6px rgba(16, 185, 129, 0.35);
+}
+
+/* Opt-in utility classes (use anywhere) */
+.anim-fade-in-up { animation: uiFadeInUp 0.6s var(--ease-smooth) both; }
+.anim-fade-in    { animation: uiFadeIn 0.6s var(--ease-smooth) both; }
+.anim-pop-in     { animation: uiPopIn 0.5s var(--ease-spring) both; }
+.anim-float      { animation: uiFloat 4s ease-in-out infinite; }
+.anim-pulse-glow { animation: uiPulseGlow 2.6s ease-in-out infinite; }
+
+/* ---- 4. Page / section entrance --------------------------------------------- */
+/* Route-level entrance is handled by <PageTransition> (framer-motion) so the
+   animation re-fires on every navigation, not just on first mount. */
+
+/* ---- 5. Card enrichment (depth + lift) -------------------------------------- */
+/* Targets card-like elements: rounded + shadow, excluding full-screen overlays. */
+.App :where(div, section, article, li, a)[class*="rounded-2xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]),
+.App :where(div, section, article, li, a)[class*="rounded-xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]) {
+  transition: transform 0.35s var(--ease-smooth), box-shadow 0.35s var(--ease-smooth);
+}
+
+.App :where(div, section, article, li, a)[class*="rounded-2xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]):hover,
+.App :where(div, section, article, li, a)[class*="rounded-xl"][class*="shadow"]:not([class*="fixed"]):not([class*="inset-0"]):not([class*="absolute"]):hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 12px 28px -8px rgba(15, 23, 42, 0.16),
+    0 4px 10px -4px rgba(16, 185, 129, 0.10);
+}
+
+/* ---- 6. Button micro-interactions (theme-safe, no layout shift) ------------- */
+button:not(:disabled),
+a[class*="rounded"][class*="bg-"] {
+  transition: transform 0.18s var(--ease-smooth), box-shadow 0.25s var(--ease-smooth),
+    filter 0.2s var(--ease-smooth), background-color 0.2s var(--ease-smooth);
+}
+button:not(:disabled):active {
+  transform: scale(0.96);
+}
+/* Soft glow lift only for prominent filled buttons */
+button:not(:disabled)[class*="bg-emerald"]:hover,
+button:not(:disabled)[class*="bg-green"]:hover,
+button:not(:disabled)[class*="bg-blue"]:hover,
+button:not(:disabled)[class*="bg-indigo"]:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.45);
+}
+
+/* ---- 7. Avatars / round images — gentle interactive pop --------------------- */
+img[class*="rounded-full"] {
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-smooth);
+}
+img[class*="rounded-full"]:hover {
+  transform: scale(1.06);
+}
+
+/* ---- 8. Enriched loading spinner glow --------------------------------------- */
+[class*="animate-spin"][class*="rounded-full"][class*="border-t"] {
+  box-shadow: 0 0 18px -2px rgba(16, 185, 129, 0.35);
+}
+
+/* ---- 9. Premium scrollbar --------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.45) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.55), rgba(20, 184, 166, 0.55));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(5, 150, 105, 0.85), rgba(13, 148, 136, 0.85));
+  background-clip: padding-box;
+}
+
+/* ---- 10. Scroll-reveal (added by uiAnimations.js, never hides content) ------ */
+.reveal-init {
+  opacity: 0;
+  transform: translateY(22px);
+  will-change: opacity, transform;
+}
+.reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.7s var(--ease-smooth), transform 0.7s var(--ease-smooth);
+}
+
+/* ---- 10b. Shared UI kit utilities (Shared/ui/*) ----------------------------- */
+
+/* Translucent "glass" page headers (PageHeader.jsx). Opacity-only entrance keeps
+   it safe above position:fixed descendants — no transform/filter containing block
+   beyond the backdrop-filter, which is scoped to the bar itself. */
+.glass-header {
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+}
+
+/* Shimmer skeleton loaders (Skeleton.jsx) — reuses the uiShimmer keyframe. */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #f0f2f5 25%, #e4e8ed 45%, #f0f2f5 65%);
+  background-size: 400% 100%;
+  animation: uiShimmer 1.6s ease-in-out infinite;
+}
+
+/* Gradient hero banner decoration (PageHero.jsx): animated dot-grid + light
+   sheen for any accent color, layered behind content (content is z-10).
+   Keyframes heroDotDrift / heroSheen are defined here before they are used. */
+@keyframes heroDotDrift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 44px 44px, 0 0; }
+}
+@keyframes heroSheen {
+  0%        { left: -60%; }
+  45%, 100% { left: 130%; }
+}
+
+.ui-hero-deco::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.16) 1.4px, transparent 1.6px),
+    radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.20), transparent 45%);
+  background-size: 22px 22px, 100% 100%;
+  pointer-events: none;
+  animation: heroDotDrift 18s linear infinite;
+}
+.ui-hero-deco::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  z-index: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+  animation: heroSheen 7s ease-in-out infinite;
+}
+
+/* Standard white card surface */
+.card-surface {
+  background-color: #fff;
+  border: 1px solid rgb(243 244 246);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* ---- 12. Branded hero/banner graphics --------------------------------------
+   Targets the app's emerald/green gradient hero blocks (rounded-2xl + white
+   text) and layers an animated dot-grid + slow light sheen *behind* the text,
+   using z-index:-1 within an isolated stacking context so content stays on top
+   and the original gradient/colors are untouched. */
+.App [class*="bg-gradient-to-r"][class*="text-white"][class*="rounded-2xl"]:is(
+    [class*="from-emerald"], [class*="from-green"], [class*="from-teal"]
+  ) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.App [class*="bg-gradient-to-r"][class*="text-white"][class*="rounded-2xl"]:is(
+    [class*="from-emerald"], [class*="from-green"], [class*="from-teal"]
+  )::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.16) 1.4px, transparent 1.6px),
+    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.18), transparent 45%);
+  background-size: 22px 22px, 100% 100%;
+  pointer-events: none;
+  animation: heroDotDrift 18s linear infinite;
+}
+
+.App [class*="bg-gradient-to-r"][class*="text-white"][class*="rounded-2xl"]:is(
+    [class*="from-emerald"], [class*="from-green"], [class*="from-teal"]
+  )::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  z-index: -1;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+  animation: heroSheen 7s ease-in-out infinite;
+}
+
+/* heroDotDrift / heroSheen keyframes are defined earlier near .ui-hero-deco */
+
+/* ---- 13. Round brand badges (avatar circles + stat icons) ------------------
+   Gradient avatar circles and the solid-color stat icons get a glossy top
+   highlight plus a light sheen that sweeps on hover. Decorative layers sit at
+   z-index:-1 in an isolated context, so the white initials/SVG icon stay on
+   top and the ring/shadow (drawn outside the box) is unaffected. */
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  ) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  )::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.4), transparent 55%);
+  pointer-events: none;
+}
+
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  )::after {
+  content: "";
+  position: absolute;
+  top: -120%;
+  left: -10%;
+  z-index: -1;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  transform: skewX(-20deg) translateX(-260%);
+  transition: transform 0.7s var(--ease-smooth);
+  pointer-events: none;
+}
+
+.App :is(
+    [class*="rounded-full"][class*="bg-gradient-to-br"],
+    [class*="rounded-full"][class*="shadow-md"][class*="ring-2"]
+  ):hover::after {
+  transform: skewX(-20deg) translateX(320%);
+}
+
+/* ---- 14. White navbar — faint animated brand accent ------------------------
+   A thin emerald→teal gradient line drifts along the bottom of the top nav,
+   and the active item gains a soft animated underline. Colors/layout intact. */
+.App nav[class*="fixed"][class*="top-0"] {
+  position: fixed; /* already fixed; ensures ::after anchors correctly */
+}
+
+.App nav[class*="fixed"][class*="top-0"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.55),
+    rgba(20, 184, 166, 0.55),
+    rgba(16, 185, 129, 0.55),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: uiGradientShift 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.App nav :is(a, button)[class*="bg-emerald-50"][class*="text-emerald-700"] {
+  position: relative;
+}
+.App nav :is(a, button)[class*="bg-emerald-50"][class*="text-emerald-700"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  height: 2px;
+  width: 0;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #10b981, #14b8a6);
+  transform: translateX(-50%);
+  animation: navUnderlineGrow 0.4s var(--ease-smooth) forwards;
+  pointer-events: none;
+}
+
+@keyframes navUnderlineGrow {
+  from { width: 0; opacity: 0; }
+  to   { width: 60%; opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Breadcrumb Navigation — Premium Edition
+   Full glassmorphic bar with staggered entrance, animated accent line,
+   hover micro-interactions, and a home icon on the root crumb.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes bcSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bcAccentGrow {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+/* ── Nav container ──────────────────────────────────────────────────────── */
+.bc-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  /* Glassmorphic surface */
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.14);
+  /* Subtle top shadow to separate from header */
+  box-shadow:
+    0 1px 0 0 rgba(16, 185, 129, 0.08),
+    0 2px 8px -4px rgba(15, 23, 42, 0.08);
+  overflow: hidden;         /* clip the accent line */
+}
+
+/* ── Animated emerald accent line at bottom ─────────────────────────────── */
+.bc-accent-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0),
+    rgba(16, 185, 129, 0.7) 30%,
+    rgba(20, 184, 166, 0.85) 60%,
+    rgba(16, 185, 129, 0)
+  );
+  transform-origin: left center;
+  animation: bcAccentGrow 0.5s var(--ease-smooth) 0.1s both;
+  pointer-events: none;
+}
+
+/* ── Ordered list reset ─────────────────────────────────────────────────── */
+.bc-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.bc-li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* ── Shared crumb item wrapper ─────────────────────────────────────────── */
+.bc-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  /* Staggered entrance: each crumb is delayed by its index * 55ms */
+  animation: bcSlideIn 0.38s var(--ease-smooth) calc(var(--bc-i, 0) * 55ms) both;
+}
+
+.bc-item--current {
+  gap: 0.35rem;
+}
+
+/* ── Chevron separator (rendered by the link crumb, not as separate element) */
+.bc-chevron {
+  width: 20px;
+  height: 14px;
+  color: rgba(16, 185, 129, 0.45);
+  flex-shrink: 0;
+  margin: 0 1px;
+  transition: color 0.2s ease;
+}
+.bc-item:hover .bc-chevron {
+  color: rgba(16, 185, 129, 0.7);
+}
+
+/* ── Link crumbs ─────────────────────────────────────────────────────────── */
+.bc-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.45rem;
+  border-radius: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #059669;
+  text-decoration: none;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.18s var(--ease-spring);
+}
+
+.bc-link:hover {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.09);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.bc-link:active {
+  transform: scale(0.96);
+}
+
+/* Home icon */
+.bc-home-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+/* Animated underline that grows on hover */
+.bc-underline {
+  position: absolute;
+  bottom: 2px;
+  left: 0.45rem;
+  right: 0.45rem;
+  height: 1.5px;
+  background: linear-gradient(90deg, #10b981, #14b8a6);
+  border-radius: 9999px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s var(--ease-smooth);
+  pointer-events: none;
+}
+.bc-underline--on {
+  transform: scaleX(1);
+}
+
+/* ── Current crumb — animated >> indicator ──────────────────────────────── */
+
+/*  Two single-chevrons that stagger their entrance and then breathe in sync  */
+.bc-dbl-chevron {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;                        /* tight pair: ›› */
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.bc-dbl-chevron__a,
+.bc-dbl-chevron__b {
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  /* Each chevron slides in from the left, then oscillates */
+  animation:
+    bcChevronIn 0.4s var(--ease-spring) both,
+    bcChevronPulse 1.6s ease-in-out infinite;
+}
+
+/* First chevron: enters slightly earlier, pulses in-phase */
+.bc-dbl-chevron__a {
+  animation-delay: 0.08s, 0.5s;
+  opacity: 0.65;
+}
+
+/* Second chevron: enters later, pulses 180° out of phase → ripple effect */
+.bc-dbl-chevron__b {
+  animation-delay: 0.18s, 0.7s;
+  opacity: 0.95;
+}
+
+@keyframes bcChevronIn {
+  from { opacity: 0; transform: translateX(-6px) scale(0.7); }
+  to   { opacity: 1; transform: translateX(0)   scale(1); }
+}
+
+@keyframes bcChevronPulse {
+  0%, 100% { transform: translateX(0);    filter: brightness(1); }
+  50%      { transform: translateX(2px);  filter: brightness(1.3); }
+}
+
+/* ── Current page label ─────────────────────────────────────────────────── */
+.bc-label {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Premium pill badge for the active crumb */
+@keyframes bcBadgeIn {
+  from { opacity: 0; transform: translateY(4px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@keyframes bcBadgeShimmer {
+  0%        { left: -70%; }
+  50%, 100% { left: 120%; }
+}
+
+.bc-label--current {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow: hidden;                       /* clip the shimmer sweep */
+  /* Pill shape */
+  padding: 0.18rem 0.65rem 0.18rem 0.55rem;
+  border-radius: 9999px;
+  /* Emerald gradient fill */
+  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+  /* Crisp white text */
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  max-width: 240px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  /* Glow shadow */
+  box-shadow:
+    0 0 0 1.5px rgba(16, 185, 129, 0.25),
+    0 4px 14px -4px rgba(16, 185, 129, 0.45);
+  /* Entrance */
+  animation: bcBadgeIn 0.4s var(--ease-spring) both;
+  animation-delay: calc(var(--bc-i, 0) * 55ms + 60ms);
+}
+
+/* Shimmer sweep on entry */
+.bc-label--current::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -70%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+  animation: bcBadgeShimmer 2.2s ease-in-out 0.5s both;
+}
+
+/* Blinking vertical cursor — white to contrast the pill */
+.bc-cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 0.72rem;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 1px;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: bcCursorBlink 1.1s step-end infinite;
+  flex-shrink: 0;
+}
+
+@keyframes bcCursorBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ── Home variant: slightly bolder root label ──────────────────────────── */
+.bc-link--home .bc-label {
+  font-weight: 600;
+}
+
+/* ── Responsive tweaks ──────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .bc-list {
+    padding: 0.45rem 0.75rem;
+  }
+  .bc-link {
+    font-size: 0.72rem;
+    max-width: 90px;
+  }
+  /* Pill badge: keep padding, just narrow max-width */
+  .bc-label--current {
+    font-size: 0.7rem;
+    max-width: 110px;
+    padding: 0.14rem 0.5rem 0.14rem 0.42rem;
+  }
+  .bc-chevron {
+    width: 16px;
+    height: 12px;
+  }
+  .bc-home-icon {
+    width: 11px;
+    height: 11px;
+  }
+  .bc-cursor {
+    height: 0.6rem;
+  }
+}
+
+/* ---- 11. Accessibility: respect reduced-motion ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal-init { opacity: 1; transform: none; }
+  .App::before, .App::after { animation: none; }
+}

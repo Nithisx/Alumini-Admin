@@ -1,7 +1,20 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import SuggestionInput from "../Components/Shared/SuggestionInput";
+import { API_BASE, API_SIGNUP_OTP, API_SIGNUP, API_SUGGESTIONS, API_CHECK_USERNAME } from "../config/api";
+import {
+  COLLEGE_NAMES,
+  COURSES,
+  COURSE_BRANCH_MAPPING,
+  STAFF_ONLY_COLLEGE,
+  getCoursesForCollege,
+} from "../constants/academicOptions";
 
-const SIGNUP_OTP_URL = "https://xyndrix.me/api/signup-otp/";
-const SIGNUP_URL = "https://xyndrix.me/api/signup/";
+const api_base = API_BASE;
+
+const SIGNUP_OTP_URL = API_SIGNUP_OTP;
+const SIGNUP_URL = API_SIGNUP;
+const SUGGESTIONS_API = API_SUGGESTIONS;
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -21,138 +34,14 @@ const REQUIRED_FIELDS = [
   "password",
   "confirm_password",
   "otp",
+  "country",
+  "state",
+  "city"
 ];
 
 const ROLES = ["Student", "Alumni", "Staff"];
 const GENDERS = ["Male", "Female", "Other"];
-
-const COLLEGE_NAMES = [
-  "FASCM-Faculty of Arts, Science, Commerce and Management",
-  "FOADP-Faculty of Architecture, Designing and Planning",
-  "FOE-Faculty of Engineering",
-  "FOP-Faculty of Pharmacy",
-  "KAHE",
-];
-
-const COURSES = [
-  "Bachelor of Architecture",
-  "Bachelor of Arts",
-  "Bachelor of Business Administration",
-  "Bachelor of Commerce",
-  "Bachelor of Computer Applications",
-  "Bachelor of Design",
-  "Bachelor of Engineering",
-  "Bachelor of Pharmacy",
-  "Bachelor of Science",
-  "Bachelor of Technology",
-  "Bachelor of Philosophy",
-  "Master of Architecture",
-  "Master of Building and Engineering Management",
-  "Master of Business Administration",
-  "Master of Commerce",
-  "Master of Computer Applications",
-  "Master of Engineering",
-  "Master of Planning",
-  "Master of Science",
-  "Master of Pharmacy",
-  "Master of Philosophy"
-];
-
-const COURSE_BRANCH_MAPPING = {
-  "Bachelor of Architecture": ["General"],
-  "Bachelor of Arts": ["English Literature", "General"],
-  "Bachelor of Business Administration": [
-    "General",
-    "Business Process Services",
-  ],
-  "Bachelor of Commerce": ["General", "Professional Accounting"],
-  "Bachelor of Computer Applications": ["Computer Application", "General"],
-  "Bachelor of Design": ["Interior Design", "General"],
-  "Bachelor of Engineering": [
-    "Aeronautical Engineering",
-    "Aerospace Engineering",
-    "Automobile Engineering",
-    "Bio Medical Engineering",
-    "Chemical Engineering",
-    "Civil Engineering",
-    "Computer Science Engineering",
-    "Electrical & Electronics Engineering",
-    "Electronics & Communication Engineering",
-    "Food Technology",
-    "Information Technology",
-    "Mechanical Engineering",
-    "Computer Science Engineering(Cyber)"
-  ],
-  "Bachelor of Pharmacy": ["Pharmacy"],
-  "Master of Pharmacy": ["Pharmacy"],
-  "Bachelor of Science": [
-    "BioTechnology",
-    "Biochemistry",
-    "Bioinformatics",
-    "Chemistry",
-    "Cognitive Science",
-    "Computer Science",
-    "Computer Technology",
-    "Mathematics",
-    "Microbiology",
-    "Physics",
-    "General",
-  ],
-  "Bachelor of Technology": [
-    "Aeronautical Engineering",
-    "Aerospace Engineering",
-    "Automobile Engineering",
-    "Bio Medical Engineering",
-    "Chemical Engineering",
-    "Civil Engineering",
-    "Computer Science Engineering",
-    "Electrical & Electronics Engineering",
-    "Electronics & Communication Engineering",
-    "Food Technology",
-    "Information Technology",
-    "Mechanical Engineering",
-    "Artificial Intelligence/Data Science"
-  ],
-  "Master of Architecture": ["General"],
-  "Master of Building and Engineering Management": ["General"],
-  "Master of Business Administration": ["General", "Business Process Services"],
-  "Master of Commerce": ["General", "Professional Accounting"],
-  "Master of Computer Applications": ["Computer Application", "General"],
-  "Master of Engineering": [
-    "Aeronautical Engineering",
-    "Aerospace Engineering",
-    "Automobile Engineering",
-    "Bio Medical Engineering",
-    "Chemical Engineering",
-    "Civil Engineering",
-    "Computer Science Engineering",
-    "Electrical & Electronics Engineering",
-    "Electronics & Communication Engineering",
-    "Food Technology",
-    "Information Technology",
-    "Mechanical Engineering",
-    "Power Electronics and Drives",
-    "Power System Engineering",
-    "Structural Engineering",
-    "Structural Engineering (Part Time)",
-    "VLSI",
-    "Water Resources And Environmental Engineering",
-  ],
-  "Master of Planning": ["General"],
-  "Master of Science": [
-    "BioTechnology",
-    "Biochemistry",
-    "Bioinformatics",
-    "Chemistry",
-    "Cognitive Science",
-    "Computer Science",
-    "Computer Technology",
-    "Mathematics",
-    "Microbiology",
-    "Physics",
-    "General",
-  ],
-};
+const SALUTATIONS = ["Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
 
 const InputField = React.memo(
   ({ value, onChange, placeholder, error, type, required = true, label }) => (
@@ -164,11 +53,10 @@ const InputField = React.memo(
       )}
       <input
         type={type || "text"}
-        className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-          error 
-            ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
-            : "border-gray-300"
-        }`}
+        className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${error
+          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+          : "border-gray-300"
+          }`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -185,11 +73,10 @@ const SelectField = React.memo(
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <select
-        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-          error 
-            ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
-            : "border-gray-300"
-        }`}
+        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${error
+          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+          : "border-gray-300"
+          }`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -205,7 +92,27 @@ const SelectField = React.memo(
   )
 );
 
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      <path fill="none" d="M0 0h48v48H0z"/>
+    </svg>
+  );
+}
+
 const Signup = () => {
+  const navigate = useNavigate();
+  const [oauthLoading, setOauthLoading] = useState(false);
+
+  const handleGoogleSignup = useCallback(() => {
+    setOauthLoading(true);
+    window.location.href = `${API_BASE}/auth/google/start/`;
+  }, []);
+
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -227,7 +134,33 @@ const Signup = () => {
     confirm_password: "",
     otp: "",
     profile_photo: "",
+    country: "",
+    state: "",
+    city: "",
+    pincode: "",
+    // Optional extras — wired to PendingSignup fields
+    salutation: "",
+    secondary_email: "",
+    bio: "",
+    home_town: "",
+    current_location: "",
+    Address: "",
+    correspondence_address: "",
+    correspondence_city: "",
+    correspondence_state: "",
+    correspondence_country: "",
+    correspondence_pincode: "",
+    company: "",
+    position: "",
+    current_work: "",
+    work_experience: "",
+    facebook_link: "",
+    linkedin_link: "",
+    twitter_link: "",
+    website_link: ""
   });
+
+  const [showOptional, setShowOptional] = useState(false);
 
   const [signLoading, setSignLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -239,16 +172,81 @@ const Signup = () => {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameDebounceTimer, setUsernameDebounceTimer] = useState(null);
 
+  // Suggestions state
+  const [apiSuggestions, setApiSuggestions] = useState({
+    usernames: [],
+    emails: [],
+    countryCodes: [],
+    countries: [],
+    states: [],
+    cities: [],
+    pincodes: []
+  });
+  const [loadingSuggestions, setLoadingSuggestions] = useState({});
+  const suggestionTimers = useRef({});
+
+  const fetchSuggestions = useCallback(async (type, params) => {
+    try {
+      setLoadingSuggestions(prev => ({ ...prev, [type]: true }));
+      const query = new URLSearchParams(params).toString();
+      const res = await fetch(`${SUGGESTIONS_API}/signup?${query}`);
+      if (res.ok) {
+        const json = await res.json();
+
+        setApiSuggestions(prev => ({
+          ...prev,
+          usernames: json.data?.usernameSuggestions || prev.usernames,
+          emails: json.data?.emailSuggestions || prev.emails,
+          countryCodes: json.data?.countryCodeSuggestions || prev.countryCodes,
+          countries: json.data?.locationSuggestions?.countries || prev.countries,
+          states: json.data?.locationSuggestions?.states || prev.states,
+          cities: json.data?.locationSuggestions?.cities || prev.cities,
+          pincodes: json.data?.locationSuggestions?.pincodes || prev.pincodes,
+        }));
+      }
+    } catch {
+      // ignore fetch errors for suggestions
+    } finally {
+      setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
+    }
+  }, []);
+
+  const debouncedFetch = useCallback((type, params, delay = 300) => {
+    if (suggestionTimers.current[type]) {
+      clearTimeout(suggestionTimers.current[type]);
+    }
+    suggestionTimers.current[type] = setTimeout(() => {
+      fetchSuggestions(type, params);
+    }, delay);
+  }, [fetchSuggestions]);
+
   const availableBranches = useMemo(() => {
     if (!formData.course) return [];
     return COURSE_BRANCH_MAPPING[formData.course] || [];
   }, [formData.course]);
+
+  const availableColleges = useMemo(() => {
+    return formData.role === "Staff"
+      ? COLLEGE_NAMES
+      : COLLEGE_NAMES.filter((college) => college !== STAFF_ONLY_COLLEGE);
+  }, [formData.role]);
+
+  const availableCourses = useMemo(() => {
+    return getCoursesForCollege(formData.college_name);
+  }, [formData.college_name]);
 
   const updateField = useCallback((field, value) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
       if (field === "course") {
         newData.branch = "";
+      }
+      if (field === "college_name") {
+        newData.course = "";
+        newData.branch = "";
+      }
+      if (field === "role" && value !== "Staff" && prev.college_name === STAFF_ONLY_COLLEGE) {
+        newData.college_name = "";
       }
       return newData;
     });
@@ -273,6 +271,10 @@ const Signup = () => {
         errors[field] = "This field is required";
       }
     });
+
+    if (formData.role !== "Staff" && formData.college_name === STAFF_ONLY_COLLEGE) {
+      errors.college_name = "Only staff can select this college";
+    }
 
     if (formData.role !== "Staff" && !formData.course?.trim()) {
       errors.course = "This field is required";
@@ -357,11 +359,16 @@ const Signup = () => {
       });
       const data = await response.json();
 
+      if (!response.ok) {
+        setError(data?.error || data?.message || "Failed to send OTP. Please try again.");
+        return;
+      }
+
       setIsOtpSent(true);
       setResendTimer(120);
       setError("");
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to send OTP");
+    } catch {
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -393,8 +400,8 @@ const Signup = () => {
         }
       };
       input.click();
-    } catch (error) {
-      console.error("Image picker error:", error);
+    } catch {
+      // ignore file picker errors
     }
   };
 
@@ -416,10 +423,17 @@ const Signup = () => {
       const payload = new FormData();
 
       Object.keys(formData).forEach((key) => {
-        if (key !== "profile_photo" && formData[key]) {
+        if (key === "profile_photo") return;
+        if (key === "pincode") return; // mapped separately to zip_code
+        if (formData[key]) {
           payload.append(key, formData[key]);
         }
       });
+
+      // Map frontend `pincode` -> backend `zip_code`
+      if (formData.pincode) {
+        payload.append("zip_code", formData.pincode);
+      }
 
       payload.append("name", `${formData.first_name} ${formData.last_name}`);
 
@@ -428,7 +442,7 @@ const Signup = () => {
         const blob = await response.blob();
         payload.append("profile_photo", blob, "profile_photo.jpg");
       }
-      
+
       if (formData.role) {
         payload.set("role", formData.role);
       }
@@ -448,7 +462,7 @@ const Signup = () => {
       } else {
         setError(data.error || data.message || "Registration failed");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setSignLoading(false);
@@ -459,11 +473,11 @@ const Signup = () => {
     if (usernameDebounceTimer) {
       clearTimeout(usernameDebounceTimer);
     }
-    
+
     if (!username.trim()) {
       return;
     }
-    
+
     if (username.includes('@')) {
       setFieldErrors((prev) => ({
         ...prev,
@@ -471,13 +485,13 @@ const Signup = () => {
       }));
       return;
     }
-    
+
     const timer = setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const response = await fetch(`https://xyndrix.me/api/check-username/?username=${encodeURIComponent(username)}`);
+        const response = await fetch(API_CHECK_USERNAME(username));
         const data = await response.json();
-        
+
         if (!response.ok) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -494,7 +508,7 @@ const Signup = () => {
             username: ""
           }));
         }
-      } catch (err) {
+      } catch {
         setFieldErrors((prev) => ({
           ...prev,
           username: "Error checking username"
@@ -503,16 +517,27 @@ const Signup = () => {
         setIsCheckingUsername(false);
       }
     }, 500);
-    
+
     setUsernameDebounceTimer(timer);
   }, [usernameDebounceTimer]);
 
+  if (oauthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-green-600 font-semibold text-lg">Signing you in with Google...</p>
+          <p className="text-gray-500 text-sm mt-2">Please wait</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
       {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-8 border w-96 shadow-lg rounded-lg bg-white">
+          <div className="relative top-20 mx-auto p-8 border w-11/12 max-w-sm shadow-lg rounded-lg bg-white">
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                 <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,14 +555,14 @@ const Signup = () => {
       )}
 
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
-          <p className="mt-2 text-sm text-gray-600">Join our academic community</p>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <p className="mt-1 text-sm text-gray-500">Join our academic community</p>
         </div>
 
-        <div className="bg-white shadow-lg rounded-lg">
+        <div className="bg-white shadow-lg rounded-2xl border border-gray-100">
           {/* Profile Photo Section */}
-          <div className="px-8 pt-8 pb-6 border-b border-gray-200">
+          <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-5 border-b border-gray-200">
             <div className="flex items-center space-x-6">
               <div className="shrink-0">
                 {formData.profile_photo ? (
@@ -568,7 +593,7 @@ const Signup = () => {
             </div>
           </div>
 
-          <div className="px-8 py-6">
+          <div className="px-4 sm:px-8 py-6">
             {error && (
               <div className="mb-6 rounded-md bg-red-50 p-4">
                 <div className="flex">
@@ -581,6 +606,25 @@ const Signup = () => {
                 </div>
               </div>
             )}
+
+            {/* Google OAuth Sign Up */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                disabled={oauthLoading}
+                className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 rounded-md transition duration-200 disabled:opacity-50 shadow-sm"
+              >
+                <GoogleIcon />
+                Sign up with Google
+              </button>
+
+              <div className="flex items-center my-5">
+                <div className="flex-1 border-t border-gray-300" />
+                <span className="mx-3 text-gray-400 text-sm">or fill in the form below</span>
+                <div className="flex-1 border-t border-gray-300" />
+              </div>
+            </div>
 
             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
               {/* Personal Information */}
@@ -604,24 +648,58 @@ const Signup = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
-                  <InputField
+                  <SelectField
+                    label="Salutation"
+                    options={SALUTATIONS}
+                    value={formData.salutation}
+                    onChange={(v) => updateField("salutation", v)}
+                    error={fieldErrors.salutation}
+                    required={false}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <SuggestionInput
                     label="Email"
                     type="email"
                     value={formData.email}
-                    onChange={(v) => updateField("email", v)}
+                    onChange={(v) => {
+                      updateField("email", v);
+                      if (v.includes("@")) {
+                        debouncedFetch("emails", { email: v });
+                      }
+                    }}
                     placeholder="Enter your email"
                     error={fieldErrors.email}
+                    suggestions={apiSuggestions.emails}
+                    loading={loadingSuggestions.emails}
                   />
                   <div className="relative">
-                    <InputField
+                    <SuggestionInput
                       label="Username"
                       value={formData.username}
                       onChange={(v) => {
                         updateField("username", v);
+                        debouncedFetch("usernames", {
+                          firstName: formData.first_name,
+                          lastName: formData.last_name
+                        });
                         checkUsernameAvailability(v);
+                      }}
+                      onFocus={() => {
+                        if (!apiSuggestions.usernames.length) {
+                          fetchSuggestions("usernames", {
+                            firstName: formData.first_name,
+                            lastName: formData.last_name
+                          });
+                        }
                       }}
                       placeholder="Choose a username"
                       error={fieldErrors.username}
+                      suggestions={apiSuggestions.usernames}
+                      loading={loadingSuggestions.usernames}
+                      showDropdownConditions={!fieldErrors.username}
+                      tickConfirmStyle
                     />
                     {formData.username && (
                       <div className="absolute right-3 top-8">
@@ -641,24 +719,38 @@ const Signup = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-6">
-                  <InputField
-                    label="Country Code"
-                    value={formData.country_code}
-                    onChange={(v) => updateField("country_code", v)}
-                    placeholder="+91"
-                    error={fieldErrors.country_code}
-                  />
-                  <div className="sm:col-span-2">
-                    <InputField
-                      label="Phone"
+                <div className="mt-6 space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Phone <span className="text-red-500">*</span>
+                  </label>
+                  <div className={`flex rounded-md shadow-sm border ${fieldErrors.phone || fieldErrors.country_code ? "border-red-300" : "border-gray-300"} focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors overflow-visible`}>
+                    <div className="relative flex-shrink-0">
+                      <SuggestionInput
+                        value={formData.country_code}
+                        onChange={(v) => {
+                          updateField("country_code", v);
+                          debouncedFetch("countryCodes", { country: formData.country });
+                        }}
+                        onFocus={() => fetchSuggestions("countryCodes", { country: formData.country })}
+                        placeholder="+91"
+                        error={""}
+                        suggestions={apiSuggestions.countryCodes.map(c => c.countryCode)}
+                        loading={loadingSuggestions.countryCodes}
+                        className="w-24"
+                        inputClassName="border-0 border-r border-gray-300 rounded-none rounded-l-md shadow-none focus:ring-0 focus:border-gray-300 bg-gray-50"
+                      />
+                    </div>
+                    <input
                       type="tel"
+                      className="flex-1 px-3 py-2 border-0 rounded-r-md text-sm placeholder-gray-400 focus:outline-none focus:ring-0"
                       value={formData.phone}
-                      onChange={(v) => updateField("phone", v)}
+                      onChange={(e) => updateField("phone", e.target.value)}
                       placeholder="Enter your phone number"
-                      error={fieldErrors.phone}
                     />
                   </div>
+                  {(fieldErrors.country_code || fieldErrors.phone) && (
+                    <p className="text-sm text-red-600">{fieldErrors.country_code || fieldErrors.phone}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
@@ -675,11 +767,10 @@ const Signup = () => {
                     </label>
                     <input
                       type="date"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                        fieldErrors.date_of_birth 
-                          ? "border-red-300 focus:ring-red-500 focus:border-red-500" 
-                          : "border-gray-300"
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${fieldErrors.date_of_birth
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300"
+                        }`}
                       value={formData.date_of_birth}
                       onChange={(e) => updateField("date_of_birth", e.target.value)}
                       max={new Date().toISOString().split("T")[0]}
@@ -687,12 +778,74 @@ const Signup = () => {
                     {fieldErrors.date_of_birth && <p className="text-sm text-red-600">{fieldErrors.date_of_birth}</p>}
                   </div>
                 </div>
+
+                {/* Location Fields */}
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <SuggestionInput
+                    label="Country"
+                    value={formData.country}
+                    onChange={(v) => {
+                      updateField("country", v);
+                      debouncedFetch("countries", { country: v });
+                    }}
+                    onFocus={() => fetchSuggestions("countries", { country: formData.country })}
+                    placeholder="Enter country"
+                    error={fieldErrors.country}
+                    suggestions={apiSuggestions.countries}
+                    loading={loadingSuggestions.countries}
+                    clearOnBlurIfNoMatch
+                  />
+                  <SuggestionInput
+                    label="State"
+                    value={formData.state}
+                    onChange={(v) => {
+                      updateField("state", v);
+                      debouncedFetch("states", { country: formData.country, state: v });
+                    }}
+                    onFocus={() => fetchSuggestions("states", { country: formData.country, state: formData.state })}
+                    placeholder="Enter state"
+                    error={fieldErrors.state}
+                    suggestions={apiSuggestions.states}
+                    loading={loadingSuggestions.states}
+                    clearOnBlurIfNoMatch
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                  <SuggestionInput
+                    label="City"
+                    value={formData.city}
+                    onChange={(v) => {
+                      updateField("city", v);
+                      debouncedFetch("cities", { country: formData.country, state: formData.state, city: v });
+                    }}
+                    onFocus={() => fetchSuggestions("cities", { country: formData.country, state: formData.state, city: formData.city })}
+                    placeholder="Enter city"
+                    error={fieldErrors.city}
+                    suggestions={apiSuggestions.cities}
+                    loading={loadingSuggestions.cities}
+                    clearOnBlurIfNoMatch
+                  />
+                  <SuggestionInput
+                    label="Pincode/Zipcode"
+                    value={formData.pincode}
+                    required={false}
+                    onChange={(v) => {
+                      updateField("pincode", v);
+                      debouncedFetch("pincodes", { country: formData.country, state: formData.state, city: formData.city, pincode: v });
+                    }}
+                    onFocus={() => fetchSuggestions("pincodes", { country: formData.country, state: formData.state, city: formData.city, pincode: formData.pincode })}
+                    placeholder="Enter pincode"
+                    error={fieldErrors.pincode}
+                    suggestions={apiSuggestions.pincodes}
+                    loading={loadingSuggestions.pincodes}
+                  />
+                </div>
               </div>
 
               {/* Academic Information */}
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Academic Information</h3>
-                
+
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <SelectField
                     label="Role"
@@ -703,7 +856,7 @@ const Signup = () => {
                   />
                   <SelectField
                     label="Faculty"
-                    options={COLLEGE_NAMES}
+                    options={availableColleges}
                     value={formData.college_name}
                     onChange={(v) => updateField("college_name", v)}
                     error={fieldErrors.college_name}
@@ -721,7 +874,7 @@ const Signup = () => {
                   />
                   <SelectField
                     label="Course"
-                    options={COURSES}
+                    options={availableCourses}
                     value={formData.course}
                     onChange={(v) => updateField("course", v)}
                     error={fieldErrors.course}
@@ -771,10 +924,264 @@ const Signup = () => {
                 </div>
               </div>
 
+              {/* Additional Information (Optional) */}
+              <div className="pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowOptional((s) => !s)}
+                  className="w-full flex items-center justify-between text-left group"
+                >
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Additional Information
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      All fields below are optional — helps the admin review your profile faster
+                    </p>
+                  </div>
+                  <span className="ml-4 text-green-600 group-hover:text-green-700">
+                    {showOptional ? "Hide" : "Show"}
+                  </span>
+                </button>
+
+                {showOptional && (
+                  <div className="mt-5 space-y-6">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <InputField
+                        label="Secondary Email"
+                        type="email"
+                        value={formData.secondary_email}
+                        onChange={(v) => updateField("secondary_email", v)}
+                        placeholder="alternate@example.com"
+                        required={false}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={3}
+                        maxLength={500}
+                        value={formData.bio}
+                        onChange={(e) => updateField("bio", e.target.value)}
+                        placeholder="Tell us a bit about yourself"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <SuggestionInput
+                        label="Home Town"
+                        value={formData.home_town}
+                        onChange={(v) => {
+                          updateField("home_town", v);
+                          debouncedFetch("cities", { city: v });
+                        }}
+                        onFocus={() => fetchSuggestions("cities", { city: formData.home_town })}
+                        placeholder="Your home town"
+                        required={false}
+                        suggestions={apiSuggestions.cities}
+                        loading={loadingSuggestions.cities}
+                      />
+                      <SuggestionInput
+                        label="Current Location"
+                        value={formData.current_location}
+                        onChange={(v) => {
+                          updateField("current_location", v);
+                          debouncedFetch("cities", { city: v });
+                        }}
+                        onFocus={() => fetchSuggestions("cities", { city: formData.current_location })}
+                        placeholder="City you live in"
+                        required={false}
+                        suggestions={apiSuggestions.cities}
+                        loading={loadingSuggestions.cities}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        value={formData.Address}
+                        onChange={(e) => updateField("Address", e.target.value)}
+                        placeholder="Street / area / landmark"
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-dashed border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-3">Correspondence Address</h4>
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        value={formData.correspondence_address}
+                        onChange={(e) => updateField("correspondence_address", e.target.value)}
+                        placeholder="Correspondence address (if different)"
+                      />
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-4">
+                        <SuggestionInput
+                          label="Correspondence City"
+                          value={formData.correspondence_city}
+                          onChange={(v) => {
+                            updateField("correspondence_city", v);
+                            debouncedFetch("cities", {
+                              country: formData.correspondence_country,
+                              state: formData.correspondence_state,
+                              city: v,
+                            });
+                          }}
+                          onFocus={() => fetchSuggestions("cities", {
+                            country: formData.correspondence_country,
+                            state: formData.correspondence_state,
+                            city: formData.correspondence_city,
+                          })}
+                          placeholder="City"
+                          required={false}
+                          suggestions={apiSuggestions.cities}
+                          loading={loadingSuggestions.cities}
+                        />
+                        <SuggestionInput
+                          label="Correspondence State"
+                          value={formData.correspondence_state}
+                          onChange={(v) => {
+                            updateField("correspondence_state", v);
+                            debouncedFetch("states", {
+                              country: formData.correspondence_country,
+                              state: v,
+                            });
+                          }}
+                          onFocus={() => fetchSuggestions("states", {
+                            country: formData.correspondence_country,
+                            state: formData.correspondence_state,
+                          })}
+                          placeholder="State"
+                          required={false}
+                          suggestions={apiSuggestions.states}
+                          loading={loadingSuggestions.states}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                        <SuggestionInput
+                          label="Correspondence Country"
+                          value={formData.correspondence_country}
+                          onChange={(v) => {
+                            updateField("correspondence_country", v);
+                            debouncedFetch("countries", { country: v });
+                          }}
+                          onFocus={() => fetchSuggestions("countries", { country: formData.correspondence_country })}
+                          placeholder="Country"
+                          required={false}
+                          suggestions={apiSuggestions.countries}
+                          loading={loadingSuggestions.countries}
+                        />
+                        <SuggestionInput
+                          label="Correspondence Pincode"
+                          value={formData.correspondence_pincode}
+                          onChange={(v) => {
+                            updateField("correspondence_pincode", v);
+                            debouncedFetch("pincodes", {
+                              country: formData.correspondence_country,
+                              state: formData.correspondence_state,
+                              city: formData.correspondence_city,
+                              pincode: v,
+                            });
+                          }}
+                          onFocus={() => fetchSuggestions("pincodes", {
+                            country: formData.correspondence_country,
+                            state: formData.correspondence_state,
+                            city: formData.correspondence_city,
+                            pincode: formData.correspondence_pincode,
+                          })}
+                          placeholder="Pincode"
+                          required={false}
+                          suggestions={apiSuggestions.pincodes}
+                          loading={loadingSuggestions.pincodes}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-dashed border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-3">Professional</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <InputField
+                          label="Company"
+                          value={formData.company}
+                          onChange={(v) => updateField("company", v)}
+                          placeholder="Current company"
+                          required={false}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                        <InputField
+                          label="Position"
+                          value={formData.position}
+                          onChange={(v) => updateField("position", v)}
+                          placeholder="Your position"
+                          required={false}
+                        />
+                        <InputField
+                          label="Current Work"
+                          value={formData.current_work}
+                          onChange={(v) => updateField("current_work", v)}
+                          placeholder="What you currently do"
+                          required={false}
+                        />
+                      </div>
+                      <div className="mt-6">
+                        <InputField
+                          label="Work Experience (years)"
+                          type="number"
+                          value={formData.work_experience}
+                          onChange={(v) => updateField("work_experience", v)}
+                          placeholder="e.g. 3.5"
+                          required={false}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-dashed border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-3">Social Links</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <InputField
+                          label="Facebook"
+                          value={formData.facebook_link}
+                          onChange={(v) => updateField("facebook_link", v)}
+                          placeholder="https://facebook.com/…"
+                          required={false}
+                        />
+                        <InputField
+                          label="LinkedIn"
+                          value={formData.linkedin_link}
+                          onChange={(v) => updateField("linkedin_link", v)}
+                          placeholder="https://linkedin.com/in/…"
+                          required={false}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
+                        <InputField
+                          label="Twitter / X"
+                          value={formData.twitter_link}
+                          onChange={(v) => updateField("twitter_link", v)}
+                          placeholder="https://x.com/…"
+                          required={false}
+                        />
+                        <InputField
+                          label="Website"
+                          value={formData.website_link}
+                          onChange={(v) => updateField("website_link", v)}
+                          placeholder="https://…"
+                          required={false}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Email Verification */}
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Email Verification</h3>
-                
+
                 <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
                   <div className="flex justify-between items-center">
                     <div>
@@ -785,11 +1192,10 @@ const Signup = () => {
                       type="button"
                       onClick={handleSendOtp}
                       disabled={resendTimer > 0 || loading}
-                      className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
-                        resendTimer > 0 || loading
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      }`}
+                      className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${resendTimer > 0 || loading
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        }`}
                     >
                       {loading ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : "Send OTP"}
                     </button>
@@ -849,11 +1255,10 @@ const Signup = () => {
                   type="button"
                   onClick={handleSignup}
                   disabled={signLoading}
-                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                    signLoading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  }`}
+                  className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${signLoading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    }`}
                 >
                   {signLoading ? (
                     <div className="flex items-center">

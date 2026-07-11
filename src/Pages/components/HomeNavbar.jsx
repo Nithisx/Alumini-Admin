@@ -9,6 +9,7 @@ import {
   faUser,
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import logo from "../../assets/KAHEAA.svg";
 import "../../App.css";
 
 export default function HomeNavbar() {
@@ -35,10 +36,10 @@ export default function HomeNavbar() {
     navigate("/home");
   };
 
-  // Navigate to dashboard based on user role
+  // Navigate to dashboard
   const goToDashboard = () => {
     if (userRole) {
-      navigate(`/${userRole}/dashboard`);
+      navigate("/dashboard");
     }
   };
 
@@ -51,13 +52,10 @@ export default function HomeNavbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img
-                src="/src/assets/kahelogo.png"
+                src={logo}
                 alt="KAHE Logo"
-                className="h-10 w-10 mr-3"
+                className="h-10 sm:h-12 w-auto max-w-[170px] sm:max-w-[210px] object-contain"
               />
-              <span className="text-xl font-bold text-blue-600">
-                Alumni Network
-              </span>
             </Link>
           </div>
           {/* Desktop Navigation */}
@@ -68,7 +66,7 @@ export default function HomeNavbar() {
             <a href="/#features" className="text-gray-600 hover:text-blue-600">
               Features
             </a>
-            <a href="/#contact" className="text-gray-600 hover:text-blue-600">
+            <a href="/contact" className="text-gray-600 hover:text-blue-600">
               Contact
             </a>
             <div className="flex items-center space-x-2 ml-4">
@@ -101,7 +99,7 @@ export default function HomeNavbar() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/Signup")}
+                    onClick={() => navigate("/signup")}
                     className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center"
                   >
                     <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
@@ -139,7 +137,7 @@ export default function HomeNavbar() {
               Features
             </a>
             <a
-              href="/#contact"
+              href="/contact"
               className="block py-2 px-4 text-gray-600 hover:bg-blue-50 rounded"
             >
               Contact
@@ -174,7 +172,7 @@ export default function HomeNavbar() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/Signup")}
+                    onClick={() => navigate("/signup")}
                     className="py-2 w-full bg-blue-600 text-white rounded-lg flex items-center justify-center"
                   >
                     <FontAwesomeIcon icon={faUserPlus} className="mr-2" />

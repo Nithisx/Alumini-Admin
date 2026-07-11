@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from "../images/logo.png"; // Adjust the path as necessary
+import logo from "../assets/KAHEAA.svg";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -80,21 +80,6 @@ const Header = () => {
     }
   };
 
-  const handleMouseEnter = () => {
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    setAboutDropdownOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    // Set a longer timeout to close the dropdown after a delay
-    timeoutRef.current = setTimeout(() => {
-      setAboutDropdownOpen(false);
-    }, 600); // 600ms delay before closing
-  };
 
   // Clean up timeout on unmount
   useEffect(() => {
@@ -120,255 +105,111 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const isLoggedIn = !!localStorage.getItem("Token");
+
+  const goToDashboard = () => {
+    navigate("/dashboard");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("Token");
+    localStorage.removeItem("Role");
+    navigate("/login");
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-       
-          <div className="flex items-center space-x-4">
-            <img src={logo} alt="KAHEAA Logo" className="h-12 w-auto" />
-            <div className="leading-tight">
-              <h1 className="text-xl font-bold text-green-700">KAHEAA</h1>
-              <p className="text-xs text-gray-600">
-                Karpagam Academy of Higher
-                <br />
-                Education Alumni Association
-              </p>
-            </div>
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+        {/* Logo */}
+        <button onClick={() => navigate("/home")} className="flex items-center bg-transparent p-0">
+          <img src={logo} alt="KAHEAA Logo" className="h-12 sm:h-14 w-auto max-w-[190px] sm:max-w-[240px] object-contain" />
+        </button>
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2 text-sm">
+            {isLoggedIn ? (
+              <>
+                <button onClick={goToDashboard} className="border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition text-sm font-medium">Dashboard</button>
+                <button onClick={handleLogout} className="border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition text-sm font-medium">Logout</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => navigate("/signup")} className="border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition text-sm font-medium">Register</button>
+                <button onClick={() => navigate("/login")} className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition text-sm font-medium">Login</button>
+              </>
+            )}
           </div>
-
-          <div className="hidden md:flex flex-col items-end space-y-1">
-            <div className="text-sm text-gray-800 space-x-2">
-              {localStorage.getItem("Token") ? (
-                <>
-            <button
-              onClick={() => {
-                const role = localStorage.getItem("Role");
-                switch (role) {
-                  case "admin":
-                    navigate("/admin/dashboard");
-                    break;
-                  case "staff":
-                    navigate("/staff/dashboard");
-                    break;
-                  case "alumni":
-                  case "student":
-                    navigate("/alumni/dashboard");
-                    break;
-                  default:
-                    navigate("/home");
-                }
-              }}
-              className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
-            >
-              DASHBOARD
-            </button>
-            <button
-              onClick={() => {
-                localStorage.removeItem("Token");
-                localStorage.removeItem("Role");
-                navigate("/login");
-              }}
-              className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
-            >
-              LOGOUT
-            </button>
-                </>
-              ) : (
-                <>
-            <button
-              onClick={() => navigate("/signup")}
-              className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
-            >
-              REGISTER
-            </button>
-            <button
-              onClick={() => navigate("/login")}
-              className="bg-white border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 transition"
-            >
-              LOGIN
-            </button>
-                </>
-              )}
-            </div>
-
-            <nav className="flex gap-4 text-sm text-gray-700">
-              {/* About dropdown - added padding to create a larger hover area */}
-
-            <button
-              onClick={() => handleNavigation("/about")}
-              className="hover:text-green-700 bg-transparent"
-            >
-              About Us
-            </button>
-
-            <button
-              onClick={() => handleNavigation("/#news-section")}
-              className="hover:text-green-700 bg-transparent"
-            >
-              Newsroom
-            </button>
-            <button
-              onClick={() => handleNavigation("/#member-section")}
-              className="hover:text-green-700 bg-transparent"
-            >
-              Members
-            </button>
-            <button
-              onClick={() => handleNavigation("/#events-section")}
-              className="hover:text-green-700 bg-transparent"
-            >
-              Events
-            </button>
-            <button
-              onClick={() => handleNavigation("/#chapters-section")}
-              className="hover:text-green-700 bg-transparent"
-            >
-              Chapters
-            </button>
-            <button
-              onClick={() => handleNavigation("/#contact-section")}
-              className="hover:text-green-700 bg-transparent"
-            >
-              Contact Us
-            </button>
+          <nav className="flex gap-5 text-sm text-gray-700">
+            {[
+              { label: "About Us", path: "/about" },
+              { label: "Newsroom", path: "/#news-section" },
+              { label: "Members", path: "/#member-section" },
+              { label: "Events", path: "/#events-section" },
+              { label: "Chapters", path: "/#chapters-section" },
+              { label: "Contact Us", path: "/contact" },
+            ].map(({ label, path }) => (
+              <button key={label} onClick={() => handleNavigation(path)} className="hover:text-green-700 bg-transparent font-medium transition-colors">
+                {label}
+              </button>
+            ))}
           </nav>
         </div>
 
-        {/* Mobile Toggle */}
+        {/* Mobile hamburger */}
         <button
-          className="md:hidden text-2xl text-green-700"
+          className="md:hidden p-2 rounded-md text-green-700 hover:bg-green-50 transition"
           onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
         >
-          {menuOpen ? <FaTimes /> : <FaBars />}
+          {menuOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile slide-down menu */}
       {menuOpen && (
-        <div className="md:hidden px-4 pb-4">
-          <div className="text-sm text-gray-800 mb-2 space-x-2 text-right">
-            {localStorage.getItem("Token") ? (
+        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
+          {/* Auth buttons */}
+          <div className="flex gap-3 px-5 py-4 border-b border-gray-100">
+            {isLoggedIn ? (
               <>
-                <button
-                  onClick={() => {
-                    const role = localStorage.getItem("Role");
-                    switch (role) {
-                      case "admin":
-                        navigate("/admin/dashboard");
-                        break;
-                      case "staff":
-                        navigate("/staff/dashboard");
-                        break;
-                      case "alumni":
-                      case "student":
-                        navigate("/alumni/dashboard");
-                        break;
-                      default:
-                        navigate("/home");
-                    }
-                    setMenuOpen(false);
-                  }}
-                  className="hover:underline bg-transparent"
-                >
-                  DASHBOARD
+                <button onClick={() => { goToDashboard(); setMenuOpen(false); }}
+                  className="flex-1 border border-green-700 text-green-700 py-2.5 rounded-lg text-sm font-medium hover:bg-green-50 transition">
+                  Dashboard
                 </button>
-                <span>::</span>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem("Token");
-                    localStorage.removeItem("Role");
-                    navigate("/login");
-                    setMenuOpen(false);
-                  }}
-                  className="hover:underline bg-transparent"
-                >
-                  LOGOUT
+                <button onClick={() => { handleLogout(); setMenuOpen(false); }}
+                  className="flex-1 border border-red-400 text-red-600 py-2.5 rounded-lg text-sm font-medium hover:bg-red-50 transition">
+                  Logout
                 </button>
               </>
             ) : (
               <>
-                <button
-                  onClick={() => {
-                    navigate("/signup");
-                    setMenuOpen(false);
-                  }}
-                  className="hover:underline bg-transparent"
-                >
-                  REGISTER
+                <button onClick={() => { navigate("/signup"); setMenuOpen(false); }}
+                  className="flex-1 border border-green-700 text-green-700 py-2.5 rounded-lg text-sm font-medium hover:bg-green-50 transition">
+                  Register
                 </button>
-                <span>::</span>
-                <button
-                  onClick={() => {
-                    navigate("/login");
-                    setMenuOpen(false);
-                  }}
-                  className="hover:underline bg-transparent"
-                >
-                  LOGIN
+                <button onClick={() => { navigate("/login"); setMenuOpen(false); }}
+                  className="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition">
+                  Login
                 </button>
               </>
             )}
           </div>
-          <nav className="flex flex-col gap-2 text-sm text-gray-700">
-            {/* Mobile About section with submenu */}
-            <div className="mb-2">
-              <button
-                onClick={() => handleNavigation("/about")}
-                className="hover:text-green-700 bg-transparent text-left font-medium"
-              >
-                About Us
+          {/* Nav links */}
+          <nav className="flex flex-col px-5 py-3 gap-1">
+            {[
+              { label: "About Us", path: "/about" },
+              { label: "Newsroom", path: "/#news-section" },
+              { label: "Members", path: "/#member-section" },
+              { label: "Events", path: "/#events-section" },
+              { label: "Chapters", path: "/#chapters-section" },
+              { label: "Contact Us", path: "/contact" },
+            ].map(({ label, path }) => (
+              <button key={label} onClick={() => { handleNavigation(path); setMenuOpen(false); }}
+                className="text-left py-3 px-2 text-gray-700 hover:text-green-700 hover:bg-green-50 rounded-lg text-base font-medium bg-transparent border-b border-gray-50 last:border-0 transition-colors">
+                {label}
               </button>
-              <div className="ml-4 mt-1 flex flex-col gap-1">
-                <button
-                  onClick={() => handleNavigation("/about#overview")}
-                  className="text-gray-600 hover:text-green-700 text-left text-xs bg-transparent"
-                >
-                  Overview
-                </button>
-                <button
-                  onClick={() => handleNavigation("/about#vision-mission")}
-                  className="text-gray-600 hover:text-green-700 text-left text-xs bg-transparent"
-                >
-                  Vision & Mission
-                </button>
-                <button
-                  onClick={() => handleNavigation("/about#administration")}
-                  className="text-gray-600 hover:text-green-700 text-left text-xs bg-transparent"
-                >
-                  Administration
-                </button>
-              </div>
-            </div>
-            <button
-              onClick={() => handleNavigation("/#news-section")}
-              className="hover:text-green-700 bg-transparent text-left"
-            >
-              Newsroom
-            </button>
-            <button
-              onClick={() => handleNavigation("/#member-section")}
-              className="hover:text-green-700 bg-transparent text-left"
-            >
-              Members
-            </button>
-            <button
-              onClick={() => handleNavigation("/#events-section")}
-              className="hover:text-green-700 bg-transparent text-left"
-            >
-              Events
-            </button>
-            <button
-              onClick={() => handleNavigation("/#chapters-section")}
-              className="hover:text-green-700 bg-transparent text-left"
-            >
-              Chapters
-            </button>
-            <button
-              onClick={() => handleNavigation("/#contact-section")}
-              className="hover:text-green-700 bg-transparent text-left"
-            >
-              Contact Us
-            </button>
+            ))}
           </nav>
         </div>
       )}

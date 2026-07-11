@@ -3,9 +3,21 @@ import Image1 from "../images/image1.jpeg";
 import Image2 from "../images/image2.jpg";
 import Image3 from "../images/image3.jpg";
 import { useNavigate } from "react-router-dom";
-const AlumniHeroSection = ({ data }) => {
+import ScrambleText from "../Components/Shared/ScrambleText";
+const AlumniHeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
+  const token = localStorage.getItem("Token");
+  const role = localStorage.getItem("Role");
+  const isAuthorized = Boolean(token && role);
+  const primaryCtaLabel = isAuthorized ? "View Members" : "Join Our Community";
+  const primaryCtaPath = isAuthorized ? "/members" : "/signup";
+  const heroHeadingPrefix = isAuthorized ? "Welcome to" : "Welcome to";
+  const heroHeadingAccent = isAuthorized ? "KAHE Alumni" : "KAHE Alumni";
+  const heroDescription = isAuthorized
+    ? "Join a distinguished community of accomplished alumni. Build meaningful connections, advance your career, and contribute to our legacy of excellence."
+    : "Join a distinguished community of accomplished alumni. Build meaningful connections, advance your career, and contribute to our legacy of excellence.";
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % 3);
@@ -32,36 +44,45 @@ const AlumniHeroSection = ({ data }) => {
         ></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-6 py-20">
-        <div className="grid lg:grid-cols-2 gap-16 items-center min-h-[80vh]">
+      <div className="relative z-10 container mx-auto px-0 py-10 sm:py-20">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[70vh] sm:min-h-[80vh]">
           {/* Left Content */}
-          <div className="space-y-8">
-            <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-100 rounded-full text-green-700 text-sm font-medium">
+          <div className="space-y-8 px-4 sm:px-6 lg:pl-8">
+            <div className="text-rise inline-flex items-center px-4 py-2 bg-green-50 border border-green-100 rounded-full text-green-700 text-sm font-medium" style={{ "--d": "60ms" }}>
               <div className="w-2 h-2 bg-green-600 rounded-full mr-2 animate-pulse"></div>
               Alumni Network
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-slate-900 leading-tight">
-                Welcome to
-                <span className="block bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500 bg-clip-text text-transparent mt-2">
-                  KAHE Alumni
-                </span>
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-slate-900 leading-tight">
+                <ScrambleText
+                  as="span"
+                  text={heroHeadingPrefix}
+                  className="inline-block"
+                  duration={1300}
+                  delay={150}
+                />
+                <ScrambleText
+                  as="span"
+                  text={heroHeadingAccent}
+                  gradient
+                  className="text-gradient-animate block bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500 bg-clip-text text-transparent mt-2"
+                  duration={1700}
+                  delay={650}
+                />
               </h1>
 
-              <p className="text-xl lg:text-2xl text-slate-600 leading-relaxed max-w-2xl">
-                Join a distinguished community of accomplished alumni. Build
-                meaningful connections, advance your career, and contribute to
-                our legacy of excellence.
+              <p className="text-rise text-base sm:text-xl lg:text-2xl text-slate-600 leading-relaxed max-w-2xl" style={{ "--d": "480ms" }}>
+                {heroDescription}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="text-rise flex flex-col sm:flex-row gap-4 pt-4" style={{ "--d": "620ms" }}>
               <button
                 className="group px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate(primaryCtaPath)}
               >
-                <span>Join Our Community</span>
+                <span>{primaryCtaLabel}</span>
                 <svg
                   className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
                   fill="none"
@@ -152,23 +173,30 @@ const AlumniHeroSection = ({ data }) => {
             </div>
 
             {/* Floating Elements */}
-            <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl rotate-12 opacity-80"></div>
-            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg rotate-45 opacity-60"></div>
+            <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl rotate-12 opacity-80 anim-float" />
+            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg rotate-45 opacity-60 anim-float" style={{ animationDelay: '1.5s' }} />
           </div>
         </div>
       </div>
 
-      {/* Bottom Wave */}
+      {/* Bottom Wave — transitions hero into white page body */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg
           viewBox="0 0 1440 120"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none"
+          className="w-full h-20"
         >
           <path
             d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
             fill="white"
-            fillOpacity="0.1"
+            fillOpacity="0.85"
+          />
+          <path
+            d="M0 120L80 105C160 90 320 60 480 55C640 50 800 70 960 78C1120 86 1280 82 1360 80L1440 78V120Z"
+            fill="white"
+            fillOpacity="0.5"
           />
         </svg>
       </div>

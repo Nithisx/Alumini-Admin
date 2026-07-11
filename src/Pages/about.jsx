@@ -17,13 +17,22 @@ import Leadership from "./about_components/LeadershipSection";
 import Faculty from "./about_components/FacultySection";
 import Departments from "./about_components/DepartmentsSection";
 import Registrar from "./about_components/RegistrarSection";
-import Logo from "../images/logo.png"; // Assuming you have a logo image
-import RegisterRequest from "../Components/Admin/Auth/LoginRequest";
+import Logo from "../assets/KAHEAA.svg";
+import RegisterRequest from "../Components/Features/Auth/LoginRequest";
 import RegistrationCertificate from "./about_components/RegistrstionCertificate";
+import RoleHeader from "../Components/Features/RoleHeader";
 const About = () => {
   // Track the active section based on URL hash
   const [activeSection, setActiveSection] = useState("overview");
   const [activeAdminSection, setActiveAdminSection] = useState(null);
+  const token = localStorage.getItem("Token");
+  const role = localStorage.getItem("Role");
+  const isAuthorized = Boolean(token && role);
+
+  const renderHeader = () => {
+    if (!isAuthorized) return <Header />;
+    return <RoleHeader />;
+  };
 
   // Handle URL hash changes
   useEffect(() => {
@@ -53,23 +62,21 @@ const About = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-green-100">
-      <Header />
+      {renderHeader()}
       <div className="flex-grow py-12">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex items-center justify-center mb-12">
+          <div className="flex flex-col items-center justify-center mb-12 text-center">
             <img
               src={Logo}
               alt="KAHE Logo"
-              className="w-28 h-28 rounded-lg mr-4 object-contain bg-white shadow"
+              className="h-20 sm:h-24 w-auto max-w-[280px] sm:max-w-[340px] object-contain"
             />
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-green-800">
-                About KAHE
-              </h1>
-              <h2 className="text-xl text-green-600">
-                Karpagam Academy of Higher Education
-              </h2>
-            </div>
+            <h1 className="mt-4 text-3xl md:text-4xl font-bold text-green-800">
+              About KAHE
+            </h1>
+            <h2 className="text-xl text-green-600">
+              Karpagam Academy of Higher Education
+            </h2>
           </div>
 
           {/* Navigation Tabs */}
