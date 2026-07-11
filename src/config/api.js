@@ -211,6 +211,7 @@ export const API_ENDORSEMENT_DELETE      = (id) => `${API_BASE}/endorsements/${i
 export const API_RBAC_PERMISSIONS        = `${API_BASE}/rbac/permissions/`;
 export const API_RBAC_ROLES              = `${API_BASE}/rbac/roles/`;
 export const API_RBAC_ROLE_PERMISSIONS   = (roleName) => `${API_BASE}/rbac/roles/${encodeURIComponent(roleName)}/permissions/`;
+export const API_RBAC_ROLE_DETAIL        = (roleName) => `${API_BASE}/rbac/roles/${encodeURIComponent(roleName)}/`;
 export const API_RBAC_USER_ROLE          = (userId) => `${API_BASE}/rbac/users/${userId}/role/`;
 export const API_RBAC_USER_PERMISSIONS   = (userId) => `${API_BASE}/rbac/users/${userId}/permissions/`;
 
