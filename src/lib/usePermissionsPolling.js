@@ -13,7 +13,7 @@ import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { fetchPermissions, selectPermissions } from "../store/permissionsSlice";
-import { getToken } from "./authToken";
+import { getRole } from "./authToken";
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -27,10 +27,10 @@ export default function usePermissionsPolling() {
 
   useEffect(() => {
     // Only poll while authenticated — never hit /me/permissions/ on public pages.
-    if (!getToken()) return undefined;
+    if (!getRole()) return undefined;
 
     const interval = setInterval(async () => {
-      if (!getToken()) return; // logged out since the last tick — skip silently
+      if (!getRole()) return; // logged out since the last tick — skip silently
       const before = [...permissionsRef.current].sort();
       const action = await dispatch(fetchPermissions());
       if (fetchPermissions.fulfilled.match(action)) {

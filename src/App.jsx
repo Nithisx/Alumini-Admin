@@ -9,7 +9,7 @@ import "./App.css";
 import Loader from "./Pages/Loder";
 import { useDispatch } from "react-redux";
 import { fetchPermissions } from "./store/permissionsSlice";
-import { getToken } from "./lib/authToken";
+import { getRole } from "./lib/authToken";
 import usePermissionsPolling from "./lib/usePermissionsPolling";
 
 
@@ -30,7 +30,7 @@ export default function App() {
   // Load the caller's effective RBAC permissions once at boot if a session
   // exists (fetched from the backend — not embedded in the JWT).
   useEffect(() => {
-    if (getToken()) dispatch(fetchPermissions());
+    if (getRole()) dispatch(fetchPermissions());
   }, [dispatch]);
 
   useEffect(() => {

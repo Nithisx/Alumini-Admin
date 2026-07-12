@@ -10,7 +10,6 @@ import {
   API_MAP_SCATTER, API_USER_LOCATIONS, API_CHAPTER_MEMBERS,
   API_MAP_USER_SEARCH, API_USER_MAP_LOCATION, API_ORIGIN,
 } from '../../../config/api';
-import { authHeader } from '../../../lib/authToken';
 
 const MEDIA_BASE_URL = API_ORIGIN;
 
@@ -205,9 +204,7 @@ const MapComponent = () => {
     }
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`${API_MAP_USER_SEARCH}?q=${encodeURIComponent(q)}`, {
-          headers: { Authorization: authHeader() },
-        });
+        const res = await fetch(`${API_MAP_USER_SEARCH}?q=${encodeURIComponent(q)}`);
         if (!res.ok) return;
         setUserMatches(await res.json());
       } catch {
@@ -224,9 +221,7 @@ const MapComponent = () => {
     if (!username || !mapRef.current) return;
     (async () => {
       try {
-        const res = await fetch(`${API_USER_MAP_LOCATION}?username=${encodeURIComponent(username)}`, {
-          headers: { Authorization: authHeader() },
-        });
+        const res = await fetch(`${API_USER_MAP_LOCATION}?username=${encodeURIComponent(username)}`);
         if (!res.ok) {
           setLocationStatus({ type: 'error', text: 'This member has no location on the map.' });
           return;
@@ -246,7 +241,7 @@ const MapComponent = () => {
     try {
       const response = await fetch(API_MAP_SCATTER, {
         method: 'GET',
-        headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
       });
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
@@ -340,8 +335,7 @@ const MapComponent = () => {
     setCityMembersError(null);
     try {
       const res = await fetch(
-        `${API_CHAPTER_MEMBERS}?type=city&value=${encodeURIComponent(item.label)}&page_size=50`,
-        { headers: { Authorization: authHeader() } }
+        `${API_CHAPTER_MEMBERS}?type=city&value=${encodeURIComponent(item.label)}&page_size=50`
       );
       if (!res.ok) throw new Error('Failed to load members for this city');
       const data = await res.json();
@@ -379,7 +373,7 @@ const MapComponent = () => {
         try {
           const res = await fetch(API_USER_LOCATIONS, {
             method: 'POST',
-            headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               latitude: String(pos.coords.latitude),
               longitude: String(pos.coords.longitude),

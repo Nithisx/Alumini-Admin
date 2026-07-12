@@ -20,6 +20,7 @@ import {
   onForegroundMessage,
   clearOSNotifications,
 } from '../../lib/webpush.js';
+import { getRole } from '../../lib/authToken.js';
 import {
   API_NOTIFICATIONS,
   API_NOTIFICATION_READ,
@@ -52,7 +53,7 @@ export function NotificationProvider({ children }) {
   const pollingRef = useRef(null);
   const navigate   = useNavigate();
 
-  const authToken = localStorage.getItem('Token');
+  const authToken = getRole();
 
   // ── Refresh the notification status (e.g. after user grants permission) ────
   const refreshStatus = useCallback(() => {
@@ -63,9 +64,7 @@ export function NotificationProvider({ children }) {
   const fetchNotifications = useCallback(async () => {
     if (!authToken) return;
     try {
-      const res = await fetch(`${API_NOTIFICATIONS}?limit=50`, {
-        headers: { Authorization: `Token ${authToken}` },
-      });
+      const res = await fetch(`${API_NOTIFICATIONS}?limit=50`);
       if (!res.ok) return;
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.results || []);
@@ -80,10 +79,7 @@ export function NotificationProvider({ children }) {
   const markRead = useCallback(async (id) => {
     if (!authToken) return;
     try {
-      await fetch(API_NOTIFICATION_READ(id), {
-        method: 'POST',
-        headers: { Authorization: `Token ${authToken}` },
-      });
+      await fetch(API_NOTIFICATION_READ(id), { method: 'POST' });
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );
@@ -97,10 +93,7 @@ export function NotificationProvider({ children }) {
   const markAllRead = useCallback(async () => {
     if (!authToken) return;
     try {
-      await fetch(API_NOTIFICATION_READ_ALL, {
-        method: 'POST',
-        headers: { Authorization: `Token ${authToken}` },
-      });
+      await fetch(API_NOTIFICATION_READ_ALL, { method: 'POST' });
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (err) {
@@ -112,10 +105,7 @@ export function NotificationProvider({ children }) {
   const deleteNotification = useCallback(async (id) => {
     if (!authToken) return;
     try {
-      await fetch(API_NOTIFICATION_DELETE(id), {
-        method: 'DELETE',
-        headers: { Authorization: `Token ${authToken}` },
-      });
+      await fetch(API_NOTIFICATION_DELETE(id), { method: 'DELETE' });
       setNotifications((prev) => prev.filter((n) => n.id !== id));
       setUnreadCount((c) => {
         const notif = notifications.find((n) => n.id === id);
@@ -130,10 +120,7 @@ export function NotificationProvider({ children }) {
   const clearAllNotifications = useCallback(async () => {
     if (!authToken) return;
     try {
-      await fetch(API_NOTIFICATION_CLEAR_ALL, {
-        method: 'DELETE',
-        headers: { Authorization: `Token ${authToken}` },
-      });
+      await fetch(API_NOTIFICATION_CLEAR_ALL, { method: 'DELETE' });
       setNotifications([]);
       setUnreadCount(0);
     } catch (err) {

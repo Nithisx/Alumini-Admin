@@ -4,6 +4,7 @@ import {
   unregisterNotificationToken,
   onForegroundMessage,
 } from '../../lib/webpush';
+import { getRole } from '../../lib/authToken';
 
 export default function FCMDiagnostics() {
   const [regs,       setRegs]       = useState([]);
@@ -76,7 +77,7 @@ export default function FCMDiagnostics() {
         <button
           onClick={async () => {
             append('Requesting permission…');
-            const result = await requestNotificationPermission(localStorage.getItem('Token'));
+            const result = await requestNotificationPermission(getRole());
             const raw = localStorage.getItem('pushSubscription');
             setStoredSub(raw ? JSON.parse(raw) : null);
             setPermission(Notification.permission);
@@ -89,7 +90,7 @@ export default function FCMDiagnostics() {
         <button
           onClick={async () => {
             append('Unregistering subscription…');
-            await unregisterNotificationToken(localStorage.getItem('Token'));
+            await unregisterNotificationToken(getRole());
             setStoredSub(null);
             setPermission(Notification.permission);
             append('unregisterNotificationToken finished.');

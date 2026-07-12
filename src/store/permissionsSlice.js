@@ -8,7 +8,7 @@
  */
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { API_BASE } from "../config/api";
-import { authHeader, getRole } from "../lib/authToken";
+import { getRole } from "../lib/authToken";
 
 const LS_KEY = "app:permissions";
 
@@ -31,12 +31,9 @@ function saveCache(permissions, role) {
 export const fetchPermissions = createAsyncThunk(
   "permissions/fetch",
   async (_arg, { rejectWithValue }) => {
-    const header = authHeader();
-    if (!header) return rejectWithValue("no-token");
+    if (!getRole()) return rejectWithValue("no-session");
     try {
-      const res = await fetch(`${API_BASE}/me/permissions/`, {
-        headers: { Authorization: header, "Content-Type": "application/json" },
-      });
+      const res = await fetch(`${API_BASE}/me/permissions/`);
       if (!res.ok) throw new Error(res.statusText);
       const body = await res.json();
       const data = body?.data ?? body;

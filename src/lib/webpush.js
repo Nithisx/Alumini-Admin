@@ -150,14 +150,9 @@ async function registerSubscriptionWithBackend(sub, authToken) {
   if (localStorage.getItem(key) === cacheKey) return;
 
   const { API_PUSH_REGISTER } = await import('../config/api.js');
-  const { authHeader } = await import('./authToken.js');
   const res = await fetch(API_PUSH_REGISTER, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // JWT ("Bearer …") or legacy token ("Token …") — the stored credential.
-      Authorization: authHeader() || `Token ${authToken}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ endpoint: sub.endpoint, p256dh, auth, device_type: 'web' }),
   });
 
@@ -201,7 +196,7 @@ async function acquireAndRegisterSubscription(authToken) {
  * Silently registers the push subscription if permission is already 'granted'.
  * Safe to call on page load — never prompts the user.
  *
- * @param {string} authToken — Django auth token
+ * @param {string} authToken — stable per-session key (role string) used to namespace this device's cached push-subscription state; auth itself is the httpOnly cookie
  * @returns {Promise<PushSubscription|null>}
  */
 export async function registerExistingPermission(authToken) {
@@ -222,7 +217,7 @@ export async function registerExistingPermission(authToken) {
  *
  * ⚠️  MUST be called from a user-initiated event (button click, tap).
  *
- * @param {string} authToken — Django auth token
+ * @param {string} authToken — stable per-session key (role string) used to namespace this device's cached push-subscription state; auth itself is the httpOnly cookie
  * @returns {Promise<{ success: boolean, token?: string, reason?: string }>}
  */
 export async function requestNotificationPermission(authToken) {
@@ -257,7 +252,7 @@ export async function requestNotificationPermission(authToken) {
 /**
  * Unregisters the push subscription from the backend and clears local storage.
  *
- * @param {string} authToken — Django auth token
+ * @param {string} authToken — stable per-session key (role string) used to namespace this device's cached push-subscription state; auth itself is the httpOnly cookie
  */
 export async function unregisterNotificationToken(authToken) {
   if (!authToken) return;
@@ -288,10 +283,7 @@ export async function unregisterNotificationToken(authToken) {
     const { API_PUSH_UNREGISTER } = await import('../config/api.js');
     await fetch(API_PUSH_UNREGISTER, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Token ${authToken}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ endpoint }),
     });
   } catch {
@@ -305,7 +297,7 @@ export async function unregisterNotificationToken(authToken) {
  * Returns the cached push endpoint for the given auth token, or null if not registered.
  * Used by the logout flow to pass the endpoint to the backend atomically.
  *
- * @param {string} authToken
+ * @param {string} authToken — cache-namespace key (see notes above)
  * @returns {string|null}
  */
 export function getCachedEndpoint(authToken) {

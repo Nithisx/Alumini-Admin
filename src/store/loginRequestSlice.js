@@ -4,9 +4,10 @@ import { API_APPROVE_SIGNUP, API_APPROVE_SIGNUP_DETAIL } from "../config/api";
 const API_URL = API_APPROVE_SIGNUP;
 const EDIT_URL = (id) => API_APPROVE_SIGNUP_DETAIL(id);
 
+// Auth is the httpOnly cookie; CSRF header is attached automatically by
+// lib/axiosInstance.js's global fetch patch for unsafe methods.
 function authHeaders() {
-  const token = typeof window !== "undefined" ? localStorage.getItem("Token") : null;
-  return { Authorization: `Token ${token}`, "Content-Type": "application/json" };
+  return { "Content-Type": "application/json" };
 }
 
 export const fetchLoginRequests = createAsyncThunk(

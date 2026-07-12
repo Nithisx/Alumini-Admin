@@ -9,12 +9,17 @@ import {
 import { getMediaUrl, API_CHAT_HOST } from "../../../config/api";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
 import { createResilientSocket } from "../../Shared/chat/resilientSocket";
+import { getRole } from "../../../lib/authToken";
 
 const API_HOST = API_CHAT_HOST;
 const WS_HOST  = API_CHAT_HOST.replace(/^https?:\/\//, "");
 
-const getToken = () => localStorage.getItem("Token");
-const authH    = () => ({ Authorization: `Token ${getToken()}`, "Content-Type": "application/json" });
+// Auth is the httpOnly cookie — sent automatically on both REST fetches (see
+// lib/axiosInstance.js's global fetch patch) and the WebSocket handshake
+// (browsers attach cookies to the WS upgrade request same as any other
+// same-site request, no JS opt-in needed). getRole() is only used as an
+// "am I logged in" gate, never as a credential.
+const authH = () => ({ "Content-Type": "application/json" });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -343,10 +348,10 @@ const Chat = () => {
 
   // ── Global WebSocket ───────────────────────────────────────────────────────
   const connectGlobalSocket = () => {
-    if (!getToken()) return;
+    if (!getRole()) return;
     closeGlobalSocket();
     const sock = createResilientSocket({
-      getUrl: () => { const t = getToken(); return t ? `wss://${WS_HOST}/ws/chat/?token=${encodeURIComponent(t)}` : null; },
+      getUrl: () => (getRole() ? `wss://${WS_HOST}/ws/chat/` : null),
       onOpen: () => sock.send({ action: "bootstrap" }),
       onDown: () => restBootstrapFallback(),
       onMessage: (data) => {
@@ -450,8 +455,7 @@ const Chat = () => {
 
   // ── API helpers ────────────────────────────────────────────────────────────
   const getCurrentUser = async () => {
-    const token = getToken();
-    if (!token) return;
+    if (!getRole()) return;
     try {
       const r = await fetch(`${API_HOST}/chat/user/me/`, { headers: authH() });
       if (r.ok) { setCurrentUser(await r.json()); return; }
@@ -463,8 +467,7 @@ const Chat = () => {
   };
 
   const loadRooms = async () => {
-    const token = getToken();
-    if (!token) return;
+    if (!getRole()) return;
     setLoading(true);
     try {
       const r = await fetch(`${API_HOST}/chat/rooms/`, { headers: authH() });
@@ -473,8 +476,7 @@ const Chat = () => {
   };
 
   const loadCommunityChat = async () => {
-    const token = getToken();
-    if (!token) return;
+    if (!getRole()) return;
     try {
       const r = await fetch(`${API_HOST}/chat/community/`, { headers: authH() });
       if (r.ok) {
@@ -575,20 +577,19 @@ const Chat = () => {
 
   // ── WebSocket (per-room) ───────────────────────────────────────────────────
   const connectWebSocket = useCallback((roomId, isCommunity = false, roomName = "") => {
-    if (!getToken()) return;
+    if (!getRole()) return;
     closeSocket();
     setIsConnected(false);
     setMessages([]);
 
     const sock = createResilientSocket({
       getUrl: () => {
-        const t = getToken();
-        if (!t) return null;
+        if (!getRole()) return null;
         if (isCommunity) {
           const roomType = roomName === "Developer Community" ? "developer" : "general";
-          return `wss://${WS_HOST}/ws/community-chat/?token=${encodeURIComponent(t)}&room=${roomType}`;
+          return `wss://${WS_HOST}/ws/community-chat/?room=${roomType}`;
         }
-        return `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/?token=${encodeURIComponent(t)}`;
+        return `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/`;
       },
       onOpen: () => setIsConnected(true),
       onDown: () => { setIsConnected(false); loadMessagesHTTP(roomId); },
@@ -709,7 +710,6 @@ const Chat = () => {
         formData.append("file", mediaPreview.file);
         const res = await fetch(`${API_HOST}/chat/upload/`, {
           method: "POST",
-          headers: { Authorization: `Token ${getToken()}` },
           body: formData,
         });
         if (res.ok) {
@@ -916,8 +916,7 @@ const Chat = () => {
     return canModerate;
   };
 
-  const token = getToken();
-  if (!token) {
+  if (!getRole()) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="anim-pop-in bg-white rounded-2xl shadow p-8 max-w-sm w-full text-center">

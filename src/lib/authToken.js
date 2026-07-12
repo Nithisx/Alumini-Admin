@@ -1,18 +1,28 @@
 /**
- * Central auth-token accessors + JWT role decoding.
+ * Central auth accessors.
  *
- * Storage keys (unchanged from legacy so existing sessions survive):
- *   "Token" — the credential. Now a JWT when the backend issued one at login;
- *             a legacy DRF token for sessions predating the JWT rollout.
+ * The real credential now lives in an httpOnly `auth_token` cookie, set by
+ * the backend on every login response (api/tokens.py::attach_auth_cookie)
+ * and sent automatically by the browser on every request (see
+ * lib/axiosInstance.js — withCredentials + CSRF header wiring). That's the
+ * mechanism ~10 call sites (NotificationProvider, webpush, logout, Chat,
+ * Map, EngagementPanel, the Redux slices, permissionsSlice, App.jsx) were
+ * migrated to rely on exclusively during this same pass.
  *
- * The role is DECODED from the JWT payload — it is not stored as a separate
- * localStorage key (that key is deprecated). Legacy DRF tokens are opaque, so
- * for those we fall back to the cached role written at login.
+ * getToken()/setToken() below still ALSO mirror the JWT into localStorage's
+ * "Token" key, purely for backward compatibility: 60+ other components
+ * across the app (Members, Events, Albums, Business, Post, Profile, Audit,
+ * etc.) still read that key directly to build their own Authorization
+ * headers, and migrating all of them is a separate, larger pass that needs
+ * real browser testing, not something to do blind in the same sitting.
+ * Do not remove this dual-write until every one of those call sites is
+ * migrated to cookie-based auth — removing it before then silently breaks
+ * data-fetching across most of the app (they'd send `Authorization: Token
+ * null` / find no token and bail, not fall back to the cookie).
  */
 
 const TOKEN_KEY = 'Token';
-// Deprecated but still read as a fallback for pre-JWT (legacy token) sessions.
-const LEGACY_ROLE_KEY = 'Role';
+const ROLE_KEY = 'Role';
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -23,23 +33,18 @@ export function setToken(token) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-export function clearAuth() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(LEGACY_ROLE_KEY);
+export function getRole() {
+  return localStorage.getItem(ROLE_KEY);
 }
 
-/**
- * Persist the credential from a login/OAuth response. Prefers the JWT (whose
- * payload carries the role) and falls back to the legacy DRF token. The
- * optional roleKey is written under the deprecated "Role" key purely so
- * legacy-token sessions (no JWT) can still resolve a role.
- */
-export function storeLoginCredential(data, roleKey) {
-  const credential = data?.jwt || data?.token;
-  if (!credential) return false;
-  localStorage.setItem(TOKEN_KEY, credential);
-  if (roleKey) localStorage.setItem(LEGACY_ROLE_KEY, roleKey);
-  return true;
+export function setRole(role) {
+  if (role) localStorage.setItem(ROLE_KEY, role);
+  else localStorage.removeItem(ROLE_KEY);
+}
+
+export function clearAuth() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(ROLE_KEY);
 }
 
 /** True if the string looks like a three-segment JWT. */
@@ -47,19 +52,10 @@ function isJwt(token) {
   return typeof token === 'string' && token.split('.').length === 3;
 }
 
-/** Decode a JWT payload without verifying (verification is server-side). */
-export function decodeJwtPayload(token) {
-  try {
-    const part = token.split('.')[1];
-    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
-    return JSON.parse(decodeURIComponent(escape(json)));
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Authorization header value for the stored credential:
+ * Authorization header value for the mirrored localStorage credential —
+ * still needed by the 60+ not-yet-migrated call sites; the ~10 migrated
+ * ones no longer call this at all (cookie handles them).
  *   JWT   → "Bearer <jwt>"
  *   token → "Token <key>"   (legacy sessions)
  */
@@ -70,15 +66,18 @@ export function authHeader() {
 }
 
 /**
- * The user's role. Prefers the JWT payload; falls back to the legacy "Role"
- * key for opaque-token sessions. Returned verbatim from the backend
- * ("Admin" | "Manager" | "Moderator" | "Staff" | "Alumni" | "Student").
+ * Record a successful login/OAuth response. The backend already set the
+ * httpOnly cookie on the same response; this mirrors the JWT into
+ * localStorage too (see file header) and caches the role for UI gating.
+ * Prefers `data.role` (present on every login payload); `roleKey` is an
+ * optional caller-supplied fallback. Returns false if no credential/role
+ * could be determined.
  */
-export function getRole() {
-  const token = getToken();
-  if (isJwt(token)) {
-    const payload = decodeJwtPayload(token);
-    if (payload?.role) return payload.role;
-  }
-  return localStorage.getItem(LEGACY_ROLE_KEY) || null;
+export function storeLoginCredential(data, roleKey) {
+  const credential = data?.jwt || data?.token;
+  const role = data?.role || roleKey;
+  if (!credential && !role) return false;
+  if (credential) setToken(credential);
+  if (role) setRole(role);
+  return true;
 }

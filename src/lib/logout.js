@@ -13,23 +13,22 @@
 
 import { toast } from 'react-toastify';
 import { getCachedEndpoint, unregisterNotificationToken } from './webpush.js';
+import { getRole } from './authToken.js';
 import { API_LOGOUT } from '../config/api.js';
 
 export async function performLogout() {
-  const token    = localStorage.getItem('Token');
+  const token    = getRole();
   const endpoint = getCachedEndpoint(token);
 
   // ── 1. Atomic backend cleanup ─────────────────────────────────────────────
   // Call /logout/ with the push endpoint so the server deactivates just this
-  // device's subscription and deletes the auth token, regardless of whether
+  // device's subscription and deletes the auth token (the httpOnly cookie,
+  // sent automatically — see lib/axiosInstance.js), regardless of whether
   // the async browser cleanup below completes in time.
   try {
     await fetch(API_LOGOUT, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Token ${token}` } : {}),
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(endpoint ? { endpoint } : {}),
     });
   } catch {

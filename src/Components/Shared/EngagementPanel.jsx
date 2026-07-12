@@ -16,8 +16,9 @@ import { toast } from "react-toastify";
 import { API_BASE, API_ORIGIN, API_CHAT_SEARCH, API_PORTAL_SHARE } from "../../config/api";
 
 const API_ROOT = API_BASE;
-const getToken = () => localStorage.getItem("Token");
-const authHeaders = () => ({ Authorization: `Token ${getToken()}`, "Content-Type": "application/json" });
+// Auth is the httpOnly cookie (sent automatically, see lib/axiosInstance.js's
+// global fetch patch) — these calls only need Content-Type here.
+const authHeaders = () => ({ "Content-Type": "application/json" });
 
 const ALLOWED_SHARE_MODES = ["link", "status", "story", "post", "portal"];
 const ALLOWED_SHARE_PLATFORMS = ["generic", "native", "whatsapp", "instagram", "facebook", "x", "linkedin", "telegram", "portal"];
@@ -160,7 +161,6 @@ const ReplyItem = ({ reply, contentType, canModerate, isPostOwner, currentUserId
     try {
       const res = await fetch(`${API_ROOT}/${contentType}/comments/replies/${reply.id}/`, {
         method: "DELETE",
-        headers: { Authorization: `Token ${getToken()}` },
       });
       if (!res.ok) throw new Error();
       onDeleted(reply.id);
@@ -258,7 +258,6 @@ const CommentItem = ({ comment, contentType, canModerate, isPostOwner, currentUs
     try {
       const res = await fetch(`${API_ROOT}/${contentType}/comments/${comment.id}/`, {
         method: "DELETE",
-        headers: { Authorization: `Token ${getToken()}` },
       });
       if (!res.ok) throw new Error();
       onDeleted(comment.id);
@@ -471,11 +470,7 @@ const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-
     if (!q.trim()) { setResults([]); return; }
     setSearching(true);
     try {
-      const token = localStorage.getItem("Token");
-      const r = await fetch(
-        `${API_CHAT_SEARCH}?q=${encodeURIComponent(q)}`,
-        { headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" } }
-      );
+      const r = await fetch(`${API_CHAT_SEARCH}?q=${encodeURIComponent(q)}`);
       if (r.ok) setResults(await r.json());
     } catch { /* ignore */ } finally { setSearching(false); }
   }, []);
@@ -489,10 +484,9 @@ const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-
     if (sent[userId] || sending === userId) return;
     setSending(userId);
     try {
-      const token = localStorage.getItem("Token");
       const r = await fetch(API_PORTAL_SHARE, {
         method: "POST",
-        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: shareToken, target: "chat", target_user_id: userId }),
       });
       if (r.ok) {
@@ -508,10 +502,9 @@ const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-
     if (sendingAll) return;
     setSendingAll(true);
     try {
-      const token = localStorage.getItem("Token");
       const r = await fetch(API_PORTAL_SHARE, {
         method: "POST",
-        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: shareToken, target: "community" }),
       });
       if (r.ok) { setShareToAll(true); toast.success("Shared to Community Chat!"); }

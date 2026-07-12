@@ -1,13 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { API_BASE } from "../config/api";
 
-function getToken() {
-  return typeof window !== "undefined" ? localStorage.getItem("Token") : null;
-}
-
-function authHeaders() {
-  return { Authorization: `Token ${getToken()}`, "Content-Type": "application/json" };
-}
+// Auth is the httpOnly cookie, sent automatically (see lib/axiosInstance.js's
+// global fetch patch) — no headers needed here.
 
 export const fetchAuditLogs = createAsyncThunk(
   "audit/fetchLogs",
@@ -20,7 +15,7 @@ export const fetchAuditLogs = createAsyncThunk(
           else params.set(k, v);
         }
       });
-      const res = await fetch(`${API_BASE}/audit-logs/?${params}`, { headers: authHeaders() });
+      const res = await fetch(`${API_BASE}/audit-logs/?${params}`);
       if (!res.ok) throw new Error(res.statusText);
       const data = await res.json();
       return { ...data, silent };
@@ -37,7 +32,7 @@ export const fetchAuditFilters = createAsyncThunk(
       const url = usernameQ
         ? `${API_BASE}/audit-logs/filters/?username_q=${encodeURIComponent(usernameQ)}`
         : `${API_BASE}/audit-logs/filters/`;
-      const res = await fetch(url, { headers: authHeaders() });
+      const res = await fetch(url);
       if (!res.ok) throw new Error(res.statusText);
       return await res.json();
     } catch (err) {
@@ -50,7 +45,7 @@ export const fetchAuditDetail = createAsyncThunk(
   "audit/fetchDetail",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${API_BASE}/audit-logs/${id}/`, { headers: authHeaders() });
+      const res = await fetch(`${API_BASE}/audit-logs/${id}/`);
       if (!res.ok) throw new Error(res.statusText);
       return await res.json();
     } catch (err) {
