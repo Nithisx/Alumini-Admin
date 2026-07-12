@@ -28,6 +28,7 @@ export const API_SIGNUP         = `${API_BASE}/signup/`;
 export const API_SIGNUP_OTP     = `${API_BASE}/signup-otp/`;
 export const API_FORGOT_PASSWORD  = `${API_BASE}/forgot-password/`;
 export const API_CHANGE_PASSWORD  = `${API_BASE}/change-password/`;
+export const API_TOKEN_REFRESH  = `${API_BASE}/auth/refresh/`;
 export const API_GOOGLE_OAUTH   = `${API_BASE}/auth/google/`;
 export const API_GOOGLE_SIGNUP  = `${API_BASE}/auth/google/signup/`;
 export const API_ME_PERMISSIONS = `${API_BASE}/me/permissions/`;
