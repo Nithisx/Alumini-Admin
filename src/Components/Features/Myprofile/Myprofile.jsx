@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react"
 import { toast } from "react-toastify";
-import axios from "../../../lib/axiosInstance"
 import SuggestionInput from "../../Shared/SuggestionInput"
 import ImageViewerModal from "../../Shared/ImageViewerModal"
 import ImageCropModal from "../../Shared/ImageCropModal"
 import { LoadingScreen, ErrorScreen } from "../../Shared/ui"
-import { API_BASE, API_PROFILE, API_FORGOT_PASSWORD, API_CHANGE_PASSWORD, API_SUGGESTIONS, API_USER_COURSES, API_USER_COURSE } from "../../../config/api"
+import { API_BASE } from "../../../config/api"
+import { useProfileStore, useAuthStore } from "../../../stores"
 import { COURSES, COURSE_BRANCH_MAPPING, COLLEGE_NAMES } from "../../../constants/academicOptions"
 import { getCoursesForCollege } from "../../../constants/academicOptions"
 import {
@@ -37,13 +37,9 @@ import {
 } from "lucide-react"
 
 // API Configuration
-const API_URL = API_PROFILE
-const FORGOT_PASSWORD_URL = API_FORGOT_PASSWORD
-const CHANGE_PASSWORD_URL = API_CHANGE_PASSWORD
 const BASE_URL = API_BASE.replace(/\/api\/v1\/?$/, "")
 const DEFAULT_PROFILE_IMAGE = "https://placehold.co/100?text=Profile"
 const DEFAULT_COVER_IMAGE = "https://placehold.co/400x150?text=Cover+Photo"
-const SUGGESTIONS_API = API_SUGGESTIONS;
 
 const ACADEMIC_COURSES = [
   "Bachelor of Architecture",
@@ -98,6 +94,9 @@ const getMediaUrl = (uri) => {
 }
 
 const ProfileScreen = () => {
+  const profileStore = useProfileStore()
+  const authStore = useAuthStore()
+
   const [profile, setProfile] = useState({
     id: null,
     first_name: "",
@@ -201,20 +200,15 @@ const ProfileScreen = () => {
   const fetchSuggestions = useCallback(async (type, params) => {
     try {
       setLoadingSuggestions(prev => ({ ...prev, [type]: true }));
-      const query = new URLSearchParams(params).toString();
-      const res = await fetch(`${SUGGESTIONS_API}/profile?${query}`);
-      if (res.ok) {
-        const json = await res.json();
-
-        setApiSuggestions(prev => ({
-          ...prev,
-          usernames: json.data?.usernameSuggestions || prev.usernames,
-          countries: json.data?.locationSuggestions?.countries || prev.countries,
-          states: json.data?.locationSuggestions?.states || prev.states,
-          cities: json.data?.locationSuggestions?.cities || prev.cities,
-          zipcodes: json.data?.locationSuggestions?.zipcodes || json.data?.locationSuggestions?.pincodes || prev.zipcodes,
-        }));
-      }
+      const json = await profileStore.suggestions(params);
+      setApiSuggestions(prev => ({
+        ...prev,
+        usernames: json.data?.usernameSuggestions || prev.usernames,
+        countries: json.data?.locationSuggestions?.countries || prev.countries,
+        states: json.data?.locationSuggestions?.states || prev.states,
+        cities: json.data?.locationSuggestions?.cities || prev.cities,
+        zipcodes: json.data?.locationSuggestions?.zipcodes || json.data?.locationSuggestions?.pincodes || prev.zipcodes,
+      }));
     } catch { /* ignore */ } finally {
       setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
     }
@@ -266,13 +260,8 @@ const ProfileScreen = () => {
     setLoading(true)
     setError("")
     try {
-      const token = localStorage.getItem("Token")
-      if (!token) throw new Error("Authentication required.")
-      const response = await fetch(API_URL, {
-        headers: { Authorization: `Token ${token}` },
-      })
-      if (!response.ok) throw new Error("Failed to fetch profile.")
-      const data = await response.json()
+      const data = await profileStore.load({ force: true })
+      if (!data) throw new Error("Failed to fetch profile.")
 
       // Safe JSON parsing function
       const safeJsonParse = (value, fallback) => {
@@ -311,9 +300,7 @@ const ProfileScreen = () => {
     setForgotPasswordMessage("")
 
     try {
-      await axios.post(FORGOT_PASSWORD_URL, {
-        email: profile.email,
-      })
+      await authStore.forgotPassword(profile.email)
 
       setForgotPasswordMessage("Check your mail to change the password")
 
@@ -334,13 +321,7 @@ const ProfileScreen = () => {
 
   const fetchCourses = async () => {
     try {
-      const token = localStorage.getItem("Token")
-      if (!token) return
-      const res = await fetch(API_USER_COURSES, { headers: { Authorization: `Token ${token}` } })
-      if (res.ok) {
-        const data = await res.json()
-        setCourses(Array.isArray(data) ? data : [])
-      }
+      setCourses(await profileStore.fetchCourses())
     } catch { /* ignore */ }
   }
 
@@ -348,24 +329,15 @@ const ProfileScreen = () => {
     if (!addCourseForm.course) { toast.error("Course is required"); return }
     setAddCourseLoading(true)
     try {
-      const token = localStorage.getItem("Token")
-      const res = await fetch(API_USER_COURSES, {
-        method: "POST",
-        headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(addCourseForm),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        const msg = data?.non_field_errors?.[0] || data?.detail || data?.error || "Failed to add course"
-        toast.error(msg)
-        return
-      }
+      const data = await profileStore.addCourse(addCourseForm)
       toast.success("Course added successfully")
       setCourses((prev) => [...prev, data])
       setShowAddCourseModal(false)
       setAddCourseForm({ course: "", branch: "", stream: "", roll_no: "", college_name: "", course_start_year: "", course_end_year: "", passed_out_year: "" })
-    } catch {
-      toast.error("Failed to add course")
+    } catch (err) {
+      // Surface the field message (bad year, duplicate roll no) over the generic one.
+      const first = Object.values(err?.details || {})[0]
+      toast.error((Array.isArray(first) ? first[0] : first) || err.message || "Failed to add course")
     } finally {
       setAddCourseLoading(false)
     }
@@ -374,20 +346,11 @@ const ProfileScreen = () => {
   const handleDeleteCourse = async (courseId) => {
     setDeletingCourseId(courseId)
     try {
-      const token = localStorage.getItem("Token")
-      const res = await fetch(API_USER_COURSE(courseId), {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      })
-      if (res.ok || res.status === 204) {
-        setCourses((prev) => prev.filter((c) => c.id !== courseId))
-        toast.success("Course removed")
-      } else {
-        const data = await res.json().catch(() => ({}))
-        toast.error(data?.error || "Failed to remove course")
-      }
-    } catch {
-      toast.error("Failed to remove course")
+      await profileStore.removeCourse(courseId)
+      setCourses((prev) => prev.filter((c) => c.id !== courseId))
+      toast.success("Course removed")
+    } catch (err) {
+      toast.error(err.message || "Failed to remove course")
     } finally {
       setDeletingCourseId(null)
     }
@@ -454,12 +417,6 @@ const ProfileScreen = () => {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const token = localStorage.getItem("Token")
-      if (!token) {
-        setSaving(false)
-        throw new Error("Authentication required.")
-      }
-
       if (!profile.first_name?.trim() || !profile.email?.trim()) {
         setSaving(false)
         throw new Error("Name and email are required fields.")
@@ -561,13 +518,7 @@ const ProfileScreen = () => {
         formData.append("cover_photo", profile.cover_photo_file)
       }
 
-      // Send the data to the API using FormData
-      await axios.put(API_URL, formData, {
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      })
+      await profileStore.replace(formData)
 
       setSaving(false)
       setModalVisible(false)
@@ -622,20 +573,9 @@ const ProfileScreen = () => {
     setChangePasswordMessage({ text: "", type: "" })
 
     try {
-      const token = localStorage.getItem("Token")
-      if (!token) throw new Error("Authentication required.")
-
-      await axios.post(
-        CHANGE_PASSWORD_URL,
-        {
-          old_password: changePasswordForm.current_password,
-          new_password: changePasswordForm.new_password,
-        },
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        }
+      await authStore.changePassword(
+        changePasswordForm.current_password,
+        changePasswordForm.new_password,
       )
 
       setChangePasswordMessage({ text: "Password changed successfully", type: "success" })

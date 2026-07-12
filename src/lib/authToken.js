@@ -42,6 +42,16 @@ export function setRole(role) {
   else localStorage.removeItem(ROLE_KEY);
 }
 
+/**
+ * Is there a signed-in session? The credential itself is an httpOnly cookie the
+ * JS can't read, so presence of the cached role — written on every successful
+ * login and cleared on logout — is the client-side signal. Never gate a UI
+ * action on this: it says "signed in", not "allowed" (see lib/usePermissions).
+ */
+export function isAuthenticated() {
+  return Boolean(getRole());
+}
+
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(ROLE_KEY);

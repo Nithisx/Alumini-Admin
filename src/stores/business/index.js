@@ -39,6 +39,20 @@ export default class BusinessStore extends ContentStore {
     }
   }
 
+  /** `formData` carries one or more `images`. */
+  uploadImages(id, formData) {
+    return api.upload(`${LIST}${id}/images/`, formData, { raw: true });
+  }
+
+  /**
+   * The images endpoint resolves a bare id in the album/business slot to the
+   * IMAGE itself (see the backend's get_object fallback), which is how the UI
+   * has always deleted one — keep the shape rather than guess a new one.
+   */
+  deleteImage(imageId) {
+    return api.delete(`${LIST}${imageId}/images/`);
+  }
+
   /** One call for the whole page: listings + the category facets beside them. */
   async load() {
     await Promise.all([this.fetchAll(), this.fetchCategories().catch(() => [])]);

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Header from "./Header";
 import Footer from "./about_components/Footer";
 import RoleHeader from "../Components/Features/RoleHeader";
+import { isAuthenticated } from "../lib/authToken";
 
 const ADMIN_EMAIL = "alumni@kahedu.edu.in";
 
@@ -11,9 +12,7 @@ const Contact = () => {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
-  const token = localStorage.getItem("Token");
-  const role = localStorage.getItem("Role");
-  const isAuthorized = Boolean(token && role);
+  const isAuthorized = isAuthenticated();
 
   const renderHeader = () => {
     if (!isAuthorized) return <Header />;

@@ -2,11 +2,10 @@ import React from "react";
 import Header from "./Header";
 import Footer from "./about_components/Footer";
 import RoleHeader from "../Components/Features/RoleHeader";
+import { isAuthenticated } from "../lib/authToken";
 
 const TermsOfService = () => {
-  const token = localStorage.getItem("Token");
-  const role = localStorage.getItem("Role");
-  const isAuthorized = Boolean(token && role);
+  const isAuthorized = isAuthenticated();
 
   const renderHeader = () => {
     if (!isAuthorized) return <Header />;

@@ -5,7 +5,10 @@
  */
 import { makeAutoObservable, runInAction } from "mobx";
 import api from "../../services/apiClient";
-import { API_AUDIT_LOGS, API_AUDIT_LOG_DETAIL, API_AUDIT_LOG_FILTERS } from "../../config/api";
+import { API_AUDIT_LOGS, API_AUDIT_LOG_DETAIL, API_AUDIT_LOG_FILTERS, API_BASE } from "../../config/api";
+
+const BLOCKED_ENTITIES_URL = `${API_BASE}/blocked-entities/`;
+const AUDIT_EXPORT_URL = `${API_BASE}/audit-logs/export/`;
 
 export default class AuditStore {
   logs = [];
@@ -72,6 +75,33 @@ export default class AuditStore {
     } catch { /* non-fatal */ } finally {
       runInAction(() => { this.filtersLoading = false; });
     }
+  }
+
+  /** CSV/JSON export of the current selection or filter set → a Blob. */
+  exportLogs(query) {
+    return api.raw("get", `${AUDIT_EXPORT_URL}?${query}`, { responseType: "blob" });
+  }
+
+  // ── Blocked / whitelisted entities (the second tab of this page) ──────────
+  async fetchBlockedEntities({ entityType, mode, search } = {}) {
+    const params = {};
+    if (entityType) params.entity_type = entityType;
+    if (mode) params.mode = mode;
+    if (search) params.search = search;
+    const data = await api.get(BLOCKED_ENTITIES_URL, { params, raw: true });
+    return Array.isArray(data) ? data : data?.results || [];
+  }
+
+  createBlockedEntity(payload) {
+    return api.post(BLOCKED_ENTITIES_URL, payload, { raw: true });
+  }
+
+  updateBlockedEntity(id, payload) {
+    return api.patch(`${BLOCKED_ENTITIES_URL}${id}/`, payload, { raw: true });
+  }
+
+  deleteBlockedEntity(id) {
+    return api.delete(`${BLOCKED_ENTITIES_URL}${id}/`);
   }
 
   async fetchDetail(id) {

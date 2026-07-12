@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../assets/KAHEAA.svg";
 import "../../App.css";
+import { isAuthenticated, getRole } from "../../lib/authToken";
 
 export default function HomeNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -19,12 +20,8 @@ export default function HomeNavbar() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem("Token");
-    const role = localStorage.getItem("Role");
-
-    setIsLoggedIn(!!token);
-    setUserRole(role);
+    setIsLoggedIn(isAuthenticated());
+    setUserRole(getRole());
   }, []);
 
   // Handle logout

@@ -23,7 +23,6 @@ import {
   faTrash,
   faClipboardList,
 } from "@fortawesome/free-solid-svg-icons";
-import { API_BASE } from "../../../config/api";
 
 const CATEGORIES = ["AUTH", "PROFILE", "CONTENT", "CHAT", "ADMIN", "OTHER"];
 const METHODS = ["GET", "POST", "PATCH", "PUT", "DELETE", "WS"];
@@ -455,6 +454,7 @@ function BlockEntityForm({ initial, onSave, onCancel, saving }) {
 }
 
 function BlockManagementTab() {
+  const audit = useAuditStore();
   const [entities, setEntities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState("");
@@ -465,29 +465,20 @@ function BlockManagementTab() {
   const [editDraft, setEditDraft] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("Token") : null;
-  const headers = useMemo(
-    () => ({ Authorization: `Token ${token}`, "Content-Type": "application/json" }),
-    [token]
-  );
-
   const fetchEntities = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filterType) params.set("entity_type", filterType);
-      if (filterMode) params.set("mode", filterMode);
-      if (search) params.set("search", search);
-      const res = await fetch(`${API_BASE}/blocked-entities/?${params}`, { headers });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setEntities(data);
+      setEntities(await audit.fetchBlockedEntities({
+        entityType: filterType,
+        mode: filterMode,
+        search,
+      }));
     } catch (e) {
       toast.error("Failed to load blocked entities: " + e.message);
     } finally {
       setLoading(false);
     }
-  }, [filterType, filterMode, search, headers]);
+  }, [filterType, filterMode, search, audit]);
 
   useEffect(() => {
     fetchEntities();
@@ -496,13 +487,7 @@ function BlockManagementTab() {
   const handleCreate = async (form) => {
     setSaving(true);
     try {
-      const res = await fetch(`${API_BASE}/blocked-entities/`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.value?.[0] || data.detail || JSON.stringify(data));
+      await audit.createBlockedEntity(form);
       toast.success(`${form.mode === "block" ? "Blocked" : "Whitelisted"} ${form.entity_type}: ${form.value}`);
       setShowForm(false);
       fetchEntities();
@@ -516,13 +501,7 @@ function BlockManagementTab() {
   const handleUpdate = async (id, form) => {
     setSaving(true);
     try {
-      const res = await fetch(`${API_BASE}/blocked-entities/${id}/`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+      await audit.updateBlockedEntity(id, form);
       toast.success("Entry updated.");
       setEditingId(null);
       setEditDraft(null);
@@ -537,11 +516,7 @@ function BlockManagementTab() {
   const handleDelete = async (id, label) => {
     if (!window.confirm(`Remove "${label}" from the list?`)) return;
     try {
-      const res = await fetch(`${API_BASE}/blocked-entities/${id}/`, {
-        method: "DELETE",
-        headers,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await audit.deleteBlockedEntity(id);
       toast.success("Entry removed.");
       fetchEntities();
     } catch (e) {
@@ -736,12 +711,6 @@ const AuditLogsTab = observer(function AuditLogsTab() {
     date_to: "",
   });
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("Token") : null;
-  const headers = useMemo(
-    () => ({ Authorization: `Token ${token}`, "Content-Type": "application/json" }),
-    [token]
-  );
-
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
   // Fetch filter options on mount
@@ -838,12 +807,7 @@ const AuditLogsTab = observer(function AuditLogsTab() {
       }
       const filtersToSend = scope === "all" ? {} : filters;
       const qs = buildQuery(filtersToSend, extras);
-      const res = await fetch(`${API_BASE}/audit-logs/export/?${qs}`, { headers });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`HTTP ${res.status}: ${txt.slice(0, 200)}`);
-      }
-      const blob = await res.blob();
+      const blob = await store.exportLogs(qs);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

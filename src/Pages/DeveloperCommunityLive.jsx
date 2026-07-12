@@ -20,6 +20,7 @@ import ImageViewerModal from "../Components/Shared/ImageViewerModal";
 
 import axiosInstance from "../lib/axiosInstance";
 import { createResilientSocket } from "../Components/Shared/chat/resilientSocket";
+import { isAuthenticated } from "../lib/authToken";
 import {
   API_CHAT_COMMUNITY,
   API_DEVELOPER_SHOWCASE,
@@ -129,9 +130,7 @@ export default function DeveloperCommunityLive() {
   const socketRef = useRef(null);
   const feedRef = useRef(null);
 
-  const token = localStorage.getItem("Token");
-  const role = localStorage.getItem("Role");
-  const isAuthorized = Boolean(token && role);
+  const isAuthorized = isAuthenticated();
 
   const renderHeader = () => {
     if (!isAuthorized) return <Header />;

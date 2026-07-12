@@ -20,9 +20,10 @@ import {
   formatFileSize,
   validateDocumentFile,
 } from "../../../lib/documentValidation";
-import { API_EVENTS } from "../../../config/api";
+import { useEventsStore } from "../../../stores";
 
 const AddEvent = () => {
+  const eventsStore = useEventsStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -150,17 +151,7 @@ const AddEvent = () => {
         eventData.append("documents", doc.file);
       });
 
-      const token = localStorage.getItem("Token");
-      const response = await fetch(API_EVENTS, {
-        method: "POST",
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        body: eventData,
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to create event");
+      const data = await eventsStore.create(eventData);
 
       setApiResponse(data);
       // reset

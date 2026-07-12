@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { API_ORIGIN, API_NEWS } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { useNewsStore } from "../../../stores";
 
 const BASE_URL = API_ORIGIN;
-const API_URL = API_NEWS;
 const categories = ["Success Stories", "Events", "Announcements", "Press Release", "Updates"];
 
 export default function EditNewsModal({ show, onClose, onSuccess, newsId }) {
+  const newsStore = useNewsStore();
   const [form, setForm] = useState({
     title: "", content: "", category: "Success Stories",
     thumbnail: null, featured: false,
@@ -15,14 +16,9 @@ export default function EditNewsModal({ show, onClose, onSuccess, newsId }) {
   const [newThumbnailPreview, setNewThumbnailPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const token = localStorage.getItem("Token");
-
   useEffect(() => {
     if (!show || !newsId) return;
-    fetch(`${API_URL}${newsId}/`, {
-      headers: { Authorization: `Token ${token}` },
-    })
-      .then((r) => r.json())
+    newsStore.fetchOne(newsId)
       .then((data) => {
         setForm({
           title: data.title || "",
@@ -35,7 +31,7 @@ export default function EditNewsModal({ show, onClose, onSuccess, newsId }) {
         setNewThumbnailPreview(null);
       })
       .catch(() => toast.error("Failed to load news details"));
-  }, [show, newsId, token]);
+  }, [show, newsId, newsStore]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -62,14 +58,7 @@ export default function EditNewsModal({ show, onClose, onSuccess, newsId }) {
       data.append("featured", form.featured);
       if (form.thumbnail) data.append("thumbnail", form.thumbnail);
 
-      const res = await fetch(`${API_URL}${newsId}/`, {
-        method: "PUT",
-        headers: { Authorization: `Token ${token}` },
-        body: data,
-      });
-
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.detail || json.message || "Failed to update news");
+      const json = await newsStore.replace(newsId, data);
 
       toast.success("News updated successfully!");
       onSuccess(json);

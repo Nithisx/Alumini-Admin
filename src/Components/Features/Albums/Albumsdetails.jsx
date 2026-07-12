@@ -2,14 +2,17 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "../../../lib/axiosInstance";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useBreadcrumb } from "../../Shared/BreadcrumbContext";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useAlbumsStore, useProfileStore } from "../../../stores";
 import { usePermissions } from "../../../lib/usePermissions";
 
-const AlbumDetailPage = () => {
+const AlbumDetailPage = observer(() => {
+  const albumsStore = useAlbumsStore();
+  const profileStore = useProfileStore();
   const { albumId } = useParams();
   const navigate = useNavigate();
   const { setBreadcrumbLabel } = useBreadcrumb();
@@ -23,13 +26,11 @@ const AlbumDetailPage = () => {
   const [imageLoading, setImageLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  const token = localStorage.getItem("Token");
-  const [currentUserId, setCurrentUserId] = useState(null);
+  const currentUserId = profileStore.currentUserId ? String(profileStore.currentUserId) : null;
   const [albumOwnerId, setAlbumOwnerId] = useState(null);
   const { has } = usePermissions();
   // Managing album content (upload/remove images) = albums.edit_any (or owner).
   const canEditAny = has("albums.edit_any");
-  const BASE_URL = API_BASE;
   const MEDIA_BASE_URL = API_ORIGIN;
 
   const isAlbumOwner = () => {
@@ -109,20 +110,12 @@ const AlbumDetailPage = () => {
     if (!albumId) return;
     const fetchData = async () => {
       try {
-        // Fetch images and profile in parallel; album fetch is best-effort
-        const [imagesRes, profileRes] = await Promise.all([
-          axios.get(`${BASE_URL}/albums/${albumId}/images/`, {
-            headers: { Authorization: `Token ${token}` },
-          }),
-          axios.get(`${BASE_URL}/profile/`, {
-            headers: { Authorization: `Token ${token}` },
-          }),
+        // Images + profile in parallel; the album fetch below is best-effort.
+        const [images] = await Promise.all([
+          albumsStore.fetchImages(albumId),
+          profileStore.load(),
         ]);
-        const images = imagesRes.data;
         setEventImages(images);
-        const profile = profileRes.data;
-        const uid = profile?.id ? String(profile.id) : null;
-        if (uid) setCurrentUserId(uid);
 
         // Derive album owner from images first
         const ownerFromImages =
@@ -137,10 +130,7 @@ const AlbumDetailPage = () => {
         } else {
           // Fall back to album detail API
           try {
-            const albumRes = await axios.get(`${BASE_URL}/albums/${albumId}/`, {
-              headers: { Authorization: `Token ${token}` },
-            });
-            const album = albumRes.data;
+            const album = await albumsStore.fetchOne(albumId);
             const ownerId =
               album.user_id ??
               (typeof album.user === "string" ? album.user : album.user?.id) ??
@@ -161,7 +151,7 @@ const AlbumDetailPage = () => {
       }
     };
     fetchData();
-  }, [albumId]);
+  }, [albumId, albumsStore, profileStore]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -206,10 +196,8 @@ const AlbumDetailPage = () => {
     formDataToSend.append("title", formData.title || "New Image");
     formData.images.forEach((image) => formDataToSend.append("images", image));
     try {
-      const response = await axios.post(`${BASE_URL}/albums/${albumId}/images/`, formDataToSend, {
-        headers: { Authorization: `Token ${token}`, "Content-Type": "multipart/form-data" },
-      });
-      setEventImages([...response.data, ...eventImages]);
+      const created = await albumsStore.uploadImages(albumId, formDataToSend);
+      setEventImages([...(Array.isArray(created) ? created : [created]), ...eventImages]);
       setFormData({ title: "", images: [] });
       document.getElementById("imageUpload").value = "";
       setShowForm(false);
@@ -223,9 +211,7 @@ const AlbumDetailPage = () => {
 
   const doDeleteImage = async (imageId) => {
     try {
-      await axios.delete(`${BASE_URL}/albums/${imageId}/images/`, {
-        headers: { Authorization: `Token ${token}` },
-      });
+      await albumsStore.deleteImage(albumId, imageId);
       setEventImages(eventImages.filter((img) => img.id !== imageId));
       toast.success("Image deleted successfully!");
     } catch {
@@ -414,6 +400,6 @@ const AlbumDetailPage = () => {
       )}
     </div>
   );
-};
+});
 
 export default AlbumDetailPage;

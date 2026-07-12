@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/KAHEAA.svg";
+import { isAuthenticated } from "../lib/authToken";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isLoggedIn = !!localStorage.getItem("Token");
+  const isLoggedIn = isAuthenticated();
 
   const goToDashboard = () => {
     navigate("/dashboard");

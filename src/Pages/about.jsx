@@ -21,13 +21,12 @@ import Logo from "../assets/KAHEAA.svg";
 import RegisterRequest from "../Components/Features/Auth/LoginRequest";
 import RegistrationCertificate from "./about_components/RegistrstionCertificate";
 import RoleHeader from "../Components/Features/RoleHeader";
+import { isAuthenticated } from "../lib/authToken";
 const About = () => {
   // Track the active section based on URL hash
   const [activeSection, setActiveSection] = useState("overview");
   const [activeAdminSection, setActiveAdminSection] = useState(null);
-  const token = localStorage.getItem("Token");
-  const role = localStorage.getItem("Role");
-  const isAuthorized = Boolean(token && role);
+  const isAuthorized = isAuthenticated();
 
   const renderHeader = () => {
     if (!isAuthorized) return <Header />;

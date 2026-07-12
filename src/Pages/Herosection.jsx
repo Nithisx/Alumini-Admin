@@ -4,12 +4,11 @@ import Image2 from "../images/image2.jpg";
 import Image3 from "../images/image3.jpg";
 import { useNavigate } from "react-router-dom";
 import ScrambleText from "../Components/Shared/ScrambleText";
+import { isAuthenticated } from "../lib/authToken";
 const AlumniHeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
-  const token = localStorage.getItem("Token");
-  const role = localStorage.getItem("Role");
-  const isAuthorized = Boolean(token && role);
+  const isAuthorized = isAuthenticated();
   const primaryCtaLabel = isAuthorized ? "View Members" : "Join Our Community";
   const primaryCtaPath = isAuthorized ? "/members" : "/signup";
   const heroHeadingPrefix = isAuthorized ? "Welcome to" : "Welcome to";

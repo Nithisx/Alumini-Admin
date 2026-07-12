@@ -5,7 +5,7 @@
  */
 import { makeAutoObservable, runInAction } from "mobx";
 import api from "../../services/apiClient";
-import { API_PROFILE } from "../../config/api";
+import { API_PROFILE, API_USER_COURSES, API_USER_COURSE, API_SUGGESTIONS } from "../../config/api";
 import { getRole } from "../../lib/authToken";
 
 export default class ProfileStore {
@@ -57,6 +57,31 @@ export default class ProfileStore {
       : await api.patch(API_PROFILE, payload, { raw: true });
     runInAction(() => { this.me = { ...this.me, ...data }; });
     return data;
+  }
+
+  /**
+   * Full replace (PUT + multipart) — the profile editor submits the whole form,
+   * photos included. Distinct from save()'s PATCH.
+   */
+  async replace(formData) {
+    const data = await api.raw("put", API_PROFILE, { data: formData });
+    runInAction(() => { this.me = { ...this.me, ...data }; });
+    return data;
+  }
+
+  // ── the viewer's OWN course enrollments ──────────────────────────────────
+  async fetchCourses() {
+    const data = await api.get(API_USER_COURSES, { raw: true });
+    return Array.isArray(data) ? data : data?.results || [];
+  }
+
+  addCourse(payload) { return api.post(API_USER_COURSES, payload, { raw: true }); }
+  removeCourse(courseId) { return api.delete(API_USER_COURSE(courseId)); }
+
+  /** Typeahead for the profile form (usernames, countries, states, cities…). */
+  async suggestions(params) {
+    const query = new URLSearchParams(params).toString();
+    return api.get(`${API_SUGGESTIONS}/profile?${query}`, { raw: true });
   }
 
   clear() { this.me = null; this.loaded = false; this.inFlight = null; }

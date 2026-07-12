@@ -13,6 +13,8 @@ import {
   API_LOGIN_ALUMNI,
   API_LOGOUT,
   API_GOOGLE_OAUTH,
+  API_FORGOT_PASSWORD,
+  API_CHANGE_PASSWORD,
 } from "../../config/api";
 import { getRole, storeLoginCredential, clearAuth } from "../../lib/authToken";
 import { getSupabaseClient } from "../../lib/supabaseClient";
@@ -87,6 +89,19 @@ export default class AuthStore {
     const data = await api.post(API_GOOGLE_OAUTH, { access_token: accessToken });
     if (data?.jwt || data?.token) this._applyLogin(data);
     return data;
+  }
+
+  /**
+   * Request a reset link. The backend answers identically whether or not the
+   * address exists (see T6 / api/domains/auth/views.py) — do not "improve" the
+   * message here into something that reveals which.
+   */
+  forgotPassword(email) {
+    return api.post(API_FORGOT_PASSWORD, { email });
+  }
+
+  changePassword(oldPassword, newPassword) {
+    return api.post(API_CHANGE_PASSWORD, { old_password: oldPassword, new_password: newPassword });
   }
 
   async logout() {

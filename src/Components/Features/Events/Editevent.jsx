@@ -8,10 +8,12 @@ import {
   faImage, faTimesCircle, faSpinner, faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { API_ORIGIN } from "../../../config/api";
+import { useEventsStore } from "../../../stores";
 
 const BASE_URL = API_ORIGIN;
 
 const EditEvent = () => {
+  const eventsStore = useEventsStore();
   const { id } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -25,13 +27,8 @@ const EditEvent = () => {
     endDate: "", endTime: "", location: "", tag: "",
   });
 
-  const token = localStorage.getItem("Token");
-
   useEffect(() => {
-    fetch(`${BASE_URL}/api/v1/events/${id}`, {
-      headers: { Authorization: `Token ${token}` },
-    })
-      .then((r) => r.json())
+    eventsStore.fetchOne(id)
       .then((data) => {
         const from = new Date(data.from_date_time);
         const end = new Date(data.end_date_time);
@@ -49,7 +46,7 @@ const EditEvent = () => {
       })
       .catch(() => toast.error("Failed to load event"))
       .finally(() => setLoading(false));
-  }, [id, token]);
+  }, [id, eventsStore]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -97,16 +94,7 @@ const EditEvent = () => {
         payload.append("images", newImageFile.file);
       }
 
-      const res = await fetch(`${BASE_URL}/api/v1/events/${id}`, {
-        method: "PUT",
-        headers: { Authorization: `Token ${token}` },
-        body: payload,
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to update event");
-      }
+      await eventsStore.replace(id, payload);
 
       toast.success("Event updated successfully!");
       navigate(`${roleBase()}/event/${id}`);

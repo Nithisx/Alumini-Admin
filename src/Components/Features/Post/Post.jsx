@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
-import axios from "../../../lib/axiosInstance";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faPlus,
@@ -12,18 +11,13 @@ import {
     faTimes,
     faUpload,
 } from "@fortawesome/free-solid-svg-icons";
-import { API_JOBS } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useJobsStore } from "../../../stores";
 
-const API_URL = API_JOBS;
-
-const getAuthToken = async () => {
-    const token = localStorage.getItem("Token");
-    return token;
-};
-
-const AdminFeed = () => {
-    const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(false);
+const AdminFeed = observer(() => {
+    const jobsStore = useJobsStore();
+    const posts = jobsStore.items;
+    const loading = jobsStore.loading;
 
     // New post form state (moved from Post component)
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,38 +36,22 @@ const AdminFeed = () => {
     const [error, setError] = useState("");
 
     const fetchJobs = async () => {
-        setLoading(true);
         setError("");
-        try {
-            const token = await getAuthToken();
-            const response = await fetch(API_URL, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(token && { Authorization: `Token ${token}` }),
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch posts: ${response.statusText} (${response.status})`);
-            }
-
-            const data = await response.json();
-            const sortedData = data.sort((a, b) =>
-                new Date(b.created_at || 0) - new Date(a.created_at || 0)
-            );
-            setPosts(sortedData);
-
-        } catch (err) {
-            setError(err.message || "Failed to fetch posts. Please try again.");
-        } finally {
-            setLoading(false);
+        const items = await jobsStore.fetchAll();
+        if (jobsStore.error) {
+            setError(jobsStore.error);
+            return;
         }
+        // Newest first — the list endpoint doesn't guarantee an order.
+        jobsStore.setItems(
+            [...items].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+        );
     };
 
     useEffect(() => {
         fetchJobs();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [jobsStore]);
 
     // Handle drop zone events (moved from Post component)
     const handleDragOver = (e) => {
@@ -140,13 +118,6 @@ const AdminFeed = () => {
         setIsLoadingModal(true);
         setError("");
 
-        const token = await getAuthToken();
-        if (!token) {
-            setError("Authentication token not found. Please log in.");
-            setIsLoadingModal(false);
-            return;
-        }
-
         const formData = new FormData();
         formData.append("description", newPostDescription);
         formData.append("company_name", newPostCompany);
@@ -160,13 +131,8 @@ const AdminFeed = () => {
         }
         
         try {
-            const response = await axios.post(API_URL, formData, {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
+            await jobsStore.create(formData);
 
-            setPosts([response.data, ...posts]);
             setNewPostDescription("");
             setNewPostCompany("");
             setNewPostRole("");
@@ -182,16 +148,8 @@ const AdminFeed = () => {
             setIsLoadingModal(false);
             setIsModalOpen(false);
             toast.success("Post created successfully!");
-        } catch (error) {
-            let errorMessage = "Failed to submit post. Please try again.";
-            if (error.response) {
-                errorMessage = `Server Error: ${error.response.status}. ${JSON.stringify(error.response.data) || error.response.statusText}`;
-            } else if (error.request) {
-                errorMessage = "Network error. Could not reach server.";
-            } else {
-                errorMessage = error.message;
-            }
-            setError(errorMessage);
+        } catch (err) {
+            setError(err.message || "Failed to submit post. Please try again.");
             setIsLoadingModal(false);
         }
     };
@@ -539,6 +497,6 @@ const AdminFeed = () => {
             )}
         </div>
     );
-};
+});
 
 export default AdminFeed;

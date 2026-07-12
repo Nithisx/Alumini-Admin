@@ -3,10 +3,8 @@ File: AddNewsModal.js
 This component handles adding new news posts via a modal form.
 */
 import React, { useState, useRef } from "react";
-import { API_NEWS } from "../../../config/api";
+import { useNewsStore } from "../../../stores";
 
-const TOKEN = localStorage.getItem("Token");
-const API_URL = API_NEWS;
 const categories = [
   "Success Stories",
   "Events",
@@ -16,6 +14,7 @@ const categories = [
 ];
 
 export default function AddNewsModal({ show, onClose, onSuccess }) {
+  const newsStore = useNewsStore();
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -93,21 +92,7 @@ export default function AddNewsModal({ show, onClose, onSuccess }) {
         // data.append(`captions`, ''); // or whatever caption value
       });
 
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { Authorization: `Token ${TOKEN}` },
-        body: data,
-      });
-
-      // Debug: Log the FormData contents
-      for (let [key, value] of data.entries()) {
-      }
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.detail || json.message || "Failed to create post");
-      }
+      const json = await newsStore.create(data);
 
       // Reset form and notify parent of success with the response data
       setForm({

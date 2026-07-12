@@ -22,6 +22,7 @@ import Footer from "./about_components/Footer";
 import RoleHeader from "../Components/Features/RoleHeader";
 
 import axiosInstance from "../lib/axiosInstance";
+import { getRole } from "../lib/authToken";
 import {
   API_ADMIN_USER_UPDATE,
   API_DEVELOPER_SHOWCASE,
@@ -109,8 +110,7 @@ export default function DevelopersShowcase() {
     setViewerOpen(true);
   };
 
-  const token = localStorage.getItem("Token");
-  const role = localStorage.getItem("Role");
+  const role = getRole();
   const isAdmin = usePermissions().has("developer.moderate");
 
   const renderHeader = () => {

@@ -3,7 +3,6 @@ import { roleBase } from "../../../lib/useBasePath";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from '../../../lib/axiosInstance';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSave,
@@ -19,9 +18,12 @@ import {
   faUsers,
   faTags
 } from "@fortawesome/free-solid-svg-icons";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useBusinessStore } from "../../../stores";
 
-const BusinessDetail = () => {
+const BusinessDetail = observer(() => {
+  const businessStore = useBusinessStore();
   const { id } = useParams();
   const navigate = useNavigate();
   const businessListPath = `${roleBase()}/business`;
@@ -56,8 +58,6 @@ const BusinessDetail = () => {
   const [keywordInput, setKeywordInput] = useState('');
   const [categories, setCategories] = useState([]);
 
-  const token = localStorage.getItem("Token");
-  const BASE_URL = API_BASE;
   const MEDIA_BASE_URL = API_ORIGIN;
 
   // Fetch business details if editing an existing business
@@ -69,29 +69,18 @@ const BusinessDetail = () => {
       }
 
       try {
-        // Fetch business details
-        const businessResponse = await axios.get(
-          `${BASE_URL}/businesses/${id}/`,
-          {
-            headers: { Authorization: `Token ${token}` },
-          }
-        );
+        const [detail, imgs] = await Promise.all([
+          businessStore.fetchOne(id),
+          businessStore.fetchImages(id),
+        ]);
 
-        // Fetch business images
-        const imagesResponse = await axios.get(
-          `${BASE_URL}/businesses/${id}/images/`,
-          {
-            headers: { Authorization: `Token ${token}` },
-          }
-        );
+        setBusiness(detail);
+        setImages(imgs);
 
-        setBusiness(businessResponse.data);
-        setImages(imagesResponse.data);
-
-        if (businessResponse.data.logo) {
-          setLogoPreview(`${MEDIA_BASE_URL}${businessResponse.data.logo}`);
+        if (detail.logo) {
+          setLogoPreview(`${MEDIA_BASE_URL}${detail.logo}`);
         }
-      } catch (error) {
+      } catch {
         toast.error("Error loading business details");
       } finally {
         setLoading(false);
@@ -101,14 +90,8 @@ const BusinessDetail = () => {
     // Fetch categories for dropdown
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(
-          `${BASE_URL}/businesses/categories/`,
-          {
-            headers: { Authorization: `Token ${token}` },
-          }
-        );
-
-        setCategories(response.data.map(cat => cat.category));
+        const cats = await businessStore.fetchCategories();
+        setCategories(cats.map(cat => cat.category));
       } catch { /* ignore */ }
     };
 
@@ -163,12 +146,10 @@ const BusinessDetail = () => {
 
   const doDeleteImage = async (imageId) => {
     try {
-      await axios.delete(`${BASE_URL}/businesses/${imageId}/images/`, {
-        headers: { Authorization: `Token ${token}` },
-      });
+      await businessStore.deleteImage(imageId);
       setImages(images.filter(image => image.id !== imageId));
       toast.success("Image deleted successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete image");
     }
   };
@@ -214,75 +195,27 @@ const BusinessDetail = () => {
         formData.append('logo', logo);
       }
 
-      let response;
+      const buildImagesForm = () => {
+        const fd = new FormData();
+        imageFiles.forEach(image => fd.append('images', image));
+        return fd;
+      };
 
       if (isNewBusiness) {
-        // Create new business
-        response = await axios.post(
-          `${BASE_URL}/businesses/`,
-          formData,
-          {
-            headers: {
-              Authorization: `Token ${token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+        const created = await businessStore.create(formData);
 
-        // Upload images if any
-        if (imageFiles.length > 0 && response.data.id) {
-          const imagesFormData = new FormData();
-          imageFiles.forEach(image => {
-            imagesFormData.append('images', image);
-          });
-
-          await axios.post(
-            `${BASE_URL}/businesses/${response.data.id}/images/`,
-            imagesFormData,
-            {
-              headers: {
-                Authorization: `Token ${token}`,
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
+        if (imageFiles.length > 0 && created.id) {
+          await businessStore.uploadImages(created.id, buildImagesForm());
         }
 
         toast.success("Business created successfully!");
-        navigate(`${roleBase()}/business/${response.data.id}`);
+        navigate(`${roleBase()}/business/${created.id}`);
       } else {
-        // Update existing business
-        response = await axios.put(
-          `${BASE_URL}/businesses/${id}/`,
-          formData,
-          {
-            headers: {
-              Authorization: `Token ${token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+        await businessStore.replace(id, formData);
 
-        // Upload images if any
         if (imageFiles.length > 0) {
-          const imagesFormData = new FormData();
-          imageFiles.forEach(image => {
-            imagesFormData.append('images', image);
-          });
-
-          const imagesResponse = await axios.post(
-            `${BASE_URL}/businesses/${id}/images/`,
-            imagesFormData,
-            {
-              headers: {
-                Authorization: `Token ${token}`,
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
-
-          // Update images state with newly uploaded images
-          setImages([...imagesResponse.data, ...images]);
+          const uploaded = await businessStore.uploadImages(id, buildImagesForm());
+          setImages([...(Array.isArray(uploaded) ? uploaded : [uploaded]), ...images]);
           setImageFiles([]);
         }
 
@@ -819,6 +752,6 @@ const BusinessDetail = () => {
       </form>
     </div>
   );
-};
+});
 
 export default BusinessDetail;
