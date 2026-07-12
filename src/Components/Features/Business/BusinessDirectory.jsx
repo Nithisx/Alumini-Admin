@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonList } from "../../Shared/ui";
 import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { usePermissions } from "../../../lib/usePermissions";
 
 const BusinessDirectory = () => {
   const [businesses, setBusinesses] = useState([]);
@@ -33,15 +34,19 @@ const BusinessDirectory = () => {
   const BASE_URL = API_BASE;
   const MEDIA_BASE_URL = API_ORIGIN;
 
-  const [canModerate, setCanModerate] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const { has } = usePermissions();
+  const canCreate = has("business.create");
+  const canEditAny = has("business.edit_any");
+  const canDeleteAny = has("business.delete_any");
 
-  const canEditBusiness = (business) => {
-    if (canModerate) return true;
+  const isOwner = (business) => {
     if (!currentUserId) return false;
     const ownerId = business.user ?? business.owner_details?.id ?? business.user_id;
     return ownerId && String(currentUserId) === String(ownerId);
   };
+  const canEditBusiness = (business) => canEditAny || isOwner(business);
+  const canDeleteBusiness = (business) => canDeleteAny || isOwner(business);
 
   useEffect(() => {
     (async () => {
@@ -57,8 +62,6 @@ const BusinessDirectory = () => {
         setCategories(cRes.data);
         const profile = profileRes.data;
         setCurrentUserId(profile?.id ?? null);
-        const role = (profile?.role || "").toLowerCase();
-        setCanModerate(Boolean(profile?.is_staff) || role === "admin" || role === "staff");
       } catch { }
       finally { setLoading(false); }
     })();
@@ -160,12 +163,14 @@ const BusinessDirectory = () => {
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Filter</span>
             </button>
-            <Link
-              to={`${roleBase()}/business/add`}
-              className="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition"
-            >
-              <Plus className="w-4 h-4" />
-            </Link>
+            {canCreate && (
+              <Link
+                to={`${roleBase()}/business/add`}
+                className="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition"
+              >
+                <Plus className="w-4 h-4" />
+              </Link>
+            )}
           </>
         }
       />
@@ -248,16 +253,20 @@ const BusinessDirectory = () => {
                           <h3 className="text-sm font-bold text-emerald-700 truncate">{business.business_name}</h3>
                           <p className="text-xs text-gray-400 font-medium">{business.category}</p>
                         </div>
-                        {canEditBusiness(business) && (
+                        {(canEditBusiness(business) || canDeleteBusiness(business)) && (
                           <div className="flex gap-1.5 flex-shrink-0" onClick={(e) => e.preventDefault()}>
-                            <Link to={`${roleBase()}/business/edit/${business.id}`} onClick={(e) => e.stopPropagation()}
-                              className="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-100 transition">
-                              <Edit className="w-3.5 h-3.5" />
-                            </Link>
-                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(business.id); }}
-                              className="w-7 h-7 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-100 transition">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {canEditBusiness(business) && (
+                              <Link to={`${roleBase()}/business/edit/${business.id}`} onClick={(e) => e.stopPropagation()}
+                                className="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-100 transition">
+                                <Edit className="w-3.5 h-3.5" />
+                              </Link>
+                            )}
+                            {canDeleteBusiness(business) && (
+                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(business.id); }}
+                                className="w-7 h-7 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-100 transition">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>

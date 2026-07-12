@@ -19,7 +19,7 @@ const normalizeUrl = (url) => (url?.startsWith("http") ? url : `https://${url}`)
 export default function BusinessDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUserId, canModerate } = useViewerProfile();
+  const { currentUserId, canEditAny, canDeleteAny, canModerateComments } = useViewerProfile("business");
   const token = localStorage.getItem("Token");
 
   const [business, setBusiness] = useState(null);
@@ -59,7 +59,9 @@ export default function BusinessDetailView({ basePath = "" }) {
   }, [id, token]);
 
   const postOwnerId = business?.owner ?? business?.owner_details?.id ?? null;
-  const canManage = canModerate || (currentUserId != null && currentUserId === postOwnerId);
+  const isOwner = currentUserId != null && currentUserId === postOwnerId;
+  const canEdit = canEditAny || isOwner;      // own business, or business.edit_any
+  const canDelete = canDeleteAny || isOwner;  // own business, or business.delete_any
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -148,10 +150,10 @@ export default function BusinessDetailView({ basePath = "" }) {
         subtitle={business?.category}
         meta={meta}
         actions={
-          canManage && (
+          (canEdit || canDelete) && (
             <HeroActions
-              onEdit={() => navigate(`${basePath}/business/edit/${id}`)}
-              onDelete={() => setConfirmOpen(true)}
+              onEdit={canEdit ? () => navigate(`${basePath}/business/edit/${id}`) : undefined}
+              onDelete={canDelete ? () => setConfirmOpen(true) : undefined}
             />
           )
         }
@@ -189,7 +191,7 @@ export default function BusinessDetailView({ basePath = "" }) {
             contentType="businesses"
             contentId={id}
             postOwnerId={postOwnerId}
-            canModerate={canModerate}
+            canModerate={canModerateComments}
             currentUserId={currentUserId}
           />
         </InfoCard>

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './lib/axiosInstance';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
+import { StoreProvider } from './stores/StoreContext';
 import App from './App';
 import { initUiAnimations } from './lib/uiAnimations';
 import { loadRuntimeConfig } from './config/runtimeConfig';
@@ -23,8 +24,12 @@ initUiAnimations();
 loadRuntimeConfig().finally(() => {
   const root = ReactDOM.createRoot(document.getElementById('root'));
   root.render(
-    <Provider store={store}>
-      <App />
-    </Provider>
+    // Redux Provider stays during the MobX migration (stores are converted
+    // domain by domain; both coexist until the last Redux consumer is gone).
+    <StoreProvider>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </StoreProvider>
   );
 });

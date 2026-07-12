@@ -142,8 +142,11 @@ export default function DeveloperCommunityLive() {
     () => developers.find((developer) => developer.id === currentUser?.id),
     [developers, currentUser]
   );
-  const hasModeratePerm = useSelector(selectHasPerm("developer.moderate"));
-  const canModerate = hasModeratePerm || Boolean(currentDeveloper?.developer_role);
+  // Moderation is gated purely on the developer.moderate permission — NOT on
+  // whether the user happens to hold a developer_role. Revoking the permission
+  // must hide the moderation controls (backend already 403s), so the old
+  // `|| developer_role` bypass is removed.
+  const canModerate = useSelector(selectHasPerm("developer.moderate"));
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {

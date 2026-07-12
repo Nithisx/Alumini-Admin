@@ -1,12 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchLoginRequests,
-  approveRequest,
-  declineRequest,
-  bulkApproveRequests,
-  editRequest,
-} from "../../../store/loginRequestSlice";
+import { observer } from "mobx-react-lite";
+import { useSignupRequestStore } from "../../../stores/StoreContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
@@ -41,9 +35,9 @@ import { getMediaUrl } from "../../../config/api";
     getCoursesForCollege,
   } from "../../../constants/academicOptions";
 
-export default function RegisterRequest() {
-  const dispatch = useDispatch();
-  const { requests, loading, error, processing } = useSelector((s) => s.loginRequests);
+function RegisterRequest() {
+  const store = useSignupRequestStore();
+  const { requests, loading, error, processing } = store;
 
   const [message, setMessage] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
@@ -173,10 +167,10 @@ export default function RegisterRequest() {
 
   // Initial fetch + silent background refresh every 10 seconds
   useEffect(() => {
-    dispatch(fetchLoginRequests());
-    const interval = setInterval(() => dispatch(fetchLoginRequests({ silent: true })), 10000);
+    store.fetch();
+    const interval = setInterval(() => store.fetch({ silent: true }), 10000);
     return () => clearInterval(interval);
-  }, [dispatch]);
+  }, [store]);
 
   // Keep selectedIds in sync when requests list changes (remove stale ids)
   useEffect(() => {
@@ -233,13 +227,13 @@ export default function RegisterRequest() {
   };
 
   const handleAccept = useCallback(async (id, email) => {
-    const result = await dispatch(approveRequest(email));
-    if (approveRequest.fulfilled.match(result)) {
+    try {
+      await store.approve(email);
       showMessage({ text: "Request accepted successfully!", type: "success" });
-    } else {
-      showMessage({ text: result.payload || "Failed to accept request.", type: "error" });
+    } catch (err) {
+      showMessage({ text: err.message || "Failed to accept request.", type: "error" });
     }
-  }, [dispatch]);
+  }, [store]);
 
   const handleBulkAccept = useCallback(async () => {
     const selectedRequests = requests.filter((req) => selectedIds[req.id]);
@@ -247,25 +241,20 @@ export default function RegisterRequest() {
       showMessage({ text: "Select at least one user to approve.", type: "error" });
       return;
     }
-    const result = await dispatch(bulkApproveRequests(selectedRequests));
-    if (bulkApproveRequests.fulfilled.match(result)) {
-      const { approved, failed } = result.payload;
-      if (approved.length > 0) showMessage({ text: `${approved.length} request${approved.length > 1 ? "s" : ""} approved!`, type: "success" });
-      if (failed.length > 0) showMessage({ text: `${failed.length} failed to approve.`, type: "error" });
-      clearSelection();
-    } else {
-      showMessage({ text: result.payload || "Bulk approve failed.", type: "error" });
-    }
-  }, [dispatch, requests, selectedIds]);
+    const { approved, failed } = await store.bulkApprove(selectedRequests);
+    if (approved.length > 0) showMessage({ text: `${approved.length} request${approved.length > 1 ? "s" : ""} approved!`, type: "success" });
+    if (failed.length > 0) showMessage({ text: `${failed.length} failed to approve.`, type: "error" });
+    if (approved.length > 0) clearSelection();
+  }, [store, requests, selectedIds]);
 
   const handleDecline = useCallback(async (id, email) => {
-    const result = await dispatch(declineRequest(email));
-    if (declineRequest.fulfilled.match(result)) {
+    try {
+      await store.decline(email);
       showMessage({ text: "Request rejected successfully!", type: "error" });
-    } else {
-      showMessage({ text: result.payload || "Failed to decline request.", type: "error" });
+    } catch (err) {
+      showMessage({ text: err.message || "Failed to decline request.", type: "error" });
     }
-  }, [dispatch]);
+  }, [store]);
 
   // --- Edit flow ---
   const startEdit = (req) => {
@@ -314,15 +303,16 @@ export default function RegisterRequest() {
       return;
     }
     setSavingEdit(true);
-    const result = await dispatch(editRequest({ id: req.id, payload }));
-    setSavingEdit(false);
-    if (editRequest.fulfilled.match(result)) {
+    try {
+      await store.edit(req.id, payload);
       showMessage({ text: "Details updated successfully.", type: "success" });
       cancelEdit();
-    } else {
-      showMessage({ text: result.payload || "Failed to update. Please try again.", type: "error" });
+    } catch (err) {
+      showMessage({ text: err.message || "Failed to update. Please try again.", type: "error" });
+    } finally {
+      setSavingEdit(false);
     }
-  }, [dispatch, editDraft]);
+  }, [store, editDraft]);
 
   const resolveProfileImage = (req) => {
     const imagePath = req?.profile_image || req?.profile_photo_url || req?.profile_photo || "";
@@ -787,7 +777,7 @@ export default function RegisterRequest() {
                 Live · auto-refreshes every 30s
               </span>
               <button
-                onClick={() => dispatch(fetchLoginRequests())}
+                onClick={() => store.fetch()}
                 disabled={loading}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50"
               >
@@ -1124,3 +1114,5 @@ export default function RegisterRequest() {
     </div>
   );
 }
+
+export default observer(RegisterRequest);

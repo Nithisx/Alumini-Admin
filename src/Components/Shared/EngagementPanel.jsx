@@ -6,7 +6,7 @@
  *   contentType  : "events" | "jobs" | "news" | "businesses"
  *   contentId    : number
  *   postOwnerId  : number | null  – user.id of the post author
- *   canModerate  : boolean        – true for staff/admin (full edit+delete on any comment)
+ *   canModerate  : boolean        – caller holds {domain}.moderate_comments (full edit+delete on any comment). Passed in by the parent; gate on the permission codename, never role.
  *   currentUserId: number | null  – id of the logged-in user
  */
 

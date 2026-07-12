@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useBreadcrumb } from "../../Shared/BreadcrumbContext";
 import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { usePermissions } from "../../../lib/usePermissions";
 
 const AlbumDetailPage = () => {
   const { albumId } = useParams();
@@ -25,7 +26,9 @@ const AlbumDetailPage = () => {
   const token = localStorage.getItem("Token");
   const [currentUserId, setCurrentUserId] = useState(null);
   const [albumOwnerId, setAlbumOwnerId] = useState(null);
-  const [canModerate, setCanModerate] = useState(false);
+  const { has } = usePermissions();
+  // Managing album content (upload/remove images) = albums.edit_any (or owner).
+  const canEditAny = has("albums.edit_any");
   const BASE_URL = API_BASE;
   const MEDIA_BASE_URL = API_ORIGIN;
 
@@ -35,10 +38,10 @@ const AlbumDetailPage = () => {
     return String(currentUserId) === String(albumOwnerId);
   };
 
-  const canManageAlbum = canModerate || isAlbumOwner();
+  const canManageAlbum = canEditAny || isAlbumOwner();
 
   const canDeleteImage = (img) => {
-    if (canModerate) return true;
+    if (canEditAny) return true;
     if (!currentUserId) return false;
     if (isAlbumOwner()) return true;
     // image-level owner check
@@ -120,8 +123,6 @@ const AlbumDetailPage = () => {
         const profile = profileRes.data;
         const uid = profile?.id ? String(profile.id) : null;
         if (uid) setCurrentUserId(uid);
-        const role = (profile?.role || "").toLowerCase();
-        setCanModerate(Boolean(profile?.is_staff) || role === "admin" || role === "staff");
 
         // Derive album owner from images first
         const ownerFromImages =

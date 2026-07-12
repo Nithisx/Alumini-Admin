@@ -25,7 +25,7 @@ const FALLBACK_IMG =
 export default function NewsDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUserId, canModerate } = useViewerProfile();
+  const { currentUserId, canDeleteAny, canModerateComments } = useViewerProfile("news");
   const token = localStorage.getItem("Token");
   const listPath = `${basePath}/news`;
 
@@ -94,7 +94,8 @@ export default function NewsDetailView({ basePath = "" }) {
   }, [id, token]);
 
   const postOwnerId = post?.user?.id ?? post?.user ?? null;
-  const canManage = canModerate || (currentUserId != null && currentUserId === postOwnerId);
+  const isOwner = currentUserId != null && currentUserId === postOwnerId;
+  const canDelete = canDeleteAny || isOwner;  // own article, or news.delete_any
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -137,7 +138,7 @@ export default function NewsDetailView({ basePath = "" }) {
         title={post?.title}
         meta={meta}
         actions={
-          canManage && <HeroActions onDelete={() => setConfirmOpen(true)} />
+          canDelete && <HeroActions onDelete={() => setConfirmOpen(true)} />
         }
       >
         {post?.thumbnail && (
@@ -197,7 +198,7 @@ export default function NewsDetailView({ basePath = "" }) {
             contentType="news"
             contentId={id}
             postOwnerId={postOwnerId}
-            canModerate={canModerate}
+            canModerate={canModerateComments}
             currentUserId={currentUserId}
           />
         </InfoCard>

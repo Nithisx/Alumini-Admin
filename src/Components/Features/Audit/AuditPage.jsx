@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchAuditLogs, fetchAuditFilters, fetchAuditDetail, setPage as setReduxPage, clearSelected } from "../../../store/auditSlice";
+import { observer } from "mobx-react-lite";
+import { useAuditStore } from "../../../stores/StoreContext";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -712,9 +712,9 @@ function BlockManagementTab() {
   );
 }
 
-function AuditLogsTab() {
-  const dispatch = useDispatch();
-  const { logs, count, page, loading, error, filterOptions, selectedLog: selected, detailLoading } = useSelector((s) => s.audit);
+const AuditLogsTab = observer(function AuditLogsTab() {
+  const store = useAuditStore();
+  const { logs, count, page, loading, error, filterOptions, selectedLog: selected, detailLoading } = store;
 
   const [localPage, setLocalPage] = useState(page);
   const [pageSize] = useState(25);
@@ -746,8 +746,8 @@ function AuditLogsTab() {
 
   // Fetch filter options on mount
   useEffect(() => {
-    dispatch(fetchAuditFilters());
-  }, [dispatch]);
+    store.fetchFilters();
+  }, [store]);
 
   // Re-fetch username suggestions when username filter changes (debounced)
   const usernameSuggestionsRef = useRef([]);
@@ -755,14 +755,14 @@ function AuditLogsTab() {
     usernameSuggestionsRef.current = filterOptions.usernames || [];
     if (!filters.username) return;
     const t = setTimeout(() => {
-      dispatch(fetchAuditFilters(filters.username));
+      store.fetchFilters(filters.username);
     }, 250);
     return () => clearTimeout(t);
-  }, [filters.username, dispatch, filterOptions.usernames]);
+  }, [filters.username, store, filterOptions.usernames]);
 
   const fetchLogs = useCallback(() => {
-    dispatch(fetchAuditLogs({ page: localPage, filters: { ...filters, page_size: pageSize } }));
-  }, [dispatch, filters, localPage, pageSize]);
+    store.fetchLogs({ page: localPage, filters: { ...filters, page_size: pageSize } });
+  }, [store, filters, localPage, pageSize]);
 
   useEffect(() => {
     fetchLogs();
@@ -771,22 +771,22 @@ function AuditLogsTab() {
   // Auto-refresh every 10 seconds — silent so no loading spinner / re-render flicker
   useEffect(() => {
     const interval = setInterval(() => {
-      dispatch(fetchAuditLogs({ page: localPage, filters: { ...filters, page_size: pageSize }, silent: true }));
+      store.fetchLogs({ page: localPage, filters: { ...filters, page_size: pageSize }, silent: true });
     }, 10000);
     return () => clearInterval(interval);
-  }, [dispatch, filters, localPage, pageSize]);
+  }, [store, filters, localPage, pageSize]);
 
   const setPage = (p) => {
     setLocalPage(p);
-    dispatch(setReduxPage(p));
+    store.setPage(p);
   };
 
   const openDetail = (id) => {
-    dispatch(fetchAuditDetail(id));
+    store.fetchDetail(id);
   };
 
   const closeDetail = () => {
-    dispatch(clearSelected());
+    store.clearSelected();
   };
 
   const toggleSelect = (id) => {
@@ -1210,7 +1210,7 @@ function AuditLogsTab() {
       <DetailModal log={selected} onClose={closeDetail} />
     </div>
   );
-}
+});
 
 const TABS = [
   { id: "logs", label: "Audit Logs", icon: faClipboardList },

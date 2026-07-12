@@ -7,6 +7,7 @@ import EngagementPanel from "../../Shared/EngagementPanel";
 import { DocumentList } from "../../Shared/DocumentPreview";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
 import { API_EVENTS, API_EVENT_DETAIL, API_PROFILE, API_ORIGIN } from "../../../config/api";
+import { usePermissions } from "../../../lib/usePermissions";
 
 const AuthorizedImage = ({ url, alt, className }) => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -30,14 +31,18 @@ export default function Events() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [canModerate, setCanModerate] = useState(false);
+  const { has } = usePermissions();
+  // Action controls gate on permission codenames (never role/is_staff) so a
+  // revoked permission hides its button, matching the backend's 403.
+  const canEditAny = has("events.edit_any");
+  const canDeleteAny = has("events.delete_any");
+  const canModerateComments = has("events.moderate_comments");
   const token = localStorage.getItem("Token");
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) {
       setCurrentUserId(null);
-      setCanModerate(false);
       return;
     }
 
@@ -47,12 +52,9 @@ export default function Events() {
       .then((r) => r.json())
       .then((profile) => {
         setCurrentUserId(profile?.id ?? null);
-        const role = (profile?.role || "").toLowerCase();
-        setCanModerate(Boolean(profile?.is_staff) || role === "admin" || role === "staff");
       })
       .catch(() => {
         setCurrentUserId(null);
-        setCanModerate(false);
       });
   }, [token]);
 
@@ -215,30 +217,34 @@ export default function Events() {
                         {event.venue}
                       </span>
                     )}
-                    {resolvedId && (canModerate || isEventOwner(event)) && (
+                    {resolvedId && (canEditAny || canDeleteAny || isEventOwner(event)) && (
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`${roleBase()}/event/${resolvedId}/edit`);
-                          }}
-                          className="h-7 w-7 rounded-full text-blue-600 hover:bg-blue-50"
-                          title="Edit event"
-                        >
-                          <FontAwesomeIcon icon={faEdit} className="text-xs" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(resolvedId);
-                          }}
-                          className="h-7 w-7 rounded-full text-red-600 hover:bg-red-50"
-                          title="Delete event"
-                        >
-                          <FontAwesomeIcon icon={faTrash} className="text-xs" />
-                        </button>
+                        {(canEditAny || isEventOwner(event)) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`${roleBase()}/event/${resolvedId}/edit`);
+                            }}
+                            className="h-7 w-7 rounded-full text-blue-600 hover:bg-blue-50"
+                            title="Edit event"
+                          >
+                            <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                          </button>
+                        )}
+                        {(canDeleteAny || isEventOwner(event)) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(resolvedId);
+                            }}
+                            className="h-7 w-7 rounded-full text-red-600 hover:bg-red-50"
+                            title="Delete event"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -308,7 +314,7 @@ export default function Events() {
                       contentType="events"
                       contentId={resolvedId}
                       postOwnerId={event?.user ?? null}
-                      canModerate={canModerate}
+                      canModerate={canModerateComments}
                       currentUserId={currentUserId}
                     />
                   )}

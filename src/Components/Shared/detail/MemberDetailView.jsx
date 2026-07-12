@@ -79,15 +79,19 @@ const getPrimaryCourse = (user) => {
 /* ─── main component ─────────────────────────────────────────────────────── */
 /**
  * MemberDetailView — standard member profile, used by all roles.
- * Read-only for everyone; admin (isAdmin) additionally gets inline edit,
- * deactivate, delete, and course CRUD.
+ * Read-only by default; each admin action is gated on its own permission
+ * codename (members.edit_any → edit + course CRUD, users.deactivate,
+ * users.delete) — never on role — so revoking a permission hides its control.
  * @param {string} basePath e.g. "/alumni"
  */
 export default function MemberDetailView({ basePath = "" }) {
   const { name } = useParams();
   const navigate = useNavigate();
   const reduce = useReducedMotion();
-  const { isAdmin } = useViewerProfile();
+  const { has } = useViewerProfile();
+  const canEditProfile = has("members.edit_any");   // edit profile + course enrollments
+  const canDeactivate = has("users.deactivate");
+  const canDeleteUser = has("users.delete");
 
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -603,7 +607,7 @@ export default function MemberDetailView({ basePath = "" }) {
           <div>
             <FieldRow icon={Icons.education} label="Education">
               <div>
-                {isAdmin && (
+                {canEditProfile && (
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-gray-400">Course enrollments</span>
                     <button onClick={() => setShowAddCourseModal(true)} className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-800 font-medium border border-emerald-300 rounded-md px-2 py-1 hover:bg-emerald-50 transition-colors">
@@ -624,7 +628,7 @@ export default function MemberDetailView({ basePath = "" }) {
                       )}
                       {c.passed_out_year && <p className="text-xs text-gray-400 mt-0.5">Passed out: {c.passed_out_year}</p>}
                       {c.roll_no && <p className="text-xs text-gray-400 mt-0.5">Roll no: {c.roll_no}</p>}
-                      {isAdmin && (
+                      {canEditProfile && (
                         <div className="absolute top-2 right-2 flex items-center gap-2">
                           <button onClick={() => handleEditCourseClick(c)} className="text-gray-400 hover:text-emerald-600 transition-colors" title="Edit course">
                             {Icons.edit}
@@ -879,20 +883,22 @@ export default function MemberDetailView({ basePath = "" }) {
                 <button onClick={() => navigate(`${basePath}/map?user=${encodeURIComponent(member.username)}`)} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                   {Icons.pin} View in Map
                 </button>
-                {isAdmin && (
-                  <>
-                    <button onClick={handleEditClick} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
-                      {Icons.edit} Edit profile
-                    </button>
-                    <button onClick={handleDeactivateUser} disabled={deactivating} className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-colors shadow-sm disabled:opacity-60 ${is_active ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"}`}>
-                      {deactivating ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : is_active ? Icons.ban : Icons.activate}
-                      {is_active ? "Deactivate" : "Activate"}
-                    </button>
-                    <button onClick={handleDeleteUser} disabled={deleting} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-60">
-                      {deleting ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : Icons.trash}
-                      Delete
-                    </button>
-                  </>
+                {canEditProfile && (
+                  <button onClick={handleEditClick} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-emerald-600 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
+                    {Icons.edit} Edit profile
+                  </button>
+                )}
+                {canDeactivate && (
+                  <button onClick={handleDeactivateUser} disabled={deactivating} className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-colors shadow-sm disabled:opacity-60 ${is_active ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"}`}>
+                    {deactivating ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : is_active ? Icons.ban : Icons.activate}
+                    {is_active ? "Deactivate" : "Activate"}
+                  </button>
+                )}
+                {canDeleteUser && (
+                  <button onClick={handleDeleteUser} disabled={deleting} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-60">
+                    {deleting ? <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : Icons.trash}
+                    Delete
+                  </button>
                 )}
               </div>
             ) : (

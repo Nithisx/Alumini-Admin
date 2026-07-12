@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonGrid } from "../../Shared/ui";
 import { API_ALBUMS, API_ALBUM_DETAIL, API_PROFILE, API_ORIGIN } from "../../../config/api";
+import { usePermissions } from "../../../lib/usePermissions";
 
 const AlbumsPage = () => {
   const navigate = useNavigate();
@@ -31,6 +32,10 @@ const AlbumsPage = () => {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const [currentUserId, setCurrentUserId] = useState(null);
+  const { has } = usePermissions();
+  const canCreate = has("albums.create");
+  const canEditAny = has("albums.edit_any");
+  const canDeleteAny = has("albums.delete_any");
 
   useEffect(() => {
     (async () => {
@@ -190,12 +195,14 @@ const AlbumsPage = () => {
           </>
         }
         actions={
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition"
-          >
-            <FontAwesomeIcon icon={faPlus} />
-          </button>
+          canCreate && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition"
+            >
+              <FontAwesomeIcon icon={faPlus} />
+            </button>
+          )
         }
       />
 
@@ -216,7 +223,7 @@ const AlbumsPage = () => {
             title={searchTerm ? "No albums match your search" : "No albums yet"}
             description={searchTerm ? "Try a different search term." : "Create your first album to get started."}
             action={
-              !searchTerm ? (
+              !searchTerm && canCreate ? (
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="px-5 py-2.5 bg-pink-600 text-white rounded-xl text-sm font-semibold hover:bg-pink-700 transition"
@@ -229,7 +236,10 @@ const AlbumsPage = () => {
         ) : (
           <MotionList className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {filtered.map((album) => {
-              const canManage = isOwner(album);
+              const owns = isOwner(album);
+              const canEdit = owns || canEditAny;      // own album, or albums.edit_any
+              const canDelete = owns || canDeleteAny;  // own album, or albums.delete_any
+              const canManage = canEdit || canDelete;
               return (
                 <MotionItem
                   key={album.id}
@@ -280,18 +290,22 @@ const AlbumsPage = () => {
                         </button>
                         {openMenuId === album.id && (
                           <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-20 py-1">
-                            <button
-                              onClick={() => openEditModal(album)}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
-                            >
-                              <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
-                            </button>
-                            <button
-                              onClick={() => { setConfirmDelete(album.id); setOpenMenuId(null); }}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-                            >
-                              <FontAwesomeIcon icon={faTrash} className="text-xs" /> Delete
-                            </button>
+                            {canEdit && (
+                              <button
+                                onClick={() => openEditModal(album)}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+                              >
+                                <FontAwesomeIcon icon={faEdit} className="text-xs" /> Edit
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                onClick={() => { setConfirmDelete(album.id); setOpenMenuId(null); }}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                              >
+                                <FontAwesomeIcon icon={faTrash} className="text-xs" /> Delete
+                              </button>
+                            )}
                             <button
                               onClick={() => setOpenMenuId(null)}
                               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 transition"

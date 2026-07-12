@@ -9,6 +9,7 @@ import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
 import { API_ORIGIN } from "../../../config/api";
+import { usePermissions } from "../../../lib/usePermissions";
 
 const TOKEN = () => localStorage.getItem("Token");
 const BASE_URL = API_ORIGIN;
@@ -38,7 +39,11 @@ export default function NewsList() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [canModerate, setCanModerate] = useState(false);
+  const { has } = usePermissions();
+  const canCreate = has("news.create");
+  const canEditAny = has("news.edit_any");
+  const canDeleteAny = has("news.delete_any");
+  const canModerateComments = has("news.moderate_comments");
   const [editingNewsId, setEditingNewsId] = useState(null);
   const [confirmDeleteNewsId, setConfirmDeleteNewsId] = useState(null);
   const navigate = useNavigate();
@@ -70,8 +75,6 @@ export default function NewsList() {
       .then((r) => r.json())
       .then((d) => {
         setCurrentUserId(d?.id ?? null);
-        const role = (d?.role || "").toLowerCase();
-        setCanModerate(Boolean(d?.is_staff) || role === "admin" || role === "staff");
       })
       .catch(() => {});
   }, []);
@@ -150,13 +153,15 @@ export default function NewsList() {
           </>
         }
         actions={
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition text-base font-bold"
-            title="Add news"
-          >
-            +
-          </button>
+          canCreate && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition text-base font-bold"
+              title="Add news"
+            >
+              +
+            </button>
+          )
         }
         below={
           categories.length > 1 ? (
@@ -234,24 +239,28 @@ export default function NewsList() {
                         Featured
                       </span>
                     )}
-                    {(canModerate || isNewsOwner(post)) && (
+                    {(canEditAny || canDeleteAny || isNewsOwner(post)) && (
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setEditingNewsId(post.id); }}
-                          className="h-7 w-7 rounded-full text-blue-600 hover:bg-blue-50 flex items-center justify-center"
-                          title="Edit news"
-                        >
-                          <FontAwesomeIcon icon={faEdit} className="text-xs" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteNewsId(post.id); }}
-                          className="h-7 w-7 rounded-full text-red-600 hover:bg-red-50 flex items-center justify-center"
-                          title="Delete news"
-                        >
-                          <FontAwesomeIcon icon={faTrash} className="text-xs" />
-                        </button>
+                        {(canEditAny || isNewsOwner(post)) && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setEditingNewsId(post.id); }}
+                            className="h-7 w-7 rounded-full text-blue-600 hover:bg-blue-50 flex items-center justify-center"
+                            title="Edit news"
+                          >
+                            <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                          </button>
+                        )}
+                        {(canDeleteAny || isNewsOwner(post)) && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteNewsId(post.id); }}
+                            className="h-7 w-7 rounded-full text-red-600 hover:bg-red-50 flex items-center justify-center"
+                            title="Delete news"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -282,11 +291,11 @@ export default function NewsList() {
 
                 {/* Engagement */}
                 <div className="border-t border-gray-50" onClick={(e) => e.stopPropagation()}>
-                  <EngagementPanel
+                  <EngagementPanel /* moderation gated by news.moderate_comments */
                     contentType="news"
                     contentId={post.id}
                     postOwnerId={post?.user ?? null}
-                    canModerate={canModerate}
+                    canModerate={canModerateComments}
                     currentUserId={currentUserId}
                   />
                 </div>

@@ -17,7 +17,7 @@ import JobStatusTag from "../JobStatusTag";
 export default function JobDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUserId, canModerate } = useViewerProfile();
+  const { currentUserId, canEditAny, canDeleteAny, canModerateComments } = useViewerProfile("jobs");
   const token = localStorage.getItem("Token");
 
   const [job, setJob] = useState(null);
@@ -49,7 +49,9 @@ export default function JobDetailView({ basePath = "" }) {
   }, [id, token]);
 
   const postOwnerId = job?.user?.id ?? job?.user ?? null;
-  const canManage = canModerate || (currentUserId != null && currentUserId === postOwnerId);
+  const isOwner = currentUserId != null && currentUserId === postOwnerId;
+  const canEdit = canEditAny || isOwner;      // own job, or jobs.edit_any (also gates status change)
+  const canDelete = canDeleteAny || isOwner;  // own job, or jobs.delete_any
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -75,7 +77,7 @@ export default function JobDetailView({ basePath = "" }) {
           key="status"
           status={job.status}
           jobId={job.id}
-          canManage={canManage}
+          canManage={canEdit}
           size="lg"
           onChange={(next) => setJob((prev) => ({ ...prev, status: next }))}
         />,
@@ -129,7 +131,7 @@ export default function JobDetailView({ basePath = "" }) {
         title={title}
         subtitle={job?.role && job?.company_name ? job.company_name : undefined}
         meta={meta}
-        actions={canManage && <HeroActions onDelete={() => setConfirmOpen(true)} />}
+        actions={canDelete && <HeroActions onDelete={() => setConfirmOpen(true)} />}
         sidebar={sidebar}
       >
         {images.length > 0 && <ImageGallery images={images} title={title} />}
@@ -145,7 +147,7 @@ export default function JobDetailView({ basePath = "" }) {
             contentType="jobs"
             contentId={id}
             postOwnerId={postOwnerId}
-            canModerate={canModerate}
+            canModerate={canModerateComments}
             currentUserId={currentUserId}
           />
         </InfoCard>

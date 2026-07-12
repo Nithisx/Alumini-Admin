@@ -47,7 +47,7 @@ const getGoogleCalendarUrl = (event) => {
 export default function EventDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUserId, canModerate } = useViewerProfile();
+  const { currentUserId, canEditAny, canDeleteAny, canModerateComments } = useViewerProfile("events");
   const token = localStorage.getItem("Token");
 
   const [event, setEvent] = useState(null);
@@ -79,7 +79,9 @@ export default function EventDetailView({ basePath = "" }) {
   }, [id, token]);
 
   const postOwnerId = event?.user ?? null;
-  const canManage = canModerate || (currentUserId != null && currentUserId === postOwnerId);
+  const isOwner = currentUserId != null && currentUserId === postOwnerId;
+  const canEdit = canEditAny || isOwner;      // own event, or events.edit_any
+  const canDelete = canDeleteAny || isOwner;  // own event, or events.delete_any
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -166,10 +168,10 @@ export default function EventDetailView({ basePath = "" }) {
         title={event?.title}
         meta={meta}
         actions={
-          canManage && (
+          (canEdit || canDelete) && (
             <HeroActions
-              onEdit={() => navigate(`${basePath}/event/${id}/edit`)}
-              onDelete={() => setConfirmOpen(true)}
+              onEdit={canEdit ? () => navigate(`${basePath}/event/${id}/edit`) : undefined}
+              onDelete={canDelete ? () => setConfirmOpen(true) : undefined}
             />
           )
         }
@@ -191,7 +193,7 @@ export default function EventDetailView({ basePath = "" }) {
             contentType="events"
             contentId={id}
             postOwnerId={postOwnerId}
-            canModerate={canModerate}
+            canModerate={canModerateComments}
             currentUserId={currentUserId}
           />
         </InfoCard>

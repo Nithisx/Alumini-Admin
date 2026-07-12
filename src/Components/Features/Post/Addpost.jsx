@@ -12,6 +12,7 @@ import {
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
 import JobStatusTag from "../../Shared/JobStatusTag";
 import { API_JOBS, API_ORIGIN, API_PROFILE } from "../../../config/api";
+import { usePermissions } from "../../../lib/usePermissions";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -137,9 +138,10 @@ const ImageGallery = ({ images }) => {
 };
 
 // Job Card Component — social feed style (full-width, like Facebook/Instagram)
-const JobCard = ({ post, onRequestDelete, onRequestEdit, onStatusChange, currentUserId, canModerate }) => {
+const JobCard = ({ post, onRequestDelete, onRequestEdit, onStatusChange, currentUserId, canEditAny, canDeleteAny, canModerateComments }) => {
   const isOwn = String(post.user?.id ?? "") === String(currentUserId ?? "");
-  const canManage = isOwn || canModerate;
+  const canEdit = isOwn || canEditAny;      // own post, or jobs.edit_any
+  const canDelete = isOwn || canDeleteAny;  // own post, or jobs.delete_any
   const navigate = useNavigate();
   const jobBase = `/${useLocation().pathname.split("/")[1] || ""}`;
   const openDetail = () => navigate(`${jobBase}/jobs/${post.id}`);
@@ -174,22 +176,26 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, onStatusChange, current
             </div>
           </div>
         </div>
-        {canManage && (
+        {(canEdit || canDelete) && (
           <div className="flex items-center gap-1" onClick={stop}>
-            <button
-              onClick={() => onRequestEdit(post)}
-              className="text-gray-400 hover:text-blue-500 transition-colors p-1 rounded"
-              title="Edit post"
-            >
-              <FontAwesomeIcon icon={faEdit} className="text-xs" />
-            </button>
-            <button
-              onClick={() => onRequestDelete(post.id)}
-              className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
-              title="Delete post"
-            >
-              <FontAwesomeIcon icon={faTrash} className="text-xs" />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => onRequestEdit(post)}
+                className="text-gray-400 hover:text-blue-500 transition-colors p-1 rounded"
+                title="Edit post"
+              >
+                <FontAwesomeIcon icon={faEdit} className="text-xs" />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => onRequestDelete(post.id)}
+                className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
+                title="Delete post"
+              >
+                <FontAwesomeIcon icon={faTrash} className="text-xs" />
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -201,7 +207,7 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, onStatusChange, current
           <JobStatusTag
             status={post.status}
             jobId={post.id}
-            canManage={canManage}
+            canManage={canEdit}
             onChange={(next) => onStatusChange?.(post.id, next)}
           />
         </div>
@@ -248,7 +254,7 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, onStatusChange, current
           contentType="jobs"
           contentId={post.id}
           postOwnerId={post.user?.id ?? null}
-          canModerate={canModerate}
+          canModerate={canModerateComments}
           currentUserId={currentUserId}
         />
       </div>
@@ -262,7 +268,10 @@ const JobFeed = () => {
   const [loading, setLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [canModerate, setCanModerate] = useState(false);
+  const { has } = usePermissions();
+  const canEditAny = has("jobs.edit_any");
+  const canDeleteAny = has("jobs.delete_any");
+  const canModerateComments = has("jobs.moderate_comments");
 
   // Edit modal state
   const [editingJob, setEditingJob] = useState(null);
@@ -318,8 +327,6 @@ const JobFeed = () => {
         .then((r) => r.json())
         .then((d) => {
           setCurrentUserId(d.id);
-          const role = (d.role || "").toLowerCase();
-          setCanModerate(d.is_staff || role === "admin" || role === "staff");
         })
         .catch(() => {});
     }
@@ -702,7 +709,9 @@ const JobFeed = () => {
                       setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, status: next } : p)))
                     }
                     currentUserId={currentUserId}
-                    canModerate={canModerate}
+                    canEditAny={canEditAny}
+                    canDeleteAny={canDeleteAny}
+                    canModerateComments={canModerateComments}
                   />
                 </MotionItem>
               ))}

@@ -28,6 +28,9 @@ export const API_SIGNUP         = `${API_BASE}/signup/`;
 export const API_SIGNUP_OTP     = `${API_BASE}/signup-otp/`;
 export const API_FORGOT_PASSWORD  = `${API_BASE}/forgot-password/`;
 export const API_CHANGE_PASSWORD  = `${API_BASE}/change-password/`;
+export const API_GOOGLE_OAUTH   = `${API_BASE}/auth/google/`;
+export const API_GOOGLE_SIGNUP  = `${API_BASE}/auth/google/signup/`;
+export const API_ME_PERMISSIONS = `${API_BASE}/me/permissions/`;
 
 // Profile
 export const API_PROFILE        = `${API_BASE}/profile/`;
@@ -201,6 +204,11 @@ export const API_NOTIFICATION_READ        = (id) => `${API_BASE}/notifications/$
 export const API_NOTIFICATION_READ_ALL    = `${API_BASE}/notifications/read-all/`;
 export const API_NOTIFICATION_DELETE      = (id) => `${API_BASE}/notifications/${id}/`;
 export const API_NOTIFICATION_CLEAR_ALL   = `${API_BASE}/notifications/clear-all/`;
+
+// ── Audit logs (admin) ────────────────────────────────────────────────────────
+export const API_AUDIT_LOGS              = `${API_BASE}/audit-logs/`;
+export const API_AUDIT_LOG_DETAIL        = (id) => `${API_BASE}/audit-logs/${id}/`;
+export const API_AUDIT_LOG_FILTERS       = `${API_BASE}/audit-logs/filters/`;
 
 // ── Developer Endorsements ────────────────────────────────────────────────────
 export const API_ENDORSEMENTS            = `${API_BASE}/endorsements/`;
