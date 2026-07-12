@@ -8,44 +8,27 @@ import CountUp from "../../Shared/CountUp";
 import { LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
 import { buildBatchMateMembersUrl } from "../../../lib/membersUrl";
 import { useBasePath } from "../../../lib/useBasePath";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useDashboardStore } from "../../../stores";
 
-const HomePage = () => {
+const HomePage = observer(() => {
   const base = useBasePath();
-  const [data, setData] = useState(null);
-  const [countryDistribution, setCountryDistribution] = useState({ chapters: [] });
-  const [cityStateDistribution, setCityStateDistribution] = useState({ city_chapters: [], state_chapters: [] });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // All data + fetching lives in DashboardStore; this component only renders.
+  const store = useDashboardStore();
+  const { data, countryDistribution, cityStateDistribution, loading, error } = store;
   const [newsSlide, setNewsSlide] = useState(0);
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchStartY, setTouchStartY] = useState(null);
-  const BASE_URL = API_BASE;
   const MEDIA_BASE_URL = API_ORIGIN;
-  const token = localStorage.getItem("Token");
   const newsCount = data?.featured_news?.length || 0;
   const batchMatesUrl = buildBatchMateMembersUrl(`${base}/members/`, data?.batch_mates?.[0]);
 
   const navigate = useCallback((path) => { window.location.href = path; }, []);
 
   useEffect(() => {
-    if (!token) { setLoading(false); setError("Authentication token not found"); return; }
-    const fetchData = async () => {
-      try {
-        const [homeRes, countryRes, cityStateRes] = await Promise.all([
-          fetch(`${BASE_URL}/home/`, { headers: { Authorization: `Token ${token}` } }),
-          fetch(`${BASE_URL}/country-distribution/`, { headers: { Authorization: `Token ${token}` } }),
-          fetch(`${BASE_URL}/city-state-chapters/`, { headers: { Authorization: `Token ${token}` } }),
-        ]);
-        if (!homeRes.ok || !countryRes.ok || !cityStateRes.ok) throw new Error("Failed to fetch data");
-        setData(await homeRes.json());
-        setCountryDistribution(await countryRes.json());
-        setCityStateDistribution(await cityStateRes.json());
-        setLoading(false);
-      } catch (err) { setError(err.message); setLoading(false); }
-    };
-    fetchData();
-  }, [token]);
+    store.load();
+  }, [store]);
 
   useEffect(() => {
     if (loading) return;
@@ -504,6 +487,6 @@ const HomePage = () => {
       `}</style>
     </div>
   );
-};
+});
 
 export default HomePage;

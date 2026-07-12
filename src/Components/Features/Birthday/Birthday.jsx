@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { PageHeader, PageHero, StatPill, EmptyState, LoadingScreen, ErrorScreen, MotionList, MotionItem } from "../../Shared/ui";
-import { API_BIRTHDAYS, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { useBirthdayStore } from "../../../stores";
 
 const Birthday = () => {
   const [birthdays, setBirthdays] = useState([]);
@@ -12,7 +13,7 @@ const Birthday = () => {
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showSelectedBirthdays, setShowSelectedBirthdays] = useState(true);
-  const token = localStorage.getItem("Token");
+  const store = useBirthdayStore();
   const navigate = useNavigate();
 
   const getMonthDay = (dateLike) => {
@@ -95,25 +96,20 @@ const computeDaysUntilBirthday = (dateLike) => {
     return { label: "Other Birthday", iconUrl: "https://cdn-icons-png.flaticon.com/128/6794/6794503.png" };
   };
 
+  // Fetching lives in BirthdayStore; this component derives the display fields.
   useEffect(() => {
     (async () => {
-      try {
-        setLoading(true);
-        const r = await fetch(API_BIRTHDAYS, {
-          headers: { Authorization: `Token ${token}` },
-        });
-        if (!r.ok) throw new Error("Failed to fetch birthdays");
-        const data = await r.json();
-        const items = Array.isArray(data) ? data : Array.isArray(data.results) ? data.results : [];
-        const mapped = items.map((u) => ({ ...u, days_until_birthday: computeDaysUntilBirthday(u.date_of_birth) }));
-        // debug: show how many items were loaded in dev tools
-        // eslint-disable-next-line no-console
-        console.debug("birthdays fetched:", mapped.length, mapped.slice(0,3));
-        setBirthdays(mapped);
-      } catch (err) { setError(err.message); }
-      finally { setLoading(false); }
+      setLoading(true);
+      await store.load();
+      setBirthdays(
+        store.items.map((u) => ({
+          ...u,
+          days_until_birthday: computeDaysUntilBirthday(u.date_of_birth),
+        }))
+      );
+      setLoading(false);
     })();
-  }, [token]);
+  }, [store]);
 
   const upcomingBirthdays = birthdays
     .filter((u) => typeof u.days_until_birthday === "number" && u.days_until_birthday >= 0)
