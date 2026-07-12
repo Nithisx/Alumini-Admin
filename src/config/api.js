@@ -1,23 +1,14 @@
 /**
- * Central API configuration.
+ * Central API endpoint registry.
  *
- * The only value the Vite bundle needs baked in is the backend origin
- * (VITE_API_ORIGIN). Secrets (VAPID key, Supabase URL/anon key) are NOT here —
- * they arrive from the backend config bootstrap (see config/runtimeConfig.js,
- * consumed by lib/webpush.js and lib/supabase.js). API/WS bases prefer the
- * bootstrapped values and fall back to env, so a single source of truth (the
- * backend) can move hosts without a rebuild.
+ * Bases (origin / REST / chat host / WS) come from config/appConfig.js, which
+ * reads Vite env vars at BUILD time. The backend's /api/v1/config/ bootstrap is
+ * gone, so there is no async config load and no network hop before first paint.
  */
-import { getApiBase, getApiOrigin, getWsBase } from './runtimeConfig';
+import { API_ORIGIN as ORIGIN, API_BASE as BASE, CHAT_HOST as CHAT, WS_BASE as WS } from './appConfig';
 
-const APP_ORIGIN = typeof window !== 'undefined' ? window.location.origin : '';
-export const API_ORIGIN = getApiOrigin() || import.meta.env.VITE_API_ORIGIN || APP_ORIGIN;
-const DEV_API_BASE = import.meta.env.VITE_DEV_API_BASE_URL || '/api/v1';
-
-// In dev, default to a same-origin path so Vite proxy can avoid browser CORS issues.
-export const API_BASE = getApiBase() || import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV
-  ? DEV_API_BASE
-  : `${API_ORIGIN}/api/v1`);
+export const API_ORIGIN = ORIGIN;
+export const API_BASE = BASE;
 
 // Auth
 export const API_LOGIN_ALUMNI   = `${API_BASE}/login/`;
@@ -136,25 +127,10 @@ export const API_BUSINESS_COMMENT_REPLY   = (id) => `${API_BASE}/businesses/comm
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
 
-const CHAT_HOST = import.meta.env.VITE_CHAT_API_HOST || API_ORIGIN;
+const CHAT_HOST = CHAT;
 export const API_CHAT_HOST = CHAT_HOST;
 
-const toWsOrigin = (origin) => {
-  try {
-    const u = new URL(origin, APP_ORIGIN || 'http://localhost');
-    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
-    return u.origin;
-  } catch {
-    if (typeof window !== 'undefined') {
-      return window.location.protocol === 'https:'
-        ? `wss://${window.location.host}`
-        : `ws://${window.location.host}`;
-    }
-    return 'ws://localhost';
-  }
-};
-
-const WS_BASE = getWsBase() || import.meta.env.VITE_WS_BASE_URL || toWsOrigin(CHAT_HOST);
+const WS_BASE = WS;
 
 export const API_CHAT_ROOMS          = `${CHAT_HOST}/chat/rooms/`;
 export const API_CHAT_ROOM_MESSAGES  = (roomId) => `${CHAT_HOST}/chat/rooms/${roomId}/messages/`;

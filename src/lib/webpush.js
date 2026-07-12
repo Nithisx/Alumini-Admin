@@ -18,12 +18,11 @@
  *  onForegroundMessage() wraps that postMessage as an observable callback.
  */
 
-import { getVapidPublicKey } from "../config/runtimeConfig";
+import { getVapidPublicKey } from "../config/appConfig";
 
-// Browser VAPID key (base64url applicationServerKey) now comes from the backend
-// config bootstrap, not the Vite bundle. Read at call time (subscribe), by which
-// point loadRuntimeConfig() has resolved. Env kept as a dev fallback.
-const getVapidKey = () => getVapidPublicKey() || import.meta.env.VITE_FIREBASE_VAPID_KEY;
+// Browser VAPID key (base64url applicationServerKey) — the PUBLIC half, from
+// build-time env (config/appConfig.js). The private key never leaves the backend.
+const getVapidKey = () => getVapidPublicKey();
 // Scoped per auth-token so two different accounts on the same browser each get
 // their own cache entry and always re-register with the correct user on login.
 const storageKey = (authToken) => `pushSubscription_${authToken}`;

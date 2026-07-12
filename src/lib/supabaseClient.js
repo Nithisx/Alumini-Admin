@@ -6,13 +6,12 @@
  * provider redirect (see Pages/OAuthComplete.jsx for what happens with the
  * resulting session).
  *
- * Built lazily (not at module load) because the Supabase URL/anon key come
- * from the backend's runtime config, which resolves asynchronously before
- * first render (see main.jsx) — by the time any code calls
- * getSupabaseClient(), loadRuntimeConfig() has already settled.
+ * Built lazily (not at module load) so nothing is constructed on a page that
+ * never signs in. The URL/anon key come from build-time env (config/appConfig.js),
+ * so they are available synchronously — no boot-time await.
  */
 import { createClient } from "@supabase/supabase-js";
-import { getSupabaseUrl, getSupabaseAnonKey } from "../config/runtimeConfig";
+import { getSupabaseUrl, getSupabaseAnonKey } from "../config/appConfig";
 
 let client = null;
 

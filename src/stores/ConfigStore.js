@@ -1,30 +1,35 @@
 /**
- * ConfigStore — runtime config served by the backend (`GET /api/v1/config/`).
+ * ConfigStore — frontend configuration, surfaced to the store layer.
  *
- * The values (API/WS bases, browser VAPID key, Supabase URL + public anon key)
- * are fetched by config/runtimeConfig.js BEFORE React renders (see main.jsx),
- * so this store just surfaces them reactively and exposes a reload(). Nothing
- * secret lives here — the Supabase anon key is public by design (RLS-protected,
- * same trust model as a Firebase web config).
+ * Values come from config/appConfig.js, i.e. Vite env vars baked in at BUILD
+ * time. The backend's `GET /api/v1/config/` bootstrap has been removed, so this
+ * is now a static, synchronous read — there is nothing to fetch and nothing to
+ * await before render.
+ *
+ * Nothing secret lives here: the Supabase ANON key and the VAPID PUBLIC key are
+ * both designed to ship to browsers (see appConfig.js for the reasoning).
  */
-import { makeAutoObservable, runInAction } from "mobx";
+import { makeAutoObservable } from "mobx";
 import {
-  loadRuntimeConfig,
-  getApiBase,
-  getWsBase,
-  getVapidPublicKey,
-  getSupabaseUrl,
-  getSupabaseAnonKey,
-  getFeatures,
-} from "../config/runtimeConfig";
+  API_BASE,
+  API_ORIGIN,
+  CHAT_HOST,
+  WS_BASE,
+  VAPID_PUBLIC_KEY,
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  FEATURES,
+} from "../config/appConfig";
 
 export default class ConfigStore {
-  apiBase = getApiBase();
-  wsBase = getWsBase();
-  vapidPublicKey = getVapidPublicKey();
-  supabaseUrl = getSupabaseUrl();
-  supabaseAnonKey = getSupabaseAnonKey();
-  features = getFeatures();
+  apiOrigin = API_ORIGIN;
+  apiBase = API_BASE;
+  chatHost = CHAT_HOST;
+  wsBase = WS_BASE;
+  vapidPublicKey = VAPID_PUBLIC_KEY;
+  supabaseUrl = SUPABASE_URL;
+  supabaseAnonKey = SUPABASE_ANON_KEY;
+  features = FEATURES;
 
   constructor(root) {
     this.root = root;
@@ -35,15 +40,8 @@ export default class ConfigStore {
     return Boolean(this.features?.developerCommunity);
   }
 
-  async reload() {
-    await loadRuntimeConfig();
-    runInAction(() => {
-      this.apiBase = getApiBase();
-      this.wsBase = getWsBase();
-      this.vapidPublicKey = getVapidPublicKey();
-      this.supabaseUrl = getSupabaseUrl();
-      this.supabaseAnonKey = getSupabaseAnonKey();
-      this.features = getFeatures();
-    });
+  /** True when the app has everything it needs to talk to the backend. */
+  get isConfigured() {
+    return Boolean(this.apiBase && this.supabaseUrl && this.supabaseAnonKey);
   }
 }

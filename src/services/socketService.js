@@ -10,7 +10,7 @@
  *   this.socket = socketService.connectGlobalChat({ onOpen, onMessage, onDown });
  *   this.roomSocket = socketService.connectRoom(roomId, { ... });
  */
-import { getWsBase } from "../config/runtimeConfig";
+import { getWsBase } from "../config/appConfig";
 import { createResilientSocket } from "../Components/Shared/chat/resilientSocket";
 
 /** Base wss origin, e.g. "wss://api.karpagamalumni.in" (from backend config). */

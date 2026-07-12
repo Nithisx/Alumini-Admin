@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/virtual_pwa-register-DJL4SEqR.js","assets/index-8UB9X6_V.js","assets/index-o5K-5WFJ.css"])))=>i.map(i=>d[i]);
+import{_ as r}from"./index-8UB9X6_V.js";r(async()=>{const{registerSW:e}=await import("./virtual_pwa-register-DJL4SEqR.js");return{registerSW:e}},__vite__mapDeps([0,1,2])).then(({registerSW:e})=>{e({immediate:!0})}).catch(e=>{console.warn("[PWA] Service worker registration failed:",e)});
