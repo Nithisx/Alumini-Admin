@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import Pagination from "./Pagination";
 import { getProfilePlaceholderByGender } from "../../lib/profilePlaceholders";
 import { useBreadcrumb } from "./BreadcrumbContext";
 import { API_BASE, API_ORIGIN } from "../../config/api";
+import { useBasePath } from "../../lib/useBasePath";
 
 const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
@@ -78,7 +79,6 @@ function MemberCard({ member, memberPath }) {
 export default function ChapterDetail() {
   const { type, value } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const { setBreadcrumbLabel } = useBreadcrumb();
 
   const [members, setMembers] = useState([]);
@@ -90,9 +90,11 @@ export default function ChapterDetail() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
-  // Determine "back" path and member path based on current route
-  const pathSegments = location.pathname.split("/");
-  const roleBase = `/${pathSegments[1]}`;
+  // Prefix-free routing since the refactor (useBasePath() returns ""), so the
+  // back/member links are just "/dashboard" and "/members". The old
+  // pathSegments[1] logic broke here — it resolved to "chapters" from
+  // /chapters/:type/:value and produced /chapters/dashboard etc.
+  const roleBase = useBasePath();
   const backPath = `${roleBase}/dashboard`;
   const memberPath = `${roleBase}/members`;
 

@@ -27,13 +27,28 @@ import RoleLayout from './Components/Features/RoleLayout';
 
 // Protected route wrapper
 import ProtectedRoute from './Components/Shared/ProtectedRoute';
+import { peekLoginRedirect } from './lib/loginRedirect';
 
+// Bounces an already-authenticated visitor off a guest-only page (/, /home,
+// /login, /signup).
+//
+// It MUST honour a pending post-login destination. GuestOnly reads localStorage,
+// which is not reactive: the instant login stores the token, any re-render while
+// still on /login makes GuestOnly render this component, and a blind
+// <Navigate to="/dashboard"> here would race and override the redirect to the
+// page the user originally clicked. Consuming the saved target first means the
+// user lands where they intended no matter which navigation wins.
 function AuthRedirect() {
   const location = useLocation();
   const token = localStorage.getItem('Token');
   const suffix = `${location.search || ''}${location.hash || ''}`;
-  if (!token) return <Navigate to="/" replace />;
-  return <Navigate to={`/dashboard${suffix}`} replace />;
+  // Session vanished mid-flight — send them to log in again, not to the
+  // marketing home page (and keep where they were headed).
+  if (!token) return <Navigate to="/login" state={{ from: location }} replace />;
+  // Peek (not consume) — this runs during render; AnimatedRoutes clears the key
+  // once the user lands on the destination.
+  const target = peekLoginRedirect();
+  return <Navigate to={target || `/dashboard${suffix}`} replace />;
 }
 
 function GuestOnly({ children }) {
@@ -48,9 +63,13 @@ function AnimatedRoutes() {
   const location = useLocation();
   const segment = `/${location.pathname.split('/')[1] || ''}`;
 
-  // Clear redirect path if navigating to any non-auth page
+  // Drop a stale "return to this page after login" target once the user
+  // navigates somewhere outside the auth flow (i.e. they abandoned logging in).
+  // /oauth/complete MUST be listed: Google sends the user back through it, and
+  // clearing the target there would strand them on /dashboard instead of the
+  // page they originally clicked.
   React.useEffect(() => {
-    const authPaths = ['/login', '/signup', '/oauth-signup'];
+    const authPaths = ['/login', '/signup', '/oauth-signup', '/oauth/complete'];
     if (!authPaths.includes(location.pathname)) {
       sessionStorage.removeItem('login_redirect_to');
     }

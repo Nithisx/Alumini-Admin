@@ -47,6 +47,10 @@ export default function Home() {
     }
   };
 
+  const handleChapterNavigation = (type, name) => {
+    handleProtectedNavigation(`/chapters/${type}/${encodeURIComponent(name)}`);
+  };
+
   const formatDate = (dateValue) => {
     const date = new Date(dateValue);
     if (Number.isNaN(date.getTime())) return "TBA";
@@ -426,6 +430,7 @@ export default function Home() {
               countryDistribution={countryDistribution}
               cityStateDistribution={cityStateDistribution}
               chapterBasePath={roleBasePath ?? undefined}
+              onChapterSelect={handleChapterNavigation}
               sectionClassName="py-0"
             />
           </section>

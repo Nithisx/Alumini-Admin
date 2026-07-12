@@ -8,62 +8,31 @@ import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
 import { API_BASE } from "../config/api";
 import { getSupabaseClient } from "../lib/supabaseClient";
+import { saveLoginRedirect, consumeLoginRedirect, DEFAULT_AFTER_LOGIN } from "../lib/loginRedirect";
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
 });
 
-function defaultDashboard() {
-  return "/dashboard";
-}
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
 
-  // Save the redirect path if it exists in location state
+  // Stash the page the user was trying to reach (set by ProtectedRoute, or by
+  // a public page's protected link — e.g. a member card on /home).
   useEffect(() => {
-    if (location.state?.from) {
-      const fromPath =
-        location.state.from.pathname +
-        (location.state.from.search || "") +
-        (location.state.from.hash || "");
-      const authPaths = ["/login", "/signup", "/oauth-signup"];
-      if (location.state.from.isRelative || !authPaths.includes(location.state.from.pathname)) {
-        if (location.state.from.isRelative) {
-          sessionStorage.setItem("login_redirect_relative", fromPath);
-        } else {
-          sessionStorage.setItem("login_redirect_to", fromPath);
-        }
-      }
-    }
+    saveLoginRedirect(location.state?.from);
   }, [location.state]);
 
-  const redirectAfterLogin = useCallback((roleKey) => {
-    const redirectTo = sessionStorage.getItem("login_redirect_to");
-    const redirectRelative = sessionStorage.getItem("login_redirect_relative");
-    
-    sessionStorage.removeItem("login_redirect_to");
-    sessionStorage.removeItem("login_redirect_relative");
-
-    const targetRolePrefix = (roleKey === "alumni" || roleKey === "student") ? "alumni" : roleKey;
-
-    if (redirectRelative) {
-      navigate(`/${targetRolePrefix}${redirectRelative}`, { replace: true });
-    } else if (redirectTo) {
-      // Check if redirectTo starts with a role prefix
-      const match = redirectTo.match(/^\/(admin|staff|alumni|student)(\/.*)?$/);
-      if (match) {
-        const remainingPath = match[2] || "";
-        navigate(`/${targetRolePrefix}${remainingPath}`, { replace: true });
-      } else {
-        navigate(redirectTo, { replace: true });
-      }
-    } else {
-      navigate(defaultDashboard(roleKey), { replace: true });
-    }
+  // Routing is prefix-free, so the stashed path is used as-is. (The old code
+  // re-prefixed it with the role — "/alumni/members/x" — which no longer
+  // resolves, so everyone silently landed on /dashboard.)
+  const redirectAfterLogin = useCallback(() => {
+    const target = consumeLoginRedirect();
+    navigate(target || DEFAULT_AFTER_LOGIN, { replace: true });
   }, [navigate]);
 
   const [form, setForm] = useState({ username: "", password: "" });
@@ -111,7 +80,7 @@ export default function LoginPage() {
         storeLoginCredential(data, data.role_key);
         dispatch(seedFromLogin(data));
         toast.success("Logged in successfully!");
-        redirectAfterLogin(data.role_key);
+        redirectAfterLogin();
       } else {
         toast.error(data.error || "Login failed: no token received");
       }

@@ -8,12 +8,9 @@ import { API_BASE } from "../config/api";
 import { storeLoginCredential } from "../lib/authToken";
 import { seedFromLogin } from "../store/permissionsSlice";
 import { getSupabaseClient } from "../lib/supabaseClient";
+import { consumeLoginRedirect, DEFAULT_AFTER_LOGIN } from "../lib/loginRedirect";
 
 const roleMap = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "student" };
-
-function defaultDashboard() {
-  return "/dashboard";
-}
 
 // Landing page Google redirects back to after the Supabase consent screen.
 // The Supabase JS SDK (lib/supabaseClient.js, detectSessionInUrl: true) has
@@ -56,7 +53,10 @@ export default function OAuthComplete() {
           storeLoginCredential(body, roleKey);
           dispatch(seedFromLogin(body));
           toast.success("Signed in with Google successfully!");
-          navigate(defaultDashboard(), { replace: true });
+          // Honour the page the user was originally trying to reach (stashed
+          // before we bounced them to /login). sessionStorage survives the
+          // round-trip out to Google and back.
+          navigate(consumeLoginRedirect() || DEFAULT_AFTER_LOGIN, { replace: true });
           return;
         }
 

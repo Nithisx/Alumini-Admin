@@ -127,6 +127,7 @@ export default function ChapterDistributionSection({
   cityStateDistribution,
   sectionClassName = "py-12 sm:py-16 lg:py-20",
   chapterBasePath = null,
+  onChapterSelect,
 }) {
   const [expandedSections, setExpandedSections] = useState({
     country: false,
@@ -190,9 +191,17 @@ export default function ChapterDistributionSection({
                   {items.length > 0 ? (
                     visibleItems.map((item, index) => {
                       const name = config.getName(item);
-                      const handleClick = chapterBasePath
-                        ? () => navigate(`${chapterBasePath}/chapters/${config.key}/${encodeURIComponent(name)}`)
-                        : undefined;
+                      // chapterBasePath is "" for logged-in users (prefix-free
+                      // routing since the refactor) and null/undefined when not
+                      // logged in. Empty string is a VALID clickable base — gate
+                      // on `!= null`, not truthiness, or the cards go dead (this
+                      // was the regression: `base` became "" and `"" ? ...` → no
+                      // onClick, so location cards stopped opening their members).
+                      const handleClick = onChapterSelect
+                        ? () => onChapterSelect(config.key, name)
+                        : chapterBasePath != null
+                          ? () => navigate(`${chapterBasePath}/chapters/${config.key}/${encodeURIComponent(name)}`)
+                          : undefined;
                       return (
                         <ChapterCard
                           key={`${config.key}-${name}-${index}`}
