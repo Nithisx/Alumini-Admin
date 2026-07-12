@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SuggestionInput from "../Components/Shared/SuggestionInput";
-import { API_BASE, API_SIGNUP_OTP, API_SIGNUP, API_SUGGESTIONS, API_CHECK_USERNAME } from "../config/api";
-import { getSupabaseClient } from "../lib/supabaseClient";
+import { useAuthStore } from "../stores";
 import { toast } from "react-toastify";
 import {
   COLLEGE_NAMES,
@@ -12,11 +11,7 @@ import {
   getCoursesForCollege,
 } from "../constants/academicOptions";
 
-const api_base = API_BASE;
 
-const SIGNUP_OTP_URL = API_SIGNUP_OTP;
-const SIGNUP_URL = API_SIGNUP;
-const SUGGESTIONS_API = API_SUGGESTIONS;
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -107,26 +102,20 @@ function GoogleIcon() {
 }
 
 const Signup = () => {
+  const authStore = useAuthStore();
   const navigate = useNavigate();
   const [oauthLoading, setOauthLoading] = useState(false);
 
   const handleGoogleSignup = useCallback(async () => {
     setOauthLoading(true);
     try {
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/oauth/complete` },
-      });
-      if (error) {
-        toast.error(error.message || "Failed to start Google sign-in.");
-        setOauthLoading(false);
-      }
+      // On success the browser navigates away immediately.
+      await authStore.startGoogleOAuth("/oauth/complete");
     } catch (err) {
       toast.error(err.message || "Google sign-in is not available right now.");
       setOauthLoading(false);
     }
-  }, []);
+  }, [authStore]);
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -203,28 +192,23 @@ const Signup = () => {
   const fetchSuggestions = useCallback(async (type, params) => {
     try {
       setLoadingSuggestions(prev => ({ ...prev, [type]: true }));
-      const query = new URLSearchParams(params).toString();
-      const res = await fetch(`${SUGGESTIONS_API}/signup?${query}`);
-      if (res.ok) {
-        const json = await res.json();
-
-        setApiSuggestions(prev => ({
-          ...prev,
-          usernames: json.data?.usernameSuggestions || prev.usernames,
-          emails: json.data?.emailSuggestions || prev.emails,
-          countryCodes: json.data?.countryCodeSuggestions || prev.countryCodes,
-          countries: json.data?.locationSuggestions?.countries || prev.countries,
-          states: json.data?.locationSuggestions?.states || prev.states,
-          cities: json.data?.locationSuggestions?.cities || prev.cities,
-          pincodes: json.data?.locationSuggestions?.pincodes || prev.pincodes,
-        }));
-      }
+      const json = await authStore.signupSuggestions(params);
+      setApiSuggestions(prev => ({
+        ...prev,
+        usernames: json.data?.usernameSuggestions || prev.usernames,
+        emails: json.data?.emailSuggestions || prev.emails,
+        countryCodes: json.data?.countryCodeSuggestions || prev.countryCodes,
+        countries: json.data?.locationSuggestions?.countries || prev.countries,
+        states: json.data?.locationSuggestions?.states || prev.states,
+        cities: json.data?.locationSuggestions?.cities || prev.cities,
+        pincodes: json.data?.locationSuggestions?.pincodes || prev.pincodes,
+      }));
     } catch {
-      // ignore fetch errors for suggestions
+      // suggestions are best-effort
     } finally {
       setLoadingSuggestions(prev => ({ ...prev, [type]: false }));
     }
-  }, []);
+  }, [authStore]);
 
   const debouncedFetch = useCallback((type, params, delay = 300) => {
     if (suggestionTimers.current[type]) {
@@ -365,29 +349,20 @@ const Signup = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(SIGNUP_OTP_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: formData.email }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data?.error || data?.message || "Failed to send OTP. Please try again.");
-        return;
-      }
+      await authStore.requestSignupOtp(formData.email);
 
       setIsOtpSent(true);
       setResendTimer(120);
       setError("");
-    } catch {
-      setError("Network error. Please check your connection and try again.");
+    } catch (err) {
+      // `status === null` means the request never reached the server.
+      setError(err.status == null
+        ? "Network error. Please check your connection and try again."
+        : err.message || "Failed to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [formData.email]);
+  }, [formData.email, authStore]);
 
   useEffect(() => {
     let interval;
@@ -462,27 +437,19 @@ const Signup = () => {
         payload.set("role", formData.role);
       }
 
-      const response = await fetch(SIGNUP_URL, {
-        method: "POST",
-        body: payload,
-      });
-      const data = await response.json();
+      await authStore.signup(payload);
 
-      if (data.success || data.token || response.ok) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          window.location.href = "/login";
-        }, 3000);
-      } else {
-        setError(data.error || data.message || "Registration failed");
-      }
-    } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        window.location.href = "/login";
+      }, 3000);
+    } catch (err) {
+      setError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setSignLoading(false);
     }
-  }, [formData, validate, isOtpSent]);
+  }, [formData, validate, isOtpSent, authStore]);
 
   const checkUsernameAvailability = useCallback((username) => {
     if (usernameDebounceTimer) {
@@ -504,15 +471,9 @@ const Signup = () => {
     const timer = setTimeout(async () => {
       setIsCheckingUsername(true);
       try {
-        const response = await fetch(API_CHECK_USERNAME(username));
-        const data = await response.json();
+        const data = await authStore.checkUsername(username);
 
-        if (!response.ok) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            username: "Error checking username"
-          }));
-        } else if (data.exists || data.available === false) {
+        if (data.exists || data.available === false) {
           setFieldErrors((prev) => ({
             ...prev,
             username: "This username is already taken"

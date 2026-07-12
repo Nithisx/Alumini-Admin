@@ -30,6 +30,7 @@ import BirthdayStore from "./birthday";
 import ContributionsStore from "./contributions";
 import EngagementStore from "./engagement";
 import StudentsStore from "./students";
+import DevelopersStore from "./developers";
 
 export default class RootStore {
   constructor() {
@@ -57,6 +58,7 @@ export default class RootStore {
     this.contributions = new ContributionsStore(this);
     this.engagement = new EngagementStore(this);
     this.students = new StudentsStore(this);
+    this.developers = new DevelopersStore(this);
 
     this.audit = new AuditStore(this);
     this.signupRequests = new SignupRequestStore(this);

@@ -18,16 +18,10 @@ import Footer from "./about_components/Footer";
 import RoleHeader from "../Components/Features/RoleHeader";
 import ImageViewerModal from "../Components/Shared/ImageViewerModal";
 
-import axiosInstance from "../lib/axiosInstance";
-import { createResilientSocket } from "../Components/Shared/chat/resilientSocket";
 import { isAuthenticated } from "../lib/authToken";
-import {
-  API_CHAT_COMMUNITY,
-  API_DEVELOPER_SHOWCASE,
-  API_PROFILE,
-  WS_COMMUNITY_URL,
-  getMediaUrl,
-} from "../config/api";
+import socketService from "../services/socketService";
+import { useDevelopersStore, useProfileStore, useChatStore } from "../stores";
+import { getMediaUrl } from "../config/api";
 
 const FEATURED_DEVELOPER_IDS = [
   "c2a1b4d7-c9e8-4dca-a297-23bb68d8681a",
@@ -39,10 +33,6 @@ const FALLBACK_ROLE_MAP = {
   "c2a1b4d7-c9e8-4dca-a297-23bb68d8681a": "DEVOPS & Backend Development",
   "16c18467-6ca6-42e6-a500-5fa6c0c8bde4": "UI/UX And frontend Development",
   "3d5871f6-e365-41ff-abf3-7e644f746c9f": "UI/UX And frontend Development",
-};
-
-const AUTH_BYPASS_HEADERS = {
-  "x-skip-unauthorized-redirect": "true",
 };
 
 const getDisplayName = (person) =>
@@ -106,6 +96,9 @@ const fmtDateTime = (timestamp) => {
 };
 
 export default function DeveloperCommunityLive() {
+  const developersStore = useDevelopersStore();
+  const profileStore = useProfileStore();
+  const chatStore = useChatStore();
   const [developers, setDevelopers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -153,39 +146,17 @@ export default function DeveloperCommunityLive() {
     });
   };
 
-  const loadDeveloperShowcase = async () => {
-    const response = await axiosInstance.get(
-      `${API_DEVELOPER_SHOWCASE}?ids=${FEATURED_DEVELOPER_IDS.join(",")}`
-    );
-    const list = response.data?.developers || [];
-    setDevelopers(list);
-  };
-
-  const loadCurrentUser = async () => {
-    if (!token) return;
-    const response = await axiosInstance.get(API_PROFILE, {
-      headers: {
-        ...AUTH_BYPASS_HEADERS,
-        Authorization: `Token ${token}`,
-      },
-    });
-    setCurrentUser(response.data || null);
-  };
-
   useEffect(() => {
     let active = true;
 
     const bootstrap = async () => {
       try {
-        await loadDeveloperShowcase();
-        await loadCurrentUser();
-        if (token) {
-          await axiosInstance.get(API_CHAT_COMMUNITY, {
-            headers: {
-              ...AUTH_BYPASS_HEADERS,
-              Authorization: `Token ${token}`,
-            },
-          });
+        setDevelopers(await developersStore.fetchShowcase(FEATURED_DEVELOPER_IDS));
+        if (isAuthorized) {
+          setCurrentUser(await profileStore.load());
+          // Touching the community endpoint ensures the room exists before the
+          // socket subscribes to it.
+          await chatStore.bootstrapViaRest();
         }
       } catch (bootstrapError) {
         console.error(bootstrapError);
@@ -199,13 +170,15 @@ export default function DeveloperCommunityLive() {
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!token) return undefined;
+    if (!isAuthorized) return undefined;
 
-    const socket = createResilientSocket({
-      getUrl: () => WS_COMMUNITY_URL(token, "developer"),
+    // Auth rides the httpOnly cookie on the WS upgrade — never a token in the
+    // query string (it leaks the credential into proxy/server logs).
+    const socket = socketService.connectCommunity("developer", {
       onOpen: () => {
         setConnected(true);
       },
@@ -238,13 +211,12 @@ export default function DeveloperCommunityLive() {
     });
 
     socketRef.current = socket;
-    socket.connect();
 
     return () => {
       socket.close();
       socketRef.current = null;
     };
-  }, [token]);
+  }, [isAuthorized]);
 
   useEffect(() => {
     if (messages.length) {

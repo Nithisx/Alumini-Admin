@@ -13,7 +13,7 @@
  * that used to be re-derived at each call site.
  */
 import api from "../../services/apiClient";
-import { API_BASE, API_CHAT_SEARCH, API_PORTAL_SHARE } from "../../config/api";
+import { API_BASE, API_CHAT_SEARCH, API_PORTAL_SHARE, API_SHARE_RESOLVE } from "../../config/api";
 
 export default class EngagementStore {
   constructor(root) {
@@ -93,6 +93,11 @@ export default class EngagementStore {
       { message, share_mode, share_platform },
       { raw: true }
     );
+  }
+
+  /** Resolve a /share/<token> link to the content it points at. Public. */
+  resolveShare(token) {
+    return api.get(API_SHARE_RESOLVE(token), { raw: true });
   }
 
   /** The targets for an already-minted token (the create response can omit them). */

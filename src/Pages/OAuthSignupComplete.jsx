@@ -8,10 +8,8 @@ import {
   STAFF_ONLY_COLLEGE,
   getCoursesForCollege,
 } from "../constants/academicOptions";
-import { API_BASE, API_SUGGESTIONS } from "../config/api";
+import { useAuthStore } from "../stores";
 
-const api_base = API_BASE;
-const SUGGESTIONS_API = API_SUGGESTIONS;
 
 const REQUIRED_FIELDS = [
   "first_name",
@@ -91,6 +89,7 @@ const SelectField = React.memo(
 );
 
 export default function OAuthSignupComplete() {
+  const authStore = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -181,21 +180,17 @@ export default function OAuthSignupComplete() {
   const fetchSuggestions = useCallback(async (type, params) => {
     try {
       setLoadingSuggestions((prev) => ({ ...prev, [type]: true }));
-      const query = new URLSearchParams(params).toString();
-      const res = await fetch(`${SUGGESTIONS_API}/signup?${query}`);
-      if (res.ok) {
-        const json = await res.json();
-        setApiSuggestions((prev) => ({
-          ...prev,
-          usernames: json.data?.usernameSuggestions || prev.usernames,
-          countryCodes: json.data?.countryCodeSuggestions || prev.countryCodes,
-          countries: json.data?.locationSuggestions?.countries || prev.countries,
-          states: json.data?.locationSuggestions?.states || prev.states,
-          cities: json.data?.locationSuggestions?.cities || prev.cities,
-          pincodes: json.data?.locationSuggestions?.pincodes || prev.pincodes,
-        }));
-      }
-    } catch { /* ignore suggestion fetch errors */ }
+      const json = await authStore.signupSuggestions(params);
+      setApiSuggestions((prev) => ({
+        ...prev,
+        usernames: json.data?.usernameSuggestions || prev.usernames,
+        countryCodes: json.data?.countryCodeSuggestions || prev.countryCodes,
+        countries: json.data?.locationSuggestions?.countries || prev.countries,
+        states: json.data?.locationSuggestions?.states || prev.states,
+        cities: json.data?.locationSuggestions?.cities || prev.cities,
+        pincodes: json.data?.locationSuggestions?.pincodes || prev.pincodes,
+      }));
+    } catch { /* suggestions are best-effort */ }
     finally {
       setLoadingSuggestions((prev) => ({ ...prev, [type]: false }));
     }
@@ -328,13 +323,9 @@ export default function OAuthSignupComplete() {
         ...(pincode ? { zip_code: pincode } : {}),
       };
 
-      const response = await fetch(`${api_base}/auth/google/signup/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
+      const data = await authStore.googleSignup(payload);
 
+      // A 200 can still mean "this identity already has an account".
       if (data.status === "pending" || data.status === "login") {
         navigate("/login", {
           replace: true,
@@ -343,20 +334,16 @@ export default function OAuthSignupComplete() {
         return;
       }
 
-      if (data.success || response.ok) {
-        setShowSuccess(true);
-      } else {
-        setError(data.error || data.message || "Registration failed");
-      }
+      setShowSuccess(true);
     } catch (err) {
-      const errData = err?.response?.data;
-      if (
-        errData?.status === "pending" ||
-        errData?.error?.toLowerCase().includes("already registered")
-      ) {
+      // …and so can a rejection.
+      const alreadyExists =
+        err?.details?.status === "pending" ||
+        (err.message || "").toLowerCase().includes("already registered");
+      if (alreadyExists) {
         navigate("/login", {
           replace: true,
-          state: { message: errData?.error || "Account already exists. Please log in." },
+          state: { message: err.message || "Account already exists. Please log in." },
         });
         return;
       }
@@ -364,7 +351,7 @@ export default function OAuthSignupComplete() {
     } finally {
       setSignLoading(false);
     }
-  }, [formData, validate, navigate, oauthAvatarUrl, prefill.accessToken]);
+  }, [formData, validate, navigate, oauthAvatarUrl, prefill.accessToken, authStore]);
 
   const checkUsernameAvailability = useCallback(
     (username) => {
@@ -377,13 +364,8 @@ export default function OAuthSignupComplete() {
       const timer = setTimeout(async () => {
         setIsCheckingUsername(true);
         try {
-          const res = await fetch(
-            `${api_base}/check-username/?username=${encodeURIComponent(username)}`
-          );
-          const data = await res.json();
-          if (!res.ok) {
-            setFieldErrors((prev) => ({ ...prev, username: "Error checking username" }));
-          } else if (data.exists || data.available === false) {
+          const data = await authStore.checkUsername(username);
+          if (data.exists || data.available === false) {
             setFieldErrors((prev) => ({ ...prev, username: "This username is already taken" }));
           } else if (data.available === true) {
             setFieldErrors((prev) => ({ ...prev, username: "" }));

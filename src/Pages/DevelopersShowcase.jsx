@@ -21,17 +21,9 @@ import Header from "./Header";
 import Footer from "./about_components/Footer";
 import RoleHeader from "../Components/Features/RoleHeader";
 
-import axiosInstance from "../lib/axiosInstance";
-import { getRole } from "../lib/authToken";
-import {
-  API_ADMIN_USER_UPDATE,
-  API_DEVELOPER_SHOWCASE,
-  API_PROFILE,
-  API_ENDORSEMENTS,
-  API_ENDORSEMENT_USER,
-  API_ENDORSEMENT_DELETE,
-  getMediaUrl,
-} from "../config/api";
+import { isAuthenticated } from "../lib/authToken";
+import { useDevelopersStore, useProfileStore } from "../stores";
+import { getMediaUrl } from "../config/api";
 
 const FEATURED_DEVELOPER_IDS = [
   "c2a1b4d7-c9e8-4dca-a297-23bb68d8681a",
@@ -83,6 +75,9 @@ const getLink = (developer, keys) => {
 };
 
 export default function DevelopersShowcase() {
+  const developersStore = useDevelopersStore();
+  const profileStore = useProfileStore();
+  const signedIn = isAuthenticated();
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -110,32 +105,16 @@ export default function DevelopersShowcase() {
     setViewerOpen(true);
   };
 
-  const role = getRole();
   const isAdmin = usePermissions().has("developer.moderate");
 
-  const renderHeader = () => {
-    if (!token || !role) return <Header />;
-    return <RoleHeader />;
-  };
+  const renderHeader = () => (signedIn ? <RoleHeader /> : <Header />);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (token) {
-          axiosInstance
-            .get(API_PROFILE, {
-              headers: { Authorization: `Token ${token}` },
-            })
-            .then((res) => {
-              setCurrentUser(res.data || null);
-            })
-            .catch((err) => {
-              console.error("Failed to load user profile:", err);
-            });
-        }
+        profileStore.load().then((me) => setCurrentUser(me));
 
-        const response = await axiosInstance.get(`${API_DEVELOPER_SHOWCASE}?ids=${FEATURED_DEVELOPER_IDS.join(",")}`);
-        const list = response.data?.developers || [];
+        const list = await developersStore.fetchShowcase(FEATURED_DEVELOPER_IDS);
         setDevelopers(list);
         setRoleDrafts(
           Object.fromEntries(
@@ -146,22 +125,10 @@ export default function DevelopersShowcase() {
           )
         );
 
-        // Fetch endorsements for all developer cards
-        const endorsementsData = {};
-        await Promise.all(
-          list.map(async (dev) => {
-            try {
-              const res = await axiosInstance.get(API_ENDORSEMENT_USER(dev.id));
-              if (res.data?.success) {
-                endorsementsData[dev.id] = res.data.data || [];
-              }
-            } catch (err) {
-              console.error(`Failed to load endorsements for dev ${dev.id}:`, err);
-              endorsementsData[dev.id] = [];
-            }
-          })
+        const pairs = await Promise.all(
+          list.map(async (dev) => [dev.id, await developersStore.fetchEndorsements(dev.id)])
         );
-        setEndorsements(endorsementsData);
+        setEndorsements(Object.fromEntries(pairs));
       } catch (fetchError) {
         console.error(fetchError);
         setError("Unable to load the developer showcase right now.");
@@ -171,25 +138,24 @@ export default function DevelopersShowcase() {
     };
 
     loadData();
-  }, [token]);
+  }, [developersStore, profileStore]);
 
   const saveRole = async (developerId) => {
     if (!isAdmin) return;
     setSavingId(developerId);
     try {
-      const response = await axiosInstance.patch(API_ADMIN_USER_UPDATE(developerId), {
-        developer_role: roleDrafts[developerId] || "",
-      });
-      if (response.data?.user) {
-        setDevelopers((previous) => previous.map((developer) => (developer.id === developerId ? response.data.user : developer)));
+      const updated = await developersStore.setRole(developerId, roleDrafts[developerId] || "");
+      if (updated) {
+        setDevelopers((previous) =>
+          previous.map((developer) => (developer.id === developerId ? updated : developer))
+        );
         setRoleDrafts((previous) => ({
           ...previous,
-          [developerId]: response.data.user.developer_role || "",
+          [developerId]: updated.developer_role || "",
         }));
       }
     } catch (saveError) {
-      console.error(saveError);
-      alert(saveError.response?.data?.message || "Unable to save developer role.");
+      alert(saveError.message || "Unable to save developer role.");
     } finally {
       setSavingId(null);
     }
@@ -215,40 +181,23 @@ export default function DevelopersShowcase() {
   };
 
   const submitEndorsement = async (developerId) => {
-    if (!token) return;
+    if (!signedIn) return;
     if (!contentInput.trim()) {
       alert("Please write a recommendation message.");
       return;
     }
     setSubmittingId(developerId);
     try {
-      const response = await axiosInstance.post(
-        API_ENDORSEMENTS,
-        {
-          recipient_id: developerId,
-          rating: ratingInput,
-          content: contentInput.trim(),
-        },
-        {
-          headers: { Authorization: `Token ${token}` },
-        }
-      );
-      if (response.data?.success) {
-        const res = await axiosInstance.get(API_ENDORSEMENT_USER(developerId));
-        if (res.data?.success) {
-          setEndorsements((prev) => ({
-            ...prev,
-            [developerId]: res.data.data || [],
-          }));
-        }
-        setShowFormId(null);
-        setContentInput("");
-        setRatingInput(5);
-        setShowReviews((prev) => ({ ...prev, [developerId]: true }));
-      }
+      await developersStore.addEndorsement(developerId, ratingInput, contentInput.trim());
+      const fresh = await developersStore.fetchEndorsements(developerId);
+      setEndorsements((prev) => ({ ...prev, [developerId]: fresh }));
+      setShowFormId(null);
+      setContentInput("");
+      setRatingInput(5);
+      setShowReviews((prev) => ({ ...prev, [developerId]: true }));
     } catch (err) {
-      console.error("Failed to submit endorsement:", err);
-      alert(err.response?.data?.message || err.response?.data?.errors?.recipient_id?.[0] || "Unable to submit endorsement.");
+      const fieldError = err?.details?.recipient_id?.[0];
+      alert(fieldError || err.message || "Unable to submit endorsement.");
     } finally {
       setSubmittingId(null);
     }
@@ -257,15 +206,11 @@ export default function DevelopersShowcase() {
   const deleteEndorsement = async (endorsementId, developerId) => {
     if (!window.confirm("Are you sure you want to delete this recommendation?")) return;
     try {
-      const response = await axiosInstance.delete(API_ENDORSEMENT_DELETE(endorsementId), {
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (response.data?.success) {
-        setEndorsements((prev) => ({
-          ...prev,
-          [developerId]: prev[developerId].filter((e) => e.id !== endorsementId),
-        }));
-      }
+      await developersStore.deleteEndorsement(endorsementId);
+      setEndorsements((prev) => ({
+        ...prev,
+        [developerId]: prev[developerId].filter((e) => e.id !== endorsementId),
+      }));
     } catch (err) {
       console.error("Failed to delete endorsement:", err);
       alert(err.response?.data?.message || "Unable to delete endorsement.");
@@ -433,7 +378,7 @@ export default function DevelopersShowcase() {
                             {showReviews[developer.id] ? "Hide" : "View"} Reviews
                           </button>
                           
-                          {token && (
+                          {signedIn && (
                             <button
                               type="button"
                               onClick={() => toggleForm(developer.id)}
@@ -446,7 +391,7 @@ export default function DevelopersShowcase() {
                       </div>
 
                       {/* Guest login prompt */}
-                      {!token && (
+                      {!signedIn && (
                         <div className="text-xs text-slate-500 text-center py-1">
                           Want to endorse? <a href="/login" className="text-emerald-600 font-semibold hover:underline">Log in</a>
                         </div>

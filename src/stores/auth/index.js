@@ -15,6 +15,12 @@ import {
   API_GOOGLE_OAUTH,
   API_FORGOT_PASSWORD,
   API_CHANGE_PASSWORD,
+  API_RESET_PASSWORD,
+  API_GOOGLE_SIGNUP,
+  API_SIGNUP,
+  API_SIGNUP_OTP,
+  API_CHECK_USERNAME,
+  API_SUGGESTIONS,
 } from "../../config/api";
 import { getRole, storeLoginCredential, clearAuth } from "../../lib/authToken";
 import { getSupabaseClient } from "../../lib/supabaseClient";
@@ -91,6 +97,33 @@ export default class AuthStore {
     return data;
   }
 
+  /** Google sign-UP: finish registering a Google identity we've never seen. */
+  googleSignup(payload) {
+    return api.post(API_GOOGLE_SIGNUP, payload, { raw: true });
+  }
+
+  // ── Registration ─────────────────────────────────────────────────────────
+  /** Email OTP for the signup form. */
+  requestSignupOtp(email) {
+    return api.post(API_SIGNUP_OTP, { email }, { raw: true });
+  }
+
+  /** `payload` is a FormData — the profile photo rides along. */
+  signup(payload) {
+    return api.upload(API_SIGNUP, payload, { raw: true });
+  }
+
+  /** → { available } / { exists }; both shapes have shipped. */
+  checkUsername(username) {
+    return api.get(API_CHECK_USERNAME(username), { raw: true });
+  }
+
+  /** Typeahead for the signup form. */
+  signupSuggestions(params) {
+    const query = new URLSearchParams(params).toString();
+    return api.get(`${API_SUGGESTIONS}/signup?${query}`, { raw: true });
+  }
+
   /**
    * Request a reset link. The backend answers identically whether or not the
    * address exists (see T6 / api/domains/auth/views.py) — do not "improve" the
@@ -98,6 +131,11 @@ export default class AuthStore {
    */
   forgotPassword(email) {
     return api.post(API_FORGOT_PASSWORD, { email });
+  }
+
+  /** Complete a reset from the emailed link. */
+  resetPassword({ uid, token, newPassword }) {
+    return api.post(API_RESET_PASSWORD, { uid, token, new_password: newPassword });
   }
 
   changePassword(oldPassword, newPassword) {

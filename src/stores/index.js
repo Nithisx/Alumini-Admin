@@ -51,6 +51,7 @@ export const useBirthdayStore = () => useStores().birthday;
 export const useContributionsStore = () => useStores().contributions;
 export const useEngagementStore = () => useStores().engagement;
 export const useStudentsStore = () => useStores().students;
+export const useDevelopersStore = () => useStores().developers;
 
 export const useAuditStore = () => useStores().audit;
 export const useSignupRequestStore = () => useStores().signupRequests;

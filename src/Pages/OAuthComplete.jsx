@@ -1,16 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePermissionStore } from "../stores";
+import { useAuthStore } from "../stores";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
-import axios from "../lib/axiosInstance";
-import { API_BASE } from "../config/api";
-import { storeLoginCredential } from "../lib/authToken";
-
-import { getSupabaseClient } from "../lib/supabaseClient";
 import { consumeLoginRedirect, DEFAULT_AFTER_LOGIN } from "../lib/loginRedirect";
-
-const roleMap = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "student" };
 
 // Landing page Google redirects back to after the Supabase consent screen.
 // The Supabase JS SDK (lib/supabaseClient.js, detectSessionInUrl: true) has
@@ -21,7 +14,7 @@ const roleMap = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "st
 // session itself is discarded immediately after.
 export default function OAuthComplete() {
   const navigate = useNavigate();
-  const permissionStore = usePermissionStore();
+  const authStore = useAuthStore();
   const ran = useRef(false);
 
   useEffect(() => {
@@ -31,27 +24,16 @@ export default function OAuthComplete() {
     (async () => {
       let accessToken;
       try {
-        const supabase = getSupabaseClient();
-        const { data, error } = await supabase.auth.getSession();
-        accessToken = data?.session?.access_token;
-        if (error || !accessToken) {
-          navigate("/login?oauth=error", { replace: true });
-          return;
-        }
+        accessToken = await authStore.readOAuthSession();
       } catch {
         navigate("/login?oauth=error", { replace: true });
         return;
       }
 
       try {
-        const { data: body } = await axios.post(`${API_BASE}/auth/google/`, {
-          access_token: accessToken,
-        });
+        const body = await authStore.completeGoogleOAuth(accessToken);
 
         if (body.jwt || body.token) {
-          const roleKey = roleMap[body.role] || "alumni";
-          storeLoginCredential(body, roleKey);
-          permissionStore.seedFromLogin(body);
           toast.success("Signed in with Google successfully!");
           // Honour the page the user was originally trying to reach (stashed
           // before we bounced them to /login). sessionStorage survives the
@@ -84,7 +66,7 @@ export default function OAuthComplete() {
         navigate("/login?oauth=error", { replace: true });
       }
     })();
-  }, [navigate, permissionStore]);
+  }, [navigate, authStore]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">

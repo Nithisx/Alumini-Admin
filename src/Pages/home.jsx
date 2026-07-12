@@ -7,6 +7,7 @@ import { DASHBOARD_THEME } from "../constants/dashboardTheme";
 import Header from "./Header.jsx";
 import Herosection from "./Herosection.jsx";
 import { API_BASE, API_ORIGIN } from "../config/api";
+import { isAuthenticated } from "../lib/authToken";
 
 const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
@@ -34,9 +35,8 @@ export default function Home() {
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchStartY, setTouchStartY] = useState(null);
 
-  const token = localStorage.getItem("Token");
   const newsCount = data.featured_news.length;
-  const isAuthed = Boolean(token);
+  const isAuthed = isAuthenticated();
   const roleBasePath = useMemo(() => (isAuthed ? "" : null), [isAuthed]);
 
   const handleProtectedNavigation = (suffix) => {

@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import axios from "../lib/axiosInstance";
 import kahelogo from "../assets/KAHEAA.svg";
-import { API_BASE } from "../config/api";
-
-const api = axios.create({
-  baseURL: API_BASE,
-  headers: { "Content-Type": "application/json" },
-});
+import { useAuthStore } from "../stores";
 
 function EyeIcon({ open }) {
   return open ? (
@@ -38,6 +32,7 @@ function passwordStrength(pw) {
 }
 
 export default function ResetPassword() {
+  const authStore = useAuthStore();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -78,16 +73,12 @@ export default function ResetPassword() {
     setStatus(null);
     setMessage("");
     try {
-      const { data } = await api.post("/reset-password/", { uid, token, new_password: newPassword });
+      const data = await authStore.resetPassword({ uid, token, newPassword });
       setStatus("success");
-      setMessage(data.message || "Password reset successful! Redirecting to login...");
+      setMessage(data?.message || "Password reset successful! Redirecting to login...");
     } catch (err) {
       setStatus("error");
-      setMessage(
-        err.response?.data?.error ||
-        err.message ||
-        "Failed to reset password. The link may have expired."
-      );
+      setMessage(err.message || "Failed to reset password. The link may have expired.");
     } finally {
       setLoading(false);
     }

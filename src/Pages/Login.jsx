@@ -1,24 +1,15 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "../lib/axiosInstance";
-import { storeLoginCredential } from "../lib/authToken";
-import { usePermissionStore } from "../stores";
+import { useAuthStore } from "../stores";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
-import { API_BASE } from "../config/api";
-import { getSupabaseClient } from "../lib/supabaseClient";
 import { saveLoginRedirect, consumeLoginRedirect, DEFAULT_AFTER_LOGIN } from "../lib/loginRedirect";
-
-const api = axios.create({
-  baseURL: API_BASE,
-  headers: { "Content-Type": "application/json" },
-});
 
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const permissionStore = usePermissionStore();
+  const authStore = useAuthStore();
 
   // Stash the page the user was trying to reach (set by ProtectedRoute, or by
   // a public page's protected link — e.g. a member card on /home).
@@ -70,46 +61,28 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { data } = await api.post("/login/", {
-        username: form.username,
-        password: form.password,
-      });
-
-      if (data.jwt || data.token) {
-        storeLoginCredential(data, data.role_key);
-        permissionStore.seedFromLogin(data);
-        toast.success("Logged in successfully!");
-        redirectAfterLogin();
-      } else {
-        toast.error(data.error || "Login failed: no token received");
-      }
+      await authStore.login(form.username, form.password);
+      toast.success("Logged in successfully!");
+      redirectAfterLogin();
     } catch (err) {
-      toast.error(
-        err.response?.data?.error || err.message || "An unexpected error occurred"
-      );
+      // The backend's message is deliberately non-enumerable (T6) — pass it
+      // through as-is; do not add detail about which half was wrong.
+      toast.error(err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
-  }, [form, redirectAfterLogin]);
+  }, [form, redirectAfterLogin, authStore]);
 
   const handleGoogleLogin = useCallback(async () => {
     setOauthLoading(true);
     try {
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/oauth/complete` },
-      });
-      if (error) {
-        toast.error(error.message || "Failed to start Google sign-in.");
-        setOauthLoading(false);
-      }
-      // On success the browser navigates away immediately — nothing more to do here.
+      // On success the browser navigates away immediately — nothing more to do.
+      await authStore.startGoogleOAuth("/oauth/complete");
     } catch (err) {
       toast.error(err.message || "Google sign-in is not available right now.");
       setOauthLoading(false);
     }
-  }, []);
+  }, [authStore]);
 
   const handleForgotPassword = async () => {
     if (!form.username) {
@@ -118,12 +91,10 @@ export default function LoginPage() {
     }
     setForgotLoading(true);
     try {
-      await api.post("/forgot-password/", { email: form.username });
+      await authStore.forgotPassword(form.username);
       toast.success("Password reset link sent! Check your email.");
     } catch (err) {
-      toast.error(
-        err.response?.data?.error || err.message || "Failed to send reset email."
-      );
+      toast.error(err.message || "Failed to send reset email.");
     } finally {
       setForgotLoading(false);
     }

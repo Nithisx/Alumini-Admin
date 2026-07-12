@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_SHARE_RESOLVE } from '../config/api';
+import { useEngagementStore } from '../stores';
+import { isAuthenticated } from '../lib/authToken';
 
 function buildTargetPath(shareType, contentId) {
   if (!shareType || !contentId) return null;
@@ -205,6 +207,7 @@ function buildPreview(sharePayload) {
 }
 
 export default function ShareRedirect() {
+  const engagement = useEngagementStore();
   const navigate = useNavigate();
   const { token } = useParams();
   const [status, setStatus] = useState('Resolving shared link...');
@@ -212,7 +215,9 @@ export default function ShareRedirect() {
   const [loading, setLoading] = useState(true);
   const [sharePayload, setSharePayload] = useState(null);
 
-  const storedToken = useMemo(() => localStorage.getItem('Token'), []);
+  // Signed-in visitors are sent straight into the app; anonymous ones get the
+  // public preview below.
+  const isSignedIn = useMemo(() => isAuthenticated(), []);
   const apiOrigin = useMemo(() => {
     try {
       return new URL(API_SHARE_RESOLVE(token || '00000000-0000-0000-0000-000000000000')).origin;
@@ -232,11 +237,7 @@ export default function ShareRedirect() {
       }
 
       try {
-        const res = await fetch(API_SHARE_RESOLVE(token));
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(data.detail || 'Unable to open this shared link.');
-        }
+        const data = await engagement.resolveShare(token);
 
         if (!cancelled) {
           setSharePayload(data);
@@ -246,7 +247,7 @@ export default function ShareRedirect() {
         const shareType = data?.type;
         const targetPath = buildTargetPath(shareType, contentId);
 
-        if (!storedToken || !targetPath) {
+        if (!isSignedIn || !targetPath) {
           if (!cancelled) {
             setStatus('Showing shared content...');
             setLoading(false);
@@ -271,7 +272,7 @@ export default function ShareRedirect() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, storedToken, token]);
+  }, [navigate, isSignedIn, token, engagement]);
 
   const preview = useMemo(() => buildPreview(sharePayload), [sharePayload]);
   const images = useMemo(() => collectImageUrls(sharePayload?.content || {}, apiOrigin), [apiOrigin, sharePayload]);
@@ -335,7 +336,7 @@ export default function ShareRedirect() {
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              {!storedToken && (
+              {!isSignedIn && (
                 <button
                   type="button"
                   className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
