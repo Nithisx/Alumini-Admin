@@ -4,19 +4,14 @@ import { useEffect, useState } from "react";
 import { roleBase } from "../../../lib/useBasePath";
 import Can from "../../Shared/Can";
 import { toast } from "react-toastify";
-import axios from "../../../lib/axiosInstance";
 import Pagination from "../../Shared/Pagination";
 import MultiSelectAutocomplete, { HighlightMatch } from "../../Shared/MultiSelectAutocomplete";
 import ActiveFilterChips from "../../Shared/ActiveFilterChips";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
 import { PageHeader, EmptyState, MotionList, MotionItem, SkeletonGrid } from "../../Shared/ui";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
-
-const TOKEN =
-  typeof window !== "undefined" ? localStorage.getItem("Token") : null;
-const BASE_URL = API_BASE;
-const API_URL = `${BASE_URL}/admin-members/`;
-const DROPDOWN_FILTERS_URL = `${BASE_URL}/dynamic-dropdown-filters/`;
+import { API_ORIGIN } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useMembersStore } from "../../../stores";
 
 const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
 
@@ -326,7 +321,8 @@ function ExportModal({ onClose, onExport, loading, selectedCount, filteredTotal,
   );
 }
 
-export default function MembersPage() {
+const MembersPage = observer(() => {
+  const membersStore = useMembersStore();
   const [members, setMembers] = useState([]);
   const [filteredTotal, setFilteredTotal] = useState(0);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
@@ -484,25 +480,7 @@ export default function MembersPage() {
       addArr("branch", branchFilter);
       addArr("roll_no", rollNoFilter);
 
-      // Build URL with or without parameters
-      const url = params.toString()
-        ? `${DROPDOWN_FILTERS_URL}?${params.toString()}`
-        : DROPDOWN_FILTERS_URL;
-
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      // Update to handle the new response structure with filters_data wrapper
-      setDropdownFilters(response.data.filters_data);
-
-      // Optional: You can also store metadata for display
-      // setFilteredCount(response.data.filtered_count);
-      // setTotalCount(response.data.total_count);
-
+      setDropdownFilters(await membersStore.fetchDropdownFilters(params));
       setFiltersLoading(false);
     } catch (error) {
       setFiltersLoading(false);
@@ -541,14 +519,7 @@ export default function MembersPage() {
     addArr("branch", branchFilter);
     addArr("roll_no", rollNoFilter);
     try {
-      const response = await axios.get(`${API_URL}?${params.toString()}`, {
-        headers: {
-          Authorization: `Token ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const { results, count } = response.data;
+      const { results, count } = await membersStore.fetchPage(params);
 
       setMembers(results);
       setFilteredTotal(count);
@@ -633,14 +604,7 @@ export default function MembersPage() {
         params.append("page", page.toString());
 
 
-        const response = await axios.get(`${API_URL}?${params.toString()}`, {
-          headers: {
-            Authorization: `Token ${TOKEN}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        const { results, next } = response.data;
+        const { results, next } = await membersStore.fetchPage(params);
 
         if (results && results.length > 0) {
           allMembers = [...allMembers, ...results];
@@ -731,19 +695,12 @@ export default function MembersPage() {
         body.filters = filters;
       }
 
-      const response = await axios.post(
-        `${BASE_URL}/members/export/`,
-        body,
-        {
-          headers: { Authorization: `Token ${TOKEN}`, "Content-Type": "application/json" },
-          responseType: "blob",
-        }
-      );
+      const blob = await membersStore.exportMembers(body);
 
       const ext = exportFormat === "xlsx" ? "xlsx" : "csv";
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `members_export_${timestamp}.${ext}`;
-      const url = URL.createObjectURL(new Blob([response.data]));
+      const url = URL.createObjectURL(new Blob([blob]));
       const a = document.createElement("a");
       a.href = url;
       a.download = filename;
@@ -1704,4 +1661,6 @@ export default function MembersPage() {
       </div>
     </div>
   );
-}
+});
+
+export default MembersPage;

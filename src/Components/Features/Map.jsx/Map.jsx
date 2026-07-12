@@ -6,10 +6,9 @@ import 'leaflet/dist/leaflet.css';
 import { Search, Map as MapIcon, Layers, Moon, Users, RefreshCw, LocateFixed, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingScreen, ErrorScreen } from '../../Shared/ui';
-import {
-  API_MAP_SCATTER, API_USER_LOCATIONS, API_CHAPTER_MEMBERS,
-  API_MAP_USER_SEARCH, API_USER_MAP_LOCATION, API_ORIGIN,
-} from '../../../config/api';
+import { API_ORIGIN } from '../../../config/api';
+import { observer } from 'mobx-react-lite';
+import { useMapStore } from '../../../stores';
 
 const MEDIA_BASE_URL = API_ORIGIN;
 
@@ -162,13 +161,13 @@ const UserMarker = React.memo(function UserMarker({ loc, onSelect }) {
   );
 });
 
-const EMPTY_SCATTER = { countries: [], states: [], cities: [], addresses: [] };
 
 // Main Map component
-const MapComponent = () => {
-  const [scatter, setScatter] = useState(EMPTY_SCATTER);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const MapComponent = observer(() => {
+  const mapStore = useMapStore();
+  const scatter = mapStore.scatter;
+  const loading = mapStore.loading;
+  const error = mapStore.error;
   const [mapView, setMapView] = useState('streets');
   const [searchQuery, setSearchQuery] = useState('');
   const [zoom, setZoom] = useState(INITIAL_ZOOM);
@@ -184,8 +183,8 @@ const MapComponent = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    fetchScatter();
-  }, []);
+    mapStore.loadScatter();
+  }, [mapStore]);
 
   useEffect(() => {
     if (!locationStatus) return;
@@ -204,15 +203,13 @@ const MapComponent = () => {
     }
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`${API_MAP_USER_SEARCH}?q=${encodeURIComponent(q)}`);
-        if (!res.ok) return;
-        setUserMatches(await res.json());
+        setUserMatches(await mapStore.searchUsers(q));
       } catch {
         // Local matches still show even if this fails.
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [searchQuery]);
+  }, [searchQuery, mapStore]);
 
   // Deep link from a member's profile ("View in map"): /map?user=<username>
   // flies to wherever the map would plot them once scatter data is loaded.
@@ -221,13 +218,10 @@ const MapComponent = () => {
     if (!username || !mapRef.current) return;
     (async () => {
       try {
-        const res = await fetch(`${API_USER_MAP_LOCATION}?username=${encodeURIComponent(username)}`);
-        if (!res.ok) {
-          setLocationStatus({ type: 'error', text: 'This member has no location on the map.' });
-          return;
-        }
-        const loc = await res.json();
+        const loc = await mapStore.locateUser(username);
         mapRef.current.flyTo([loc.lat, loc.lng], ZOOM_BREAKS[loc.precision] ?? ZOOM_BREAKS.city, { duration: 1.2 });
+      } catch {
+        setLocationStatus({ type: 'error', text: 'This member has no location on the map.' });
       } finally {
         searchParams.delete('user');
         setSearchParams(searchParams, { replace: true });
@@ -235,29 +229,6 @@ const MapComponent = () => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
-
-  const fetchScatter = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(API_MAP_SCATTER, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Network response was not ok');
-      const data = await response.json();
-      setScatter({
-        countries: (data.countries || []).map((d) => ({ ...d, bucket: 'country' })),
-        states: (data.states || []).map((d) => ({ ...d, bucket: 'state' })),
-        cities: (data.cities || []).map((d) => ({ ...d, bucket: 'city' })),
-        addresses: data.addresses || [],
-      });
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const zoomBucket = useMemo(() => bucketForZoom(zoom), [zoom]);
   const zoomRank = BUCKET_ORDER.indexOf(zoomBucket);
@@ -334,19 +305,14 @@ const MapComponent = () => {
     setCityMembersLoading(true);
     setCityMembersError(null);
     try {
-      const res = await fetch(
-        `${API_CHAPTER_MEMBERS}?type=city&value=${encodeURIComponent(item.label)}&page_size=50`
-      );
-      if (!res.ok) throw new Error('Failed to load members for this city');
-      const data = await res.json();
-      setCityMembers(data);
+      setCityMembers(await mapStore.chapterMembers('city', item.label));
     } catch (err) {
-      setCityMembersError(err.message);
+      setCityMembersError(err.message || 'Failed to load members for this city');
       setCityMembers(null);
     } finally {
       setCityMembersLoading(false);
     }
-  }, []);
+  }, [mapStore]);
 
   const closeCityPanel = useCallback(() => {
     setSelectedCity(null);
@@ -371,22 +337,13 @@ const MapComponent = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const res = await fetch(API_USER_LOCATIONS, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              latitude: String(pos.coords.latitude),
-              longitude: String(pos.coords.longitude),
-            }),
-          });
-          if (!res.ok) throw new Error('Failed to save your location');
+          await mapStore.shareMyLocation(pos.coords.latitude, pos.coords.longitude);
           setLocationStatus({ type: 'success', text: 'Your location is now shared on the map.' });
-          await fetchScatter();
           if (mapRef.current) {
             mapRef.current.flyTo([pos.coords.latitude, pos.coords.longitude], ZOOM_BREAKS.address, { duration: 1.2 });
           }
         } catch (err) {
-          setLocationStatus({ type: 'error', text: err.message });
+          setLocationStatus({ type: 'error', text: err.message || 'Failed to save your location' });
         } finally {
           setSharingLocation(false);
         }
@@ -426,7 +383,7 @@ const MapComponent = () => {
 
   if (loading) return <LoadingScreen message="Loading map data…" />;
 
-  if (error) return <ErrorScreen message={error} onRetry={fetchScatter} retryLabel="Retry" />;
+  if (error) return <ErrorScreen message={error} onRetry={() => mapStore.loadScatter()} retryLabel="Retry" />;
 
   return (
     <div className="fixed left-0 right-0 top-14 bottom-0 pb-14 lg:pb-0 overflow-hidden flex flex-col bg-gray-50">
@@ -608,7 +565,7 @@ const MapComponent = () => {
               className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 text-gray-500 transition disabled:opacity-60">
               <LocateFixed size={16} className={sharingLocation ? 'animate-pulse text-emerald-600' : ''} />
             </button>
-            <button onClick={fetchScatter} title="Refresh"
+            <button onClick={() => mapStore.loadScatter()} title="Refresh"
               className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 text-gray-500 transition">
               <RefreshCw size={16} />
             </button>
@@ -634,6 +591,6 @@ const MapComponent = () => {
       </div>
     </div>
   );
-};
+});
 
 export default MapComponent;

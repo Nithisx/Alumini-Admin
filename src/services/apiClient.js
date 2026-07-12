@@ -62,9 +62,11 @@ function toApiError(err) {
   });
 }
 
-async function request(method, url, { data, params, headers, signal, raw } = {}) {
+async function request(method, url, { data, params, headers, signal, raw, responseType } = {}) {
   try {
-    const res = await axios.request({ method, url, data, params, headers, signal });
+    const res = await axios.request({ method, url, data, params, headers, signal, responseType });
+    // A blob/arraybuffer response has no envelope to unwrap.
+    if (responseType && responseType !== "json") return res.data;
     return raw ? res.data : unwrap(res.data);
   } catch (err) {
     throw toApiError(err);

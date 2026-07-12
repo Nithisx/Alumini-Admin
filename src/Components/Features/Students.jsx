@@ -1,27 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import axios from "../../lib/axiosInstance";
-import { API_STUDENTS, API_ORIGIN } from "../../config/api";
+import { API_ORIGIN } from "../../config/api";
+import { observer } from "mobx-react-lite";
+import { useStudentsStore } from "../../stores";
 
-const StudentImageUpload = () => {
-  const [students, setStudents] = useState([]);  // Store students
-  const [formData, setFormData] = useState({ name: "", image: null }); // Form data
+const StudentImageUpload = observer(() => {
+  const studentsStore = useStudentsStore();
+  const students = studentsStore.items;
+  const [formData, setFormData] = useState({ name: "", image: null });
 
-  useEffect(() => {
-    // Fetch students when component mounts
-    const fetchStudents = async () => {
-      try {
-
-        const token = localStorage.getItem("Token")
-        const response = await axios.get(API_STUDENTS, {
-          headers: { Authorization: `Token ${token}` },
-        });
-        setStudents(response.data);  // Set students in state
-      } catch { /* ignore */ }
-    };
-
-    fetchStudents();
-  }, []);
+  useEffect(() => { studentsStore.fetchAll(); }, [studentsStore]);
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -40,28 +28,15 @@ const StudentImageUpload = () => {
     }
 
     try {
-      const token = localStorage.getItem("Token"); // Get token from local storage
-      let formDataToSend = new FormData();
-
+      const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("image", formData.image);
 
-      const response = await axios.post(
-        API_STUDENTS,
-        formDataToSend,
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      setStudents([response.data, ...students]); // Add new student to list
-      setFormData({ name: "", image: null });  // Reset form
+      await studentsStore.create(formDataToSend);
+      setFormData({ name: "", image: null });
       toast.success("Student added successfully!");
-    } catch (error) {
-      toast.success("Could not upload student image.");
+    } catch {
+      toast.error("Could not upload student image.");
     }
   };
 
@@ -123,6 +98,6 @@ const StudentImageUpload = () => {
       </div>
     </div>
   );
-};
+});
 
 export default StudentImageUpload;

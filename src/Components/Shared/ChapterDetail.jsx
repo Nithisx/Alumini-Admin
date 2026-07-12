@@ -3,10 +3,10 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import Pagination from "./Pagination";
 import { getProfilePlaceholderByGender } from "../../lib/profilePlaceholders";
 import { useBreadcrumb } from "./BreadcrumbContext";
-import { API_BASE, API_ORIGIN } from "../../config/api";
+import { API_ORIGIN } from "../../config/api";
+import { useMembersStore } from "../../stores";
 import { useBasePath } from "../../lib/useBasePath";
 
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 const PAGE_SIZE = 24;
 
@@ -77,6 +77,7 @@ function MemberCard({ member, memberPath }) {
 }
 
 export default function ChapterDetail() {
+  const membersStore = useMembersStore();
   const { type, value } = useParams();
   const navigate = useNavigate();
   const { setBreadcrumbLabel } = useBreadcrumb();
@@ -107,24 +108,16 @@ export default function ChapterDetail() {
   }, [value, decodedValue]);
 
   const fetchMembers = useCallback(async (page, q) => {
-    const token = localStorage.getItem("Token");
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({
+      const data = await membersStore.fetchChapterMembers({
         type,
         value: decodedValue,
         page,
-        page_size: pageSize,
+        pageSize,
+        search: q,
       });
-      if (q) params.set("search", q);
-
-      const res = await fetch(`${BASE_URL}/chapter-members/?${params}`, {
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data = await res.json();
-
       setMembers(data.results ?? data);
       setTotalCount(data.count ?? (data.results ? data.count : (data.length ?? 0)));
     } catch (err) {
@@ -132,7 +125,7 @@ export default function ChapterDetail() {
     } finally {
       setLoading(false);
     }
-  }, [type, decodedValue, pageSize]);
+  }, [type, decodedValue, pageSize, membersStore]);
 
   useEffect(() => {
     setCurrentPage(1);

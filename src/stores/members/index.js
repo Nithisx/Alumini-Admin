@@ -15,6 +15,9 @@ import {
   API_CHAT_ROOMS,
 } from "../../config/api";
 
+const MEMBERS_URL = `${API_BASE}/admin-members/`;
+const IMPORT_URL = `${API_BASE}/members/import/`;   // GET = template, POST = import
+const DROPDOWN_FILTERS_URL = `${API_BASE}/dynamic-dropdown-filters/`;
 const coursesUrl = (userId) => `${API_BASE}/profile/${userId}/courses/`;
 const courseUrl = (userId, courseId) => `${API_BASE}/profile/${userId}/courses/${courseId}/`;
 
@@ -32,7 +35,7 @@ export default class MembersStore {
   async fetchAll(params) {
     this.loading = true;
     try {
-      const data = await api.get(`${API_BASE}/admin-members/`, { params, raw: true });
+      const data = await api.get(MEMBERS_URL, { params, raw: true });
       const items = Array.isArray(data) ? data : data?.results || [];
       runInAction(() => { this.items = items; });
       return items;
@@ -42,6 +45,38 @@ export default class MembersStore {
     } finally {
       runInAction(() => { this.loading = false; });
     }
+  }
+
+  /**
+   * One page of the directory. `query` is a pre-built URLSearchParams (the
+   * filter panel has ~18 multi-value facets) — passed straight through.
+   * → { results, count, next }
+   */
+  fetchPage(query) {
+    return api.get(`${MEMBERS_URL}?${query.toString()}`, { raw: true });
+  }
+
+  /** Facet values for the filter panel, narrowed by the filters already applied. */
+  async fetchDropdownFilters(query) {
+    const qs = query?.toString();
+    const url = qs ? `${DROPDOWN_FILTERS_URL}?${qs}` : DROPDOWN_FILTERS_URL;
+    const data = await api.get(url, { raw: true });
+    return data?.filters_data;
+  }
+
+  /** Bulk import: the sample workbook is a GET on the import endpoint. */
+  downloadImportTemplate() {
+    return api.raw("get", IMPORT_URL, { responseType: "blob" });
+  }
+
+  /** `formData` = { file, send_emails }. → the import report. */
+  importMembers(formData) {
+    return api.upload(IMPORT_URL, formData, { raw: true });
+  }
+
+  /** Export → a Blob (csv/xlsx), so no envelope unwrapping. */
+  exportMembers(body) {
+    return api.raw("post", `${API_BASE}/members/export/`, { data: body, responseType: "blob" });
   }
 
   /** One member by username (the detail page's route param). */

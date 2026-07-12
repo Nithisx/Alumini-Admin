@@ -50,6 +50,7 @@ export const useRbacStore = () => useStores().rbac;
 export const useBirthdayStore = () => useStores().birthday;
 export const useContributionsStore = () => useStores().contributions;
 export const useEngagementStore = () => useStores().engagement;
+export const useStudentsStore = () => useStores().students;
 
 export const useAuditStore = () => useStores().audit;
 export const useSignupRequestStore = () => useStores().signupRequests;

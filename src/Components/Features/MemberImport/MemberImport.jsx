@@ -2,13 +2,8 @@
 
 import { useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { API_BASE } from "../../../config/api";
 import { PageHero } from "../../Shared/ui";
-
-const API_IMPORT   = `${API_BASE}/members/import/`;
-const API_TEMPLATE = `${API_BASE}/members/import/`;   // GET on same endpoint
-
-const token = () => localStorage.getItem("Token");
+import { useMembersStore } from "../../../stores";
 
 // ── Tiny helpers ────────────────────────────────────────────────────────────
 
@@ -61,6 +56,7 @@ function ResultSection({ title, color, items, emptyMsg, renderRow }) {
 // ── Main component ───────────────────────────────────────────────────────────
 
 export default function MemberImport() {
+  const membersStore = useMembersStore();
   const fileRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [file, setFile]         = useState(null);
@@ -99,12 +95,7 @@ export default function MemberImport() {
 
   const downloadTemplate = async () => {
     try {
-      const res = await fetch(API_TEMPLATE, {
-        method: "GET",
-        headers: { Authorization: `Token ${token()}` },
-      });
-      if (!res.ok) throw new Error("Download failed");
-      const blob = await res.blob();
+      const blob = await membersStore.downloadImportTemplate();
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement("a");
       a.href     = url;
@@ -131,25 +122,14 @@ export default function MemberImport() {
     form.append("send_emails", sendEmails ? "true" : "false");
 
     try {
-      const res = await fetch(API_IMPORT, {
-        method: "POST",
-        headers: { Authorization: `Token ${token()}` },
-        body: form,
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.error || "Import failed. Check the file and try again.");
-        setLoading(false);
-        return;
-      }
+      const data = await membersStore.importMembers(form);
 
       setResult(data);
       if (data.summary.created > 0) toast.success(data.message);
       else if (data.summary.updated > 0) toast.info(data.message);
       else toast.warn("No users were created or updated. Check the skipped list.");
-    } catch {
-      toast.error("Network error while importing. Please try again.");
+    } catch (err) {
+      toast.error(err.message || "Import failed. Check the file and try again.");
     } finally {
       setLoading(false);
     }
