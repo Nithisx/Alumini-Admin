@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import SuggestionInput from "../Components/Shared/SuggestionInput";
 import { API_BASE, API_SIGNUP_OTP, API_SIGNUP, API_SUGGESTIONS, API_CHECK_USERNAME } from "../config/api";
+import { getSupabaseClient } from "../lib/supabaseClient";
+import { toast } from "react-toastify";
 import {
   COLLEGE_NAMES,
   COURSES,
@@ -108,9 +110,22 @@ const Signup = () => {
   const navigate = useNavigate();
   const [oauthLoading, setOauthLoading] = useState(false);
 
-  const handleGoogleSignup = useCallback(() => {
+  const handleGoogleSignup = useCallback(async () => {
     setOauthLoading(true);
-    window.location.href = `${API_BASE}/auth/google/start/`;
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/oauth/complete` },
+      });
+      if (error) {
+        toast.error(error.message || "Failed to start Google sign-in.");
+        setOauthLoading(false);
+      }
+    } catch (err) {
+      toast.error(err.message || "Google sign-in is not available right now.");
+      setOauthLoading(false);
+    }
   }, []);
 
   const [formData, setFormData] = useState({

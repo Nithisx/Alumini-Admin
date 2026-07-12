@@ -1,8 +1,13 @@
-import React, { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
+import axios from "../lib/axiosInstance";
+import { API_BASE } from "../config/api";
 import { storeLoginCredential } from "../lib/authToken";
+import { seedFromLogin } from "../store/permissionsSlice";
+import { getSupabaseClient } from "../lib/supabaseClient";
 
 const roleMap = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "student" };
 
@@ -10,30 +15,76 @@ function defaultDashboard() {
   return "/dashboard";
 }
 
-// Landing page for the backend-driven Google OAuth redirect. The httpOnly
-// auth cookie is already set by the time the browser gets here (the
-// callback view set it before redirecting) — the JWT/role in the URL are
-// the same values, just handed to the frontend once so it can populate
-// localStorage for the existing route guards, exactly like the password
-// login path does via storeLoginCredential.
+// Landing page Google redirects back to after the Supabase consent screen.
+// The Supabase JS SDK (lib/supabaseClient.js, detectSessionInUrl: true) has
+// already parsed the ?code=... in this URL and exchanged it for a session
+// by the time getSession() resolves below — we only need the raw Supabase
+// access_token out of it. Our own backend re-verifies that token
+// (GoogleOAuthLoginView) and issues our real JWT/DRF token; the Supabase
+// session itself is discarded immediately after.
 export default function OAuthComplete() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const dispatch = useDispatch();
+  const ran = useRef(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const jwt = params.get("jwt");
-    const role = params.get("role");
-    const roleKey = roleMap[role] || "alumni";
+    if (ran.current) return; // guards React StrictMode's dev-mode double-invoke
+    ran.current = true;
 
-    if (jwt && storeLoginCredential({ jwt }, roleKey)) {
-      toast.success("Signed in with Google successfully!");
-      navigate(defaultDashboard(roleKey), { replace: true });
-    } else {
-      toast.error("Could not complete sign-in. Please try logging in again.");
-      navigate("/login", { replace: true });
-    }
-  }, [location.search, navigate]);
+    (async () => {
+      let accessToken;
+      try {
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase.auth.getSession();
+        accessToken = data?.session?.access_token;
+        if (error || !accessToken) {
+          navigate("/login?oauth=error", { replace: true });
+          return;
+        }
+      } catch {
+        navigate("/login?oauth=error", { replace: true });
+        return;
+      }
+
+      try {
+        const { data: body } = await axios.post(`${API_BASE}/auth/google/`, {
+          access_token: accessToken,
+        });
+
+        if (body.jwt || body.token) {
+          const roleKey = roleMap[body.role] || "alumni";
+          storeLoginCredential(body, roleKey);
+          dispatch(seedFromLogin(body));
+          toast.success("Signed in with Google successfully!");
+          navigate(defaultDashboard(), { replace: true });
+          return;
+        }
+
+        if (body.status === "pending") {
+          navigate("/login?oauth=pending", { replace: true });
+          return;
+        }
+
+        if (body.status === "new_user") {
+          navigate("/oauth-signup", {
+            replace: true,
+            state: {
+              accessToken,
+              email: body.email,
+              first_name: body.first_name,
+              last_name: body.last_name,
+              avatar_url: body.avatar_url,
+            },
+          });
+          return;
+        }
+
+        navigate("/login?oauth=error", { replace: true });
+      } catch {
+        navigate("/login?oauth=error", { replace: true });
+      }
+    })();
+  }, [navigate, dispatch]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">

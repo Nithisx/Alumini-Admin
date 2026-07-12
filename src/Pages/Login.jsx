@@ -7,6 +7,7 @@ import { seedFromLogin } from "../store/permissionsSlice";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
 import { API_BASE } from "../config/api";
+import { getSupabaseClient } from "../lib/supabaseClient";
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -76,10 +77,9 @@ export default function LoginPage() {
     setForm((f) => ({ ...f, [name]: value }));
   }, []);
 
-  // The backend's OAuth callback redirects here with ?oauth=pending or
-  // ?oauth=error&reason=... on non-login outcomes (the "login" outcome
-  // redirects straight to /oauth/complete instead, since the cookie's
-  // already set by then).
+  // OAuthComplete (the post-Google-redirect landing page) sends us here with
+  // ?oauth=pending or ?oauth=error on non-login outcomes — the "login"
+  // outcome redirects straight to a dashboard instead.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const oauthResult = params.get("oauth");
@@ -124,9 +124,23 @@ export default function LoginPage() {
     }
   }, [form, redirectAfterLogin]);
 
-  const handleGoogleLogin = useCallback(() => {
+  const handleGoogleLogin = useCallback(async () => {
     setOauthLoading(true);
-    window.location.href = `${API_BASE}/auth/google/start/`;
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/oauth/complete` },
+      });
+      if (error) {
+        toast.error(error.message || "Failed to start Google sign-in.");
+        setOauthLoading(false);
+      }
+      // On success the browser navigates away immediately — nothing more to do here.
+    } catch (err) {
+      toast.error(err.message || "Google sign-in is not available right now.");
+      setOauthLoading(false);
+    }
   }, []);
 
   const handleForgotPassword = async () => {

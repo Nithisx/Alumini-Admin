@@ -94,27 +94,28 @@ export default function OAuthSignupComplete() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // The backend's OAuth callback redirects here with the verified identity
-  // as query params, plus a short-lived signed prefill_token the final
-  // submit sends back so the backend can trust this email without a
-  // Supabase session (there is none — the one-time code was already
-  // consumed server-side).
+  // OAuthComplete (the post-Google-redirect landing page) navigates here
+  // with the verified identity plus the raw Supabase access_token in router
+  // state (not the URL — it's a live credential, not something that should
+  // sit in browser history). The final submit sends that same access_token
+  // back so the backend can re-verify the email without needing a
+  // still-open Supabase session.
   const prefill = useMemo(() => {
-    const params = new URLSearchParams(location.search);
+    const s = location.state || {};
     return {
-      email: params.get("email") || "",
-      first_name: params.get("first_name") || "",
-      last_name: params.get("last_name") || "",
-      avatar_url: params.get("avatar_url") || "",
-      prefill_token: params.get("prefill_token") || "",
+      email: s.email || "",
+      first_name: s.first_name || "",
+      last_name: s.last_name || "",
+      avatar_url: s.avatar_url || "",
+      accessToken: s.accessToken || "",
     };
-  }, [location.search]);
+  }, [location.state]);
   const oauthAvatarUrl = prefill.avatar_url;
 
   // Guard: redirect to login if no Google data
   useEffect(() => {
-    if (!prefill.email || !prefill.prefill_token) navigate("/login", { replace: true });
-  }, [prefill.email, prefill.prefill_token, navigate]);
+    if (!prefill.email || !prefill.accessToken) navigate("/login", { replace: true });
+  }, [prefill.email, prefill.accessToken, navigate]);
 
   const [formData, setFormData] = useState({
     first_name: prefill.first_name || "",
@@ -307,7 +308,7 @@ export default function OAuthSignupComplete() {
       return;
     }
 
-    if (!prefill.prefill_token) {
+    if (!prefill.accessToken) {
       navigate("/signup", {
         replace: true,
         state: { message: "Your session expired. Please sign in with Google again." },
@@ -321,7 +322,7 @@ export default function OAuthSignupComplete() {
     try {
       const { pincode, ...rest } = formData;
       const payload = {
-        prefill_token: prefill.prefill_token,
+        access_token: prefill.accessToken,
         avatar_url: oauthAvatarUrl,
         ...rest,
         ...(pincode ? { zip_code: pincode } : {}),
@@ -363,7 +364,7 @@ export default function OAuthSignupComplete() {
     } finally {
       setSignLoading(false);
     }
-  }, [formData, validate, navigate, oauthAvatarUrl, prefill.prefill_token]);
+  }, [formData, validate, navigate, oauthAvatarUrl, prefill.accessToken]);
 
   const checkUsernameAvailability = useCallback(
     (username) => {
