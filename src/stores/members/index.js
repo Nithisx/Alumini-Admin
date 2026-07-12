@@ -12,7 +12,11 @@ import {
   API_DELETE_USER,
   API_ADMIN_USER_UPDATE,
   API_CHAPTER_MEMBERS,
+  API_CHAT_ROOMS,
 } from "../../config/api";
+
+const coursesUrl = (userId) => `${API_BASE}/profile/${userId}/courses/`;
+const courseUrl = (userId, courseId) => `${API_BASE}/profile/${userId}/courses/${courseId}/`;
 
 export default class MembersStore {
   items = [];
@@ -62,13 +66,34 @@ export default class MembersStore {
     return api.get(API_CHAPTER_MEMBERS, { params, raw: true });
   }
 
+  /**
+   * Admin edit of another user's profile. PUT + multipart: the endpoint takes a
+   * full representation and the payload can carry a new profile photo.
+   */
   update(userId, payload) {
-    const isForm = typeof FormData !== "undefined" && payload instanceof FormData;
-    return isForm
-      ? api.raw("patch", API_ADMIN_USER_UPDATE(userId), { data: payload })
-      : api.patch(API_ADMIN_USER_UPDATE(userId), payload, { raw: true });
+    return api.raw("put", API_ADMIN_USER_UPDATE(userId), { data: payload });
   }
 
-  deactivate(email) { return api.post(API_DEACTIVATE_USER, { email }); }
-  remove(email) { return api.delete(API_DELETE_USER, { email }); }
+  /**
+   * Deactivate/delete are POST {user_id} — not a DELETE, and not keyed by email.
+   * (Backend: api/domains/members/views.py DeactivateUserView / DeleteUserView.)
+   * `deactivate` toggles: it activates a currently-inactive user.
+   */
+  deactivate(userId) { return api.post(API_DEACTIVATE_USER, { user_id: userId }, { raw: true }); }
+  remove(userId) { return api.post(API_DELETE_USER, { user_id: userId }, { raw: true }); }
+
+  // ── a member's courses (admin view of someone else's) ────────────────────
+  async fetchCourses(userId) {
+    const data = await api.get(coursesUrl(userId), { raw: true });
+    return Array.isArray(data) ? data : data?.results || [];
+  }
+
+  addCourse(userId, payload) { return api.post(coursesUrl(userId), payload, { raw: true }); }
+  updateCourse(userId, courseId, payload) {
+    return api.raw("put", courseUrl(userId, courseId), { data: payload });
+  }
+  removeCourse(userId, courseId) { return api.delete(courseUrl(userId, courseId)); }
+
+  /** Open (or reuse) a 1:1 chat room with this member. */
+  startChat(userId) { return api.post(API_CHAT_ROOMS, { target_user_id: userId }, { raw: true }); }
 }

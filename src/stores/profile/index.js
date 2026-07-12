@@ -13,27 +13,41 @@ export default class ProfileStore {
   loading = false;
   loaded = false;
 
+  /** Request plumbing, not rendered state — hence not observable. */
+  inFlight = null;
+
   constructor(root) {
     this.root = root;
-    makeAutoObservable(this, { root: false });
+    makeAutoObservable(this, { root: false, inFlight: false });
   }
 
   get currentUserId() { return this.me?.id ?? null; }
+  get role() { return (this.me?.role || "").toLowerCase(); }
 
-  /** Fetch once; subsequent callers reuse the cached profile. */
+  /**
+   * Fetch once; subsequent callers reuse the cached profile. Single-flight:
+   * a page mounts several components that each want the profile, and without
+   * this they'd all fire /profile/ before the first response landed.
+   */
   async load({ force = false } = {}) {
     if (!getRole()) return null;
     if (this.loaded && !force) return this.me;
+    if (this.inFlight && !force) return this.inFlight;
+
     this.loading = true;
-    try {
-      const data = await api.get(API_PROFILE, { raw: true });
-      runInAction(() => { this.me = data; this.loaded = true; });
-      return data;
-    } catch {
-      return null;
-    } finally {
-      runInAction(() => { this.loading = false; });
-    }
+    this.inFlight = api
+      .get(API_PROFILE, { raw: true })
+      .then((data) => {
+        runInAction(() => { this.me = data; this.loaded = true; });
+        return data;
+      })
+      .catch(() => null)
+      .finally(() => {
+        runInAction(() => { this.loading = false; });
+        this.inFlight = null;
+      });
+
+    return this.inFlight;
   }
 
   async save(payload) {
@@ -45,5 +59,5 @@ export default class ProfileStore {
     return data;
   }
 
-  clear() { this.me = null; this.loaded = false; }
+  clear() { this.me = null; this.loaded = false; this.inFlight = null; }
 }

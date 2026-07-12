@@ -71,6 +71,16 @@ export default class ContentStore {
     }
   }
 
+  /** Cheap existence probe — the detail views use it for prev/next arrows. */
+  async exists(id) {
+    try {
+      await api.get(this.cfg.detail(id), { raw: true });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async fetchOne(id) {
     this.loading = true;
     this.error = null;

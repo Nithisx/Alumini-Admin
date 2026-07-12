@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { autorun } from "mobx";
 import { usePermissions } from "../../../lib/usePermissions";
-import { API_BASE } from "./media";
+import { useProfileStore } from "../../../stores";
 
 /**
  * Signed-in viewer context for detail views + the moderation capabilities each
- * one needs — now derived from the EFFECTIVE PERMISSION SET, not from role /
+ * one needs — derived from the EFFECTIVE PERMISSION SET, not from role /
  * is_staff. Revoking, say, `news.delete_any` from a role must hide that role's
  * delete button (the backend already 403s it); gating on role left the button
  * visible, which was the bug this fixes.
@@ -22,22 +23,26 @@ import { API_BASE } from "./media";
  *   canModerateComments  — {domain}.moderate_comments
  *   canModerate          — any of the above (back-compat coarse flag)
  *   isAdmin              — rbac.manage (admin-panel capability)
+ *
+ * The profile comes from ProfileStore (fetched once per session, not once per
+ * detail view). Reading a MobX observable does not subscribe a plain component,
+ * so it's bridged into React state with autorun — same pattern as usePermissions.
  */
 export default function useViewerProfile(domain) {
-  const [profile, setProfile] = useState({ currentUserId: null, role: "" });
+  const profileStore = useProfileStore();
   const { permissions } = usePermissions();
 
+  const [profile, setProfile] = useState(() => ({
+    currentUserId: profileStore.currentUserId,
+    role: profileStore.role,
+  }));
+
   useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_BASE}/profile/`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        setProfile({ currentUserId: d.id ?? null, role: (d.role || "").toLowerCase() });
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
+    profileStore.load();
+    return autorun(() => {
+      setProfile({ currentUserId: profileStore.currentUserId, role: profileStore.role });
+    });
+  }, [profileStore]);
 
   const has = (codename) => permissions.includes(codename);
   const canEditAny = domain ? has(`${domain}.edit_any`) : false;

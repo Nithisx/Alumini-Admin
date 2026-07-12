@@ -29,6 +29,16 @@ export default class BusinessStore extends ContentStore {
     return categories;
   }
 
+  /** Gallery images for one listing — a separate endpoint from the detail. */
+  async fetchImages(id) {
+    try {
+      const data = await api.get(`${LIST}${id}/images/`, { raw: true });
+      return Array.isArray(data) ? data : data?.results || [];
+    } catch {
+      return [];
+    }
+  }
+
   /** One call for the whole page: listings + the category facets beside them. */
   async load() {
     await Promise.all([this.fetchAll(), this.fetchCategories().catch(() => [])]);

@@ -4,7 +4,8 @@ import DetailScaffold from "./DetailScaffold";
 import ImageGallery from "./ImageGallery";
 import { InfoCard, FieldRow, MetaChip, TagPills, Icons } from "./primitives";
 import useViewerProfile from "./useViewerProfile";
-import { API_BASE, getMediaUrl } from "./media";
+import { useBusinessStore } from "../../../stores";
+import { getMediaUrl } from "./media";
 import CountUp from "../CountUp";
 import EngagementPanel from "../EngagementPanel";
 import ConfirmModal from "../ConfirmModal";
@@ -20,7 +21,7 @@ export default function BusinessDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUserId, canEditAny, canDeleteAny, canModerateComments } = useViewerProfile("business");
-  const token = localStorage.getItem("Token");
+  const businessStore = useBusinessStore();
 
   const [business, setBusiness] = useState(null);
   const [images, setImages] = useState([]);
@@ -32,31 +33,20 @@ export default function BusinessDetailView({ basePath = "" }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const headers = { Authorization: `Token ${token}` };
-    Promise.all([
-      fetch(`${API_BASE}/businesses/${id}/`, { headers }).then((r) => {
-        if (!r.ok) throw new Error("Unable to load this business.");
-        return r.json();
-      }),
-      fetch(`${API_BASE}/businesses/${id}/images/`, { headers })
-        .then((r) => (r.ok ? r.json() : []))
-        .catch(() => []),
-    ])
+    Promise.all([businessStore.fetchOne(id), businessStore.fetchImages(id)])
       .then(([biz, imgs]) => {
         if (cancelled) return;
         setBusiness(biz);
-        setImages(Array.isArray(imgs) ? imgs : []);
+        setImages(imgs);
       })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
+      .catch(() => {
+        if (!cancelled) setError("Unable to load this business.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, token]);
+    return () => { cancelled = true; };
+  }, [id, businessStore]);
 
   const postOwnerId = business?.owner ?? business?.owner_details?.id ?? null;
   const isOwner = currentUserId != null && currentUserId === postOwnerId;
@@ -66,11 +56,7 @@ export default function BusinessDetailView({ basePath = "" }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const res = await fetch(`${API_BASE}/businesses/${id}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (!res.ok) throw new Error();
+      await businessStore.remove(id);
       navigate(`${basePath}/business`);
     } catch {
       setDeleting(false);

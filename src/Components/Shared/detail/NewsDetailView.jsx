@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import DetailScaffold from "./DetailScaffold";
 import { InfoCard, AnimatedCard, MetaChip, Icons } from "./primitives";
 import useViewerProfile from "./useViewerProfile";
-import { API_BASE, getMediaUrl } from "./media";
+import { useNewsStore } from "../../../stores";
+import { getMediaUrl } from "./media";
 import EngagementPanel from "../EngagementPanel";
 import ConfirmModal from "../ConfirmModal";
 import HeroActions from "./HeroActions";
@@ -26,7 +27,7 @@ export default function NewsDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUserId, canDeleteAny, canModerateComments } = useViewerProfile("news");
-  const token = localStorage.getItem("Token");
+  const newsStore = useNewsStore();
   const listPath = `${basePath}/news`;
 
   const [post, setPost] = useState(null);
@@ -41,26 +42,12 @@ export default function NewsDetailView({ basePath = "" }) {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch(`${API_BASE}/news/${id}/`, {
-      headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("No more news available.");
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) setPost(data);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, token]);
+    newsStore.fetchOne(id)
+      .then((data) => { if (!cancelled) setPost(data); })
+      .catch(() => { if (!cancelled) setError("No more news available."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id, newsStore]);
 
   // adjacent-article existence (for prev/next)
   useEffect(() => {
@@ -70,17 +57,8 @@ export default function NewsDetailView({ basePath = "" }) {
       setHasNext(false);
       return;
     }
-    const exists = async (newsId) => {
-      if (!Number.isInteger(newsId) || newsId <= 0) return false;
-      try {
-        const res = await fetch(`${API_BASE}/news/${newsId}/`, {
-          headers: { ...(token && { Authorization: `Token ${token}` }), "Content-Type": "application/json" },
-        });
-        return res.ok;
-      } catch {
-        return false;
-      }
-    };
+    const exists = async (newsId) =>
+      Number.isInteger(newsId) && newsId > 0 && newsStore.exists(newsId);
     let cancelled = false;
     Promise.all([exists(currentId - 1), exists(currentId + 1)]).then(([p, n]) => {
       if (!cancelled) {
@@ -91,7 +69,7 @@ export default function NewsDetailView({ basePath = "" }) {
     return () => {
       cancelled = true;
     };
-  }, [id, token]);
+  }, [id, newsStore]);
 
   const postOwnerId = post?.user?.id ?? post?.user ?? null;
   const isOwner = currentUserId != null && currentUserId === postOwnerId;
@@ -100,11 +78,7 @@ export default function NewsDetailView({ basePath = "" }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const res = await fetch(`${API_BASE}/news/${id}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (!res.ok) throw new Error();
+      await newsStore.remove(id);
       navigate(listPath);
     } catch {
       setDeleting(false);

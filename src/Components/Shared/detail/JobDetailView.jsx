@@ -4,7 +4,8 @@ import DetailScaffold from "./DetailScaffold";
 import ImageGallery from "./ImageGallery";
 import { InfoCard, FieldRow, MetaChip, Icons } from "./primitives";
 import useViewerProfile from "./useViewerProfile";
-import { API_BASE, getMediaUrl } from "./media";
+import { useJobsStore } from "../../../stores";
+import { getMediaUrl } from "./media";
 import EngagementPanel from "../EngagementPanel";
 import ConfirmModal from "../ConfirmModal";
 import HeroActions from "./HeroActions";
@@ -18,7 +19,7 @@ export default function JobDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUserId, canEditAny, canDeleteAny, canModerateComments } = useViewerProfile("jobs");
-  const token = localStorage.getItem("Token");
+  const jobsStore = useJobsStore();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,24 +30,12 @@ export default function JobDetailView({ basePath = "" }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch(`${API_BASE}/jobs/${id}/`, { headers: { Authorization: `Token ${token}` } })
-      .then((res) => {
-        if (!res.ok) throw new Error("Unable to load this job post.");
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) setJob(data);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, token]);
+    jobsStore.fetchOne(id)
+      .then((data) => { if (!cancelled) setJob(data); })
+      .catch(() => { if (!cancelled) setError("Unable to load this job post."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id, jobsStore]);
 
   const postOwnerId = job?.user?.id ?? job?.user ?? null;
   const isOwner = currentUserId != null && currentUserId === postOwnerId;
@@ -56,11 +45,7 @@ export default function JobDetailView({ basePath = "" }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const res = await fetch(`${API_BASE}/jobs/${id}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (!res.ok) throw new Error();
+      await jobsStore.remove(id);
       navigate(`${basePath}/jobs`);
     } catch {
       setDeleting(false);

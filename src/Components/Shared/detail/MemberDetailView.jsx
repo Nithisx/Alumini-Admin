@@ -8,8 +8,8 @@ import ImageCropModal from "../ImageCropModal";
 import ScrambleText from "../ScrambleText";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
 import { COLLEGE_NAMES, COURSES, COURSE_BRANCH_MAPPING, getCoursesForCollege } from "../../../constants/academicOptions";
-import { API_BASE as API_ROOT, getMediaUrl } from "./media";
-import { API_CHAT_ROOMS } from "../../../config/api";
+import { getMediaUrl } from "./media";
+import { useMembersStore } from "../../../stores";
 import useViewerProfile from "./useViewerProfile";
 import { Icons } from "./primitives";
 import Can from "../Can";
@@ -17,13 +17,18 @@ import UserPermissionsPanel from "../../Features/RBAC/UserPermissionsPanel";
 import RoleEditor from "../../Features/RBAC/RoleEditor";
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
-const TOKEN = () => localStorage.getItem("Token");
-const API_PROFILE = `${API_ROOT}/profile/`;
-const API_DEACTIVATE_USER = `${API_ROOT}/deactivate-user/`;
-const API_DELETE_USER = `${API_ROOT}/delete-user/`;
-const getAdminCoursesUrl = (userId) => `${API_ROOT}/profile/${userId}/courses/`;
-const getAdminCourseUrl = (userId, courseId) => `${API_ROOT}/profile/${userId}/courses/${courseId}/`;
 const MEMBERS_RETURN_URL_KEY = "members:returnUrl";
+
+/**
+ * Course endpoints reject with per-field validation detail; surface the first
+ * field message rather than the generic "Validation failed", which tells the
+ * admin nothing about which year/roll-no was wrong.
+ */
+const courseErrorMessage = (err, fallback) => {
+  const first = Object.values(err?.details || {})[0];
+  const message = Array.isArray(first) ? first[0] : first;
+  return message || err?.message || fallback;
+};
 const COVER_PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1556888335-95371827d5fb?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
@@ -87,6 +92,7 @@ const getPrimaryCourse = (user) => {
 export default function MemberDetailView({ basePath = "" }) {
   const { name } = useParams();
   const navigate = useNavigate();
+  const membersStore = useMembersStore();
   const reduce = useReducedMotion();
   const { has } = useViewerProfile();
   const canEditProfile = has("members.edit_any");   // edit profile + course enrollments
@@ -167,32 +173,23 @@ export default function MemberDetailView({ basePath = "" }) {
 
   const fetchUserCourses = async (userId) => {
     try {
-      const res = await fetch(getAdminCoursesUrl(userId), { headers: { Authorization: `Token ${TOKEN()}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setUserCourses(Array.isArray(data) ? data : []);
-      }
+      setUserCourses(await membersStore.fetchCourses(userId));
     } catch { /* ignore */ }
   };
 
   /* ── fetch ── */
   const fetchMemberDetails = async () => {
     try {
-      const res = await fetch(`${API_PROFILE}${name}`, {
-        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMember(data);
-        setEditedMember(data);
-        if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
-          setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
-        }
-        if (Array.isArray(data.user_courses)) {
-          setUserCourses(data.user_courses);
-        } else {
-          await fetchUserCourses(data.id);
-        }
+      const data = await membersStore.fetchOne(name);
+      setMember(data);
+      setEditedMember(data);
+      if (data.course && COURSE_BRANCH_MAPPING[data.course]) {
+        setAvailableBranches(COURSE_BRANCH_MAPPING[data.course]);
+      }
+      if (Array.isArray(data.user_courses)) {
+        setUserCourses(data.user_courses);
+      } else {
+        await fetchUserCourses(data.id);
       }
     } catch { /* ignore */ }
   };
@@ -206,16 +203,7 @@ export default function MemberDetailView({ basePath = "" }) {
     if (!addCourseForm.course) { toast.error("Course is required"); return; }
     setAddCourseLoading(true);
     try {
-      const res = await fetch(getAdminCoursesUrl(member.id), {
-        method: "POST",
-        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
-        body: JSON.stringify(addCourseForm),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data?.non_field_errors?.[0] || data?.error || data?.detail || "Failed to add course");
-        return;
-      }
+      await membersStore.addCourse(member.id, addCourseForm);
       toast.success("Course added successfully");
       await fetchMemberDetails();
       setShowAddCourseModal(false);
@@ -230,8 +218,8 @@ export default function MemberDetailView({ basePath = "" }) {
         passed_out_year: "",
         is_primary: false
       });
-    } catch {
-      toast.error("Failed to add course");
+    } catch (err) {
+      toast.error(courseErrorMessage(err, "Failed to add course"));
     } finally {
       setAddCourseLoading(false);
     }
@@ -257,21 +245,12 @@ export default function MemberDetailView({ basePath = "" }) {
     if (!editCourseForm.course) { toast.error("Course is required"); return; }
     setEditCourseLoading(true);
     try {
-      const res = await fetch(getAdminCourseUrl(member.id, editingCourseId), {
-        method: "PUT",
-        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
-        body: JSON.stringify(editCourseForm),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data?.non_field_errors?.[0] || data?.error || data?.detail || "Failed to update course");
-        return;
-      }
+      await membersStore.updateCourse(member.id, editingCourseId, editCourseForm);
       toast.success("Course updated successfully");
       await fetchMemberDetails();
       setShowEditCourseModal(false);
-    } catch {
-      toast.error("Failed to update course");
+    } catch (err) {
+      toast.error(courseErrorMessage(err, "Failed to update course"));
     } finally {
       setEditCourseLoading(false);
     }
@@ -280,19 +259,11 @@ export default function MemberDetailView({ basePath = "" }) {
   const handleDeleteCourse = async (courseId) => {
     setDeletingCourseId(courseId);
     try {
-      const res = await fetch(getAdminCourseUrl(member.id, courseId), {
-        method: "DELETE",
-        headers: { Authorization: `Token ${TOKEN()}` },
-      });
-      if (res.ok || res.status === 204) {
-        toast.success("Course removed");
-        await fetchMemberDetails();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data?.error || "Failed to remove course");
-      }
-    } catch {
-      toast.error("Failed to remove course");
+      await membersStore.removeCourse(member.id, courseId);
+      toast.success("Course removed");
+      await fetchMemberDetails();
+    } catch (err) {
+      toast.error(courseErrorMessage(err, "Failed to remove course"));
     } finally {
       setDeletingCourseId(null);
     }
@@ -353,13 +324,8 @@ export default function MemberDetailView({ basePath = "" }) {
         }
       });
 
-      const response = await fetch(`${API_PROFILE}${member.id}/update/`, {
-        method: "PUT",
-        headers: { Authorization: `Token ${TOKEN()}` },
-        body: formData,
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
+      const data = await membersStore.update(member.id, formData);
+      if (data?.success) {
         const updatedUser = {
           ...data.user,
           worked_in: data.user.worked_in || data.user.Worked_in || "",
@@ -447,47 +413,31 @@ export default function MemberDetailView({ basePath = "" }) {
     const action = member.is_active ? "deactivate" : "activate";
     setDeactivating(true);
     try {
-      const res = await fetch(API_DEACTIVATE_USER, {
-        method: "POST",
-        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: member.id }),
-      });
-      const data = await res.json();
-      if (res.status === 200) {
-        toast.success(`User ${action}d successfully!`);
-        navigateToMembersList();
-        window.location.reload();
-      } else {
-        toast.error(`Failed to ${action} user: ${data.message || "Unknown error"}`);
-      }
-    } catch { toast.error(`Network error while ${action}ing user`); }
-    finally { setDeactivating(false); }
+      await membersStore.deactivate(member.id);
+      toast.success(`User ${action}d successfully!`);
+      navigateToMembersList();
+      window.location.reload();
+    } catch (err) {
+      toast.error(`Failed to ${action} user: ${err.message}`);
+    } finally { setDeactivating(false); }
   };
 
   const handleDeleteUser = () => setShowDeleteConfirm(true);
   const doDeleteUser = async () => {
     setDeleting(true);
     try {
-      const res = await fetch(API_DELETE_USER, {
-        method: "POST",
-        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: member.id }),
-      });
-      const data = await res.json();
-      if (res.ok) { toast.success("User deleted successfully!"); navigateToMembersList(); }
-      else toast.error(`Failed to delete user: ${data.message || data.error || "Unknown error"}`);
-    } catch { toast.error("Network error while deleting user"); }
-    finally { setDeleting(false); }
+      await membersStore.remove(member.id);
+      toast.success("User deleted successfully!");
+      navigateToMembersList();
+    } catch (err) {
+      toast.error(`Failed to delete user: ${err.message}`);
+    } finally { setDeleting(false); }
   };
 
   const handlechat = async () => {
     try {
-      const res = await fetch(API_CHAT_ROOMS, {
-        method: "POST",
-        headers: { Authorization: `Token ${TOKEN()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ target_user_id: member.id }),
-      });
-      if (res.ok) navigate(`${basePath}/chat`);
+      await membersStore.startChat(member.id);
+      navigate(`${basePath}/chat`);
     } catch { /* ignore chat init errors */ }
   };
 

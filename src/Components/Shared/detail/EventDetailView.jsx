@@ -4,7 +4,8 @@ import DetailScaffold from "./DetailScaffold";
 import ImageGallery from "./ImageGallery";
 import { InfoCard, FieldRow, MetaChip, Icons } from "./primitives";
 import useViewerProfile from "./useViewerProfile";
-import { API_BASE, getMediaUrl } from "./media";
+import { useEventsStore } from "../../../stores";
+import { getMediaUrl } from "./media";
 import EngagementPanel from "../EngagementPanel";
 import { DocumentList } from "../DocumentPreview";
 import ConfirmModal from "../ConfirmModal";
@@ -48,7 +49,7 @@ export default function EventDetailView({ basePath = "" }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUserId, canEditAny, canDeleteAny, canModerateComments } = useViewerProfile("events");
-  const token = localStorage.getItem("Token");
+  const eventsStore = useEventsStore();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,24 +60,12 @@ export default function EventDetailView({ basePath = "" }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch(`${API_BASE}/events/${id}`, { headers: { Authorization: `Token ${token}` } })
-      .then((res) => {
-        if (!res.ok) throw new Error("Unable to load this event.");
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) setEvent(data);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, token]);
+    eventsStore.fetchOne(id)
+      .then((data) => { if (!cancelled) setEvent(data); })
+      .catch(() => { if (!cancelled) setError("Unable to load this event."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id, eventsStore]);
 
   const postOwnerId = event?.user ?? null;
   const isOwner = currentUserId != null && currentUserId === postOwnerId;
@@ -86,11 +75,7 @@ export default function EventDetailView({ basePath = "" }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const res = await fetch(`${API_BASE}/events/${id}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (!res.ok) throw new Error();
+      await eventsStore.remove(id);
       navigate(`${basePath}/event`);
     } catch {
       setDeleting(false);
