@@ -47,9 +47,12 @@ export async function performLogout() {
   localStorage.removeItem('Token');
   localStorage.removeItem('Role');
   try {
+    // Wipe ALL user-scoped store state — permissions, profile, and the chat
+    // sockets. Leaving the chat sockets open after logout would keep streaming
+    // the previous user's messages into the next session on this device.
     const { rootStore } = await import('../stores');
-    rootStore.permissions.clear();
-  } catch { /* store may not be loaded */ }
+    rootStore.reset();
+  } catch { /* stores may not be loaded */ }
 
   toast.success('Logged out successfully!');
   setTimeout(() => { window.location.href = '/home'; }, 800);

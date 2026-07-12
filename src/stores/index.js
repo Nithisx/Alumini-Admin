@@ -33,6 +33,22 @@ export const useConfigStore = () => useStores().config;
 export const useAuthStore = () => useStores().auth;
 export const usePermissionStore = () => useStores().permissions;
 export const useNotificationStore = () => useStores().notifications;
+export const useProfileStore = () => useStores().profile;
+export const useDashboardStore = () => useStores().dashboard;
+
+// Content domains
+export const useNewsStore = () => useStores().news;
+export const useEventsStore = () => useStores().events;
+export const useAlbumsStore = () => useStores().albums;
+export const useBusinessStore = () => useStores().business;
+export const useJobsStore = () => useStores().jobs; // the feed ("posts") = jobs domain
+
+export const useMembersStore = () => useStores().members;
+export const useChatStore = () => useStores().chat;
+export const useMapStore = () => useStores().map;
+export const useRbacStore = () => useStores().rbac;
+export const useBirthdayStore = () => useStores().birthday;
+
 export const useAuditStore = () => useStores().audit;
 export const useSignupRequestStore = () => useStores().signupRequests;
 
