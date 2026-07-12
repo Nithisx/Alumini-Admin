@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { usePermissions } from "../../../lib/usePermissions";
 import {
   Search, Send, ArrowLeft, Plus, Users, MessageSquare,
   Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
@@ -877,7 +877,7 @@ const Chat = () => {
   // Chat moderation UI is gated by the RBAC matrix: a user sees it only if the
   // admin granted chat.moderate to their role (or as a per-user override). The
   // backend enforces the same permission regardless of what the UI shows.
-  const canModerate = useSelector((s) => s.permissions.permissions.includes("chat.moderate"));
+  const canModerate = usePermissions().has("chat.moderate");
   const isAdmin = canModerate;
 
   const otherUserId   = selectedChat?.other_user?.id;

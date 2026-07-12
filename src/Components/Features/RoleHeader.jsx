@@ -7,7 +7,7 @@
  * theme preserved from the original per-role headers.
  */
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { usePermissions } from "../../lib/usePermissions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt, faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
 import Logo from "../../assets/KAHEAA.svg";
@@ -21,7 +21,7 @@ export default function RoleHeader({ baseOverride }) {
   // /contact) a logged-in viewer's role base is passed explicitly.
   const urlBase = useBasePath();
   const base = baseOverride || urlBase;
-  const permissions = useSelector((s) => s.permissions.permissions);
+  const { permissions } = usePermissions();
   const [pathname, setPathname] = useState(window.location.pathname);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 

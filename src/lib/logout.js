@@ -47,9 +47,8 @@ export async function performLogout() {
   localStorage.removeItem('Token');
   localStorage.removeItem('Role');
   try {
-    const { store } = await import('../store/store');
-    const { clearPermissions } = await import('../store/permissionsSlice');
-    store.dispatch(clearPermissions());
+    const { rootStore } = await import('../stores');
+    rootStore.permissions.clear();
   } catch { /* store may not be loaded */ }
 
   toast.success('Logged out successfully!');

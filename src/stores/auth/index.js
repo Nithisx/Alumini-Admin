@@ -8,14 +8,14 @@
  * exchanged with our backend here.
  */
 import { makeAutoObservable, runInAction } from "mobx";
-import api from "../services/apiClient";
+import api from "../../services/apiClient";
 import {
   API_LOGIN_ALUMNI,
   API_LOGOUT,
   API_GOOGLE_OAUTH,
-} from "../config/api";
-import { getRole, storeLoginCredential, clearAuth } from "../lib/authToken";
-import { getSupabaseClient } from "../lib/supabaseClient";
+} from "../../config/api";
+import { getRole, storeLoginCredential, clearAuth } from "../../lib/authToken";
+import { getSupabaseClient } from "../../lib/supabaseClient";
 
 const ROLE_TO_KEY = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "student" };
 

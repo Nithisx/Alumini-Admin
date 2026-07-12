@@ -7,22 +7,22 @@
  * fetching/marking/push registration goes through this store.
  */
 import { makeAutoObservable, runInAction } from "mobx";
-import api from "../services/apiClient";
+import api from "../../services/apiClient";
 import {
   API_NOTIFICATIONS,
   API_NOTIFICATION_READ,
   API_NOTIFICATION_READ_ALL,
   API_NOTIFICATION_DELETE,
   API_NOTIFICATION_CLEAR_ALL,
-} from "../config/api";
-import { getRole } from "../lib/authToken";
+} from "../../config/api";
+import { getRole } from "../../lib/authToken";
 import {
   getNotificationStatus,
   requestNotificationPermission,
   registerExistingPermission,
   unregisterNotificationToken,
   getCachedEndpoint,
-} from "../lib/webpush";
+} from "../../lib/webpush";
 
 export default class NotificationStore {
   notifications = [];

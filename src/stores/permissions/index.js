@@ -9,9 +9,9 @@
  * re-enforces regardless of what the client believes.
  */
 import { makeAutoObservable, runInAction } from "mobx";
-import api from "../services/apiClient";
-import { API_ME_PERMISSIONS } from "../config/api";
-import { getRole } from "../lib/authToken";
+import api from "../../services/apiClient";
+import { API_ME_PERMISSIONS } from "../../config/api";
+import { getRole } from "../../lib/authToken";
 
 const LS_KEY = "app:permissions";
 const POLL_INTERVAL_MS = 5 * 60 * 1000;

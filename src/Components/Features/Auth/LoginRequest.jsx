@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { observer } from "mobx-react-lite";
-import { useSignupRequestStore } from "../../../stores/StoreContext";
+import { useSignupRequestStore } from "../../../stores";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,

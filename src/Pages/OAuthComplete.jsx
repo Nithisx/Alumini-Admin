@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { usePermissionStore } from "../stores";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
 import axios from "../lib/axiosInstance";
 import { API_BASE } from "../config/api";
 import { storeLoginCredential } from "../lib/authToken";
-import { seedFromLogin } from "../store/permissionsSlice";
+
 import { getSupabaseClient } from "../lib/supabaseClient";
 import { consumeLoginRedirect, DEFAULT_AFTER_LOGIN } from "../lib/loginRedirect";
 
@@ -21,7 +21,7 @@ const roleMap = { Admin: "admin", Staff: "staff", Alumni: "alumni", Student: "st
 // session itself is discarded immediately after.
 export default function OAuthComplete() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const permissionStore = usePermissionStore();
   const ran = useRef(false);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function OAuthComplete() {
         if (body.jwt || body.token) {
           const roleKey = roleMap[body.role] || "alumni";
           storeLoginCredential(body, roleKey);
-          dispatch(seedFromLogin(body));
+          permissionStore.seedFromLogin(body);
           toast.success("Signed in with Google successfully!");
           // Honour the page the user was originally trying to reach (stashed
           // before we bounced them to /login). sessionStorage survives the
@@ -84,7 +84,7 @@ export default function OAuthComplete() {
         navigate("/login?oauth=error", { replace: true });
       }
     })();
-  }, [navigate, dispatch]);
+  }, [navigate, permissionStore]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">

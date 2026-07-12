@@ -7,11 +7,11 @@
  * redirected to their dashboard (the backend enforces it regardless). Detail
  * views receive the current role base via their element factory.
  *
- * Permissions flow through Redux (permissionsSlice); nav is rendered by
+ * Permissions come from the MobX PermissionStore (stores/permissions); nav is rendered by
  * RoleHeader.
  */
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { usePermissions } from "../../lib/usePermissions";
 import PageTransition from "../Shared/PageTransition";
 import Breadcrumb from "../Shared/Breadcrumb";
 import { BreadcrumbProvider } from "../Shared/BreadcrumbContext";
@@ -22,8 +22,7 @@ import { useBasePath } from "../../lib/useBasePath";
 import { ROUTE_MANIFEST } from "./routeManifest.jsx";
 
 function GuardedElement({ entry, base }) {
-  const permissions = useSelector((s) => s.permissions.permissions);
-  const loaded = useSelector((s) => s.permissions.loaded);
+  const { permissions, loaded } = usePermissions();
 
   // Wait for permissions before deciding, to avoid a flash-redirect on reload.
   if (entry.permission && loaded && !permissions.includes(entry.permission)) {

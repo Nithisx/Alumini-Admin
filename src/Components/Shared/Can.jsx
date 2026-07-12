@@ -9,10 +9,10 @@
  * re-renders when the set loads or the admin edits the matrix. UX convenience
  * only — the backend always enforces RBAC regardless of what the UI shows.
  */
-import { useSelector } from "react-redux";
+import { usePermissions } from "../../lib/usePermissions";
 
 export default function Can({ perm, anyOf, allOf, fallback = null, children }) {
-  const permissions = useSelector((s) => s.permissions.permissions);
+  const { permissions } = usePermissions();
   let allowed = true;
   if (perm) allowed = permissions.includes(perm);
   else if (anyOf) allowed = anyOf.some((c) => permissions.includes(c));

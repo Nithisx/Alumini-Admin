@@ -4,8 +4,8 @@
  * server-side filters, detail drawer) expressed as store actions.
  */
 import { makeAutoObservable, runInAction } from "mobx";
-import api from "../services/apiClient";
-import { API_AUDIT_LOGS, API_AUDIT_LOG_DETAIL, API_AUDIT_LOG_FILTERS } from "../config/api";
+import api from "../../services/apiClient";
+import { API_AUDIT_LOGS, API_AUDIT_LOG_DETAIL, API_AUDIT_LOG_FILTERS } from "../../config/api";
 
 export default class AuditStore {
   logs = [];

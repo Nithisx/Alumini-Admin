@@ -3,8 +3,8 @@
  * Replaces the old Redux loginRequestSlice.
  */
 import { makeAutoObservable, runInAction } from "mobx";
-import api from "../services/apiClient";
-import { API_APPROVE_SIGNUP, API_APPROVE_SIGNUP_DETAIL } from "../config/api";
+import api from "../../services/apiClient";
+import { API_APPROVE_SIGNUP, API_APPROVE_SIGNUP_DETAIL } from "../../config/api";
 
 export default class SignupRequestStore {
   requests = [];

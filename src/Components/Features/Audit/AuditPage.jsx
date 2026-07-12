@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { observer } from "mobx-react-lite";
-import { useAuditStore } from "../../../stores/StoreContext";
+import { useAuditStore } from "../../../stores";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

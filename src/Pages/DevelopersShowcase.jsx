@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { usePermissions } from "../lib/usePermissions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { FaGithub, FaLinkedinIn } from "react-icons/fa6";
@@ -20,7 +20,7 @@ import {
 import Header from "./Header";
 import Footer from "./about_components/Footer";
 import RoleHeader from "../Components/Features/RoleHeader";
-import { selectHasPerm } from "../store/permissionsSlice";
+
 import axiosInstance from "../lib/axiosInstance";
 import {
   API_ADMIN_USER_UPDATE,
@@ -111,7 +111,7 @@ export default function DevelopersShowcase() {
 
   const token = localStorage.getItem("Token");
   const role = localStorage.getItem("Role");
-  const isAdmin = useSelector(selectHasPerm("developer.moderate"));
+  const isAdmin = usePermissions().has("developer.moderate");
 
   const renderHeader = () => {
     if (!token || !role) return <Header />;

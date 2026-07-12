@@ -1,9 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './lib/axiosInstance';
-import { Provider } from 'react-redux';
-import { store } from './store/store';
-import { StoreProvider } from './stores/StoreContext';
+import { StoreProvider } from './stores';
 import App from './App';
 import { initUiAnimations } from './lib/uiAnimations';
 import { assertConfig } from './config/appConfig';
@@ -25,11 +23,7 @@ assertConfig();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  // Redux Provider stays during the MobX migration (stores are converted
-  // domain by domain; both coexist until the last Redux consumer is gone).
   <StoreProvider>
-    <Provider store={store}>
-      <App />
-    </Provider>
+    <App />
   </StoreProvider>
 );

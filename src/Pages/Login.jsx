@@ -2,8 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "../lib/axiosInstance";
 import { storeLoginCredential } from "../lib/authToken";
-import { useDispatch } from "react-redux";
-import { seedFromLogin } from "../store/permissionsSlice";
+import { usePermissionStore } from "../stores";
 import { toast } from "react-toastify";
 import kahelogo from "../assets/KAHEAA.svg";
 import { API_BASE } from "../config/api";
@@ -19,7 +18,7 @@ const api = axios.create({
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
+  const permissionStore = usePermissionStore();
 
   // Stash the page the user was trying to reach (set by ProtectedRoute, or by
   // a public page's protected link — e.g. a member card on /home).
@@ -78,7 +77,7 @@ export default function LoginPage() {
 
       if (data.jwt || data.token) {
         storeLoginCredential(data, data.role_key);
-        dispatch(seedFromLogin(data));
+        permissionStore.seedFromLogin(data);
         toast.success("Logged in successfully!");
         redirectAfterLogin();
       } else {

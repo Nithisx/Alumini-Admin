@@ -3,23 +3,18 @@ import React, { useState, useEffect } from "react";
 import AppRoutes from "./AppRoutes";
 import ErrorBoundary from "./Components/Shared/ErrorBoundary";
 import NetworkStatusBanner from "./Components/Shared/NetworkStatusBanner";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import Loader from "./Pages/Loder";
-import { useDispatch } from "react-redux";
-import { fetchPermissions } from "./store/permissionsSlice";
+import { usePermissionStore } from "./stores";
 import { getRole } from "./lib/authToken";
-import usePermissionsPolling from "./lib/usePermissionsPolling";
+
 
 
 export default function App() {
-  const dispatch = useDispatch();
-  // Live propagation of admin-side RBAC edits (role matrix or per-user
-  // overrides) — polls GET /me/permissions/ every 5 minutes while
-  // authenticated and silently refreshes Redux (nav/Can gating react
-  // automatically), toasting only when the effective set actually changed.
-  usePermissionsPolling();
+  const permissions = usePermissionStore();
+
   // Show the Karpagam Alumni loading screen only on the landing page ("/" or
   // "/home"). Runs once per full page load (not on in-app route changes).
   const [appLoading, setAppLoading] = useState(() => {
@@ -27,11 +22,16 @@ export default function App() {
     return pathname === "/" || pathname === "/home";
   });
 
-  // Load the caller's effective RBAC permissions once at boot if a session
-  // exists (fetched from the backend — not embedded in the JWT).
+  // Effective RBAC permissions: fetched once at boot (they are NOT in the JWT —
+  // an admin edits the matrix at runtime), then re-polled so a granted/revoked
+  // permission propagates to the nav and every <Can>-gated control without the
+  // user having to log out. Toast only when the set actually changed.
   useEffect(() => {
-    if (getRole()) dispatch(fetchPermissions());
-  }, [dispatch]);
+    if (!getRole()) return undefined;
+    permissions.fetch();
+    permissions.startPolling(() => toast.info("Your permissions were updated."));
+    return () => permissions.stopPolling();
+  }, [permissions]);
 
   useEffect(() => {
     if (!appLoading) return;

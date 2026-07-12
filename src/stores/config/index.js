@@ -19,7 +19,7 @@ import {
   SUPABASE_URL,
   SUPABASE_ANON_KEY,
   FEATURES,
-} from "../config/appConfig";
+} from "../../config/appConfig";
 
 export default class ConfigStore {
   apiOrigin = API_ORIGIN;

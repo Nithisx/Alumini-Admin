@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { usePermissions } from "../../../lib/usePermissions";
 import { API_BASE } from "./media";
 
 /**
@@ -25,7 +25,7 @@ import { API_BASE } from "./media";
  */
 export default function useViewerProfile(domain) {
   const [profile, setProfile] = useState({ currentUserId: null, role: "" });
-  const permissions = useSelector((s) => s.permissions.permissions);
+  const { permissions } = usePermissions();
 
   useEffect(() => {
     let cancelled = false;

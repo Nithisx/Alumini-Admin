@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { usePermissions } from "../lib/usePermissions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { FaGithub, FaLinkedinIn } from "react-icons/fa6";
@@ -17,7 +17,7 @@ import Header from "./Header";
 import Footer from "./about_components/Footer";
 import RoleHeader from "../Components/Features/RoleHeader";
 import ImageViewerModal from "../Components/Shared/ImageViewerModal";
-import { selectHasPerm } from "../store/permissionsSlice";
+
 import axiosInstance from "../lib/axiosInstance";
 import { createResilientSocket } from "../Components/Shared/chat/resilientSocket";
 import {
@@ -146,7 +146,7 @@ export default function DeveloperCommunityLive() {
   // whether the user happens to hold a developer_role. Revoking the permission
   // must hide the moderation controls (backend already 403s), so the old
   // `|| developer_role` bypass is removed.
-  const canModerate = useSelector(selectHasPerm("developer.moderate"));
+  const canModerate = usePermissions().has("developer.moderate");
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
