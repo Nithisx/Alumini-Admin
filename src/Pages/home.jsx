@@ -6,31 +6,43 @@ import ChapterDistributionSection from "../Components/Shared/ChapterDistribution
 import { DASHBOARD_THEME } from "../constants/dashboardTheme";
 import Header from "./Header.jsx";
 import Herosection from "./Herosection.jsx";
-import { API_BASE, API_ORIGIN } from "../config/api";
+import { API_ORIGIN } from "../config/api";
+import { observer } from "mobx-react-lite";
+import { useDashboardStore } from "../stores";
 import { isAuthenticated } from "../lib/authToken";
 
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 
-export default function Home() {
+const EMPTY_HOME = {
+  upcoming_events: [],
+  latest_album_images: [],
+  latest_members: [],
+  featured_news: [],
+  total_users: 0,
+  upcoming_event: 0,
+  albums_count: 0,
+  new_users: 0,
+};
+
+const Home = observer(() => {
   const navigate = useNavigate();
-  const [data, setData] = useState({
-    upcoming_events: [],
-    latest_album_images: [],
-    latest_members: [],
-    featured_news: [],
-    total_users: 0,
-    upcoming_event: 0,
-    albums_count: 0,
-    new_users: 0,
-  });
-  const [countryDistribution, setCountryDistribution] = useState({ chapters: [] });
-  const [cityStateDistribution, setCityStateDistribution] = useState({
-    city_chapters: [],
-    state_chapters: [],
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dashboard = useDashboardStore();
+
+  // The endpoint omits a list entirely when it's empty, so normalise here — the
+  // render path indexes into all four unconditionally.
+  const raw = dashboard.data || {};
+  const data = {
+    ...EMPTY_HOME,
+    ...raw,
+    upcoming_events: Array.isArray(raw.upcoming_events) ? raw.upcoming_events : [],
+    latest_album_images: Array.isArray(raw.latest_album_images) ? raw.latest_album_images : [],
+    latest_members: Array.isArray(raw.latest_members) ? raw.latest_members : [],
+    featured_news: Array.isArray(raw.featured_news) ? raw.featured_news : [],
+  };
+  const countryDistribution = dashboard.countryDistribution;
+  const cityStateDistribution = dashboard.cityStateDistribution;
+  const loading = dashboard.loading;
+  const error = dashboard.error ? "Failed to fetch data. Please try again later." : null;
   const [newsSlide, setNewsSlide] = useState(0);
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchStartY, setTouchStartY] = useState(null);
@@ -61,50 +73,7 @@ export default function Home() {
     }).format(date);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [homeResponse, countryResponse, cityStateResponse] = await Promise.all([
-          fetch(`${BASE_URL}/home/`),
-          fetch(`${BASE_URL}/country-distribution/`),
-          fetch(`${BASE_URL}/city-state-chapters/`),
-        ]);
-
-        if (!homeResponse.ok || !countryResponse.ok || !cityStateResponse.ok) {
-          throw new Error("Failed to fetch home data");
-        }
-
-        const homeResult = await homeResponse.json();
-        const countryResult = await countryResponse.json();
-        const cityStateResult = await cityStateResponse.json();
-
-        setData((prev) => ({
-          ...prev,
-          ...homeResult,
-          upcoming_events: Array.isArray(homeResult.upcoming_events)
-            ? homeResult.upcoming_events
-            : [],
-          latest_album_images: Array.isArray(homeResult.latest_album_images)
-            ? homeResult.latest_album_images
-            : [],
-          latest_members: Array.isArray(homeResult.latest_members)
-            ? homeResult.latest_members
-            : [],
-          featured_news: Array.isArray(homeResult.featured_news)
-            ? homeResult.featured_news
-            : [],
-        }));
-        setCountryDistribution(countryResult);
-        setCityStateDistribution(cityStateResult);
-        setLoading(false);
-      } catch {
-        setError("Failed to fetch data. Please try again later.");
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  useEffect(() => { dashboard.load(); }, [dashboard]);
 
   useEffect(() => {
     if (newsCount === 0) return;
@@ -506,4 +475,6 @@ export default function Home() {
       <Footer />
     </div>
   );
-}
+});
+
+export default Home;

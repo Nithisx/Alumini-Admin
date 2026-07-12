@@ -6,20 +6,12 @@ import {
   Trash2, Globe, Eye, AlertTriangle, Check, CheckCheck,
   Clock, Pencil, X, MoreVertical, Info, Shield, Copy, Paperclip, CornerUpLeft, Code,
 } from "lucide-react";
-import { getMediaUrl, API_CHAT_HOST } from "../../../config/api";
+import { getMediaUrl } from "../../../config/api";
 import { getProfilePlaceholderByGender } from "../../../lib/profilePlaceholders";
-import { createResilientSocket } from "../../Shared/chat/resilientSocket";
+import { observer } from "mobx-react-lite";
+import { useChatStore } from "../../../stores";
 import { getRole } from "../../../lib/authToken";
 
-const API_HOST = API_CHAT_HOST;
-const WS_HOST  = API_CHAT_HOST.replace(/^https?:\/\//, "");
-
-// Auth is the httpOnly cookie — sent automatically on both REST fetches (see
-// lib/axiosInstance.js's global fetch patch) and the WebSocket handshake
-// (browsers attach cookies to the WS upgrade request same as any other
-// same-site request, no JS opt-in needed). getRole() is only used as an
-// "am I logged in" gate, never as a credential.
-const authH = () => ({ "Content-Type": "application/json" });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -242,32 +234,36 @@ const ContextMenu = ({ x, y, items, onClose }) => {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-const Chat = () => {
+const Chat = observer(() => {
+  // Rooms, messages, presence and both sockets live in ChatStore; this
+  // component holds only view state (what's open, what's being typed).
+  const chat = useChatStore();
+  const rooms = chat.rooms;
+  const communityRooms = chat.communityRooms;
+  const allRooms = chat.allRooms;
+  const allRoomsLoading = chat.allRoomsLoading;
+  const messages = chat.messages;
+  const presenceMap = chat.presence;
+  const currentUser = chat.currentUser;
+  const isConnected = chat.connected;
+  const loading = chat.loading;
+
   const [selectedChat, setSelectedChat]       = useState(null);
   const [message, setMessage]                 = useState("");
-  const [messages, setMessages]               = useState([]);
   const [searchQuery, setSearchQuery]         = useState("");
   const [searchResults, setSearchResults]     = useState([]);
   const [showSearch, setShowSearch]           = useState(false);
-  const [rooms, setRooms]                     = useState([]);
-  const [loading, setLoading]                 = useState(false);
-  const [currentUser, setCurrentUser]         = useState(null);
-  const [isConnected, setIsConnected]         = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [roomToDelete, setRoomToDelete]       = useState(null);
-  const [communityRooms, setCommunityRooms]   = useState([]);
   const [showAgreement, setShowAgreement]     = useState(
     () => !localStorage.getItem("chat_agreement_accepted")
   );
 
   // Admin spectating
   const [spectateMode, setSpectateMode]       = useState(false);
-  const [allRooms, setAllRooms]               = useState([]);
-  const [allRoomsLoading, setAllRoomsLoading] = useState(false);
   const [spectateSearch, setSpectateSearch]   = useState("");
   const [isSpectating, setIsSpectating]       = useState(false);
 
-  const [presenceMap, setPresenceMap]   = useState({});
   const [editingId, setEditingId]       = useState(null);
   const [editText, setEditText]         = useState("");
   const [mediaLightbox, setMediaLightbox] = useState(null);
@@ -282,17 +278,11 @@ const Chat = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const messagesEndRef    = useRef(null);
-  const socketRef         = useRef(null);
-  const globalSocketRef   = useRef(null);
   const inputRef          = useRef(null);
-  const selectedChatIdRef = useRef(null);
-  const currentUserIdRef  = useRef(null);
   const longPressTimer    = useRef(null);
   const fileInputRef      = useRef(null);
   const editInputRef      = useRef(null);
   const autoSelectedRef   = useRef(false);
-
-  useEffect(() => { currentUserIdRef.current = currentUser?.id || null; }, [currentUser]);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(() => { scrollToBottom(); }, [messages]);
@@ -323,415 +313,76 @@ const Chat = () => {
   }, [rooms]);
 
   useEffect(() => {
-    connectGlobalSocket();
+    chat.connectGlobal();
     // Revive dead sockets when the tab regains focus or the network returns —
     // mobile/laptop sleep and proxy idle-timeouts otherwise leave them silent.
-    const reviveSockets = () => {
-      globalSocketRef.current?.reviveIfNeeded();
-      socketRef.current?.reviveIfNeeded();
-    };
-    const onVisible = () => { if (document.visibilityState === "visible") reviveSockets(); };
+    const revive = () => chat.reviveSockets();
+    const onVisible = () => { if (document.visibilityState === "visible") revive(); };
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("online", reviveSockets);
-    window.addEventListener("focus", reviveSockets);
+    window.addEventListener("online", revive);
+    window.addEventListener("focus", revive);
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("online", reviveSockets);
-      window.removeEventListener("focus", reviveSockets);
-      closeSocket(); closeGlobalSocket();
+      window.removeEventListener("online", revive);
+      window.removeEventListener("focus", revive);
+      chat.closeRoom();
+      chat.disconnectGlobal();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [chat]);
 
-  const closeSocket = () => { socketRef.current?.close(); socketRef.current = null; };
-  const closeGlobalSocket = () => { globalSocketRef.current?.close(); globalSocketRef.current = null; };
-
-  // ── Global WebSocket ───────────────────────────────────────────────────────
-  const connectGlobalSocket = () => {
-    if (!getRole()) return;
-    closeGlobalSocket();
-    const sock = createResilientSocket({
-      getUrl: () => (getRole() ? `wss://${WS_HOST}/ws/chat/` : null),
-      onOpen: () => sock.send({ action: "bootstrap" }),
-      onDown: () => restBootstrapFallback(),
-      onMessage: (data) => {
-        if (data.action === "bootstrap") {
-          if (Array.isArray(data.rooms)) setRooms(data.rooms);
-          if (Array.isArray(data.communities)) {
-            setCommunityRooms(data.communities.map((c) => ({ ...c, is_community: true })));
-          } else if (data.community?.id) {
-            setCommunityRooms([{ ...data.community, is_community: true, name: "Community Chat" }]);
-          }
-          if (data.presence && typeof data.presence === "object") {
-            setPresenceMap((prev) => ({ ...prev, ...data.presence }));
-          }
-          if (data.me) setCurrentUser(data.me);
-          return;
-        }
-
-        if (data.action === "room_update") {
-          setRooms((prev) => {
-            const idx = prev.findIndex((r) => String(r.id) === String(data.room_id));
-            if (idx === -1) { loadRooms(); return prev; }
-            const fromSelf = String(data.sender_id) === String(currentUserIdRef.current);
-            const updated  = prev.map((r, i) =>
-              i === idx
-                ? {
-                    ...r,
-                    lastMessage: data.last_message ?? r.lastMessage,
-                    lastMessageTime: data.last_message_time ?? r.lastMessageTime,
-                    lastMessageSenderId: data.last_message_sender_id ?? r.lastMessageSenderId,
-                    lastMessageStatus: data.last_message_status ?? r.lastMessageStatus,
-                    ...(fromSelf ? { unreadCount: 0 } : {}),
-                  }
-                : r
-            );
-            updated.sort((a, b) =>
-              new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0)
-            );
-            return updated;
-          });
-          return;
-        }
-
-        if (data.action === "room_created" && data.room?.id) {
-          setRooms((prev) =>
-            prev.some((r) => String(r.id) === String(data.room.id)) ? prev : [data.room, ...prev]
-          );
-          return;
-        }
-
-        if ((data.action === "presence_update" || data.type === "presence_update") && data.user_id != null) {
-          const key = String(data.user_id);
-          setPresenceMap((prev) => ({
-            ...prev,
-            [key]: { ...(prev[key] || {}), is_online: !!data.is_online, last_seen: data.last_seen ?? prev[key]?.last_seen ?? null },
-          }));
-          return;
-        }
-
-        if (data.action === "incoming_message" && data.room_id) {
-          setRooms((prev) => {
-            const isOpen = String(selectedChatIdRef.current) === String(data.room_id);
-            const updated = prev.map((r) =>
-              String(r.id) === String(data.room_id) ? {
-                ...r,
-                ...(data.last_message != null     ? { lastMessage: data.last_message }          : {}),
-                ...(data.last_message_time != null ? { lastMessageTime: data.last_message_time } : {}),
-                ...(data.sender_id != null        ? { lastMessageSenderId: data.sender_id }     : {}),
-                unreadCount: isOpen ? (r.unreadCount || 0) : (r.unreadCount || 0) + 1,
-              } : r
-            );
-            updated.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
-            return updated;
-          });
-          return;
-        }
-
-        // Status updates (e.g. delivered) pushed to sender via their user group
-        if (data.action === "status_update" && Array.isArray(data.message_ids)) {
-          setMessages((prev) => prev.map((m) =>
-            data.message_ids.includes(String(m.id))
-              ? { ...m, status: data.status, delivered_at: data.delivered_at || m.delivered_at, seen_at: data.seen_at || m.seen_at }
-              : m
-          ));
-          // Also update sidebar status for last message
-          if (data.room_id) {
-            setRooms((prev) => prev.map((r) =>
-              String(r.id) === String(data.room_id)
-                ? { ...r, lastMessageStatus: data.status }
-                : r
-            ));
-          }
-          return;
-        }
-      },
-    });
-    globalSocketRef.current = sock;
-    sock.connect();
-  };
-
-  const restBootstrapFallback = () => { loadRooms(); getCurrentUser(); loadCommunityChat(); };
-
-  // ── API helpers ────────────────────────────────────────────────────────────
-  const getCurrentUser = async () => {
-    if (!getRole()) return;
-    try {
-      const r = await fetch(`${API_HOST}/chat/user/me/`, { headers: authH() });
-      if (r.ok) { setCurrentUser(await r.json()); return; }
-    } catch { /* ignore */ }
-    try {
-      const r = await fetch(`${API_HOST}/api/v1/user/me/`, { headers: authH() });
-      if (r.ok) setCurrentUser(await r.json());
-    } catch { /* ignore */ }
-  };
-
-  const loadRooms = async () => {
-    if (!getRole()) return;
-    setLoading(true);
-    try {
-      const r = await fetch(`${API_HOST}/chat/rooms/`, { headers: authH() });
-      if (r.ok) setRooms(await r.json());
-    } catch { /* ignore */ } finally { setLoading(false); }
-  };
-
-  const loadCommunityChat = async () => {
-    if (!getRole()) return;
-    try {
-      const r = await fetch(`${API_HOST}/chat/community/`, { headers: authH() });
-      if (r.ok) {
-        const d = await r.json();
-        if (Array.isArray(d)) {
-          setCommunityRooms(d.map((c) => ({ ...c, is_community: true })));
-        } else if (d?.id) {
-          setCommunityRooms([{ ...d, is_community: true, name: "Community Chat" }]);
-        }
-      }
-    } catch { /* ignore */ }
-  };
-
-  const loadAllRooms = async () => {
-    setAllRoomsLoading(true);
-    try {
-      const r = await fetch(`${API_HOST}/chat/admin/rooms/`, { headers: authH() });
-      if (r.ok) setAllRooms(await r.json());
-    } catch { /* ignore */ } finally { setAllRoomsLoading(false); }
-  };
-
-  const searchUsers = async (q) => {
-    if (!q.trim()) { setSearchResults([]); return; }
-    try {
-      const r = await fetch(`${API_HOST}/chat/search/?q=${encodeURIComponent(q)}`, { headers: authH() });
-      if (r.ok) setSearchResults(await r.json());
-    } catch { /* ignore */ }
-  };
-
-  const createRoom = async (userId) => {
-    try {
-      const r = await fetch(`${API_HOST}/chat/rooms/`, {
-        method: "POST", headers: authH(),
-        body: JSON.stringify({ target_user_id: userId }),
-      });
-      if (r.ok) {
-        const room = await r.json();
-        setRooms((prev) => [room, ...prev.filter((x) => x.id !== room.id)]);
-        selectChat(room);
-        setShowSearch(false); setSearchQuery(""); setSearchResults([]);
-      }
-    } catch { /* ignore */ }
-  };
-
-  const deleteRoom = async (roomId) => {
-    try {
-      const r = await fetch(
-        `${API_HOST}/chat/rooms/?room_id=${encodeURIComponent(roomId)}`,
-        { method: "DELETE", headers: authH() }
-      );
-      if (r.ok) {
-        setRooms((prev) => prev.filter((x) => x.id !== roomId));
-        if (selectedChat?.id === roomId) {
-          setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false);
-        }
-        setShowDeleteModal(false); setRoomToDelete(null);
-      }
-    } catch { /* ignore */ }
-  };
-
-  const loadMessagesHTTP = async (roomId) => {
-    try {
-      const r = await fetch(`${API_HOST}/chat/rooms/${encodeURIComponent(roomId)}/messages/`, { headers: authH() });
-      if (r.ok) {
-        const msgs = await r.json();
-        setMessages(msgs.map((m) => ({
-          ...m,
-          time: m.time || fmtTime(m.timestamp) || fmtTime(m.delivered_at) || "",
-        })));
-      }
-    } catch { /* ignore */ }
-  };
-
-  const markSeen = useCallback(async (roomId, upToMsgId, isCommunity = false) => {
-    if (!roomId && !isCommunity) return;
-    const endpoint = isCommunity
-      ? `${API_HOST}/chat/community/seen/`
-      : `${API_HOST}/chat/rooms/${roomId}/seen/`;
-    try {
-      await fetch(endpoint, {
-        method: "POST",
-        headers: authH(),
-        body: JSON.stringify(upToMsgId ? { message_id: upToMsgId } : {}),
-      });
-    } catch { /* ignore */ }
-  }, []);
-
-  const fetchPresence = useCallback(async (userId) => {
-    if (!userId) return;
-    try {
-      const r = await fetch(`${API_HOST}/chat/presence/${userId}/`, { headers: authH() });
-      if (r.ok) {
-        const data = await r.json();
-        setPresenceMap((prev) => ({ ...prev, [userId]: data }));
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  // ── WebSocket (per-room) ───────────────────────────────────────────────────
-  const connectWebSocket = useCallback((roomId, isCommunity = false, roomName = "") => {
-    if (!getRole()) return;
-    closeSocket();
-    setIsConnected(false);
-    setMessages([]);
-
-    const sock = createResilientSocket({
-      getUrl: () => {
-        if (!getRole()) return null;
-        if (isCommunity) {
-          const roomType = roomName === "Developer Community" ? "developer" : "general";
-          return `wss://${WS_HOST}/ws/community-chat/?room=${roomType}`;
-        }
-        return `wss://${WS_HOST}/ws/chat/${encodeURIComponent(roomId)}/`;
-      },
-      onOpen: () => setIsConnected(true),
-      onDown: () => { setIsConnected(false); loadMessagesHTTP(roomId); },
-      onMessage: (data) => {
-        if (data.action === "message_history" && Array.isArray(data.messages)) {
-          const normalized = data.messages.map((m) => ({
-            ...m,
-            time: m.time || fmtTime(m.timestamp) || fmtTime(m.delivered_at) || "",
-          }));
-          setMessages(normalized);
-          const lastMsg = normalized[normalized.length - 1];
-          if (lastMsg) markSeen(roomId, lastMsg.id, isCommunity);
-          return;
-        }
-
-        if (data.action === "new_message" || data.type === "chat_message" || data.action === "chat_message") {
-          const newMsg = {
-            id: data.message_id || data.id || crypto.randomUUID(),
-            text: data.message || data.text || "",
-            sender: data.sender
-              ? typeof data.sender === "string" ? { username: data.sender } : data.sender
-              : null,
-            time: fmtTime(data.timestamp) || new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
-            timestamp: data.timestamp || new Date().toISOString(),
-            status: data.status || "sent",
-            delivered_at: data.delivered_at || null,
-            seen_at: data.seen_at || null,
-            sender_id: data.sender_id || data.sender?.id || null,
-            reply_to: data.reply_to || null,
-            media: data.media || null,
-            media_type: data.media_type || null,
-            edited: data.edited || false,
-          };
-          setMessages((prev) => [...prev, newMsg]);
-          markSeen(roomId, newMsg.id, isCommunity);
-          setRooms((prev) => {
-            const updated = prev.map((r) =>
-              String(r.id) === String(roomId)
-                ? {
-                    ...r,
-                    lastMessage: newMsg.text,
-                    lastMessageTime: newMsg.timestamp,
-                    lastMessageSenderId: newMsg.sender_id || newMsg.sender?.id,
-                    lastMessageStatus: newMsg.status,
-                    unreadCount: 0,
-                  }
-                : r
-            );
-            updated.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
-            return updated;
-          });
-          return;
-        }
-
-        if (data.action === "status_update" && Array.isArray(data.message_ids)) {
-          setMessages((prev) => prev.map((m) =>
-            data.message_ids.includes(String(m.id))
-              ? { ...m, status: data.status, delivered_at: data.delivered_at || m.delivered_at, seen_at: data.seen_at || m.seen_at }
-              : m
-          ));
-          return;
-        }
-
-        if (data.action === "presence_update") {
-          setPresenceMap((prev) => ({
-            ...prev,
-            [data.user_id]: { is_online: data.is_online, last_seen: data.last_seen },
-          }));
-          return;
-        }
-
-        if (data.action === "message_deleted") {
-          setMessages((prev) => prev.filter((m) => String(m.id) !== String(data.message_id)));
-          return;
-        }
-
-        if (data.action === "message_edited") {
-          setMessages((prev) => prev.map((m) =>
-            String(m.id) === String(data.message_id) ? { ...m, text: data.new_text, edited: true } : m
-          ));
-          return;
-        }
-      },
-    });
-    socketRef.current = sock;
-    sock.connect();
-  }, [markSeen]);
-
-  const selectChat = useCallback((chat, spectating = false) => {
-    setSelectedChat(chat);
+  const selectChat = useCallback((room, spectating = false) => {
+    setSelectedChat(room);
     setIsSpectating(spectating);
-    selectedChatIdRef.current = chat?.id || null;
     setEditingId(null);
     setCtxMenu(null);
     setInfoMsg(null);
     setReplyTo(null);
     setMediaPreview(null);
-    connectWebSocket(chat.id, Boolean(chat.is_community), chat.name);
-    setRooms((prev) => prev.map((r) =>
-      String(r.id) === String(chat.id) ? { ...r, unreadCount: 0 } : r
-    ));
-    if (!chat.is_community && chat.other_user?.id && !presenceMap[chat.other_user.id]) {
-      fetchPresence(chat.other_user.id);
+    // The store opens the room socket and clears the room's unread badge.
+    chat.openRoom(room.id, { isCommunity: Boolean(room.is_community), roomName: room.name });
+    if (!room.is_community && room.other_user?.id && !presenceMap[room.other_user.id]) {
+      chat.fetchPresence(room.other_user.id);
     }
-  }, [connectWebSocket, fetchPresence, presenceMap]);
+  }, [chat, presenceMap]);
+
+  const handleCreateRoom = async (userId) => {
+    try {
+      const room = await chat.createRoom(userId);
+      selectChat(room);
+      setShowSearch(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    } catch { /* the room list is unchanged; nothing to undo */ }
+  };
+
+  const handleDeleteRoom = async (roomId) => {
+    try {
+      await chat.deleteRoom(roomId);
+      if (selectedChat?.id === roomId) setSelectedChat(null);
+    } catch { /* non-fatal */ } finally {
+      setShowDeleteModal(false);
+      setRoomToDelete(null);
+    }
+  };
 
   // ── Send ───────────────────────────────────────────────────────────────────
   const sendMessage = async () => {
-    if ((!message.trim() && !mediaPreview) || !socketRef.current || !isConnected || isSpectating) return;
+    if ((!message.trim() && !mediaPreview) || !isConnected || isSpectating) return;
 
-    let mediaUrl = null;
-    let mediaType = null;
-
-    if (mediaPreview) {
-      setUploadingMedia(true);
-      try {
-        const formData = new FormData();
-        formData.append("file", mediaPreview.file);
-        const res = await fetch(`${API_HOST}/chat/upload/`, {
-          method: "POST",
-          body: formData,
-        });
-        if (res.ok) {
-          const d = await res.json();
-          mediaUrl = d.media_url;
-          mediaType = d.media_type;
-        } else {
-          setUploadingMedia(false);
-          return;
-        }
-      } catch {
-        setUploadingMedia(false);
-        return;
-      }
+    if (mediaPreview) setUploadingMedia(true);
+    try {
+      // The store uploads the attachment (if any) and then sends over the socket.
+      await chat.sendMessage({
+        text: message,
+        replyToId: replyTo?.id || null,
+        media: mediaPreview?.file || null,
+      });
+    } catch {
+      return; // upload failed — keep the draft so nothing is lost
+    } finally {
       setUploadingMedia(false);
     }
 
-    const payload = { action: "send_message", room_id: selectedChat?.id, message: message.trim() };
-    if (replyTo) payload.reply_to_id = replyTo.id;
-    if (mediaUrl) { payload.media_url = mediaUrl; payload.media_type = mediaType; }
-
-    socketRef.current.send(JSON.stringify(payload));
     setMessage("");
     setReplyTo(null);
     if (mediaPreview?.url) URL.revokeObjectURL(mediaPreview.url);
@@ -782,15 +433,15 @@ const Chat = () => {
   };
 
   const submitEdit = () => {
-    if (!editText.trim() || !socketRef.current || !isConnected) return;
-    socketRef.current.send(JSON.stringify({ action: "edit_message", message_id: editingId, message: editText.trim() }));
+    if (!editText.trim() || !isConnected) return;
+    chat.editMessage(editingId, editText.trim());
     setEditingId(null);
     setEditText("");
   };
 
   const deleteMessage = (msgId) => {
-    if (!socketRef.current || !isConnected) return;
-    socketRef.current.send(JSON.stringify({ action: "delete_message", message_id: msgId }));
+    if (!isConnected) return;
+    chat.deleteMessage(msgId);
     setCtxMenu(null);
   };
 
@@ -1050,7 +701,7 @@ const Chat = () => {
                 <button
                   onClick={() => {
                     setSpectateMode((v) => {
-                      if (!v) loadAllRooms();
+                      if (!v) chat.loadAllRooms();
                       return !v;
                     });
                   }}
@@ -1076,14 +727,17 @@ const Chat = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text" placeholder="Search people…" value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); searchUsers(e.target.value); }}
+                  onChange={async (e) => {
+                    setSearchQuery(e.target.value);
+                    setSearchResults(await chat.searchUsers(e.target.value));
+                  }}
                   className="w-full bg-gray-100 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
                 />
               </div>
               {searchResults.length > 0 && (
                 <div className="bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden max-h-48 overflow-y-auto">
                   {searchResults.map((u) => (
-                    <div key={u.id} onClick={() => createRoom(u.id)}
+                    <div key={u.id} onClick={() => handleCreateRoom(u.id)}
                       className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0">
                       <div className="relative">
                         <Avatar src={u.profile_photo} name={u.first_name || u.username} gender={u.gender} size={9} />
@@ -1248,7 +902,7 @@ const Chat = () => {
             <>
               {/* Top bar */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
-                <button onClick={() => { setSelectedChat(null); closeSocket(); setMessages([]); setIsConnected(false); setIsSpectating(false); }}
+                <button onClick={() => { setSelectedChat(null); chat.closeRoom(); setIsSpectating(false); }}
                   className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition">
                   <ArrowLeft className="w-4 h-4" />
                 </button>
@@ -1287,7 +941,10 @@ const Chat = () => {
                       <div className="w-3.5 h-3.5 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin" />
                       Connecting…
                       <button
-                        onClick={() => connectWebSocket(selectedChat.id, Boolean(selectedChat.is_community))}
+                        onClick={() => chat.openRoom(selectedChat.id, {
+                          isCommunity: Boolean(selectedChat.is_community),
+                          roomName: selectedChat.name,
+                        })}
                         className="underline text-yellow-800 font-medium"
                       >
                         Retry
@@ -1517,7 +1174,7 @@ const Chat = () => {
                 className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
                 Cancel
               </button>
-              <button onClick={() => deleteRoom(roomToDelete?.id)}
+              <button onClick={() => handleDeleteRoom(roomToDelete?.id)}
                 className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition">
                 Delete
               </button>
@@ -1527,6 +1184,6 @@ const Chat = () => {
       )}
     </div>
   );
-};
+});
 
 export default Chat;
