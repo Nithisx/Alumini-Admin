@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Eye, Heart } from "lucide-react";
-import { API_BASE, API_ORIGIN } from "../../config/api";
+import { API_ORIGIN } from "../../config/api";
+import { useEngagementStore } from "../../stores";
 
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 
 const resolvePhoto = (photo) => {
@@ -52,6 +52,7 @@ export const ViewStats = ({
   uniqueViewers,
   recentViewers,
 }) => {
+  const engagement = useEngagementStore();
   const [expanded, setExpanded] = useState(false);
   const [viewers, setViewers] = useState(recentViewers || []);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -61,18 +62,10 @@ export const ViewStats = ({
     if (loadedAll || loadingMore || !contentType) return;
     setLoadingMore(true);
     try {
-      const token = localStorage.getItem("Token");
-      const res = await fetch(
-        `${BASE_URL}/${contentType}/${contentId}/viewers/`,
-        { headers: { Authorization: `Token ${token}` } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setViewers(Array.isArray(data) ? data : []);
-        setLoadedAll(true);
-      }
+      setViewers(await engagement.fetchViewers(contentType, contentId));
+      setLoadedAll(true);
     } catch {
-      /* ignore */
+      /* leave the preloaded viewers in place */
     } finally {
       setLoadingMore(false);
     }

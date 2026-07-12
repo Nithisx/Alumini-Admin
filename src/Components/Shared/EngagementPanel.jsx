@@ -13,12 +13,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Heart, MessageCircle, Share2, Send, Reply, Pencil, Trash2, X, Check, Copy, ChevronDown, ChevronUp, Link2, ArrowLeft, Search, Users } from "lucide-react";
 import { toast } from "react-toastify";
-import { API_BASE, API_ORIGIN, API_CHAT_SEARCH, API_PORTAL_SHARE } from "../../config/api";
+import { API_ORIGIN } from "../../config/api";
+import { useEngagementStore } from "../../stores";
 
-const API_ROOT = API_BASE;
-// Auth is the httpOnly cookie (sent automatically, see lib/axiosInstance.js's
-// global fetch patch) — these calls only need Content-Type here.
-const authHeaders = () => ({ "Content-Type": "application/json" });
 
 const ALLOWED_SHARE_MODES = ["link", "status", "story", "post", "portal"];
 const ALLOWED_SHARE_PLATFORMS = ["generic", "native", "whatsapp", "instagram", "facebook", "x", "linkedin", "telegram", "portal"];
@@ -27,7 +24,7 @@ const ALLOWED_SHARE_PLATFORMS = ["generic", "native", "whatsapp", "instagram", "
 
 const getPhotoUrl = (p) => {
   if (!p) return "";
-  return p.startsWith("http") ? p : `${API_ROOT.replace("/api/v1", "")}${p}`;
+  return p.startsWith("http") ? p : `${API_ORIGIN}${p}`;
 };
 
 const timeAgo = (iso) => {
@@ -139,17 +136,12 @@ const ReplyItem = ({ reply, contentType, canModerate, isPostOwner, currentUserId
   const canDelete = isOwn || canModerate || isPostOwner;
   const canEdit = isOwn || canModerate;
 
+  const engagement = useEngagementStore();
+
   const saveEdit = async () => {
     if (!editText.trim()) return;
     try {
-      const res = await fetch(`${API_ROOT}/${contentType}/comments/replies/${reply.id}/`, {
-        method: "PUT",
-        headers: authHeaders(),
-        body: JSON.stringify({ reply: editText.trim() }),
-      });
-      if (!res.ok) throw new Error();
-      const updated = await res.json();
-      onEdited(updated);
+      onEdited(await engagement.editReply(contentType, reply.id, editText.trim()));
       setEditing(false);
     } catch {
       toast.error("Failed to update reply.");
@@ -159,10 +151,7 @@ const ReplyItem = ({ reply, contentType, canModerate, isPostOwner, currentUserId
   const handleDelete = async () => {
     if (!window.confirm("Delete this reply?")) return;
     try {
-      const res = await fetch(`${API_ROOT}/${contentType}/comments/replies/${reply.id}/`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error();
+      await engagement.deleteReply(contentType, reply.id);
       onDeleted(reply.id);
     } catch {
       toast.error("Failed to delete reply.");
@@ -236,17 +225,12 @@ const CommentItem = ({ comment, contentType, canModerate, isPostOwner, currentUs
     if (showReplyInput) replyInputRef.current?.focus();
   }, [showReplyInput]);
 
+  const engagement = useEngagementStore();
+
   const saveEdit = async () => {
     if (!editText.trim()) return;
     try {
-      const res = await fetch(`${API_ROOT}/${contentType}/comments/${comment.id}/`, {
-        method: "PUT",
-        headers: authHeaders(),
-        body: JSON.stringify({ comment: editText.trim() }),
-      });
-      if (!res.ok) throw new Error();
-      const updated = await res.json();
-      onEdited(updated);
+      onEdited(await engagement.editComment(contentType, comment.id, editText.trim()));
       setEditing(false);
     } catch {
       toast.error("Failed to update comment.");
@@ -256,10 +240,7 @@ const CommentItem = ({ comment, contentType, canModerate, isPostOwner, currentUs
   const handleDelete = async () => {
     if (!window.confirm("Delete this comment and all its replies?")) return;
     try {
-      const res = await fetch(`${API_ROOT}/${contentType}/comments/${comment.id}/`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error();
+      await engagement.deleteComment(contentType, comment.id);
       onDeleted(comment.id);
     } catch {
       toast.error("Failed to delete comment.");
@@ -270,13 +251,7 @@ const CommentItem = ({ comment, contentType, canModerate, isPostOwner, currentUs
     const text = replyText.trim();
     if (!text) return;
     try {
-      const res = await fetch(`${API_ROOT}/${contentType}/comments/${comment.id}/replies/`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ reply: text }),
-      });
-      if (!res.ok) throw new Error();
-      const newReply = await res.json();
+      const newReply = await engagement.addReply(contentType, comment.id, text);
       setReplies((prev) => [...prev, newReply]);
       setReplyText("");
       setShowReplyInput(false);
@@ -455,6 +430,7 @@ const PortalIcon = ({ size = 20 }) => (
 // ── Portal Share Modal ────────────────────────────────────────────────────────
 
 const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-line no-unused-vars
+  const engagement = useEngagementStore();
   const [query, setQuery]             = useState("");
   const [results, setResults]         = useState([]);
   const [searching, setSearching]     = useState(false);
@@ -470,10 +446,9 @@ const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-
     if (!q.trim()) { setResults([]); return; }
     setSearching(true);
     try {
-      const r = await fetch(`${API_CHAT_SEARCH}?q=${encodeURIComponent(q)}`);
-      if (r.ok) setResults(await r.json());
-    } catch { /* ignore */ } finally { setSearching(false); }
-  }, []);
+      setResults(await engagement.searchUsers(q));
+    } finally { setSearching(false); }
+  }, [engagement]);
 
   useEffect(() => {
     const t = setTimeout(() => searchUsers(query), 300);
@@ -484,17 +459,9 @@ const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-
     if (sent[userId] || sending === userId) return;
     setSending(userId);
     try {
-      const r = await fetch(API_PORTAL_SHARE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: shareToken, target: "chat", target_user_id: userId }),
-      });
-      if (r.ok) {
-        setSent((prev) => ({ ...prev, [userId]: true }));
-        toast.success("Shared via chat!");
-      } else {
-        toast.error("Failed to send.");
-      }
+      await engagement.shareToChat(shareToken, userId);
+      setSent((prev) => ({ ...prev, [userId]: true }));
+      toast.success("Shared via chat!");
     } catch { toast.error("Failed to send."); } finally { setSending(null); }
   };
 
@@ -502,13 +469,9 @@ const PortalShareModal = ({ open, onClose, shareToken }) => { // eslint-disable-
     if (sendingAll) return;
     setSendingAll(true);
     try {
-      const r = await fetch(API_PORTAL_SHARE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: shareToken, target: "community" }),
-      });
-      if (r.ok) { setShareToAll(true); toast.success("Shared to Community Chat!"); }
-      else toast.error("Failed to share to community.");
+      await engagement.shareToCommunity(shareToken);
+      setShareToAll(true);
+      toast.success("Shared to Community Chat!");
     } catch { toast.error("Failed to share to community."); } finally { setSendingAll(false); }
   };
 
@@ -910,6 +873,7 @@ const ShareSheet = ({
 // ── Main EngagementPanel ──────────────────────────────────────────────────────
 
 const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModerate = false, currentUserId = null }) => {
+  const engagement = useEngagementStore();
   const [liked, setLiked] = useState(false);
   const [totalLikes, setTotalLikes] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
@@ -946,41 +910,31 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
   useEffect(() => {
     if (!contentId) return;
 
-    const likeUrl = isJobs
-      ? `${API_ROOT}/jobs/${contentId}/react/`
-      : `${API_ROOT}/${contentType}/${contentId}/like/`;
-    fetch(likeUrl, { method: "GET", headers: authHeaders() })
-      .then((r) => r.json())
+    engagement.fetchLikes(contentType, contentId)
       .then((d) => {
         setLiked(!!d.liked);
         setTotalLikes(d.total_likes ?? 0);
       })
       .catch(() => {});
 
-    // Comment count — also pre-load comments so we can show them immediately
-    fetch(`${API_ROOT}/${contentType}/${contentId}/comments/`, { headers: authHeaders() })
-      .then((r) => r.json())
+    // Pre-load the comments too, so opening the thread is instant.
+    engagement.fetchComments(contentType, contentId)
       .then((d) => {
-        if (Array.isArray(d)) {
-          setComments(d);
-          setTotalComments(d.length);
-        }
+        setComments(d);
+        setTotalComments(d.length);
       })
       .catch(() => {});
 
-    fetch(`${API_ROOT}/${contentType}/${contentId}/share/`, { headers: authHeaders() })
-      .then((r) => r.json())
+    engagement.fetchShareCount(contentType, contentId)
       .then((d) => setTotalShares(d.total_shares ?? 0))
       .catch(() => {});
-  }, [contentId, contentType, isJobs]);
+  }, [contentId, contentType, engagement]);
 
   // ── load / refresh comments ─────────────────────────────────────────────
   const loadComments = useCallback(async () => {
     setCommentsLoading(true);
     try {
-      const res = await fetch(`${API_ROOT}/${contentType}/${contentId}/comments/`, { headers: authHeaders() });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await engagement.fetchComments(contentType, contentId);
       setComments(data);
       setTotalComments(data.length);
     } catch {
@@ -988,7 +942,7 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
     } finally {
       setCommentsLoading(false);
     }
-  }, [contentType, contentId]);
+  }, [contentType, contentId, engagement]);
 
   const toggleComments = () => {
     setShowComments((v) => {
@@ -1006,11 +960,7 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
     if (likeLoading) return;
     setLikeLoading(true);
     try {
-      const url = isJobs
-        ? `${API_ROOT}/jobs/${contentId}/react/`
-        : `${API_ROOT}/${contentType}/${contentId}/like/`;
-      const res = await fetch(url, { method: "POST", headers: authHeaders() });
-      const d = await res.json();
+      const d = await engagement.toggleLike(contentType, contentId);
       setLiked(d.liked);
       setTotalLikes(d.total_likes ?? 0);
     } catch {
@@ -1026,13 +976,7 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
     if (!text) return;
     setSubmittingComment(true);
     try {
-      const res = await fetch(`${API_ROOT}/${contentType}/${contentId}/comments/`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ comment: text }),
-      });
-      if (!res.ok) throw new Error();
-      const created = await res.json();
+      const created = await engagement.addComment(contentType, contentId, text);
       setComments((prev) => [...prev, created]);
       setTotalComments((n) => n + 1);
       setNewComment("");
@@ -1108,16 +1052,10 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
   }, [copyShareLink, shareMessage, shareUrl]);
 
   const fetchTargetsByToken = useCallback(async (token) => {
-    if (!token) return [];
-    try {
-      const res = await fetch(`${API_ROOT}/share/${token}/targets/`);
-      if (!res.ok) return [];
-      const data = await res.json();
-      return normalizeShareTargets(data?.share_links?.targets || data?.targets || data);
-    } catch {
-      return [];
-    }
-  }, []);
+    const data = await engagement.fetchShareTargets(token);
+    if (!data) return [];
+    return normalizeShareTargets(data?.share_links?.targets || data?.targets || data);
+  }, [engagement]);
 
   const requestShareLinks = useCallback(async ({ mode, platform, message, openNativeIfAvailable = false } = {}) => {
     if (shareLoading) return;
@@ -1126,20 +1064,11 @@ const EngagementPanel = ({ contentType, contentId, postOwnerId = null, canModera
 
     setShareLoading(true);
     try {
-      const body = {
+      const data = await engagement.createShare(contentType, contentId, {
         message: typeof message === "string" ? message : shareMessage,
         share_mode: nextMode,
         share_platform: nextPlatform,
-      };
-
-      const res = await fetch(`${API_ROOT}/${contentType}/${contentId}/share/`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
       const token = data?.share?.token || data?.token;
       const url = token ? `${window.location.origin}/share/${token}` : shareUrl;
       const canonicalUrl = data?.share_links?.canonical_url || url;

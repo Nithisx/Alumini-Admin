@@ -28,6 +28,7 @@ import MapStore from "./map";
 import RbacStore from "./rbac";
 import BirthdayStore from "./birthday";
 import ContributionsStore from "./contributions";
+import EngagementStore from "./engagement";
 
 export default class RootStore {
   constructor() {
@@ -53,6 +54,7 @@ export default class RootStore {
     this.rbac = new RbacStore(this);
     this.birthday = new BirthdayStore(this);
     this.contributions = new ContributionsStore(this);
+    this.engagement = new EngagementStore(this);
 
     this.audit = new AuditStore(this);
     this.signupRequests = new SignupRequestStore(this);
