@@ -79,9 +79,12 @@ const HomePage = observer(() => {
     setTouchStartY(null);
   };
 
-  if (loading) return <LoadingScreen message="Loading your feed..." />;
-
   if (error) return <ErrorScreen message={error} onRetry={() => window.location.reload()} />;
+
+  // `!data` covers the first render: the store's loading flag only turns on
+  // inside load(), which runs in an effect AFTER this render — dereferencing
+  // `data` before then crashed straight into the error boundary.
+  if (loading || !data) return <LoadingScreen message="Loading your feed..." />;
 
   const formatDate = (d) => new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(d));
   const formatDateTime = (d) => {

@@ -491,9 +491,10 @@ const Jobs = observer(() => {
           item={job}
           onDelete={deleteJob}
           onUpdate={updateJob}
-          onStatusChange={(id, next) =>
-            setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: next } : j)))
-          }
+          onStatusChange={(id, next) => {
+            const job = jobs.find((j) => String(j.id) === String(id));
+            if (job) contributions.replaceLocal("jobs", id, { ...job, status: next });
+          }}
         />
       ))}
     </div>

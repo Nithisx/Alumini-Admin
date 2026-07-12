@@ -221,7 +221,7 @@ const Home = observer(() => {
               >
                 {isAuthed ? "Go to Dashboard" : "Login"}
               </button>
-              {!token && (
+              {!isAuthed && (
                 <button
                   className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15"
                   onClick={() => navigate("/signup")}
