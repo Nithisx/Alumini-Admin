@@ -428,6 +428,8 @@ const Signup = () => {
       payload.append("name", `${formData.first_name} ${formData.last_name}`);
 
       if (formData.profile_photo) {
+        // Not an API call — profile_photo is a local blob: URL from the cropper,
+        // read back into a Blob so it can ride along in the multipart body.
         const response = await fetch(formData.profile_photo);
         const blob = await response.blob();
         payload.append("profile_photo", blob, "profile_photo.jpg");

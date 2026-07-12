@@ -28,6 +28,7 @@ import RoleLayout from './Components/Features/RoleLayout';
 // Protected route wrapper
 import ProtectedRoute from './Components/Shared/ProtectedRoute';
 import { peekLoginRedirect } from './lib/loginRedirect';
+import { isAuthenticated } from './lib/authToken';
 
 // Bounces an already-authenticated visitor off a guest-only page (/, /home,
 // /login, /signup).
@@ -40,11 +41,10 @@ import { peekLoginRedirect } from './lib/loginRedirect';
 // user lands where they intended no matter which navigation wins.
 function AuthRedirect() {
   const location = useLocation();
-  const token = localStorage.getItem('Token');
   const suffix = `${location.search || ''}${location.hash || ''}`;
   // Session vanished mid-flight — send them to log in again, not to the
   // marketing home page (and keep where they were headed).
-  if (!token) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isAuthenticated()) return <Navigate to="/login" state={{ from: location }} replace />;
   // Peek (not consume) — this runs during render; AnimatedRoutes clears the key
   // once the user lands on the destination.
   const target = peekLoginRedirect();
@@ -52,8 +52,7 @@ function AuthRedirect() {
 }
 
 function GuestOnly({ children }) {
-  const token = localStorage.getItem('Token');
-  return token ? <AuthRedirect /> : children;
+  return isAuthenticated() ? <AuthRedirect /> : children;
 }
 
 // Animates between top-level sections, keyed by the first path segment so that
