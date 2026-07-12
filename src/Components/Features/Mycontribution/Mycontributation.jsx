@@ -5,7 +5,7 @@ import Events from "./Eventcontributation";
 import News from "./Newscontribution";
 import Bussiness from "./Businesscontribution";
 import Albums from "./Albumscontribution";
-import { clearMyPostsCache } from "../../../lib/mypostsCache";
+import { useContributionsStore } from "../../../stores";
 import { PageHeader } from "../../Shared/ui";
 
 const tabs = [
@@ -17,14 +17,16 @@ const tabs = [
 ];
 
 const MyContributions = () => {
+  const contributions = useContributionsStore();
   const [activeTab, setActiveTab] = useState("jobs");
   const [cacheReady, setCacheReady] = useState(false);
 
+  // Entering the page always re-reads /myposts/ — the tabs render whatever the
+  // user has just created elsewhere in the app.
   useEffect(() => {
-    const token = localStorage.getItem("Token");
-    clearMyPostsCache(token);
+    contributions.invalidate();
     setCacheReady(true);
-  }, []);
+  }, [contributions]);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6">

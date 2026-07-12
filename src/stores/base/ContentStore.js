@@ -126,6 +126,29 @@ export default class ContentStore {
     }
   }
 
+  /**
+   * Full replace (PUT). Distinct from update()'s PATCH: several detail
+   * endpoints expect the whole representation, and the two verbs are not
+   * interchangeable against this backend — callers pick deliberately.
+   * `payload` may be FormData or a plain object.
+   */
+  async replace(id, payload) {
+    this.saving = true;
+    try {
+      const updated = await api.raw("put", this.cfg.detail(id), { data: payload });
+      runInAction(() => {
+        this.items = this.items.map((i) => (String(i.id) === String(id) ? updated : i));
+        if (this.current && String(this.current.id) === String(id)) this.current = updated;
+      });
+      return updated;
+    } catch (err) {
+      runInAction(() => { this.error = err.message; });
+      throw err;
+    } finally {
+      runInAction(() => { this.saving = false; });
+    }
+  }
+
   async remove(id) {
     this.saving = true;
     try {

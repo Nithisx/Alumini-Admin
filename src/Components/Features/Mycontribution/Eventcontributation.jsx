@@ -4,12 +4,12 @@ import {
   MoreHorizontal, MapPin, Clock, Trash2, X, Heart, MessageCircle,
   Calendar, Eye, ChevronLeft, ChevronRight, Edit, Upload, Save, Plus,
 } from "lucide-react";
-import { getMyPosts } from "../../../lib/mypostsCache";
+import { observer } from "mobx-react-lite";
+import { useContributionsStore, useEventsStore } from "../../../stores";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
 import { DocumentList } from "../../Shared/DocumentPreview";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
 
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 
 const ImageSlider = ({ images }) => {
@@ -52,18 +52,17 @@ const EditEventModal = ({ event, isOpen, onClose, onUpdate }) => {
     }
   }, [event, isOpen]);
 
+  const eventsStore = useEventsStore();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem("Token");
       const fd = new FormData();
       Object.keys(formData).forEach((k) => fd.append(k, formData[k]));
       newImages.forEach((img) => fd.append("images", img));
       imagesToDelete.forEach((id) => fd.append("delete_images", id));
-      const res = await fetch(`${BASE_URL}/events/${event.id}/`, { method: "PUT", headers: { Authorization: `Token ${token}` }, body: fd });
-      if (!res.ok) throw new Error();
-      onUpdate(await res.json());
+      onUpdate(await eventsStore.replace(event.id, fd));
       onClose();
     } catch { toast.error("Failed to update event."); } finally { setSubmitting(false); }
   };
@@ -292,29 +291,24 @@ const EventCard = ({ item, onDelete, onUpdate }) => {
   );
 };
 
-const Events = () => {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
+const Events = observer(() => {
+  const contributions = useContributionsStore();
+  const eventsStore = useEventsStore();
+  const events = contributions.events;
+  const loading = contributions.loading;
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("Token");
-        const data = await getMyPosts(token);
-        setEvents(data.events || data.posts || []);
-      } catch { toast.error("Failed to fetch events."); } finally { setLoading(false); }
-    })();
-  }, []);
+    contributions.load().catch(() => toast.error("Failed to fetch events."));
+  }, [contributions]);
 
   const deleteEvent = async (id) => {
-    const token = localStorage.getItem("Token");
-    const res = await fetch(`${BASE_URL}/events/${id}`, { method: "DELETE", headers: { Authorization: `Token ${token}` } });
-    if (!res.ok) { toast.error("Failed to delete event."); return; }
-    setEvents((p) => p.filter((e) => e.id !== id));
+    try {
+      await eventsStore.remove(id);
+      contributions.removeLocal("events", id);
+    } catch { toast.error("Failed to delete event."); }
   };
 
-  const updateEvent = (updated) => setEvents((p) => p.map((e) => e.id === updated.id ? updated : e));
+  const updateEvent = (updated) => contributions.replaceLocal("events", updated.id, updated);
 
   if (loading) return (
     <div className="space-y-3 p-4">
@@ -343,6 +337,6 @@ const Events = () => {
       {events.map((event) => <EventCard key={event.id} item={event} onDelete={deleteEvent} onUpdate={updateEvent} />)}
     </div>
   );
-};
+});
 
 export default Events;

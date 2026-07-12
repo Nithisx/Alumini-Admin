@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { MoreHorizontal, Trash2, Edit, X, Upload, Calendar, Newspaper, ChevronLeft, ChevronRight } from "lucide-react";
-import { getMyPosts } from "../../../lib/mypostsCache";
+import { observer } from "mobx-react-lite";
+import { useContributionsStore, useNewsStore } from "../../../stores";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
 
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 
 const ImageSlider = ({ images }) => {
@@ -317,37 +317,27 @@ const NewsCard = ({ item, onDelete, onUpdate }) => {
   );
 };
 
-const NewsContribution = () => {
-  const [news, setNews] = useState([]);
-  const [loading, setLoading] = useState(false);
+const NewsContribution = observer(() => {
+  const contributions = useContributionsStore();
+  const newsStore = useNewsStore();
+  const news = contributions.news;
+  const loading = contributions.loading;
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("Token");
-        const data = await getMyPosts(token);
-        setNews(data.news || data.results || []);
-      } catch { toast.error("Failed to fetch news."); } finally { setLoading(false); }
-    })();
-  }, []);
+    contributions.load().catch(() => toast.error("Failed to fetch news."));
+  }, [contributions]);
 
   const doDeleteNews = async (id) => {
     try {
-      const token = localStorage.getItem("Token");
-      const res = await fetch(`${BASE_URL}/news/${id}/`, { method: "DELETE", headers: { Authorization: `Token ${token}` } });
-      if (!res.ok) throw new Error();
-      setNews((p) => p.filter((a) => a.id !== id));
+      await newsStore.remove(id);
+      contributions.removeLocal("news", id);
       toast.success("News article deleted!");
     } catch { toast.error("Failed to delete news article."); }
   };
 
   const updateNews = async (newsId, payloadData) => {
     try {
-      const token = localStorage.getItem("Token");
-      if (!token) throw new Error("Token not found");
-
       const { values, original, newImages, imagesToDelete } = payloadData;
       const payload = new FormData();
 
@@ -382,28 +372,13 @@ const NewsContribution = () => {
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/news/${newsId}/`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        body: payload,
+      const updatedArticle = await newsStore.update(newsId, payload);
+      const existing = news.find((a) => String(a.id) === String(newsId));
+      contributions.replaceLocal("news", newsId, {
+        ...existing,
+        ...updatedArticle,
+        images: updatedArticle.images ?? existing?.images,
       });
-
-      if (!response.ok) throw new Error(`Failed to update news: ${response.status}`);
-
-      const updatedArticle = await response.json();
-      setNews((prevNews) =>
-        prevNews.map((article) =>
-          article.id === newsId
-            ? {
-                ...article,
-                ...updatedArticle,
-                images: updatedArticle.images ?? article.images,
-              }
-            : article
-        )
-      );
       toast.success("News article updated successfully!");
     } catch (error) {
       toast.error(error.message || "Failed to update news article");
@@ -453,6 +428,6 @@ const NewsContribution = () => {
       ))}
     </div>
   );
-};
+});
 
 export default NewsContribution;

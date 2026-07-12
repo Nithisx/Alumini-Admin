@@ -10,21 +10,23 @@ import EngagementPanel from "../../Shared/EngagementPanel";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
 import { API_ORIGIN } from "../../../config/api";
 import { usePermissions } from "../../../lib/usePermissions";
+import { observer } from "mobx-react-lite";
+import { useNewsStore, useProfileStore } from "../../../stores";
 
-const TOKEN = () => localStorage.getItem("Token");
 const BASE_URL = API_ORIGIN;
 
+// Media needs the session to fetch; auth + credentials are attached centrally by
+// lib/axiosInstance.js's fetch patch, so no Authorization header is built here.
 const AuthorizedImage = ({ url, alt, className }) => {
   const [imageUrl, setImageUrl] = useState(null);
-  const token = TOKEN();
   useEffect(() => {
     let isMounted = true;
-    fetch(url, { headers: { Authorization: token ? `Token ${token}` : "" } })
+    fetch(url)
       .then((r) => r.blob())
       .then((blob) => { if (isMounted) setImageUrl(URL.createObjectURL(blob)); })
       .catch(() => {});
     return () => { isMounted = false; };
-  }, [url, token]);
+  }, [url]);
   return imageUrl ? (
     <img src={imageUrl} alt={alt} className={className} />
   ) : (
@@ -32,13 +34,16 @@ const AuthorizedImage = ({ url, alt, className }) => {
   );
 };
 
-export default function NewsList() {
-  const [posts, setPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+function NewsList() {
+  const newsStore = useNewsStore();
+  const profileStore = useProfileStore();
+  const posts = newsStore.items;
+  const isLoading = newsStore.loading;
+  const currentUserId = profileStore.currentUserId;
+
   const [showModal, setShowModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentUserId, setCurrentUserId] = useState(null);
   const { has } = usePermissions();
   const canCreate = has("news.create");
   const canEditAny = has("news.edit_any");
@@ -48,54 +53,19 @@ export default function NewsList() {
   const [confirmDeleteNewsId, setConfirmDeleteNewsId] = useState(null);
   const navigate = useNavigate();
 
-  const fetchNews = async () => {
-    setIsLoading(true);
-    try {
-      const token = TOKEN();
-      const res = await fetch(`${BASE_URL}/api/v1/news/`, {
-        headers: { Authorization: `Token ${token}` },
-      });
-      const data = await res.json();
-      setPosts(Array.isArray(data) ? data : data?.results || []);
-    } catch {
-      setPosts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Data + persistence live in NewsStore; ownership needs only the cached profile.
+  const fetchNews = () => newsStore.fetchAll();
 
-  useEffect(() => { fetchNews(); }, []);
+  useEffect(() => { newsStore.fetchAll(); }, [newsStore]);
+  useEffect(() => { profileStore.load(); }, [profileStore]);
 
-  useEffect(() => {
-    const token = TOKEN();
-    if (!token) return;
-    fetch(`${BASE_URL}/api/v1/profile/`, {
-      headers: { Authorization: `Token ${token}` },
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        setCurrentUserId(d?.id ?? null);
-      })
-      .catch(() => {});
-  }, []);
-
-  const isNewsOwner = (post) => {
-    if (!currentUserId) return false;
-    const ownerId = post?.user ?? post?.user_id;
-    return ownerId && String(currentUserId) === String(ownerId);
-  };
+  const isNewsOwner = (post) => newsStore.isOwner(post, currentUserId);
 
   const handleDeleteNews = async (newsId) => {
     try {
-      const token = TOKEN();
-      const res = await fetch(`${BASE_URL}/api/v1/news/${newsId}/`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${token}` },
-      });
-      if (!res.ok) throw new Error();
-      setPosts((prev) => prev.filter((p) => p.id !== newsId));
+      await newsStore.remove(newsId);
     } catch {
-      // silent
+      // silent — the store already recorded the error
     }
   };
 
@@ -314,3 +284,5 @@ export default function NewsList() {
     </div>
   );
 }
+
+export default observer(NewsList);

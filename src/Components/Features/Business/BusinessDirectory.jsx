@@ -3,20 +3,18 @@ import { roleBase } from "../../../lib/useBasePath";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { Link } from "react-router-dom";
-import axios from "../../../lib/axiosInstance";
 import {
   Search, Plus, Edit, Trash2, Globe, Phone, Mail, MapPin,
   Users, ChevronDown, ChevronRight, Building, Package, Settings,
 } from "lucide-react";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonList } from "../../Shared/ui";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useBusinessStore, useProfileStore } from "../../../stores";
 import { usePermissions } from "../../../lib/usePermissions";
 
-const BusinessDirectory = () => {
-  const [businesses, setBusinesses] = useState([]);
+const BusinessDirectory = observer(() => {
   const [filteredBusinesses, setFilteredBusinesses] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -30,42 +28,26 @@ const BusinessDirectory = () => {
   const [productsCollapsed, setProductsCollapsed] = useState(false);
   const [servicesCollapsed, setServicesCollapsed] = useState(false);
 
-  const token = localStorage.getItem("Token");
-  const BASE_URL = API_BASE;
+  const businessStore = useBusinessStore();
+  const profileStore = useProfileStore();
+  const businesses = businessStore.items;
+  const categories = businessStore.categories;
+  const loading = businessStore.loading;
   const MEDIA_BASE_URL = API_ORIGIN;
 
-  const [currentUserId, setCurrentUserId] = useState(null);
   const { has } = usePermissions();
   const canCreate = has("business.create");
   const canEditAny = has("business.edit_any");
   const canDeleteAny = has("business.delete_any");
 
-  const isOwner = (business) => {
-    if (!currentUserId) return false;
-    const ownerId = business.user ?? business.owner_details?.id ?? business.user_id;
-    return ownerId && String(currentUserId) === String(ownerId);
-  };
+  const currentUserId = profileStore.currentUserId;
+  const isOwner = (business) => businessStore.isOwner(business, currentUserId);
   const canEditBusiness = (business) => canEditAny || isOwner(business);
   const canDeleteBusiness = (business) => canDeleteAny || isOwner(business);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const [bRes, cRes, profileRes] = await Promise.all([
-          axios.get(`${BASE_URL}/businesses/`, { headers: { Authorization: `Token ${token}` } }),
-          axios.get(`${BASE_URL}/businesses/categories/`, { headers: { Authorization: `Token ${token}` } }),
-          axios.get(`${BASE_URL}/profile/`, { headers: { Authorization: `Token ${token}` } }),
-        ]);
-        setBusinesses(bRes.data);
-        setFilteredBusinesses(bRes.data);
-        setCategories(cRes.data);
-        const profile = profileRes.data;
-        setCurrentUserId(profile?.id ?? null);
-      } catch { }
-      finally { setLoading(false); }
-    })();
-  }, [token]);
+  // Fetching lives in BusinessStore / ProfileStore; this component only renders.
+  useEffect(() => { businessStore.load(); }, [businessStore]);
+  useEffect(() => { profileStore.load(); }, [profileStore]);
 
   useEffect(() => {
     let results = [...businesses];
@@ -90,9 +72,7 @@ const BusinessDirectory = () => {
 
   const doDelete = async (id) => {
     try {
-      await axios.delete(`${BASE_URL}/businesses/${id}/`, { headers: { Authorization: `Token ${token}` } });
-      setBusinesses((p) => p.filter((b) => b.id !== id));
-      setFilteredBusinesses((p) => p.filter((b) => b.id !== id));
+      await businessStore.remove(id);
       toast.success("Business deleted!");
     } catch { toast.error("Failed to delete business."); }
   };
@@ -313,6 +293,6 @@ const BusinessDirectory = () => {
       </div>
     </div>
   );
-};
+});
 
 export default BusinessDirectory;

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { roleBase } from "../../../lib/useBasePath";
 import { useNavigate } from "react-router-dom";
-import axios from "../../../lib/axiosInstance";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,17 +9,23 @@ import {
   faCheck, faSpinner, faSearch, faEllipsisV, faEdit, faCalendarAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonGrid } from "../../Shared/ui";
-import { API_ALBUMS, API_ALBUM_DETAIL, API_PROFILE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useAlbumsStore, useProfileStore } from "../../../stores";
 import { usePermissions } from "../../../lib/usePermissions";
 
-const AlbumsPage = () => {
+const AlbumsPage = observer(() => {
   const navigate = useNavigate();
-  const [albums, setAlbums] = useState([]);
+  const albumsStore = useAlbumsStore();
+  const profileStore = useProfileStore();
+  const albums = albumsStore.items;
+  const loading = albumsStore.loading;
+  const currentUserId = profileStore.currentUserId;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: "", description: "" });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -31,7 +36,6 @@ const AlbumsPage = () => {
   const [editUploadedFile, setEditUploadedFile] = useState(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
-  const [currentUserId, setCurrentUserId] = useState(null);
   const { has } = usePermissions();
   const canCreate = has("albums.create");
   const canEditAny = has("albums.edit_any");
@@ -39,26 +43,14 @@ const AlbumsPage = () => {
 
   useEffect(() => {
     (async () => {
-      try {
-        const token = localStorage.getItem("Token");
-        const [albumsRes, profileRes] = await Promise.all([
-          axios.get(API_ALBUMS, {
-            headers: { Authorization: `Token ${token}` },
-          }),
-          axios.get(API_PROFILE, {
-            headers: { Authorization: `Token ${token}` },
-          }),
-        ]);
-        setAlbums(Array.isArray(albumsRes.data) ? albumsRes.data : []);
-        if (profileRes.data?.id) setCurrentUserId(profileRes.data.id);
-      } catch {
-        toast.error("Could not load albums.");
-        setAlbums([]);
-      } finally {
-        setLoading(false);
-      }
+      // Fetching lives in AlbumsStore / ProfileStore.
+      const [items] = await Promise.all([
+        albumsStore.fetchAll(),
+        profileStore.load(),
+      ]);
+      if (!items.length && albumsStore.error) toast.error("Could not load albums.");
     })();
-  }, []);
+  }, [albumsStore, profileStore]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -68,20 +60,11 @@ const AlbumsPage = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isOwner = (album) => {
-    if (!currentUserId) return false;
-    // album.user comes from the API as a UUID string (not an object)
-    const ownerId = album.user ?? album.created_by ?? album.owner ?? album.user_id;
-    return ownerId && String(currentUserId) === String(ownerId);
-  };
+  const isOwner = (album) => albumsStore.isOwner(album, currentUserId);
 
   const doDeleteAlbum = async (id) => {
     try {
-      const token = localStorage.getItem("Token");
-      await axios.delete(API_ALBUM_DETAIL(id), {
-        headers: { Authorization: `Token ${token}` },
-      });
-      setAlbums((prev) => prev.filter((a) => a.id !== id));
+      await albumsStore.remove(id);
       toast.success("Album deleted!");
     } catch { toast.error("Could not delete album."); }
   };
@@ -106,15 +89,11 @@ const AlbumsPage = () => {
     if (!editFormData.title.trim()) { toast.error("Please enter a title."); return; }
     setIsSavingEdit(true);
     try {
-      const token = localStorage.getItem("Token");
       const payload = new FormData();
       payload.append("title", editFormData.title);
       payload.append("description", editFormData.description);
       if (editUploadedFile) payload.append("cover_image", editUploadedFile.file, editUploadedFile.name);
-      const r = await axios.put(API_ALBUM_DETAIL(editingAlbum.id), payload, {
-        headers: { Authorization: `Token ${token}`, "Content-Type": "multipart/form-data" },
-      });
-      setAlbums((prev) => prev.map((a) => a.id === editingAlbum.id ? r.data : a));
+      await albumsStore.replace(editingAlbum.id, payload);
       setEditingAlbum(null);
       setEditUploadedFile(null);
       toast.success("Album updated!");
@@ -127,15 +106,11 @@ const AlbumsPage = () => {
     if (!formData.title.trim()) { toast.error("Please enter a title."); return; }
     setIsCreating(true);
     try {
-      const token = localStorage.getItem("Token");
       const payload = new FormData();
       payload.append("title", formData.title);
       payload.append("description", formData.description);
       if (uploadedFile) payload.append("cover_image", uploadedFile.file, uploadedFile.name);
-      const r = await axios.post(API_ALBUMS, payload, {
-        headers: { Authorization: `Token ${token}`, "Content-Type": "multipart/form-data" },
-      });
-      setAlbums((prev) => [r.data, ...prev]);
+      await albumsStore.create(payload);
       setIsModalOpen(false);
       setFormData({ title: "", description: "" });
       setUploadedFile(null);
@@ -467,6 +442,6 @@ const AlbumsPage = () => {
       )}
     </div>
   );
-};
+});
 
 export default AlbumsPage;

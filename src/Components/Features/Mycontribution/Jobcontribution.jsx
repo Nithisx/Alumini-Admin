@@ -4,13 +4,13 @@ import {
   MoreHorizontal, MapPin, Trash2, Edit, X, Save, Upload, Calendar, DollarSign,
   Briefcase, ChevronLeft, ChevronRight, Users, Eye,
 } from "lucide-react";
-import { getMyPosts } from "../../../lib/mypostsCache";
+import { observer } from "mobx-react-lite";
+import { useContributionsStore, useJobsStore } from "../../../stores";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
 import { DocumentList } from "../../Shared/DocumentPreview";
 import JobStatusTag from "../../Shared/JobStatusTag";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
 
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 
 const ImageSlider = ({ images }) => {
@@ -393,35 +393,27 @@ const JobCard = ({ item, onDelete, onUpdate, onStatusChange }) => {
   );
 };
 
-const Jobs = () => {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+const Jobs = observer(() => {
+  const contributions = useContributionsStore();
+  const jobsStore = useJobsStore();
+  const jobs = contributions.jobs;
+  const loading = contributions.loading;
 
   useEffect(() => {
-    (async () => {
-      try {
-        const token = localStorage.getItem("Token");
-        const data = await getMyPosts(token);
-        setJobs(data.jobs || []);
-      } catch {
-        // ignore load failure — the empty state will be shown
-      } finally { setLoading(false); }
-    })();
-  }, []);
+    // A load failure leaves the list empty — the empty state covers it.
+    contributions.load().catch(() => {});
+  }, [contributions]);
 
   const deleteJob = async (id) => {
-    const token = localStorage.getItem("Token");
-    const res = await fetch(`${BASE_URL}/jobs/${id}/`, { method: "DELETE", headers: { Authorization: `Token ${token}` } });
-    if (!res.ok) { toast.error("Failed to delete job."); return; }
-    setJobs((p) => p.filter((j) => j.id !== id));
-    toast.success("Job deleted!");
+    try {
+      await jobsStore.remove(id);
+      contributions.removeLocal("jobs", id);
+      toast.success("Job deleted!");
+    } catch { toast.error("Failed to delete job."); }
   };
 
   const updateJob = async (jobId, updatedFields) => {
     try {
-      const token = localStorage.getItem("Token");
-      if (!token) throw new Error("Token not found");
-
       const { values, original, newImages, imagesToDelete } = updatedFields;
       const payload = new FormData();
 
@@ -455,28 +447,13 @@ const Jobs = () => {
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/jobs/${jobId}/`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        body: payload,
+      const updatedJob = await jobsStore.update(jobId, payload);
+      const existing = jobs.find((j) => String(j.id) === String(jobId));
+      contributions.replaceLocal("jobs", jobId, {
+        ...existing,
+        ...updatedJob,
+        images: updatedJob.images ?? existing?.images,
       });
-
-      if (!response.ok) throw new Error("Failed to update");
-
-      const updatedJob = await response.json();
-      setJobs((prevJobs) =>
-        prevJobs.map((job) =>
-          job.id === jobId
-            ? {
-                ...job,
-                ...updatedJob,
-                images: updatedJob.images ?? job.images,
-              }
-            : job
-        )
-      );
       toast.success("Job updated successfully");
     } catch (error) {
       toast.error("Failed to update job. Please try again.");
@@ -521,6 +498,6 @@ const Jobs = () => {
       ))}
     </div>
   );
-};
+});
 
 export default Jobs;

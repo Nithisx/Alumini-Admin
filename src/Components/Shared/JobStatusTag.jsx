@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { API_JOBS } from "../../config/api";
-
-const JOBS_URL = API_JOBS;
+import { useJobsStore } from "../../stores";
 
 const CONFIG = {
   open: {
@@ -42,6 +40,7 @@ export default function JobStatusTag({
   onChange,
   size = "sm",
 }) {
+  const jobsStore = useJobsStore();
   const [busy, setBusy] = useState(false);
   const current = normalize(status);
   const conf = CONFIG[current];
@@ -57,15 +56,7 @@ export default function JobStatusTag({
     const next = current === "open" ? "closed" : "open";
     setBusy(true);
     try {
-      const token = localStorage.getItem("Token");
-      const body = new FormData();
-      body.append("status", next);
-      const res = await fetch(`${JOBS_URL}${jobId}/`, {
-        method: "PUT",
-        headers: { Authorization: token ? `Token ${token}` : "" },
-        body,
-      });
-      if (!res.ok) throw new Error();
+      await jobsStore.setStatus(jobId, next);
       onChange?.(next);
       toast.success(`Role marked ${CONFIG[next].label}`);
     } catch {

@@ -27,6 +27,7 @@ import ChatStore from "./chat";
 import MapStore from "./map";
 import RbacStore from "./rbac";
 import BirthdayStore from "./birthday";
+import ContributionsStore from "./contributions";
 
 export default class RootStore {
   constructor() {
@@ -51,6 +52,7 @@ export default class RootStore {
     this.map = new MapStore(this);
     this.rbac = new RbacStore(this);
     this.birthday = new BirthdayStore(this);
+    this.contributions = new ContributionsStore(this);
 
     this.audit = new AuditStore(this);
     this.signupRequests = new SignupRequestStore(this);
@@ -61,6 +63,7 @@ export default class RootStore {
     this.chat.dispose();
     this.permissions.clear();
     this.profile.clear();
+    this.contributions.clear();
   }
 }
 

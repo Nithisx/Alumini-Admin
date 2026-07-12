@@ -2,18 +2,19 @@ import React, { useState, useEffect } from "react";
 import { roleBase } from "../../../lib/useBasePath";
 import { toast } from "react-toastify";
 import ConfirmModal from "../../Shared/ConfirmModal";
-import axios from "../../../lib/axiosInstance";
 import { Calendar, Image, Eye, Edit, Trash2, Save, X, Upload } from "lucide-react";
-import { getMyPosts } from "../../../lib/mypostsCache";
+import { observer } from "mobx-react-lite";
+import { useContributionsStore, useAlbumsStore } from "../../../stores";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
 
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 
-const AlbumsContribution = () => {
-  const [albums, setAlbums] = useState([]);
-  const [loading, setLoading] = useState(true);
+const AlbumsContribution = observer(() => {
+  const contributions = useContributionsStore();
+  const albumsStore = useAlbumsStore();
+  const albums = contributions.albums;
+  const loading = contributions.loading;
   const [error, setError] = useState(null);
   const [editingAlbum, setEditingAlbum] = useState(null);
   const [editFormData, setEditFormData] = useState({ title: "", description: "" });
@@ -21,23 +22,14 @@ const AlbumsContribution = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  const token = localStorage.getItem("Token");
-
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await getMyPosts(token);
-        setAlbums(data.albums || []);
-        setError(null);
-      } catch { setError("Failed to load albums."); } finally { setLoading(false); }
-    })();
-  }, []);
+    contributions.load().then(() => setError(null)).catch(() => setError("Failed to load albums."));
+  }, [contributions]);
 
   const doDelete = async (id) => {
     try {
-      await axios.delete(`${BASE_URL}/albums/${id}/`, { headers: { Authorization: `Token ${token}` } });
-      setAlbums((p) => p.filter((a) => a.id !== id));
+      await albumsStore.remove(id);
+      contributions.removeLocal("albums", id);
       toast.success("Album deleted!");
     } catch { toast.error("Failed to delete album."); }
   };
@@ -56,8 +48,8 @@ const AlbumsContribution = () => {
       fd.append("title", editFormData.title);
       fd.append("description", editFormData.description);
       if (editCoverImage) fd.append("cover_image", editCoverImage);
-      const res = await axios.put(`${BASE_URL}/albums/${id}/`, fd, { headers: { Authorization: `Token ${token}`, "Content-Type": "multipart/form-data" } });
-      setAlbums((p) => p.map((a) => a.id === id ? res.data : a));
+      const updated = await albumsStore.replace(id, fd);
+      contributions.replaceLocal("albums", id, updated);
       setEditingAlbum(null);
       toast.success("Album updated!");
     } catch { toast.error("Failed to update album."); } finally { setEditLoading(false); }
@@ -198,6 +190,6 @@ const AlbumsContribution = () => {
       </div>
     </div>
   );
-};
+});
 
 export default AlbumsContribution;

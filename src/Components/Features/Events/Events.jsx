@@ -6,19 +6,21 @@ import { faCalendarAlt, faClock, faMapMarkerAlt, faSearch, faEdit, faTrash } fro
 import EngagementPanel from "../../Shared/EngagementPanel";
 import { DocumentList } from "../../Shared/DocumentPreview";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
-import { API_EVENTS, API_EVENT_DETAIL, API_PROFILE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useEventsStore, useProfileStore } from "../../../stores";
 import { usePermissions } from "../../../lib/usePermissions";
 
+// Auth + credentials are attached centrally by lib/axiosInstance.js's fetch patch.
 const AuthorizedImage = ({ url, alt, className }) => {
   const [imageUrl, setImageUrl] = useState(null);
-  const token = localStorage.getItem("Token");
   useEffect(() => {
     let isMounted = true;
-    fetch(url, { headers: { Authorization: token ? `Token ${token}` : "" } })
+    fetch(url)
       .then((r) => r.blob())
       .then((blob) => { if (isMounted) setImageUrl(URL.createObjectURL(blob)); });
     return () => (isMounted = false);
-  }, [url, token]);
+  }, [url]);
   return imageUrl ? (
     <img src={imageUrl} alt={alt} className={className} />
   ) : (
@@ -26,50 +28,25 @@ const AuthorizedImage = ({ url, alt, className }) => {
   );
 };
 
-export default function Events() {
-  const [events, setEvents] = useState([]);
+function Events() {
+  const eventsStore = useEventsStore();
+  const profileStore = useProfileStore();
+  const events = eventsStore.items;
+  const isLoading = eventsStore.loading;
+  const currentUserId = profileStore.currentUserId;
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState(null);
   const { has } = usePermissions();
   // Action controls gate on permission codenames (never role/is_staff) so a
   // revoked permission hides its button, matching the backend's 403.
   const canEditAny = has("events.edit_any");
   const canDeleteAny = has("events.delete_any");
   const canModerateComments = has("events.moderate_comments");
-  const token = localStorage.getItem("Token");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!token) {
-      setCurrentUserId(null);
-      return;
-    }
-
-    fetch(API_PROFILE, {
-      headers: { Authorization: `Token ${token}` },
-    })
-      .then((r) => r.json())
-      .then((profile) => {
-        setCurrentUserId(profile?.id ?? null);
-      })
-      .catch(() => {
-        setCurrentUserId(null);
-      });
-  }, [token]);
-
-  useEffect(() => {
-    setIsLoading(true);
-    fetch(API_EVENTS, {
-      headers: { Authorization: token ? `Token ${token}` : "" },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        setEvents(Array.isArray(data) ? data : data?.results || data?.events || []);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, [token]);
+  // Fetching lives in EventsStore / ProfileStore; this component only renders.
+  useEffect(() => { profileStore.load(); }, [profileStore]);
+  useEffect(() => { eventsStore.fetchAll(); }, [eventsStore]);
 
   const filtered = events.filter(
     (e) =>
@@ -138,14 +115,9 @@ export default function Events() {
     if (!eventId) return;
     if (!window.confirm("Delete this event?")) return;
     try {
-      const response = await fetch(API_EVENT_DETAIL(eventId), {
-        method: "DELETE",
-        headers: { Authorization: token ? `Token ${token}` : "" },
-      });
-      if (!response.ok) throw new Error();
-      setEvents((prev) => prev.filter((e) => String(e.id) !== String(eventId) && String(e.pk) !== String(eventId)));
+      await eventsStore.remove(eventId);
     } catch {
-      // silent
+      // silent — the store recorded the error
     }
   };
 
@@ -328,3 +300,5 @@ export default function Events() {
     </div>
   );
 }
+
+export default observer(Events);

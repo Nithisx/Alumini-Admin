@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Building, Trash2, Eye, X, MapPin, Phone, Globe, Users, Calendar, Tag } from "lucide-react";
-import { getMyPosts } from "../../../lib/mypostsCache";
+import { observer } from "mobx-react-lite";
+import { useContributionsStore, useBusinessStore } from "../../../stores";
 import { ViewStats, LikesList } from "../../Shared/EngagementStats";
-import { API_BASE, API_ORIGIN } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
 
-const TOKEN = localStorage.getItem("Token");
-const BASE_URL = API_BASE;
 const MEDIA_BASE_URL = API_ORIGIN;
 
 const BusinessCard = ({ business, onDelete, onView }) => (
@@ -194,28 +193,23 @@ const DeleteModal = ({ id, onConfirm, onCancel }) => {
   );
 };
 
-export default function BusinessContribution() {
-  const [businesses, setBusinesses] = useState([]);
-  const [loading, setLoading] = useState(true);
+const BusinessContribution = observer(() => {
+  const contributions = useContributionsStore();
+  const businessStore = useBusinessStore();
+  const businesses = contributions.businesses;
+  const loading = contributions.loading;
   const [error, setError] = useState(null);
   const [viewBusiness, setViewBusiness] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await getMyPosts(TOKEN);
-        setBusinesses(data.business || []);
-      } catch { setError("Failed to load businesses."); } finally { setLoading(false); }
-    })();
-  }, []);
+    contributions.load().catch(() => setError("Failed to load businesses."));
+  }, [contributions]);
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/businesses/${deleteConfirm}/`, { method: "DELETE", headers: { Authorization: `Token ${TOKEN}` } });
-      if (!res.ok) throw new Error();
-      setBusinesses((p) => p.filter((b) => b.id !== deleteConfirm));
+      await businessStore.remove(deleteConfirm);
+      contributions.removeLocal("businesses", deleteConfirm);
       toast.success("Business deleted!");
     } catch { toast.error("Failed to delete business."); } finally { setDeleteConfirm(null); }
   };
@@ -258,4 +252,6 @@ export default function BusinessContribution() {
       <DeleteModal id={deleteConfirm} onConfirm={handleDelete} onCancel={() => setDeleteConfirm(null)} />
     </>
   );
-}
+});
+
+export default BusinessContribution;

@@ -48,6 +48,7 @@ export const useChatStore = () => useStores().chat;
 export const useMapStore = () => useStores().map;
 export const useRbacStore = () => useStores().rbac;
 export const useBirthdayStore = () => useStores().birthday;
+export const useContributionsStore = () => useStores().contributions;
 
 export const useAuditStore = () => useStores().audit;
 export const useSignupRequestStore = () => useStores().signupRequests;

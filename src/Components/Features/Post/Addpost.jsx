@@ -11,8 +11,10 @@ import {
 } from "../../../lib/documentValidation";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
 import JobStatusTag from "../../Shared/JobStatusTag";
-import { API_JOBS, API_ORIGIN, API_PROFILE } from "../../../config/api";
+import { API_ORIGIN } from "../../../config/api";
 import { usePermissions } from "../../../lib/usePermissions";
+import { observer } from "mobx-react-lite";
+import { useJobsStore, useProfileStore } from "../../../stores";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -36,14 +38,6 @@ import {
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
-const API_URL = API_JOBS;
-
-// Helper to get the token
-const getAuthToken = async () => {
-  const token = localStorage.getItem("Token");
-  return token;
-};
-
 // Format date to a more readable format
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -61,19 +55,6 @@ const getProfilePhotoUrl = (photoPath) => {
   if (!photoPath) return "";
   if (photoPath.startsWith("http")) return photoPath;
   return `${API_ORIGIN}${photoPath}`;
-};
-
-const normalizeJobsList = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.results)) return payload.results;
-  if (Array.isArray(payload?.jobs)) return payload.jobs;
-  return [];
-};
-
-const normalizeCreatedJob = (payload) => {
-  if (!payload || typeof payload !== "object") return null;
-  if (Array.isArray(payload)) return payload[0] || null;
-  return payload.job || payload.data || payload.result || payload;
 };
 
 // Image Gallery Component
@@ -262,12 +243,14 @@ const JobCard = ({ post, onRequestDelete, onRequestEdit, onStatusChange, current
   );
 };
 
-const JobFeed = () => {
-  // Posts state
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
+const JobFeed = observer(() => {
+  // Data lives in JobsStore / ProfileStore; this component only renders it.
+  const jobsStore = useJobsStore();
+  const profileStore = useProfileStore();
+  const posts = jobsStore.items;
+  const loading = jobsStore.loading;
+  const currentUserId = profileStore.currentUserId;
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
   const { has } = usePermissions();
   const canEditAny = has("jobs.edit_any");
   const canDeleteAny = has("jobs.delete_any");
@@ -296,41 +279,8 @@ const JobFeed = () => {
   const [jobType, setJobType] = useState("");
   const [error, setError] = useState("");
 
-  // Fetch posts from backend
-  const fetchJobs = async () => {
-    setLoading(true);
-    try {
-      const token = await getAuthToken();
-      const response = await fetch(API_URL, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Token ${token}` : "",
-        },
-      });
-      const data = await response.json();
-      setPosts(normalizeJobsList(data));
-    } catch {
-      // request failed — leave the feed as-is and stop the loader
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchJobs();
-    const token = localStorage.getItem("Token");
-    if (token) {
-      fetch(API_PROFILE, {
-        headers: { Authorization: `Token ${token}` },
-      })
-        .then((r) => r.json())
-        .then((d) => {
-          setCurrentUserId(d.id);
-        })
-        .catch(() => {});
-    }
-  }, []);
+  useEffect(() => { jobsStore.fetchAll(); }, [jobsStore]);
+  useEffect(() => { profileStore.load(); }, [profileStore]);
 
   const openEditModal = (post) => {
     setEditingJob(post);
@@ -349,7 +299,6 @@ const JobFeed = () => {
     if (!editForm.companyName || !editForm.role || !editForm.location) return;
     setIsSavingEdit(true);
     try {
-      const token = await getAuthToken();
       const formData = new FormData();
       formData.append("description", editForm.description);
       formData.append("company_name", editForm.companyName);
@@ -357,14 +306,7 @@ const JobFeed = () => {
       formData.append("location", editForm.location);
       formData.append("salary_range", editForm.salaryRange);
       formData.append("job_type", editForm.jobType);
-      const res = await fetch(`${API_URL}${editingJob.id}/`, {
-        method: "PUT",
-        headers: { Authorization: `Token ${token}` },
-        body: formData,
-      });
-      if (!res.ok) throw new Error();
-      const updated = await res.json();
-      setPosts((prev) => prev.map((p) => p.id === editingJob.id ? updated : p));
+      await jobsStore.replace(editingJob.id, formData);
       setEditingJob(null);
       toast.success("Job post updated!");
     } catch {
@@ -374,21 +316,9 @@ const JobFeed = () => {
     }
   };
 
-  // Delete a post
   const deletePost = async (postId) => {
     try {
-      const token = await getAuthToken();
-      const response = await fetch(`${API_URL}${postId}/`, {
-        method: "DELETE",
-        headers: {
-          Authorization: token ? `Token ${token}` : "",
-        },
-      });
-      if (response.ok) {
-        setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      } else {
-        toast.error("Failed to delete post. Please try again.");
-      }
+      await jobsStore.remove(postId);
     } catch {
       toast.error("Failed to delete post. Please try again.");
     }
@@ -484,9 +414,6 @@ const JobFeed = () => {
     setError("");
 
     try {
-      const token = await getAuthToken();
-      if (!token) throw new Error("Authentication token not found");
-
       const formData = new FormData();
       formData.append("description", description);
       formData.append("company_name", companyName);
@@ -503,25 +430,7 @@ const JobFeed = () => {
         formData.append("documents", doc.file);
       });
 
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const createdJob = normalizeCreatedJob(data);
-      if (createdJob) {
-        setPosts((prevPosts) => [createdJob, ...prevPosts]);
-      } else {
-        await fetchJobs();
-      }
+      await jobsStore.create(formData);
       closeModal();
     } catch (error) {
       setError(
@@ -705,9 +614,8 @@ const JobFeed = () => {
                     post={post}
                     onRequestDelete={setConfirmDeleteId}
                     onRequestEdit={openEditModal}
-                    onStatusChange={(id, next) =>
-                      setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, status: next } : p)))
-                    }
+                    /* the store already updated the item; nothing to do here */
+                    onStatusChange={() => {}}
                     currentUserId={currentUserId}
                     canEditAny={canEditAny}
                     canDeleteAny={canDeleteAny}
@@ -1075,6 +983,6 @@ const JobFeed = () => {
       `}</style>
     </div>
   );
-};
+});
 
 export default JobFeed;
