@@ -7,12 +7,13 @@
  * the RBAC cache so the affected user's new permissions apply immediately).
  */
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "../../../lib/axiosInstance";
-import { API_BASE, API_RBAC_ROLES, API_RBAC_USER_ROLE } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useRbacStore } from "../../../stores";
 import { toast } from "react-toastify";
 import { UserCog, Save, Loader2 } from "lucide-react";
 
-export default function RoleEditor({ userId, currentRole, onRoleChanged }) {
+const RoleEditor = observer(({ userId, currentRole, onRoleChanged }) => {
+  const rbac = useRbacStore();
   const [roles, setRoles] = useState([]);
   const [selected, setSelected] = useState(currentRole || "");
   const [savedRole, setSavedRole] = useState(currentRole || "");
@@ -24,9 +25,8 @@ export default function RoleEditor({ userId, currentRole, onRoleChanged }) {
     (async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get(API_RBAC_ROLES || `${API_BASE}/rbac/roles/`);
-        if (cancelled) return;
-        setRoles(data?.data?.roles || []);
+        const list = await rbac.load();
+        if (!cancelled) setRoles(list);
       } catch {
         if (!cancelled) toast.error("Failed to load roles.");
       } finally {
@@ -36,7 +36,7 @@ export default function RoleEditor({ userId, currentRole, onRoleChanged }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [rbac]);
 
   useEffect(() => {
     setSelected(currentRole || "");
@@ -49,15 +49,14 @@ export default function RoleEditor({ userId, currentRole, onRoleChanged }) {
     if (!userId || !selected || !dirty) return;
     setSaving(true);
     try {
-      const url = API_RBAC_USER_ROLE ? API_RBAC_USER_ROLE(userId) : `${API_BASE}/rbac/users/${userId}/role/`;
-      const { data } = await axios.patch(url, { role: selected });
-      const newRole = data?.data?.new_role || selected;
+      const data = await rbac.changeUserRole(userId, selected);
+      const newRole = data?.new_role || selected;
       setSavedRole(newRole);
       setSelected(newRole);
       toast.success(`Role updated to ${newRole}.`);
       onRoleChanged?.(newRole);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to update role.");
+      toast.error(err.message || "Failed to update role.");
     } finally {
       setSaving(false);
     }
@@ -103,4 +102,6 @@ export default function RoleEditor({ userId, currentRole, onRoleChanged }) {
       </div>
     </div>
   );
-}
+});
+
+export default RoleEditor;

@@ -1,33 +1,21 @@
 /**
- * NotificationProvider — React context that:
- *  1. Silently registers FCM token if permission is already granted (on mount)
- *  2. Exposes requestPermission() for UI-triggered permission prompts
- *  3. Listens for foreground FCM messages and shows an in-app toast
- *  4. Fetches the unread notification count from the backend periodically
- *  5. Exposes { notifications, unreadCount, fetchNotifications, markRead, markAllRead,
- *               notificationStatus, requestPermission }
+ * NotificationProvider — the UI half of notifications.
+ *
+ * All data, network and Web Push registration live in NotificationStore; this
+ * component only:
+ *  1. kicks off silent push registration + the poll on mount,
+ *  2. renders the in-app toast for a foreground push,
+ *  3. re-exposes the store through the existing useNotifications() context so
+ *     the ~dozen consumers (bells, headers, settings) keep their current API.
  */
 
-import React, {
-  createContext, useContext, useState, useEffect, useCallback, useRef,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { autorun } from 'mobx';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import {
-  registerExistingPermission,
-  requestNotificationPermission,
-  getNotificationStatus,
-  onForegroundMessage,
-  clearOSNotifications,
-} from '../../lib/webpush.js';
+import { onForegroundMessage, clearOSNotifications } from '../../lib/webpush.js';
 import { getRole } from '../../lib/authToken.js';
-import {
-  API_NOTIFICATIONS,
-  API_NOTIFICATION_READ,
-  API_NOTIFICATION_READ_ALL,
-  API_NOTIFICATION_DELETE,
-  API_NOTIFICATION_CLEAR_ALL,
-} from '../../config/api.js';
+import { useNotificationStore } from '../../stores';
 
 const NotificationContext = createContext(null);
 
@@ -47,109 +35,36 @@ const TYPE_ICONS = {
 };
 
 export function NotificationProvider({ children }) {
-  const [notifications, setNotifications]     = useState([]);
-  const [unreadCount,   setUnreadCount]        = useState(0);
-  const [notifStatus,   setNotifStatus]        = useState(() => getNotificationStatus());
-  const pollingRef = useRef(null);
-  const navigate   = useNavigate();
-
+  const store = useNotificationStore();
+  const navigate = useNavigate();
   const authToken = getRole();
 
-  // ── Refresh the notification status (e.g. after user grants permission) ────
-  const refreshStatus = useCallback(() => {
-    setNotifStatus(getNotificationStatus());
-  }, []);
+  // Consumers are plain components, so the observable state is bridged into
+  // React state — merely reading an observable does not subscribe a component.
+  const [snapshot, setSnapshot] = useState(() => ({
+    notifications: store.notifications.slice(),
+    unreadCount: store.unreadCount,
+    notificationStatus: store.status,
+  }));
 
-  // ── Fetch notifications from backend ──────────────────────────────────────
-  const fetchNotifications = useCallback(async () => {
-    if (!authToken) return;
-    try {
-      const res = await fetch(`${API_NOTIFICATIONS}?limit=50`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : (data.results || []);
-      setNotifications(list);
-      setUnreadCount(list.filter((n) => !n.is_read).length);
-    } catch {
-      // silent — don't spam console on poll failure
-    }
-  }, [authToken]);
+  useEffect(() => autorun(() => {
+    setSnapshot({
+      notifications: store.notifications.slice(),
+      unreadCount: store.unreadCount,
+      notificationStatus: store.status,
+    });
+  }), [store]);
 
-  // ── Mark single notification as read ──────────────────────────────────────
-  const markRead = useCallback(async (id) => {
-    if (!authToken) return;
-    try {
-      await fetch(API_NOTIFICATION_READ(id), { method: 'POST' });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-      );
-      setUnreadCount((c) => Math.max(0, c - 1));
-    } catch (err) {
-      console.error('[Notifications] Failed to mark read:', err);
-    }
-  }, [authToken]);
-
-  // ── Mark all notifications as read ────────────────────────────────────────
-  const markAllRead = useCallback(async () => {
-    if (!authToken) return;
-    try {
-      await fetch(API_NOTIFICATION_READ_ALL, { method: 'POST' });
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('[Notifications] Failed to mark all read:', err);
-    }
-  }, [authToken]);
-
-  // ── Delete a single notification ──────────────────────────────────────────
-  const deleteNotification = useCallback(async (id) => {
-    if (!authToken) return;
-    try {
-      await fetch(API_NOTIFICATION_DELETE(id), { method: 'DELETE' });
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      setUnreadCount((c) => {
-        const notif = notifications.find((n) => n.id === id);
-        return notif && !notif.is_read ? Math.max(0, c - 1) : c;
-      });
-    } catch (err) {
-      console.error('[Notifications] Failed to delete notification:', err);
-    }
-  }, [authToken, notifications]);
-
-  // ── Clear all notifications ───────────────────────────────────────────────
-  const clearAllNotifications = useCallback(async () => {
-    if (!authToken) return;
-    try {
-      await fetch(API_NOTIFICATION_CLEAR_ALL, { method: 'DELETE' });
-      setNotifications([]);
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('[Notifications] Failed to clear all notifications:', err);
-    }
-  }, [authToken]);
-
-  // ── Request permission (must be triggered by user interaction) ────────────
-  const requestPermission = useCallback(async () => {
-    if (!authToken) return { success: false, reason: 'no_auth' };
-    const result = await requestNotificationPermission(authToken);
-    refreshStatus();
-    return result;
-  }, [authToken, refreshStatus]);
-
-  // ── Silent FCM registration + foreground listener (on mount) ──────────────
+  // ── Silent push registration + foreground listener ────────────────────────
   useEffect(() => {
     if (!authToken) return;
 
-    // Dismiss any OS-level notifications from the browser notification center
+    // Dismiss any OS-level notifications sitting in the notification center.
     clearOSNotifications();
 
-    // Silently register token if permission is already granted
-    // (no prompt — safe to call on page load)
-    registerExistingPermission(authToken)
-      .then(() => refreshStatus())
-      .catch(() => {});
+    // Register the existing grant without prompting — safe on page load.
+    store.registerExisting();
 
-    // Helper to display in-app toast for foreground notifications
     const showToastNotification = (data) => {
       const title = data.title || 'New Notification';
       const body  = data.body  || '';
@@ -178,24 +93,22 @@ export function NotificationProvider({ children }) {
         }
       );
 
-      // Refresh notification list to show the new one
-      fetchNotifications();
+      store.fetch();
     };
 
-    // Listen for messages arriving while the tab is active (Web Push)
     const unsubscribe = onForegroundMessage((payload) => {
       showToastNotification(payload.data || {});
     });
 
-    // Handle incoming window message event from React Native WebView
+    // The React Native WebView shell forwards pushes as window messages.
     const handleNativeMessage = (event) => {
       try {
         const payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         if (payload?.type === 'PUSH_NOTIFICATION') {
           showToastNotification(payload.data || {});
         }
-      } catch (err) {
-        // Not a JSON message or not for us
+      } catch {
+        // Not a JSON message, or not for us.
       }
     };
     window.addEventListener('message', handleNativeMessage);
@@ -204,29 +117,26 @@ export function NotificationProvider({ children }) {
       if (typeof unsubscribe === 'function') unsubscribe();
       window.removeEventListener('message', handleNativeMessage);
     };
-  }, [authToken, fetchNotifications, refreshStatus, navigate]);
+  }, [authToken, store, navigate]);
 
   // ── Initial fetch + polling ───────────────────────────────────────────────
   useEffect(() => {
     if (!authToken) return;
-    fetchNotifications();
-
-    pollingRef.current = setInterval(fetchNotifications, POLL_INTERVAL_MS);
-    return () => clearInterval(pollingRef.current);
-  }, [authToken, fetchNotifications]);
+    store.fetch();
+    const timer = setInterval(() => store.fetch(), POLL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [authToken, store]);
 
   return (
     <NotificationContext.Provider
       value={{
-        notifications,
-        unreadCount,
-        fetchNotifications,
-        markRead,
-        markAllRead,
-        deleteNotification,
-        clearAllNotifications,
-        notificationStatus: notifStatus,
-        requestPermission,
+        ...snapshot,
+        fetchNotifications: () => store.fetch(),
+        markRead: (id) => store.markRead(id),
+        markAllRead: () => store.markAllRead(),
+        deleteNotification: (id) => store.deleteNotification(id),
+        clearAllNotifications: () => store.clearAll(),
+        requestPermission: () => store.requestPermission(),
       }}
     >
       {children}

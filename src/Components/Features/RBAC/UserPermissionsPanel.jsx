@@ -13,14 +13,15 @@
  *  - default (none of the above): unchecked, plain
  */
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "../../../lib/axiosInstance";
-import { API_BASE } from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useRbacStore } from "../../../stores";
 import { toast } from "react-toastify";
 import { UserCog, Save, Loader2 } from "lucide-react";
 
 const EMPTY_BASELINE = { grants: [], revokes: [], effective: [] };
 
-export default function UserPermissionsPanel({ userId, userRole }) {
+const UserPermissionsPanel = observer(({ userId, userRole }) => {
+  const rbac = useRbacStore();
   const [groups, setGroups] = useState({});          // { group: [{codename, description}] }
   const [role, setRole] = useState(userRole || null);
   const [baseline, setBaseline] = useState(EMPTY_BASELINE); // last-saved server state
@@ -47,13 +48,12 @@ export default function UserPermissionsPanel({ userId, userRole }) {
     (async () => {
       setLoading(true);
       try {
-        const [permsRes, userPermsRes] = await Promise.all([
-          axios.get(`${API_BASE}/rbac/permissions/`),
-          axios.get(`${API_BASE}/rbac/users/${userId}/permissions/`),
+        const [, userPayload] = await Promise.all([
+          rbac.load(),
+          rbac.getUserOverrides(userId),
         ]);
         if (cancelled) return;
-        const g = permsRes.data?.data?.groups || permsRes.data?.groups || {};
-        const userPayload = userPermsRes.data?.data || userPermsRes.data || {};
+        const g = rbac.groups;
         const grants = userPayload.grants || [];
         const revokes = userPayload.revokes || [];
         const effective = userPayload.effective || [];
@@ -71,7 +71,7 @@ export default function UserPermissionsPanel({ userId, userRole }) {
     return () => {
       cancelled = true;
     };
-  }, [userId, userRole]);
+  }, [userId, userRole, rbac]);
 
   const toggle = (codename) => {
     const isRoleInherited = roleInherited.has(codename);
@@ -129,12 +129,8 @@ export default function UserPermissionsPanel({ userId, userRole }) {
     if (!userId) return;
     setSaving(true);
     try {
-      const { data } = await axios.put(
-        `${API_BASE}/rbac/users/${userId}/permissions/`,
-        { grants: [...localGrants], revokes: [...localRevokes] }
-      );
-      const payload = data?.data || data || {};
-      const effective = payload.effective || [];
+      const payload = await rbac.setUserOverrides(userId, [...localGrants], [...localRevokes]);
+      const effective = payload?.effective || [];
       setBaseline({
         grants: [...localGrants],
         revokes: [...localRevokes],
@@ -142,7 +138,7 @@ export default function UserPermissionsPanel({ userId, userRole }) {
       });
       toast.success("User permissions updated.");
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to save user permissions.");
+      toast.error(err.message || "Failed to save user permissions.");
     } finally {
       setSaving(false);
     }
@@ -247,4 +243,6 @@ export default function UserPermissionsPanel({ userId, userRole }) {
       </div>
     </div>
   );
-}
+});
+
+export default UserPermissionsPanel;

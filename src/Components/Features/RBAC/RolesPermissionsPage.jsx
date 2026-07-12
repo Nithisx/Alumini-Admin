@@ -20,21 +20,17 @@
  * handled on the member detail screen; this page manages the role matrix.
  */
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "../../../lib/axiosInstance";
-import {
-  API_RBAC_PERMISSIONS,
-  API_RBAC_ROLES,
-  API_RBAC_ROLE_PERMISSIONS,
-  API_RBAC_ROLE_DETAIL,
-} from "../../../config/api";
+import { observer } from "mobx-react-lite";
+import { useRbacStore } from "../../../stores";
 import { toast } from "react-toastify";
 import { ShieldCheck, Save, Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import FormModal from "../../Shared/FormModal";
 
-export default function RolesPermissionsPage() {
-  const [groups, setGroups] = useState({});          // { group: [{codename, description}] }
-  const [roles, setRoles] = useState([]);            // [{name, user_count, permissions:[...] }]
+const RolesPermissionsPage = observer(() => {
+  const rbac = useRbacStore();
+  const groups = rbac.groups;   // { group: [{codename, description}] }
+  const roles = rbac.roles;     // [{name, user_count, permissions:[...] }]
   const [activeRole, setActiveRole] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -59,22 +55,10 @@ export default function RolesPermissionsPage() {
   const [reassignTo, setReassignTo] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  const loadAll = async () => {
-    const [permsRes, rolesRes] = await Promise.all([
-      axios.get(API_RBAC_PERMISSIONS),
-      axios.get(API_RBAC_ROLES),
-    ]);
-    const g = permsRes.data?.data?.groups || {};
-    const r = rolesRes.data?.data?.roles || [];
-    setGroups(g);
-    setRoles(r);
-    return r;
-  };
-
   useEffect(() => {
     (async () => {
       try {
-        const r = await loadAll();
+        const r = await rbac.load();
         if (r.length) {
           setActiveRole(r[0].name);
           setSelected(new Set(r[0].permissions || []));
@@ -86,7 +70,7 @@ export default function RolesPermissionsPage() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [rbac]);
 
   const selectRole = (role) => {
     setActiveRole(role.name);
@@ -106,15 +90,10 @@ export default function RolesPermissionsPage() {
     if (!activeRole) return;
     setSaving(true);
     try {
-      const { data } = await axios.put(
-        API_RBAC_ROLE_PERMISSIONS(activeRole),
-        { permissions: [...selected] }
-      );
-      const applied = data?.data?.permissions || [...selected];
-      setRoles((rs) => rs.map((r) => (r.name === activeRole ? { ...r, permissions: applied } : r)));
+      await rbac.setRolePermissions(activeRole, [...selected]);
       toast.success(`Permissions updated for ${activeRole}.`);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to save permissions.");
+      toast.error(err.message || "Failed to save permissions.");
     } finally {
       setSaving(false);
     }
@@ -140,20 +119,18 @@ export default function RolesPermissionsPage() {
     }
     setCreating(true);
     try {
-      const { data } = await axios.post(API_RBAC_ROLES, {
+      const role = await rbac.createRole({
         name: newName.trim(),
         display_name: newDisplayName.trim() || newName.trim(),
       });
-      const role = data?.data;
       if (role) {
-        setRoles((rs) => [...rs, role]);
         setActiveRole(role.name);
         setSelected(new Set(role.permissions || []));
       }
       toast.success(`Role "${newDisplayName || newName}" created.`);
       setShowCreate(false);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to create role.");
+      toast.error(err.message || "Failed to create role.");
     } finally {
       setCreating(false);
     }
@@ -171,16 +148,14 @@ export default function RolesPermissionsPage() {
     if (!renameTarget) return;
     setRenaming(true);
     try {
-      const { data } = await axios.patch(API_RBAC_ROLE_DETAIL(renameTarget.name), {
+      await rbac.updateRole(renameTarget.name, {
         display_name: renameDisplayName.trim() || renameTarget.name,
         description: renameDescription,
       });
-      const updated = data?.data;
-      setRoles((rs) => rs.map((r) => (r.name === renameTarget.name ? { ...r, ...updated } : r)));
       toast.success("Role updated.");
       setRenameTarget(null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to update role.");
+      toast.error(err.message || "Failed to update role.");
     } finally {
       setRenaming(false);
     }
@@ -192,34 +167,31 @@ export default function RolesPermissionsPage() {
     setDeleteTarget(role);
   };
 
-  const removeRoleFromState = (roleName) => {
-    setRoles((rs) => {
-      const next = rs.filter((r) => r.name !== roleName);
-      if (activeRole === roleName) {
-        setActiveRole(next.length ? next[0].name : null);
-        setSelected(new Set(next.length ? next[0].permissions || [] : []));
-      }
-      return next;
-    });
+  /** The store already dropped the role; this just re-points the selection. */
+  const reselectAfterDelete = (roleName) => {
+    if (activeRole !== roleName) return;
+    const next = roles.filter((r) => r.name !== roleName);
+    setActiveRole(next.length ? next[0].name : null);
+    setSelected(new Set(next.length ? next[0].permissions || [] : []));
   };
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await axios.delete(API_RBAC_ROLE_DETAIL(deleteTarget.name));
+      await rbac.deleteRole(deleteTarget.name);
+      reselectAfterDelete(deleteTarget.name);
       toast.success(`Role "${deleteTarget.display_name || deleteTarget.name}" deleted.`);
-      removeRoleFromState(deleteTarget.name);
       setDeleteTarget(null);
     } catch (err) {
-      const memberCount = err?.response?.data?.details?.member_count;
-      if (err?.response?.status === 409 && memberCount != null) {
-        // Needs a reassignment target — swap to the second modal.
+      const memberCount = err?.details?.member_count;
+      if (err?.status === 409 && memberCount != null) {
+        // The role still has members — ask which role they move to instead.
         setReassignInfo({ role: deleteTarget, memberCount });
         setReassignTo("");
         setDeleteTarget(null);
       } else {
-        toast.error(err?.response?.data?.message || "Failed to delete role.");
+        toast.error(err.message || "Failed to delete role.");
       }
     } finally {
       setDeleting(false);
@@ -230,16 +202,14 @@ export default function RolesPermissionsPage() {
     if (!reassignInfo || !reassignTo) return;
     setDeleting(true);
     try {
-      await axios.delete(API_RBAC_ROLE_DETAIL(reassignInfo.role.name), {
-        data: { reassign_to: reassignTo },
-      });
+      await rbac.deleteRole(reassignInfo.role.name, reassignTo);
       toast.success(
         `Role "${reassignInfo.role.display_name || reassignInfo.role.name}" deleted — ${reassignInfo.memberCount} member(s) moved to ${reassignTo}.`
       );
-      removeRoleFromState(reassignInfo.role.name);
+      reselectAfterDelete(reassignInfo.role.name);
       setReassignInfo(null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to delete role.");
+      toast.error(err.message || "Failed to delete role.");
     } finally {
       setDeleting(false);
     }
@@ -484,4 +454,6 @@ export default function RolesPermissionsPage() {
       </FormModal>
     </div>
   );
-}
+});
+
+export default RolesPermissionsPage;
