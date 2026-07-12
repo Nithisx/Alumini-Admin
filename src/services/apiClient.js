@@ -25,29 +25,39 @@ function unwrap(body) {
 
 /** Normalize any axios error into a plain Error with the server message. */
 export class ApiError extends Error {
-  constructor(message, { status, code, details, cause } = {}) {
+  constructor(message, { status, code, details, requestId, cause } = {}) {
     super(message);
     this.name = "ApiError";
-    this.status = status;
-    this.code = code;
-    this.details = details;
+    this.status = status;      // null when the request never reached the server
+    this.code = code;          // stable machine code — see services/errorCodes.js
+    this.details = details;    // e.g. { field: [messages] } on VALIDATION_ERROR
+    this.requestId = requestId; // correlates with the backend log line
     this.cause = cause;
   }
 }
 
+/**
+ * Normalize any axios failure into an ApiError carrying the backend's standard
+ * contract (core/errors.py): `code` is the stable machine value to branch on —
+ * see services/errorCodes.js. `status` is null when the request never reached
+ * the server at all (offline / DNS / CORS), which callers treat as transient.
+ */
 function toApiError(err) {
   const res = err?.response;
   const data = res?.data;
   const message =
     data?.message ||
-    data?.error ||
+    data?.error ||        // legacy key, still emitted for back-compat
     data?.detail ||
     err?.message ||
     "Request failed";
   return new ApiError(message, {
-    status: res?.status,
+    status: res?.status ?? null,
     code: data?.code,
-    details: data?.details ?? data,
+    // Only real `details` — never fall back to the whole body, or a
+    // VALIDATION_ERROR consumer would read the envelope as field errors.
+    details: data?.details,
+    requestId: data?.request_id,
     cause: err,
   });
 }
