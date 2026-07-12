@@ -11,14 +11,23 @@ export const MEDIA_BASE = API_ORIGIN;
  */
 export const getMediaUrl = (uri) => {
   if (!uri) return "";
+  const input = String(uri).trim();
+  if (!input) return "";
   if (
-    uri.startsWith("http://") ||
-    uri.startsWith("https://") ||
-    uri.startsWith("file://") ||
-    uri.startsWith("data:") ||
-    uri.startsWith("blob:")
+    input.startsWith("http://") ||
+    input.startsWith("https://") ||
+    input.startsWith("file://") ||
+    input.startsWith("data:") ||
+    input.startsWith("blob:")
   ) {
-    return uri;
+    return input;
   }
-  return uri.startsWith("/") ? `${MEDIA_BASE}${uri}` : `${MEDIA_BASE}/${uri}`;
+
+  const origin = API_BASE.replace(/\/api\/v1\/?$/, "");
+  if (input.startsWith("//")) return `${window.location.protocol}${input}`;
+  if (input.startsWith("/api/")) return `${origin}${input}`;
+  if (input.startsWith("/media/")) return `${origin}/api/v1${input}`;
+  if (input.startsWith("/")) return `${origin}${input}`;
+  if (input.startsWith("media/")) return `${origin}/api/v1/${input}`;
+  return `${origin}/api/v1/media/${input}`;
 };

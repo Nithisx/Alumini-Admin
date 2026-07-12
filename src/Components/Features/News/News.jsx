@@ -8,30 +8,17 @@ import EditNewsModal from "./Editnewsmodal";
 import ConfirmModal from "../../Shared/ConfirmModal";
 import EngagementPanel from "../../Shared/EngagementPanel";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
-import { API_ORIGIN } from "../../../config/api";
+import { getMediaUrl } from "../../../config/api";
 import { usePermissions } from "../../../lib/usePermissions";
 import { observer } from "mobx-react-lite";
 import { useNewsStore, useProfileStore } from "../../../stores";
 
-const BASE_URL = API_ORIGIN;
-
-// Media needs the session to fetch; auth + credentials are attached centrally by
-// lib/axiosInstance.js's fetch patch, so no Authorization header is built here.
 const AuthorizedImage = ({ url, alt, className }) => {
-  const [imageUrl, setImageUrl] = useState(null);
-  useEffect(() => {
-    let isMounted = true;
-    fetch(url)
-      .then((r) => r.blob())
-      .then((blob) => { if (isMounted) setImageUrl(URL.createObjectURL(blob)); })
-      .catch(() => {});
-    return () => { isMounted = false; };
-  }, [url]);
-  return imageUrl ? (
-    <img src={imageUrl} alt={alt} className={className} />
-  ) : (
-    <div className="bg-gray-100 animate-pulse w-full h-48" />
-  );
+  if (!url) {
+    return <div className="bg-gray-100 animate-pulse w-full h-48" />;
+  }
+
+  return <img src={url} alt={alt} className={className} />;
 };
 
 function NewsList() {
@@ -74,7 +61,7 @@ function NewsList() {
 
   const getImageUrl = (path) => {
     if (!path) return null;
-    return path.startsWith("http") ? path : `${BASE_URL}${path}`;
+    return getMediaUrl(path);
   };
 
   const categories = ["All", ...new Set(posts.map((p) => p.category).filter(Boolean))];

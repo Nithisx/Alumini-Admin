@@ -6,26 +6,17 @@ import { faCalendarAlt, faClock, faMapMarkerAlt, faSearch, faEdit, faTrash } fro
 import EngagementPanel from "../../Shared/EngagementPanel";
 import { DocumentList } from "../../Shared/DocumentPreview";
 import { PageHeader, PageHero, StatPill, EmptyState, MotionList, MotionItem, SkeletonFeed } from "../../Shared/ui";
-import { API_ORIGIN } from "../../../config/api";
+import { getMediaUrl } from "../../../config/api";
 import { observer } from "mobx-react-lite";
 import { useEventsStore, useProfileStore } from "../../../stores";
 import { usePermissions } from "../../../lib/usePermissions";
 
-// Auth + credentials are attached centrally by lib/axiosInstance.js's fetch patch.
 const AuthorizedImage = ({ url, alt, className }) => {
-  const [imageUrl, setImageUrl] = useState(null);
-  useEffect(() => {
-    let isMounted = true;
-    fetch(url)
-      .then((r) => r.blob())
-      .then((blob) => { if (isMounted) setImageUrl(URL.createObjectURL(blob)); });
-    return () => (isMounted = false);
-  }, [url]);
-  return imageUrl ? (
-    <img src={imageUrl} alt={alt} className={className} />
-  ) : (
-    <div className="bg-gray-100 animate-pulse w-full h-full" />
-  );
+  if (!url) {
+    return <div className="bg-gray-100 animate-pulse w-full h-full" />;
+  }
+
+  return <img src={url} alt={alt} className={className} />;
 };
 
 function Events() {
@@ -165,7 +156,7 @@ function Events() {
           <MotionList className="space-y-6">
             {filtered.map((event) => {
             const imgPath = event.images?.[0]?.image;
-            const imgUrl = imgPath ? `${API_ORIGIN}${imgPath}` : null;
+            const imgUrl = imgPath ? getMediaUrl(imgPath) : null;
             const resolvedId = resolveEventId(event);
             const calendarUrl = getGoogleCalendarUrl(event);
             
